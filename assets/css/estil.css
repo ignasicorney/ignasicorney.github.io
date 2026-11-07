@@ -338,3 +338,4 @@ figcaption, .peu-foto {
 [data-tema="original"] .peus-fila li { display: list-item; margin-bottom: .6rem; }
 [data-tema="original"] .peus-fila .n { display: none; }
 [data-tema="original"] .peus-fila p { margin: 0; }
+[data-tema="original"] .capcal nav a[href="/latdg/"] { text-transform: none; }
