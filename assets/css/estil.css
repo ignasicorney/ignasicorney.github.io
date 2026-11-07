@@ -256,7 +256,7 @@ figcaption, .peu-foto {
 .carrussel .fletxa svg { width: 2.2rem; height: 2.2rem; fill: none; stroke: currentColor; stroke-width: 1.4; filter: drop-shadow(0 0 3px rgba(0,0,0,.6)); }
 .carrussel .fletxa.ant { left: .3rem; }
 .carrussel .fletxa.seg { right: .3rem; }
-.carrussel .fletxa[hidden] { display: none; }
+.carrussel .fletxa[hidden] { display: none !important; }
 
 /* Diapositives: caixa fosca, imatge sencera, peu sobreposat i comptador */
 .carrussel.diapos { max-width: 700px; margin-left: auto; margin-right: auto; }
@@ -329,3 +329,12 @@ figcaption, .peu-foto {
 .xarxes .ico { width: 1.4rem; height: 1.4rem; display: block; background: currentColor;
   -webkit-mask: var(--ico) center / contain no-repeat; mask: var(--ico) center / contain no-repeat; }
 .xarxes a:hover { color: var(--accent); }
+
+/* Tema original: columna de text més ampla i peus de la portada com a llista simple */
+[data-tema="original"] .text, [data-tema="original"] .peus-fila, [data-tema="original"] .docs { max-width: 56rem; }
+[data-tema="original"] .dues { grid-template-columns: minmax(0, 40rem) minmax(0, 14rem); }
+[data-tema="original"] .peu-foto { font-family: var(--lletra); color: var(--text); font-size: .95rem; }
+[data-tema="original"] .peus-fila { list-style: disc; padding-left: 1.4rem; }
+[data-tema="original"] .peus-fila li { display: list-item; margin-bottom: .6rem; }
+[data-tema="original"] .peus-fila .n { display: none; }
+[data-tema="original"] .peus-fila p { margin: 0; }

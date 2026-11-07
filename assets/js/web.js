@@ -70,6 +70,8 @@
     });
     var t; pista.addEventListener('scroll', function () { clearTimeout(t); t = setTimeout(estat, 60); }, { passive: true });
     window.addEventListener('resize', estat);
+    pista.querySelectorAll('img').forEach(function (im) { if (!im.complete) im.addEventListener('load', estat); });
+    window.addEventListener('load', estat);
     estat();
   });
 
