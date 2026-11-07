@@ -182,7 +182,8 @@ function netejaHtml(arrel) {
     if (t === "a") { const h = n.getAttribute("href") || ""; return h ? '<a href="' + esc(h) + '">' + dins + "</a>" : dins; }
     if (["p", "h2", "h3", "li", "ul", "ol", "blockquote"].includes(t)) {
       if (!dins.replace(/<br>|\s|&nbsp;/g, "")) return "";
-      return "\n<" + t + ">" + dins.trim() + "</" + t + ">";
+      const id = (t === "h2" || t === "h3") && n.id ? ' id="' + esc(n.id) + '"' : "";
+      return "\n<" + t + id + ">" + dins.trim() + "</" + t + ">";
     }
     return dins ? "<" + t + ">" + dins + "</" + t + ">" : "";
   };
