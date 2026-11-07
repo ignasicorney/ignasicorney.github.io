@@ -1,0 +1,45 @@
+name: Rescatar imatges de Wix
+on:
+  workflow_dispatch:
+  push:
+    paths: ['_data/imatges_wix.txt', '.github/workflows/rescatar-imatges.yml']
+permissions:
+  contents: write
+jobs:
+  baixar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Baixar originals de static.wixstatic.com
+        run: |
+          mkdir -p assets/img/originals
+          fallides=0
+          while read -r f; do
+            [ -z "$f" ] && continue
+            id="${f%.*}"; ext="${f##*.}"
+            desti="assets/img/originals/$f"
+            [ -s "$desti" ] && continue
+            if ! curl -fsSL --retry 3 -o "$desti" "https://static.wixstatic.com/media/303ac4_${id}~mv2.${ext}"; then
+              echo "No s'ha pogut baixar $f"; rm -f "$desti"; fallides=$((fallides+1))
+            fi
+          done < _data/imatges_wix.txt
+          ls assets/img/originals | wc -l
+          du -sh assets/img/originals
+          echo "Fallides: $fallides"
+      - name: Fer versions web (màx. 1600 px) i miniatures (600 px)
+        run: |
+          sudo apt-get -qq update && sudo apt-get -qq install -y imagemagick >/dev/null
+          mkdir -p assets/img/web assets/img/mini
+          for f in assets/img/originals/*; do
+            b=$(basename "$f"); n="${b%.*}"
+            [ -s "assets/img/web/$n.jpg" ] || convert "$f" -auto-orient -resize '1600x1600>' -strip -quality 82 -background white -flatten "assets/img/web/$n.jpg"
+            [ -s "assets/img/mini/$n.jpg" ] || convert "$f" -auto-orient -resize '600x600>' -strip -quality 78 -background white -flatten "assets/img/mini/$n.jpg"
+          done
+          du -sh assets/img/*
+      - name: Desar al repositori
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add assets/img
+          git diff --cached --quiet || git commit -m "Imatges rescatades de Wix"
+          git push
