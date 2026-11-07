@@ -2,14 +2,18 @@
 
 :root,
 [data-tema="original"] {
-  --paper: #ffffff;
-  --paper-2: #f3f3f3;
-  --ink: #000000;
-  --text: #222222;
-  --muted: #5c5c5c;
+  --paper: #000000;
+  --paper-2: #1c1c1c;
+  --ink: #ffffff;
+  --text: #ffffff;
+  --muted: #bdbdbd;
   --accent: #af0d0d;
   --accent-ink: #ffffff;
-  --rule: #000000;
+  --link: #ffffff;
+  --rule: #ffffff;
+  --lletra: "Open Sans", Arial, sans-serif;
+  --lletra-cos: 1.0625rem;
+  --interlineat: 1.55;
 }
 [data-tema="vidriat"] {
   --paper: #eef0ec;
@@ -19,7 +23,11 @@
   --muted: #56645c;
   --accent: #2e6b4f;
   --accent-ink: #ffffff;
+  --link: #2e6b4f;
   --rule: #2e6b4f;
+  --lletra: "Newsreader", Georgia, "Times New Roman", serif;
+  --lletra-cos: 1.1875rem;
+  --interlineat: 1.6;
 }
 
 * { box-sizing: border-box; }
@@ -28,13 +36,13 @@ body {
   margin: 0;
   background: var(--paper);
   color: var(--text);
-  font-family: "Newsreader", Georgia, "Times New Roman", serif;
+  font-family: var(--lletra);
   font-optical-sizing: auto;
-  font-size: 1.1875rem;
-  line-height: 1.6;
+  font-size: var(--lletra-cos);
+  line-height: var(--interlineat);
 }
 img { max-width: 100%; height: auto; display: block; }
-a { color: var(--accent); text-underline-offset: .15em; text-decoration-thickness: 1px; }
+a { color: var(--link); text-underline-offset: .15em; text-decoration-thickness: 1px; }
 a:hover { text-decoration-thickness: 2px; }
 :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
 
@@ -230,33 +238,94 @@ figcaption, .peu-foto {
 
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 
-/* Carrussels */
-.carrussel { position: relative; margin: 1.5rem 0 2.5rem; max-width: 52rem; }
+/* Carrussels, a l'estil dels de Wix */
+.carrussel { position: relative; margin: 1.5rem 0 2.5rem; }
 .carrussel .pistes {
   list-style: none; margin: 0; padding: 0;
   display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scroll-behavior: smooth;
   scrollbar-width: none; overscroll-behavior-x: contain;
 }
 .carrussel .pistes::-webkit-scrollbar { display: none; }
-.carrussel .pistes > li { flex: 0 0 100%; scroll-snap-align: start; }
-.carrussel .pistes a { display: block; background: var(--paper-2); }
-.carrussel .pistes img { width: 100%; height: clamp(16rem, 58vw, 34rem); object-fit: contain; }
-.carrussel .peu-foto { min-height: 1.4em; }
-.carrussel .controls {
-  display: flex; align-items: center; gap: .8rem; margin-top: .4rem;
-  font-family: "Archivo Narrow", sans-serif; color: var(--muted);
+.carrussel .pistes > li { flex: 0 0 100%; scroll-snap-align: start; position: relative; }
+.carrussel .pistes a { display: block; }
+.carrussel .fletxa {
+  position: absolute; top: 50%; transform: translateY(-50%);
+  background: none; border: 0; padding: .4rem; cursor: pointer; color: #fff;
+  width: 3rem; height: 4rem; display: grid; place-items: center;
 }
-.carrussel .controls button {
-  font: inherit; font-size: 1.5rem; line-height: 1; width: 2.6rem; height: 2.4rem;
-  background: var(--paper); color: var(--ink); border: 2px solid var(--ink); cursor: pointer;
+.carrussel .fletxa svg { width: 2.2rem; height: 2.2rem; fill: none; stroke: currentColor; stroke-width: 1.4; filter: drop-shadow(0 0 3px rgba(0,0,0,.6)); }
+.carrussel .fletxa.ant { left: .3rem; }
+.carrussel .fletxa.seg { right: .3rem; }
+.carrussel .fletxa[hidden] { display: none; }
+
+/* Diapositives: caixa fosca, imatge sencera, peu sobreposat i comptador */
+.carrussel.diapos { max-width: 700px; margin-left: auto; margin-right: auto; }
+.carrussel.diapos .pistes { background: #1c1c1c; }
+.carrussel.diapos .pistes img { width: 100%; height: clamp(15rem, 62vw, 455px); object-fit: contain; }
+.carrussel.diapos .sobre {
+  position: absolute; left: 0; right: 0; bottom: 0;
+  display: flex; align-items: flex-end; justify-content: space-between; gap: 1rem;
+  padding: .6rem .9rem; background: rgba(0, 0, 0, .55); color: #fff;
+  font-family: "Open Sans", Arial, sans-serif; font-size: .92rem; line-height: 1.35;
+  pointer-events: none;
 }
-.carrussel .controls button:hover { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
-.carrussel .controls button:disabled { opacity: .3; cursor: default; background: var(--paper); color: var(--ink); border-color: var(--ink); }
-.carrussel .compta { min-width: 3.5rem; text-align: center; font-size: 1.05rem; }
-/* Portada: el carrussel ocupa tota l'amplada */
-main > .carrussel:first-of-type { max-width: none; }
-/* Tira de reportatges: diverses miniatures alhora */
-.carrussel.tira { max-width: none; }
-.carrussel.tira .pistes { gap: .5rem; }
-.carrussel.tira .pistes > li { flex: 0 0 auto; width: clamp(9rem, 28vw, 13rem); }
-.carrussel.tira .pistes img { height: auto; aspect-ratio: 3 / 4; object-fit: cover; object-position: top; }
+.carrussel.diapos .sobre p { margin: 0; }
+.carrussel.diapos .sobre .t { display: block; font-size: 1rem; }
+.carrussel.diapos .sobre .d { display: block; font-size: .85rem; opacity: .9; }
+.carrussel.diapos .compta { font-size: .8rem; white-space: nowrap; }
+@media (hover: hover) {
+  .carrussel.diapos .sobre, .carrussel.diapos .fletxa { opacity: 0; transition: opacity .2s; }
+  .carrussel.diapos:hover .sobre, .carrussel.diapos:hover .fletxa,
+  .carrussel.diapos:focus-within .sobre, .carrussel.diapos:focus-within .fletxa { opacity: 1; }
+}
+
+/* Portada: a tota l'amplada, imatge retallada i punts a sota */
+.carrussel.portada { margin-top: 0; }
+.carrussel.portada .pistes img { width: 100%; height: clamp(14rem, 48vw, 470px); object-fit: cover; }
+.carrussel.portada .punts {
+  position: absolute; left: 0; right: 0; bottom: .8rem;
+  display: flex; justify-content: center; gap: .45rem;
+}
+.carrussel.portada .punts button {
+  width: .75rem; height: .75rem; border-radius: 50%; padding: 0; cursor: pointer;
+  border: 1.5px solid #fff; background: transparent; box-shadow: 0 0 2px rgba(0,0,0,.6);
+}
+.carrussel.portada .punts button[aria-current="true"] { background: #fff; }
+
+/* Tira de reportatges: imatges a tota alçada, botó rodó */
+.carrussel.tira .pistes { gap: .6rem; }
+.carrussel.tira .pistes > li { flex: 0 0 auto; }
+.carrussel.tira .pistes img { height: clamp(16rem, 40vw, 460px); width: auto; max-width: none; }
+.carrussel.tira .fletxa {
+  width: 2.6rem; height: 2.6rem; border-radius: 50%; background: #000; color: #fff; padding: 0;
+  box-shadow: 0 0 0 1px rgba(255,255,255,.25);
+}
+.carrussel.tira .fletxa svg { width: 1.3rem; height: 1.3rem; stroke-width: 2.2; filter: none; }
+.carrussel.tira .fletxa.ant { left: .6rem; }
+.carrussel.tira .fletxa.seg { right: .6rem; }
+
+/* Tema original de Wix: fons negre, nom en vermell i menú en majúscules */
+[data-tema="original"] .capcal {
+  display: flex; align-items: flex-end; justify-content: space-between; gap: 1.5rem 3rem; flex-wrap: wrap;
+  border-bottom: 0; padding-top: 2rem;
+}
+[data-tema="original"] .nom {
+  color: var(--accent); text-transform: uppercase; font-size: clamp(1.5rem, 3vw, 1.9rem);
+  line-height: 1.05; letter-spacing: 0; border-left: 4px solid var(--accent); padding-left: .55rem; max-width: 9.5em;
+}
+[data-tema="original"] .capcal nav ul { margin: 0; gap: 0 .6rem; font-family: var(--lletra); font-size: .9rem; font-weight: 400; text-transform: uppercase; }
+[data-tema="original"] .capcal nav a { border-bottom: 0; border-top: 1px solid var(--ink); margin: 0; padding: .7rem .5rem .3rem; min-width: 4.5rem; text-align: center; }
+[data-tema="original"] .capcal nav a:hover { border-top-width: 3px; padding-top: calc(.7rem - 2px); }
+[data-tema="original"] .capcal nav a[aria-current="page"] { color: var(--ink); border-top: 4px solid var(--ink); padding-top: calc(.7rem - 3px); }
+[data-tema="original"] h1, [data-tema="original"] h2 { font-family: var(--lletra); text-transform: uppercase; font-size: 1.25rem; letter-spacing: 0; }
+[data-tema="original"] .entradeta { font-size: inherit; }
+[data-tema="original"] .peu { border-top: 1px solid var(--muted); }
+[data-tema="original"] .prova-colors button[aria-pressed="true"] { background: var(--accent); }
+[data-tema="original"] .carrussel.tira .fletxa { background: #fff; color: #000; }
+
+/* Icones de xarxes al peu */
+.xarxes { display: flex; gap: 1rem; align-items: center; }
+.xarxes a { margin: 0; display: inline-flex; color: var(--ink); }
+.xarxes .ico { width: 1.4rem; height: 1.4rem; display: block; background: currentColor;
+  -webkit-mask: var(--ico) center / contain no-repeat; mask: var(--ico) center / contain no-repeat; }
+.xarxes a:hover { color: var(--accent); }

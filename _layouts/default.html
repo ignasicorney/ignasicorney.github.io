@@ -19,8 +19,8 @@
 <link rel="alternate" type="application/atom+xml" title="Blog d'Ignasi Corney Oller" href="/blog/feed.xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Archivo+Narrow:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;0,6..72,700;1,6..72,400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/assets/css/estil.css?v=2">
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Narrow:wght@400;500;600&family=Open+Sans:ital,wght@0,400;0,700;1,400&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;0,6..72,700;1,6..72,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/css/estil.css?v=3">
 <script>try{var t=localStorage.getItem('tema');if(t)document.documentElement.dataset.tema=t;}catch(e){}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"Person","name":"Ignasi Corney Oller","url":"https://ignasicorney.github.io/","jobTitle":"Periodista i docent","homeLocation":{"@type":"Place","name":"la Bisbal d'Empordà"},"sameAs":["https://x.com/ignasicorney","https://www.instagram.com/ignasicorney/"]}</script>
 </head>
@@ -42,7 +42,11 @@
 </main>
 <footer class="peu">
   <p>© {{ site.time | date: "%Y" }} Ignasi Corney Oller</p>
-  <p><a href="https://x.com/ignasicorney">X</a> <a href="https://www.instagram.com/ignasicorney/">Instagram</a> <a href="/blog/feed.xml">Subscripció al blog</a></p>
+  <p class="xarxes">
+    <a href="https://x.com/ignasicorney" aria-label="X (@ignasicorney)" title="X"><span class="ico" style="--ico:url(https://cdn.jsdelivr.net/npm/simple-icons@13/icons/x.svg)"></span></a>
+    <a href="https://www.instagram.com/ignasicorney/" aria-label="Instagram (@ignasicorney)" title="Instagram"><span class="ico" style="--ico:url(https://cdn.jsdelivr.net/npm/simple-icons@13/icons/instagram.svg)"></span></a>
+    <a href="/blog/feed.xml" aria-label="Subscripció RSS al blog" title="RSS"><span class="ico" style="--ico:url(https://cdn.jsdelivr.net/npm/simple-icons@13/icons/rss.svg)"></span></a>
+  </p>
 </footer>
 <div class="prova-colors" role="group" aria-label="Prova de colors (temporal)">
   <span>Colors:</span>
@@ -58,7 +62,7 @@
     <button type="button" class="seg" aria-label="Imatge següent">Següent ›</button>
   </div>
 </dialog>
-<script src="/assets/js/web.js?v=2" defer></script>
+<script src="/assets/js/web.js?v=3" defer></script>
 <script data-goatcounter="https://ignasicorney.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 </body>
 </html>

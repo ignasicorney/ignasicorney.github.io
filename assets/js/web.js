@@ -42,26 +42,28 @@
     });
   }
 
-  // Carrussels: fletxes, comptador i teclat (el lliscament el fa el navegador)
+  // Carrussels: fletxes, punts i teclat (el lliscament el fa el navegador)
   document.querySelectorAll('.carrussel').forEach(function (c) {
     var pista = c.querySelector('.pistes');
     var items = pista.children;
-    var compta = c.querySelector('.compta');
     var ant = c.querySelector('.ant'), seg = c.querySelector('.seg');
+    var punts = c.querySelectorAll('.punts button');
+    var tira = c.classList.contains('tira');
     function pas() { return items.length > 1 ? items[1].offsetLeft - items[0].offsetLeft : pista.clientWidth; }
-    function actual() { return Math.round(pista.scrollLeft / pas()); }
+    function actual() { return Math.round(pista.scrollLeft / pista.clientWidth); }
     function estat() {
       var i = actual();
-      if (compta) compta.textContent = (i + 1) + '/' + items.length;
-      ant.disabled = pista.scrollLeft <= 2;
-      seg.disabled = pista.scrollLeft + pista.clientWidth >= pista.scrollWidth - 2;
+      punts.forEach(function (p, k) { p.setAttribute('aria-current', k === i ? 'true' : 'false'); });
+      if (ant) ant.hidden = pista.scrollLeft <= 2;
+      if (seg) seg.hidden = pista.scrollLeft + pista.clientWidth >= pista.scrollWidth - 2;
     }
     function ves(d) {
-      var visibles = Math.max(1, Math.floor(pista.clientWidth / pas()));
-      pista.scrollTo({ left: (actual() + d * visibles) * pas() });
+      if (tira) pista.scrollBy({ left: d * pista.clientWidth * 0.8 });
+      else pista.scrollTo({ left: (actual() + d) * pista.clientWidth });
     }
-    ant.addEventListener('click', function () { ves(-1); });
-    seg.addEventListener('click', function () { ves(1); });
+    if (ant) ant.addEventListener('click', function () { ves(-1); });
+    if (seg) seg.addEventListener('click', function () { ves(1); });
+    punts.forEach(function (p, k) { p.addEventListener('click', function () { pista.scrollTo({ left: k * pista.clientWidth }); }); });
     pista.addEventListener('keydown', function (e) {
       if (e.key === 'ArrowLeft') { e.preventDefault(); ves(-1); }
       if (e.key === 'ArrowRight') { e.preventDefault(); ves(1); }

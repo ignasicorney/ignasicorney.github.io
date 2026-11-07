@@ -15,18 +15,22 @@ aplec:
   - f: 00a45b12cbb948b3b05062f93f1750aa
     ext: jpeg
     peu: "64è Aplec de la Sardana, any 2026. (Foto: Anna Pascual Fabrellas)"
+    desc: "D'esquerra a dreta, Josep Pareta Sens i Ignasi Corney Oller"
   - f: 92938e09807443959ceb597818e0badf
     ext: png
     peu: "62è Aplec de la Sardana, any 2024. (Foto: Anna Pascual Fabrellas)"
-  - f: c95a538234044fcfbe792be3472f393b
-    ext: jpg
-    peu: "44è Aplec de la Sardana, any 2006. (Foto: Aleix Diaz Mallolis)"
+    desc: "D'esquerra a dreta, Ignasi Corney Oller, Josep Felip Johera i Josep Paretas Sens."
   - f: 0615a72092294acb9c84e498fc937c9f
     ext: jpg
     peu: "53è Aplec de la Sardana, any 2015. (Foto: Aleix Díaz Mallolis)"
   - f: a84b5eba5ec147efb3b993add6918f82
     ext: jpg
     peu: "45è Aplec de la Sardana, any 2007. (Foto: Aleix Diaz Mallolis)"
+    desc: "D'esquerra a dreta, Ignasi Corney Oller i Ramon Duran Candaler."
+  - f: c95a538234044fcfbe792be3472f393b
+    ext: jpg
+    peu: "44è Aplec de la Sardana, any 2006. (Foto: Aleix Diaz Mallolis)."
+    desc: "D'esquerra a dreta, Ramon Duran Candaler i Ignasi Corney Oller."
 debats:
   - f: a887ca33a134448a8c9ac1dcd2429348
     ext: jpg
@@ -47,6 +51,9 @@ diari_de_girona:
   - f: f2dc64487d6c4741bb4d1a4658f872c3
     ext: jpg
     peu: "Diari de Girona, 15.08.2000"
+  - f: 90abbe5587cc4d979a5b8a44ad6b2c1e
+    ext: jpg
+    peu: "Diari de Girona, 05.08.2007"
   - f: 80e05d7682164540a76794c2474293e6
     ext: jpg
     peu: "Diari de Girona, 17.09.2000"
@@ -215,9 +222,6 @@ diari_de_girona:
   - f: b8c57c3d7e2a40f387ede03ca3baeaad
     ext: jpg
     peu: "Diari de Girona, 13.05.2007"
-  - f: 90abbe5587cc4d979a5b8a44ad6b2c1e
-    ext: jpg
-    peu: "Diari de Girona, 05.08.2007"
 reportatges:
   - f: 6429803f1ee1452eb117b4b67576722a
     ext: jpg

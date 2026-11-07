@@ -1,18 +1,21 @@
-{% assign g = site.data.galeries[include.nom] %}
-<section class="carrussel{% if include.tira %} tira{% endif %}" aria-roledescription="carrussel" aria-label="{{ include.titol }}">
+{% assign g = site.data.galeries[include.nom] %}{% assign tipus = include.tipus | default: "diapos" %}
+<section class="carrussel {{ tipus }}" aria-roledescription="carrussel" aria-label="{{ include.titol }}">
   <ul class="pistes" tabindex="0">
   {% for i in g %}
     <li aria-roledescription="diapositiva" aria-label="{{ forloop.index }} de {{ g.size }}">
-      <a href="/assets/img/web/{{ i.f }}.jpg" data-original="/assets/img/originals/{{ i.f }}.{{ i.ext }}" data-peu="{{ i.peu | escape }}">
-        <img src="/assets/img/{% if include.tira %}mini{% else %}web{% endif %}/{{ i.f }}.jpg" alt="{{ i.peu | escape }}"{% unless forloop.first %} loading="lazy"{% endunless %} decoding="async">
+      <a href="/assets/img/web/{{ i.f }}.jpg" data-original="/assets/img/originals/{{ i.f }}.{{ i.ext }}" data-peu="{{ i.peu | escape }}{% if i.desc %}. {{ i.desc | escape }}{% endif %}">
+        <img src="/assets/img/{% if tipus == 'tira' %}mini{% else %}web{% endif %}/{{ i.f }}.jpg" alt="{{ i.peu | escape }}"{% unless forloop.first %} loading="lazy"{% endunless %} decoding="async">
       </a>
-      {% unless include.tira %}<p class="peu-foto">{{ i.peu }}</p>{% endunless %}
+      {% if tipus == "diapos" %}
+      <div class="sobre"><p><span class="t">{{ i.peu }}</span>{% if i.desc %}<span class="d">{{ i.desc }}</span>{% endif %}</p><span class="compta">{{ forloop.index }}/{{ g.size }}</span></div>
+      {% endif %}
     </li>
   {% endfor %}
   </ul>
-  <div class="controls">
-    <button type="button" class="ant" aria-label="Anterior">‹</button>
-    {% unless include.tira %}<span class="compta" aria-live="polite">1/{{ g.size }}</span>{% endunless %}
-    <button type="button" class="seg" aria-label="Següent">›</button>
-  </div>
+  {% if tipus == "portada" %}
+  <div class="punts">{% for i in g %}<button type="button" aria-label="Imatge {{ forloop.index }}"></button>{% endfor %}</div>
+  {% else %}
+  <button type="button" class="fletxa ant" aria-label="Anterior"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 4 7 12l8 8"/></svg></button>
+  <button type="button" class="fletxa seg" aria-label="Següent"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 4 8 8-8 8"/></svg></button>
+  {% endif %}
 </section>
