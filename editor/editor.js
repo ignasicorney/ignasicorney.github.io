@@ -167,7 +167,7 @@ function composaFitxer(a) {
 const PERMESOS = { P: "p", H2: "h2", H3: "h3", B: "b", STRONG: "b", I: "i", EM: "i", U: "u", A: "a", UL: "ul", OL: "ol", LI: "li", BR: "br", BLOCKQUOTE: "blockquote" };
 function netejaHtml(arrel) {
   const fora = n => {
-    if (n.nodeType === 3) return esc(n.textContent).replace(/&#x27;/g, "'");
+    if (n.nodeType === 3) return n.textContent.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
     if (n.nodeType !== 1) return "";
     let dins = Array.from(n.childNodes).map(fora).join("");
     const st = n.getAttribute("style") || "";
