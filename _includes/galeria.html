@@ -1,6 +1,0 @@
-{% assign g = site.data.galeries[include.nom] %}
-<ul class="galeria{% if include.classe %} {{ include.classe }}{% endif %}" aria-label="{{ include.titol }}">
-{% for i in g %}
-  <li><a href="/assets/img/web/{{ i.f }}.jpg" data-original="/assets/img/originals/{{ i.f }}.{{ i.ext }}" data-peu="{{ i.peu | escape }}"><img src="/assets/img/mini/{{ i.f }}.jpg" alt="{{ i.peu | escape }}" loading="lazy" decoding="async">{% if include.peus %}<span>{{ i.peu | remove: "Diari de Girona, " }}</span>{% endif %}</a></li>
-{% endfor %}
-</ul>

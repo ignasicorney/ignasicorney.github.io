@@ -75,21 +75,4 @@
     estat();
   });
 
-  var prova = document.querySelector('.prova-colors');
-  if (prova) {
-    var html = document.documentElement;
-    function marca() {
-      prova.querySelectorAll('button').forEach(function (b) {
-        b.setAttribute('aria-pressed', b.dataset.posa === html.dataset.tema ? 'true' : 'false');
-      });
-    }
-    prova.addEventListener('click', function (e) {
-      var b = e.target.closest('button');
-      if (!b) return;
-      html.dataset.tema = b.dataset.posa;
-      try { localStorage.setItem('tema', b.dataset.posa); } catch (err) {}
-      marca();
-    });
-    marca();
-  }
 })();

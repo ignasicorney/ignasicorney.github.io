@@ -3,17 +3,17 @@ layout: default
 title: Blog
 description: Blog d'Ignasi Corney Oller.
 ---
-<h1>Blog</h1>
 {% if site.posts.size > 0 %}
 <ul class="entrades">
 {% for p in site.posts %}
   <li>
     <h2><a href="{{ p.url }}">{{ p.title }}</a></h2>
     <span class="data">{{ p.date | date: "%d.%m.%Y" }}</span>
-    {% if p.excerpt %}<p>{{ p.excerpt | strip_html | truncate: 220 }}</p>{% endif %}
+    {% assign resum = p.description | default: p.content | strip_html | strip_newlines | truncate: 240 %}
+    {% if resum != "" %}<p>{{ resum }}</p>{% endif %}
   </li>
 {% endfor %}
 </ul>
 {% else %}
-<p class="buit">Encara no hi ha entrades. Les primeres apareixeran aquí.</p>
+<p class="buit">Encara no hi ha entrades.</p>
 {% endif %}

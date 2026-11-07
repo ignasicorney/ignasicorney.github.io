@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ca" data-tema="original">
+<html lang="ca">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -19,9 +19,8 @@
 <link rel="alternate" type="application/atom+xml" title="Blog d'Ignasi Corney Oller" href="/blog/feed.xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Archivo+Narrow:wght@400;500;600&family=Open+Sans:ital,wght@0,400;0,700;1,400&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;0,6..72,700;1,6..72,400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/assets/css/estil.css?v=5">
-<script>try{var t=localStorage.getItem('tema');if(t)document.documentElement.dataset.tema=t;}catch(e){}</script>
+<link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/css/estil.css?v=6">
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"Person","name":"Ignasi Corney Oller","url":"https://ignasicorney.github.io/","jobTitle":"Periodista i docent","homeLocation":{"@type":"Place","name":"la Bisbal d'Empordà"},"sameAs":["https://x.com/ignasicorney","https://www.instagram.com/ignasicorney/"]}</script>
 </head>
 <body>
@@ -38,21 +37,17 @@
   </nav>
 </header>
 <main id="contingut">
+{% unless page.layout == "entrada" or page.url == "/" %}<h1 class="ocult">{{ page.title }}</h1>{% endunless %}{% if page.url == "/" %}<h1 class="ocult">Ignasi Corney Oller</h1>{% endif %}
 {{ content }}
 </main>
 <footer class="peu">
-  <p>© {{ site.time | date: "%Y" }} Ignasi Corney Oller</p>
+  <p>© {{ site.time | date: "%Y" }} per IGNASI CORNEY OLLER</p>
   <p class="xarxes">
     <a href="https://x.com/ignasicorney" aria-label="X (@ignasicorney)" title="X"><span class="ico" style="--ico:url(https://cdn.jsdelivr.net/npm/simple-icons@13/icons/x.svg)"></span></a>
     <a href="https://www.instagram.com/ignasicorney/" aria-label="Instagram (@ignasicorney)" title="Instagram"><span class="ico" style="--ico:url(https://cdn.jsdelivr.net/npm/simple-icons@13/icons/instagram.svg)"></span></a>
     <a href="/blog/feed.xml" aria-label="Subscripció RSS al blog" title="RSS"><span class="ico" style="--ico:url(https://cdn.jsdelivr.net/npm/simple-icons@13/icons/rss.svg)"></span></a>
   </p>
 </footer>
-<div class="prova-colors" role="group" aria-label="Prova de colors (temporal)">
-  <span>Colors:</span>
-  <button type="button" data-posa="original">Negre i vermell</button>
-  <button type="button" data-posa="vidriat">Vidriat</button>
-</div>
 <dialog class="visor" aria-label="Imatge ampliada">
   <form method="dialog"><button class="tanca" aria-label="Tanca">×</button></form>
   <figure><img alt=""><figcaption></figcaption></figure>
@@ -62,7 +57,7 @@
     <button type="button" class="seg" aria-label="Imatge següent">Següent ›</button>
   </div>
 </dialog>
-<script src="/assets/js/web.js?v=4" defer></script>
+<script src="/assets/js/web.js?v=6" defer></script>
 <script data-goatcounter="https://ignasicorney.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 </body>
 </html>
