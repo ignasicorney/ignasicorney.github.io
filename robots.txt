@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://ignasicorney.github.io/sitemap.xml

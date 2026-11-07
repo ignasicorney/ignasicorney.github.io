@@ -1,0 +1,7 @@
+- { nom: Inici, url: / }
+- { nom: Salutació, url: /salutacio/ }
+- { nom: Publicacions, url: /publicacions/ }
+- { nom: Llibres, url: /llibres/ }
+- { nom: La TdG, url: /latdg/ }
+- { nom: Vídeos, url: /videos/ }
+- { nom: Blog, url: /blog/ }

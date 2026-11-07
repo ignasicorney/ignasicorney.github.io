@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="ca" data-tema="original">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+{% if page.url == "/" %}{% assign titol = site.title %}{% else %}{% assign titol = page.title | append: " | " | append: site.title %}{% endif %}
+{% assign desc = page.description | default: page.excerpt | default: site.description | strip_html | strip_newlines | truncate: 160 %}
+<title>{{ titol }}</title>
+<meta name="description" content="{{ desc }}">
+<link rel="canonical" href="{{ page.url | absolute_url }}">
+<meta property="og:type" content="{% if page.layout == 'entrada' %}article{% else %}website{% endif %}">
+<meta property="og:site_name" content="{{ site.title }}">
+<meta property="og:title" content="{{ titol }}">
+<meta property="og:description" content="{{ desc }}">
+<meta property="og:url" content="{{ page.url | absolute_url }}">
+<meta property="og:image" content="{{ page.imatge | default: '/assets/img/web/857a7c0d54f347348a8624216aba8259.jpg' | absolute_url }}">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@ignasicorney">
+<link rel="alternate" type="application/atom+xml" title="Blog d'Ignasi Corney Oller" href="/blog/feed.xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Narrow:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;0,6..72,700;1,6..72,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/css/estil.css?v=1">
+<script>try{var t=localStorage.getItem('tema');if(t)document.documentElement.dataset.tema=t;}catch(e){}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"Person","name":"Ignasi Corney Oller","url":"https://ignasicorney.github.io/","jobTitle":"Periodista i docent","homeLocation":{"@type":"Place","name":"la Bisbal d'Empordà"},"sameAs":["https://x.com/ignasicorney","https://www.instagram.com/ignasicorney/"]}</script>
+</head>
+<body>
+<a class="salt" href="#contingut">Ves al contingut</a>
+<header class="capcal">
+  <a class="nom" href="/">Ignasi Corney Oller</a>
+  <nav aria-label="Seccions">
+    <ul>
+      {% for s in site.data.menu %}
+      {% assign actiu = false %}{% if s.url == "/" and page.url == "/" %}{% assign actiu = true %}{% elsif s.url != "/" and page.url contains s.url %}{% assign actiu = true %}{% endif %}
+      <li><a href="{{ s.url }}"{% if actiu %} aria-current="page"{% endif %}>{{ s.nom }}</a></li>
+      {% endfor %}
+    </ul>
+  </nav>
+</header>
+<main id="contingut">
+{{ content }}
+</main>
+<footer class="peu">
+  <p>© {{ site.time | date: "%Y" }} Ignasi Corney Oller</p>
+  <p><a href="https://x.com/ignasicorney">X</a> <a href="https://www.instagram.com/ignasicorney/">Instagram</a> <a href="/blog/feed.xml">Subscripció al blog</a></p>
+</footer>
+<div class="prova-colors" role="group" aria-label="Prova de colors (temporal)">
+  <span>Colors:</span>
+  <button type="button" data-posa="original">Negre i vermell</button>
+  <button type="button" data-posa="vidriat">Vidriat</button>
+</div>
+<dialog class="visor" aria-label="Imatge ampliada">
+  <form method="dialog"><button class="tanca" aria-label="Tanca">×</button></form>
+  <figure><img alt=""><figcaption></figcaption></figure>
+  <div class="visor-nav">
+    <button type="button" class="ant" aria-label="Imatge anterior">‹ Anterior</button>
+    <a class="orig" href="#" target="_blank" rel="noopener">Original</a>
+    <button type="button" class="seg" aria-label="Imatge següent">Següent ›</button>
+  </div>
+</dialog>
+<script src="/assets/js/web.js?v=1" defer></script>
+<script data-goatcounter="https://ignasicorney.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+</body>
+</html>
