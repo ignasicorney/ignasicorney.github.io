@@ -229,3 +229,34 @@ figcaption, .peu-foto {
 .prova-colors button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
 
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+
+/* Carrussels */
+.carrussel { position: relative; margin: 1.5rem 0 2.5rem; max-width: 52rem; }
+.carrussel .pistes {
+  list-style: none; margin: 0; padding: 0;
+  display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scroll-behavior: smooth;
+  scrollbar-width: none; overscroll-behavior-x: contain;
+}
+.carrussel .pistes::-webkit-scrollbar { display: none; }
+.carrussel .pistes > li { flex: 0 0 100%; scroll-snap-align: start; }
+.carrussel .pistes a { display: block; background: var(--paper-2); }
+.carrussel .pistes img { width: 100%; height: clamp(16rem, 58vw, 34rem); object-fit: contain; }
+.carrussel .peu-foto { min-height: 1.4em; }
+.carrussel .controls {
+  display: flex; align-items: center; gap: .8rem; margin-top: .4rem;
+  font-family: "Archivo Narrow", sans-serif; color: var(--muted);
+}
+.carrussel .controls button {
+  font: inherit; font-size: 1.5rem; line-height: 1; width: 2.6rem; height: 2.4rem;
+  background: var(--paper); color: var(--ink); border: 2px solid var(--ink); cursor: pointer;
+}
+.carrussel .controls button:hover { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.carrussel .controls button:disabled { opacity: .3; cursor: default; background: var(--paper); color: var(--ink); border-color: var(--ink); }
+.carrussel .compta { min-width: 3.5rem; text-align: center; font-size: 1.05rem; }
+/* Portada: el carrussel ocupa tota l'amplada */
+main > .carrussel:first-of-type { max-width: none; }
+/* Tira de reportatges: diverses miniatures alhora */
+.carrussel.tira { max-width: none; }
+.carrussel.tira .pistes { gap: .5rem; }
+.carrussel.tira .pistes > li { flex: 0 0 auto; width: clamp(9rem, 28vw, 13rem); }
+.carrussel.tira .pistes img { height: auto; aspect-ratio: 3 / 4; object-fit: cover; object-position: top; }

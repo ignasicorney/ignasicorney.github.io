@@ -1,3 +1,16 @@
+inici:
+  - f: 857a7c0d54f347348a8624216aba8259
+    ext: jpg
+    peu: "La pedregada de 31.08.2022"
+  - f: c7d3fe80367f46d3b760f6dbadf67a2a
+    ext: jpg
+    peu: "La nevada de 08.03.2010"
+  - f: b64b26bb5aed4cec9eadf92685438480
+    ext: jpg
+    peu: "Vista aèria de la Bisbal des d'un globus aerostàtic, 27.08.2015"
+  - f: d64e978645ca43498a7e02f0cd2fb73b
+    ext: jpg
+    peu: "Un autobús de la Sarfa al c. Sis d'octubre de 1869, 06.06.2006"
 aplec:
   - f: 00a45b12cbb948b3b05062f93f1750aa
     ext: jpeg

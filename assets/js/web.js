@@ -42,6 +42,35 @@
     });
   }
 
+  // Carrussels: fletxes, comptador i teclat (el lliscament el fa el navegador)
+  document.querySelectorAll('.carrussel').forEach(function (c) {
+    var pista = c.querySelector('.pistes');
+    var items = pista.children;
+    var compta = c.querySelector('.compta');
+    var ant = c.querySelector('.ant'), seg = c.querySelector('.seg');
+    function pas() { return items.length > 1 ? items[1].offsetLeft - items[0].offsetLeft : pista.clientWidth; }
+    function actual() { return Math.round(pista.scrollLeft / pas()); }
+    function estat() {
+      var i = actual();
+      if (compta) compta.textContent = (i + 1) + '/' + items.length;
+      ant.disabled = pista.scrollLeft <= 2;
+      seg.disabled = pista.scrollLeft + pista.clientWidth >= pista.scrollWidth - 2;
+    }
+    function ves(d) {
+      var visibles = Math.max(1, Math.floor(pista.clientWidth / pas()));
+      pista.scrollTo({ left: (actual() + d * visibles) * pas() });
+    }
+    ant.addEventListener('click', function () { ves(-1); });
+    seg.addEventListener('click', function () { ves(1); });
+    pista.addEventListener('keydown', function (e) {
+      if (e.key === 'ArrowLeft') { e.preventDefault(); ves(-1); }
+      if (e.key === 'ArrowRight') { e.preventDefault(); ves(1); }
+    });
+    var t; pista.addEventListener('scroll', function () { clearTimeout(t); t = setTimeout(estat, 60); }, { passive: true });
+    window.addEventListener('resize', estat);
+    estat();
+  });
+
   var prova = document.querySelector('.prova-colors');
   if (prova) {
     var html = document.documentElement;
