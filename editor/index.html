@@ -1,0 +1,105 @@
+---
+layout: null
+sitemap: false
+permalink: /editor/
+---
+<!doctype html>
+<html lang="ca">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light only">
+<meta name="robots" content="noindex, nofollow">
+<title>Editor del web</title>
+<link rel="stylesheet" href="/editor/editor.css?v=1">
+</head>
+<body>
+<header>
+  <div class="capcalera">
+    <h1>✏️ Editor del web</h1>
+    <a class="dreta" href="/" target="_blank" rel="noopener">Obre el web ↗</a>
+  </div>
+  <p class="sub">Seccions i blog d'ignasicorney.github.io. En desar, els canvis es publiquen en un o dos minuts.</p>
+</header>
+
+<main>
+  <section id="clauBox">
+    <h2>🔒 Clau</h2>
+    <div class="fila" style="margin-top:10px">
+      <input type="password" id="clau" placeholder="Clau de GitHub (github_pat_…)" autocomplete="current-password" size="34">
+      <button type="button" id="entra">Entra</button>
+      <label class="fila" style="gap:6px"><input type="checkbox" id="recorda" checked> Recorda-la en aquest navegador</label>
+    </div>
+    <p class="font" id="clauEstat"></p>
+    <details class="font">
+      <summary>Com aconsegueixo la clau?</summary>
+      <ol>
+        <li>Entra a GitHub amb el compte <b>ignasicorney</b> i obre <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">aquesta pàgina</a>.</li>
+        <li>Nom: «Editor del web». Caducitat: la més llarga que et deixi.</li>
+        <li>A «Repository access», tria <b>Only select repositories</b> i marca <b>ignasicorney.github.io</b>.</li>
+        <li>A «Permissions → Repository permissions», posa <b>Contents</b> a <b>Read and write</b>.</li>
+        <li>Clica «Generate token», copia la clau i enganxa-la aquí. Si la marques per recordar, no te la tornarà a demanar en aquest navegador.</li>
+      </ol>
+    </details>
+  </section>
+
+  <div id="panell" hidden>
+    <section class="tria">
+      <label class="fila" style="gap:8px">📄 Què vols editar?
+        <select id="quin"></select>
+      </label>
+      <button type="button" class="suau" id="novaEntrada">➕ Entrada nova al blog</button>
+    </section>
+
+    <section id="meta">
+      <div class="graella">
+        <label>Títol <input type="text" id="titol"></label>
+        <label id="dataBox">Data <input type="date" id="data"></label>
+      </div>
+      <label>Descripció per a Google i les xarxes (opcional) <input type="text" id="descripcio" maxlength="200"></label>
+      <p class="font" id="metaNota"></p>
+    </section>
+
+    <div id="blocs"></div>
+
+    <section class="afegeix">
+      <span>Afegeix al final:</span>
+      <button type="button" class="suau" data-nou="text">📝 Text</button>
+      <button type="button" class="suau" data-nou="imatges">🖼️ Imatges</button>
+      <button type="button" class="suau" data-nou="carrussel">🎞️ Carrussel</button>
+      <button type="button" class="suau" data-nou="video">▶️ Vídeo</button>
+    </section>
+
+    <section id="perill" hidden>
+      <button type="button" class="perill" id="esborraEntrada">🗑️ Esborra aquesta entrada</button>
+    </section>
+  </div>
+</main>
+
+<div class="peu" id="peu" hidden>
+  <div class="dins">
+    <span id="estat"></span>
+    <a id="veure" href="/" target="_blank" rel="noopener">Veure la pàgina ↗</a>
+    <button type="button" id="desa" disabled>💾 Desa i publica</button>
+  </div>
+</div>
+
+<template id="tplEines">
+  <div class="eines">
+    <button type="button" data-ordre="bold" title="Negreta (Ctrl+B)"><b>N</b></button>
+    <button type="button" data-ordre="italic" title="Cursiva (Ctrl+I)"><i>C</i></button>
+    <button type="button" data-ordre="underline" title="Subratllat (Ctrl+U)"><u>S</u></button>
+    <button type="button" data-ordre="enllac" title="Enllaç">🔗</button>
+    <button type="button" data-ordre="h2" title="Títol de secció">Títol</button>
+    <button type="button" data-ordre="h3" title="Subtítol">Subtítol</button>
+    <button type="button" data-ordre="p" title="Paràgraf normal">¶</button>
+    <button type="button" data-ordre="insertUnorderedList" title="Llista">• Llista</button>
+    <button type="button" data-ordre="cita" title="Cita">❝</button>
+    <button type="button" data-ordre="removeFormat" title="Treu el format del text seleccionat">✕ format</button>
+  </div>
+</template>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.1.0/js-yaml.min.js"></script>
+<script src="/editor/editor.js?v=1"></script>
+</body>
+</html>
