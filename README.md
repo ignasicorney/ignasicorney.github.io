@@ -2,19 +2,16 @@
 
 Web personal d'Ignasi Corney Oller, publicat amb GitHub Pages (Jekyll).
 
-## Escriure una entrada al blog
+## Editar el web
 
-Crea un fitxer a la carpeta `_posts` amb el nom `AAAA-MM-DD-titol-curt.md`, per exemple `2026-11-08-primera-entrada.md`, amb aquest començament:
+L'editor és a https://ignasicorney.github.io/editor/ (no surt a Google). Demana una clau de GitHub del compte ignasicorney amb permís «Contents: Read and write» sobre aquest repositori. Hi pots:
 
-```
----
-title: "Títol de l'entrada"
----
+- editar el text de cada secció (negreta, cursiva, subratllat, enllaços, títols, llistes, cites);
+- pujar, baixar, afegir o treure blocs de text, imatges, carrussels i vídeos;
+- pujar imatges noves o canviar-les (es redueixen soles) i triar-ne posició, mida i cantonades;
+- escriure, editar i esborrar entrades del blog.
 
-Text de l'entrada. Un paràgraf per línia en blanc.
-```
-
-En un parell de minuts surt a ignasicorney.github.io/blog/.
+Les pàgines són fetes de blocs `<!-- bloc:tipus {…} -->` … `<!-- /bloc -->`. L'HTML de cada bloc el generen `editor/editor.js` i `_eines/blocs.py`, que han de fer el mateix.
 
 ## Imatges
 
