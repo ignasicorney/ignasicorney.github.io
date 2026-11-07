@@ -43,6 +43,20 @@ a:hover { text-decoration-thickness: 2px; }
 .capcal nav a[aria-current="page"] { border-top: 4px solid var(--text); padding-top: calc(.7rem - 3px); }
 .capcal nav a[href="/latdg/"] { text-transform: none; }
 
+/* Mòbil (07.11.2026): nom en una línia i menú en graella de 4 columnes (Publicacions ocupa dues caselles),
+   sense ratlles a cada botó; només una ratlla vermella sota l'apartat actiu. L'ordinador no canvia. */
+@media (max-width: 600px) {
+  .capcal { gap: 1.1rem; }
+  .nom { font-size: min(5.6vw, 1.5rem); max-width: none; white-space: nowrap; }
+  .capcal nav { width: 100%; }
+  .capcal nav ul { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .25rem 0; font-size: .8rem; }
+  .capcal nav li:nth-child(3) { grid-column: span 2; }
+  .capcal nav a,
+  .capcal nav a:hover,
+  .capcal nav a[aria-current="page"] { border-top: 0; border-bottom: 2px solid transparent; padding: .55rem 0 .4rem; min-width: 0; white-space: nowrap; }
+  .capcal nav a[aria-current="page"] { border-bottom-color: var(--vermell); }
+}
+
 /* Cos */
 main { max-width: 68rem; margin: 0 auto; padding: 2.5rem 1rem 4rem; }
 .text { max-width: 58rem; margin: 0 auto; }
