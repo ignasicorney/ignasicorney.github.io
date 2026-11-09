@@ -73,6 +73,24 @@
     pista.querySelectorAll('img').forEach(function (im) { if (!im.complete) im.addEventListener('load', estat); });
     window.addEventListener('load', estat);
     estat();
+
+    // Portada: passa sola a la imatge següent cada 5 segons, com al Wix
+    // (s'atura mentre el ratolí és a sobre o es toca, i quan la pestanya no es veu)
+    if (c.classList.contains('portada') && items.length > 1) {
+      var aturat = false, rellotge = null;
+      function endavant() {
+        if (aturat || document.hidden) return;
+        var i = (actual() + 1) % items.length;
+        pista.scrollTo({ left: i * pista.clientWidth });
+      }
+      function engega() { clearInterval(rellotge); rellotge = setInterval(endavant, 5000); }
+      c.addEventListener('mouseenter', function () { aturat = true; });
+      c.addEventListener('mouseleave', function () { aturat = false; engega(); });
+      pista.addEventListener('touchstart', function () { aturat = true; }, { passive: true });
+      pista.addEventListener('touchend', function () { aturat = false; engega(); }, { passive: true });
+      punts.forEach(function (p) { p.addEventListener('click', engega); });
+      engega();
+    }
   });
 
 })();
