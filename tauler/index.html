@@ -396,6 +396,114 @@ dialog .check{display:flex;gap:8px;align-items:center;color:var(--text);font-siz
     ["2026-11-13", "14:00", "15:00", "Guàrdia", "", "altres"],
     ["2026-11-13", "16:30", "17:30", "Trampolí", "", "altres"]
   ];
+  // Actes previstos del curs (CALENDARI_CURS_26-27.pdf): [inici, fi, títol, tipus, hora, hora de final]
+  const SEMBRA_ACTES = [
+    ["2026-09-01", "", "Claustre de benvinguda", "claustre"],
+    ["2026-09-03", "", "Reunió de famílies de 1r d'ESO", "tutoria"],
+    ["2026-09-15", "2026-09-16", "Prova diagnòstica de cicles", "examen"],
+    ["2026-09-15", "", "Reunió de famílies de 2n, 3r i 4t d'ESO", "tutoria"],
+    ["2026-09-22", "", "Reunió de famílies de batxillerat", "tutoria"],
+    ["2026-09-22", "", "Reunió de famílies de cicles", "tutoria"],
+    ["2026-09-28", "", "Claustre pedagògic de cicles", "claustre"],
+    ["2026-09-29", "", "Claustre pedagògic", "claustre"],
+    ["2026-10-06", "", "Reunió de departament", "claustre"],
+    ["2026-10-13", "", "ED de batxillerat", "claustre"],
+    ["2026-10-16", "", "Sortida de tutoria", "sortida"],
+    ["2026-10-19", "2026-10-20", "ED de 1r d'ESO: avaluació inicial", "claustre"],
+    ["2026-10-20", "", "ED de 3r d'ESO", "claustre", "16:00", "17:00"],
+    ["2026-10-27", "", "ED de 2n d'ESO", "claustre", "16:00", "17:00"],
+    ["2026-10-27", "", "ED de 4t d'ESO", "claustre", "17:00", "18:00"],
+    ["2026-11-03", "", "ED de batxillerat", "claustre"],
+    ["2026-11-09", "2026-11-10", "Compleció de cicles", "altres"],
+    ["2026-11-09", "2026-11-13", "Setmana de la Ciència", "sortida"],
+    ["2026-11-10", "", "ED de 1r d'ESO", "claustre", "16:00", "17:00"],
+    ["2026-11-10", "", "ED de 3r d'ESO", "claustre", "17:00", "18:00"],
+    ["2026-11-17", "", "ED de 4t d'ESO", "claustre", "16:00", "17:00"],
+    ["2026-11-17", "", "ED de 2n d'ESO", "claustre", "17:00", "18:00"],
+    ["2026-11-23", "", "Avaluació de cicles de grau mitjà", "examen"],
+    ["2026-11-24", "", "Reunió de caps de departament", "claustre"],
+    ["2026-11-26", "", "1a avaluació de 2n de batxillerat", "examen"],
+    ["2026-12-01", "", "Reunió de departament", "claustre"],
+    ["2026-12-04", "", "Fi del 1r trimestre", "altres"],
+    ["2026-12-09", "2026-12-11", "Servei comunitari de 4t", "sortida"],
+    ["2026-12-09", "2026-12-10", "1a avaluació d'ESO i 1r de batxillerat", "examen"],
+    ["2026-12-14", "2026-12-15", "1a avaluació d'ESO i 1r de batxillerat", "examen"],
+    ["2026-12-14", "2026-12-16", "Recuperació de 1r de batxillerat", "examen"],
+    ["2026-12-16", "2026-12-18", "Projecte de recerca / Crèdit de síntesi", "sortida"],
+    ["2026-12-17", "", "Claustre", "claustre"],
+    ["2026-12-21", "", "Entrega de notes", "examen"],
+    ["2026-12-21", "", "Sortida de cicles", "sortida"],
+    ["2026-12-21", "", "Activitat de batxillerat", "sortida"],
+    ["2027-01-08", "", "Inici de classes", "altres"],
+    ["2027-01-12", "", "ED de batxillerat", "claustre"],
+    ["2027-01-14", "", "Entrega dels treballs de recerca", "examen"],
+    ["2027-01-19", "", "ED de 1r d'ESO", "claustre"],
+    ["2027-01-26", "", "ED de 2n d'ESO", "claustre"],
+    ["2027-02-01", "", "Avaluació de cicles de grau superior", "examen"],
+    ["2027-02-01", "", "ED de 4t d'ESO", "claustre"],
+    ["2027-02-02", "", "ED de 3r d'ESO", "claustre"],
+    ["2027-02-09", "2027-02-11", "Recuperacions d'ESO", "examen"],
+    ["2027-02-16", "2027-02-17", "Exposició del treball de recerca de 2n de batxillerat", "examen"],
+    ["2027-02-23", "", "Reunió de caps de departament", "claustre"],
+    ["2027-02-25", "", "2a avaluació de 2n de batxillerat", "examen"],
+    ["2027-03-02", "", "Reunió de departament", "claustre"],
+    ["2027-03-08", "", "Claustre", "claustre"],
+    ["2027-03-09", "2027-03-10", "Saló dels Oficis", "sortida"],
+    ["2027-03-09", "", "Claustre pedagògic", "claustre"],
+    ["2027-03-12", "", "Fi de classes del 2n trimestre", "altres"],
+    ["2027-03-15", "", "Avaluació de cicles de grau mitjà", "examen"],
+    ["2027-03-15", "2027-03-18", "2a avaluació d'ESO i 1r de batxillerat", "examen"],
+    ["2027-03-17", "2027-03-19", "Projecte de recerca / Crèdit de síntesi", "sortida"],
+    ["2027-03-18", "", "Proves Cangur", "sortida"],
+    ["2027-03-19", "", "Entrega de notes de cicles", "examen"],
+    ["2027-03-30", "", "Claustre", "claustre"],
+    ["2027-04-06", "2027-04-08", "Servei comunitari de 4t", "sortida"],
+    ["2027-04-06", "", "Reunió de departament", "claustre"],
+    ["2027-04-13", "", "ED de 3r d'ESO", "claustre"],
+    ["2027-04-15", "2027-04-16", "Avaluació final d'etapa de 4t d'ESO", "examen"],
+    ["2027-04-15", "", "Dia Internacional de l'Art", "sortida"],
+    ["2027-04-20", "", "ED de 1r d'ESO", "claustre"],
+    ["2027-04-22", "", "Celebració de Sant Jordi", "sortida"],
+    ["2027-04-26", "2027-04-28", "Avaluació diagnòstica de 2n d'ESO", "examen"],
+    ["2027-04-27", "", "ED de 2n de batxillerat", "claustre"],
+    ["2027-04-29", "", "Obra d'arts escèniques de 2n de batxillerat", "sortida"],
+    ["2027-05-04", "", "ED de 2n d'ESO", "claustre"],
+    ["2027-05-07", "", "2n de batxillerat finalitza les classes", "altres"],
+    ["2027-05-10", "2027-05-12", "Recuperació de 2n de batxillerat", "examen"],
+    ["2027-05-11", "", "ED de 4t d'ESO", "claustre"],
+    ["2027-05-13", "", "Avaluació final ordinària de 2n de batxillerat", "examen"],
+    ["2027-05-14", "", "Entrega de notes de 2n de batxillerat", "examen"],
+    ["2027-05-18", "", "ED de 1r de batxillerat", "claustre"],
+    ["2027-05-18", "", "Inici del repàs de selectivitat", "altres"],
+    ["2027-05-20", "", "Obra d'arts escèniques de 1r de batxillerat", "sortida"],
+    ["2027-05-21", "", "Acte de final d'etapa de 2n de batxillerat", "sortida"],
+    ["2027-05-28", "", "Fi de classes de cicles", "altres"],
+    ["2027-05-31", "2027-06-01", "Avaluació de cicles", "examen"],
+    ["2027-05-31", "", "Fi del repàs de selectivitat", "altres"],
+    ["2027-06-01", "2027-06-03", "Proves PAU", "examen"],
+    ["2027-06-01", "2027-06-03", "Recuperació de 2n de batxillerat", "examen"],
+    ["2027-06-02", "2027-06-04", "Classes de repàs de cicles", "altres"],
+    ["2027-06-04", "", "Entrega de notes de cicles", "examen"],
+    ["2027-06-04", "", "Acte de final d'etapa de cicles", "sortida"],
+    ["2027-06-07", "2027-06-11", "Recuperacions de cicles", "examen"],
+    ["2027-06-07", "", "Avaluació extraordinària de 2n de batxillerat", "examen"],
+    ["2027-06-08", "", "Avaluació final de 4t d'ESO", "examen"],
+    ["2027-06-09", "", "Fi de 1r de batxillerat", "altres"],
+    ["2027-06-09", "", "Avaluació final de 1r de batxillerat", "examen"],
+    ["2027-06-10", "", "Entrega de notes de 1r de batxillerat", "examen"],
+    ["2027-06-10", "", "Avaluació final de 4t d'ESO", "examen"],
+    ["2027-06-11", "", "Repàs de 1r de batxillerat", "altres"],
+    ["2027-06-14", "2027-06-15", "Avaluació extraordinària de cicles", "examen"],
+    ["2027-06-14", "2027-06-15", "Avaluació final d'ESO", "examen"],
+    ["2027-06-14", "", "Repàs de 1r de batxillerat", "altres"],
+    ["2027-06-15", "2027-06-18", "Recuperació de 1r de batxillerat", "examen"],
+    ["2027-06-18", "", "Entrega de notes de cicles", "examen"],
+    ["2027-06-21", "2027-06-22", "Avaluació final d'ESO", "examen"],
+    ["2027-06-21", "", "Acte de final d'etapa de 4t", "sortida"],
+    ["2027-06-22", "", "Avaluació extraordinària de 1r de batxillerat", "examen"],
+    ["2027-06-23", "", "Entrega de notes", "examen"],
+    ["2027-06-30", "", "Claustre de final de curs", "claustre"]
+  ];
   // Dates pròpies de l'institut: entren com a activitats editables la primera vegada que s'obre l'Institut
   const SEMBRA_INS = [
     { d: "2026-09-14", t: "Inici de curs dels cicles formatius", tipus: "altres" },
@@ -453,6 +561,7 @@ dialog .check{display:flex;gap:8px;align-items:center;color:var(--text);font-siz
       if (typeof d.notes === "string") r.notes = d.notes;
       if (typeof d.sembrat === "string") r.sembrat = d.sembrat;
       if (typeof d.sembratHorari === "string") r.sembratHorari = d.sembratHorari;
+      if (typeof d.sembratActes === "string") r.sembratActes = d.sembratActes;
       if (Array.isArray(d.tasques)) r.tasques = d.tasques.filter(t => t && typeof t.text === "string");
       if (d.correu && Array.isArray(d.correu.comptes)) r.correu = { comptes: d.correu.comptes.filter(c => c && c.url) };
       if (d.qualificacions && Array.isArray(d.qualificacions.grups)) r.qualificacions = d.qualificacions;
@@ -501,6 +610,14 @@ dialog .check{display:flex;gap:8px;align-items:center;color:var(--text);font-siz
             dades.activitats.push({ id: nouId(), titol: t, tipus: tipus, lloc: lloc, data: d, fins: "", hora: hi, horaFi: hf, repeteix: true, repFins: FI_CURS, excepcions: [], notes: "" });
         });
         dades.sembratHorari = "xtec-2026-11-10";
+        desa();
+      }
+      if (dades.sembratActes !== "actes-2026-2027") {
+        SEMBRA_ACTES.forEach(([d, f, t, tipus, hi, hf]) => {
+          if (!dades.activitats.some(a => a.data === d && a.titol === t))
+            dades.activitats.push({ id: nouId(), titol: t, tipus: tipus, lloc: "", data: d, fins: f || "", hora: hi || "", horaFi: hf || "", repeteix: false, repFins: "", excepcions: [], notes: "" });
+        });
+        dades.sembratActes = "actes-2026-2027";
         desa();
       }
       return "ok";
