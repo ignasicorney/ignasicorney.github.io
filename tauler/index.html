@@ -62,6 +62,9 @@ h3.bt{margin:0 0 8px;font-size:1rem;text-transform:uppercase}
 .taula td.ed:hover{outline:1px solid var(--accent);outline-offset:-1px}
 .taula td.txt{max-width:220px;overflow:hidden;text-overflow:ellipsis;text-align:left}
 .taula td.nomal{cursor:pointer}
+.taula td.psi{color:#c0001a;font-weight:600}
+.marca-al{display:inline-block;font-size:.68rem;font-weight:700;border:1px solid currentColor;border-radius:4px;padding:0 3px;margin-left:3px;color:var(--suau);vertical-align:1px}
+.marca-al.psi{color:#c0001a}
 .celaed{width:5.5em;font:inherit;padding:2px 4px;border:1px solid var(--accent);border-radius:4px;text-align:right}
 td.txt .celaed{width:16em;text-align:left}
 .formules{border:1px solid var(--linia);border-radius:10px;padding:10px;margin-bottom:10px;background:#faf9f6}
@@ -943,7 +946,7 @@ dialog .check{display:flex;gap:8px;align-items:center;color:var(--text);font-siz
     }
     if (f) {
       h += '<div class="taula"><table><thead><tr><th>Alumne</th>' + f.columnes.map(c => "<th" + (c.tipus === "calc" ? ' class="calc" title="' + esc(c.formula) + '"' : "") + ">" + esc(c.nom) + (desquadres[c.nom] ? " ⚠️" : "") + "</th>").join("") + "</tr></thead><tbody>" +
-        (files.map(r => '<tr><td class="nomal" data-alumne="' + esc(r.nom) + '">' + esc(r.nom) + "</td>" + f.columnes.map(c => {
+        (files.map(r => { const psi = (g.psi || []).includes(r.nom), dis = /\sDIS$/i.test(r.nom); return '<tr><td class="nomal' + (psi ? " psi" : "") + '" data-alumne="' + esc(r.nom) + '" title="' + (psi ? "PSI" : "") + (psi && dis ? " · " : "") + (dis ? "Dislèxia" : "") + '">' + esc(dis ? r.nom.replace(/\s+DIS$/i, "") : r.nom) + (psi ? ' <span class="marca-al psi">PSI</span>' : "") + (dis ? ' <span class="marca-al">DIS</span>' : "") + "</td>" + f.columnes.map(c => {
           const v = valor(f, r, c), txt = mostraValor(v);
           if (c.tipus === "calc") {
             const n = numOpcional(v), ok = coincideix(v, r.o && r.o[c.nom]);
@@ -951,7 +954,7 @@ dialog .check{display:flex;gap:8px;align-items:center;color:var(--text);font-siz
             return '<td class="' + cls.join(" ") + '"' + (ok ? "" : ' title="A l\'Excel: ' + esc(r.o[c.nom]) + '"') + ">" + esc(txt) + (ok ? "" : " ⚠️") + "</td>";
           }
           return '<td class="ed' + (c.tipus === "text" ? " txt" : "") + '" data-alumne="' + esc(r.nom) + '" data-c="' + esc(c.nom) + '" title="' + esc(txt) + '">' + esc(txt) + "</td>";
-        }).join("") + "</tr>").join("") || '<tr><td colspan="' + (f.columnes.length + 1) + '" class="buit">Cap alumne no coincideix.</td></tr>') +
+        }).join("") + "</tr>"; }).join("") || '<tr><td colspan="' + (f.columnes.length + 1) + '" class="buit">Cap alumne no coincideix.</td></tr>') +
         "</tbody></table></div><p class=\"font\">" + files.length + " alumnes · toca una nota per canviar-la; toca el nom per canviar-lo o esborrar l'alumne.</p>";
     }
     cos.innerHTML = h;
@@ -1031,10 +1034,19 @@ dialog .check{display:flex;gap:8px;align-items:center;color:var(--text);font-siz
     const g = grupActual(), f = fullActual(g);
     if (nomal && g) {
       const vell = nomal.dataset.alumne;
-      const nou = prompt("Nom de l'alumne (deixa-ho buit per esborrar-lo de tots els fulls del grup):", vell);
+      const nou = prompt("Nom de l'alumne. Afegeix «DIS» al final si té dislèxia. Deixa-ho buit per esborrar-lo de tots els fulls del grup:", vell);
       if (nou === null) return;
-      if (!nou.trim()) { if (confirm("Vols esborrar «" + vell + "» i totes les seves notes del grup " + g.nom + "?")) g.fulls.forEach(fu => { fu.files = fu.files.filter(r => r.nom !== vell); }); }
-      else g.fulls.forEach(fu => fu.files.forEach(r => { if (r.nom === vell) r.nom = nou.trim(); }));
+      g.psi = g.psi || [];
+      if (!nou.trim()) {
+        if (confirm("Vols esborrar «" + vell + "» i totes les seves notes del grup " + g.nom + "?")) { g.fulls.forEach(fu => { fu.files = fu.files.filter(r => r.nom !== vell); }); g.psi = g.psi.filter(n => n !== vell); }
+      } else {
+        const net = nou.trim().replace(/\s+dis$/i, " DIS");
+        g.fulls.forEach(fu => fu.files.forEach(r => { if (r.nom === vell) r.nom = net; }));
+        const teniaPsi = g.psi.includes(vell);
+        const psi = confirm("«" + net + "» té un PSI (nom en vermell)?\n\nD'acord = sí · Cancel·la = no" + (teniaPsi ? "\n(Ara en té.)" : ""));
+        g.psi = g.psi.filter(n => n !== vell && n !== net);
+        if (psi) g.psi.push(net);
+      }
       desa(); pintaAlumnes(); return;
     }
     const q = ev.target.closest("[data-q]"); if (!q) return;
@@ -1100,7 +1112,6 @@ dialog .check{display:flex;gap:8px;align-items:center;color:var(--text);font-siz
     for (let r = cap + 1; r <= rang.e.r; r++) {
       const nom = String(val(cela(r, 0)) || "").trim();
       if (!nom) { if (files.length) break; else continue; }
-      if (!nom.includes(",")) { if (files.length) break; else continue; }
       files.push({ r, nom });
     }
     return { cap, cols, files, cela, val };
@@ -1147,6 +1158,45 @@ dialog .check{display:flex;gap:8px;align-items:center;color:var(--text);font-siz
       await importaFitxers(fitxers);
     } catch (e) { pintaAlumnes(); $("alumCos").insertAdjacentHTML("afterbegin", '<p class="avis">No s\'ha pogut importar de Drive: ' + esc(e.message) + "</p>"); }
   }
+  // Noms de la columna A escrits en vermell (marca de PSI), llegint l'estil de l'Excel
+  async function nomsEnVermell(buf) {
+    const noms = new Set();
+    try {
+      await carregaScript("https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js", () => window.JSZip);
+      const zip = await window.JSZip.loadAsync(buf);
+      const xml = async c => { const f = zip.file(c); return f ? new DOMParser().parseFromString(await f.async("string"), "application/xml") : null; };
+      const est = await xml("xl/styles.xml"); if (!est) return noms;
+      const tots = (doc, tag) => Array.from(doc.getElementsByTagName(tag));
+      const fonts = tots(est, "fonts")[0] ? tots(tots(est, "fonts")[0], "font") : [];
+      const vermella = fonts.map(fo => {
+        const c = fo.getElementsByTagName("color")[0]; if (!c) return false;
+        const rgb = c.getAttribute("rgb"), idx = c.getAttribute("indexed");
+        if (idx === "10" || idx === "2") return true;
+        if (!rgb) return false;
+        const h = rgb.slice(-6), r = parseInt(h.slice(0, 2), 16), g = parseInt(h.slice(2, 4), 16), b = parseInt(h.slice(4, 6), 16);
+        return r >= 160 && g <= 90 && b <= 90;
+      });
+      const xfs = tots(est, "cellXfs")[0] ? tots(tots(est, "cellXfs")[0], "xf").map(x => vermella[Number(x.getAttribute("fontId") || 0)] || false) : [];
+      const wbx = await xml("xl/workbook.xml"), rels = await xml("xl/_rels/workbook.xml.rels");
+      if (!wbx || !rels) return noms;
+      const rutes = {}; tots(rels, "Relationship").forEach(r => { rutes[r.getAttribute("Id")] = r.getAttribute("Target"); });
+      for (const fu of tots(wbx, "sheet")) {
+        const rid = fu.getAttribute("r:id") || fu.getAttributeNS("http://schemas.openxmlformats.org/officeDocument/2006/relationships", "id");
+        let ruta = rutes[rid]; if (!ruta) continue;
+        ruta = ruta.replace(/^\/?(xl\/)?/, "xl/");
+        const doc = await xml(ruta); if (!doc) continue;
+        const cadenes = await xml("xl/sharedStrings.xml");
+        const ss = cadenes ? tots(cadenes, "si").map(si => tots(si, "t").map(t => t.textContent).join("")) : [];
+        tots(doc, "c").forEach(c => {
+          if (!/^A\d+$/.test(c.getAttribute("r") || "") || !xfs[Number(c.getAttribute("s") || 0)]) return;
+          const v = c.getElementsByTagName("v")[0], is = c.getElementsByTagName("is")[0];
+          const text = c.getAttribute("t") === "s" && v ? ss[Number(v.textContent)] : is ? tots(is, "t").map(t => t.textContent).join("") : v ? v.textContent : "";
+          if (text && text.trim()) noms.add(text.trim());
+        });
+      }
+    } catch (e) { /* si no es pot llegir l'estil, s'importa igualment sense les marques */ }
+    return noms;
+  }
   async function importaFitxers(fitxers) {
     if (!fitxers.length) return;
     const estat = t => { const el = $("alumCos").querySelector(".font") || $("alumCos"); el.insertAdjacentHTML("beforebegin", '<p class="avis" style="color:var(--suau)">' + esc(t) + "</p>"); };
@@ -1167,6 +1217,7 @@ dialog .check{display:flex;gap:8px;align-items:center;color:var(--text);font-siz
       const q = Q(); let nous = 0, avisos = [];
       for (const ll of llibres) {
         const wb = XLSX.read(ll.buf, { type: "array", cellFormula: true, sheetStubs: true });
+        const vermells = await nomsEnVermell(ll.buf);
         const nomGrup = ll.nom.replace(/\.xlsx?$/i, "").trim();
         const llegits = {};
         wb.SheetNames.forEach(n => { llegits[n] = llegeixFull(XLSX, wb.Sheets[n]); });
@@ -1198,8 +1249,9 @@ dialog .check{display:flex;gap:8px;align-items:center;color:var(--text);font-siz
         });
         if (!fulls.length) { avisos.push(ll.nom + ": no s'hi ha trobat cap llista d'alumnes"); continue; }
         const i = q.grups.findIndex(x => x.nom.toLowerCase() === nomGrup.toLowerCase());
-        if (i >= 0) { if (!confirm("El grup «" + nomGrup + "» ja hi és. Vols substituir-lo pel de l'Excel? (Es perdran els canvis fets aquí.)")) continue; q.grups[i] = { nom: nomGrup, fulls }; }
-        else q.grups.push({ nom: nomGrup, fulls });
+        const psi = Array.from(new Set(fulls.reduce((a, fu) => a.concat(fu.files.map(x => x.nom)), []).filter(n => vermells.has(n))));
+        if (i >= 0) { if (!confirm("El grup «" + nomGrup + "» ja hi és. Vols substituir-lo pel de l'Excel? (Es perdran els canvis fets aquí.)")) continue; q.grups[i] = { nom: nomGrup, fulls, psi }; }
+        else q.grups.push({ nom: nomGrup, fulls, psi });
         nous++;
       }
       q.grups.sort((a, b) => a.nom.localeCompare(b.nom, "ca", { numeric: true }));
