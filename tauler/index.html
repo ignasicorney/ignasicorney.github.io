@@ -105,7 +105,7 @@ ul.tasques button{background:none;border:0;color:var(--suau);padding:0 2px}
 .ag-mes .cel.obj{background:#fbf6ea}
 .ag-mes .dn{font-size:.75rem;font-weight:600;cursor:pointer}
 .ag-mes .marca{font-size:.65rem;color:var(--suau);display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.ag-mes .mesxips{font-size:.7rem;color:var(--suau);cursor:pointer}
+.ag-mes .xip{font-size:.68rem;line-height:1.25;margin-top:1px}
 .ag-blocs .marca{display:block;font-size:.65rem;color:var(--suau);white-space:normal}
 .ag-mes .dn i{font-style:normal;color:var(--accent);font-weight:400}
 .ag-mes textarea{width:100%;border:0;background:transparent;resize:none;font:inherit;font-size:.8rem;padding:2px 0;min-height:0}
@@ -818,8 +818,7 @@ dialog .check{display:flex;gap:8px;align-items:center;color:var(--text);font-siz
           const llista = mapa[iso] || [], marca = marquesDia(iso)[0];
           h += '<div class="cel' + (fora ? " fora" : "") + (iso === avui ? " avui" : "") + (dsem(iso) >= 5 || esNoLectiu(iso) ? " nolectiu" : "") + '"><span class="dn" data-dia="' + iso + '" title="Obre el dia">' + Number(iso.slice(8)) + "</span>" +
             (marca && !fora ? '<span class="marca">' + esc(marca) + "</span>" : "") +
-            llista.slice(0, 3).map(e => '<span class="xip" style="background:' + colorDe(e.tipus) + '"' + atrEsdev(e) + ' title="' + esc((e.hora ? e.hora + " " : "") + e.titol) + '">' + esc((e.hora ? e.hora + " " : "") + e.titol) + "</span>").join("") +
-            (llista.length > 3 ? '<span class="mesxips" data-dia="' + iso + '">+' + (llista.length - 3) + "</span>" : "") +
+            llista.map(e => '<span class="xip" style="background:' + colorDe(e.tipus) + '"' + atrEsdev(e) + ' title="' + esc((e.hora ? e.hora + (e.horaFi ? "–" + e.horaFi : "") + " " : "") + e.titol + (e.lloc ? " · " + e.lloc : "")) + '">' + esc((e.hora ? e.hora + " " : "") + e.titol) + "</span>").join("") +
             (fora ? "" : '<textarea rows="2" maxlength="60" data-agc="mensual" data-k="' + iso + '" aria-label="' + dma(iso) + '" placeholder="…">' + esc(a.mensual[iso] || "") + "</textarea>") + "</div>";
         }
         h += '<div class="cel obj"><textarea rows="3" maxlength="200" data-agc="objectius" data-k="' + dl + '" aria-label="Objectius de la setmana del ' + dm(dl) + '" placeholder="Objectius…">' + esc(a.objectius[dl] || "") + "</textarea></div>";
