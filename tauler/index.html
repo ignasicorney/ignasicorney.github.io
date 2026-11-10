@@ -238,7 +238,7 @@ dialog .check{display:flex;gap:8px;align-items:center;color:var(--text);font-siz
     </div>
     <div id="calCos"></div>
     <div class="llegenda" id="calLlegenda"></div>
-    <p class="font">Hi surten sols les vacances i els festius del calendari escolar de Catalunya (Ordre EDF/66/2026). Les festes locals i els dies de lliure disposició de l'INS la Bisbal s'hi poden afegir com a activitat «No lectiu». Les classes setmanals se salten soles els dies no lectius.</p>
+    <p class="font">Calendari escolar de l'INS la Bisbal, curs 2026-2027. Els dies de lliure disposició i la festa local es poden editar si canvien. Les classes setmanals se salten soles els dies no lectius.</p>
   </div>
   <div class="bloc" id="reunions">
     <h3 class="bt">🗣️ Reunions</h3>
@@ -325,15 +325,29 @@ dialog .check{display:flex;gap:8px;align-items:center;color:var(--text);font-siz
   const BISBAL = { lat: 41.9600, lon: 3.0386 };
   const WORKER = "https://latdg-agenda.ignasicorney.workers.dev";
   const TZ = "Europe/Madrid";
-  // Calendari escolar oficial (fix, no editable)
+  // Calendari escolar de l'INS la Bisbal, curs 2026-2027 (fix)
+  const INICI_CURS = "2026-09-08", FI_CURS = "2027-06-21";
   const CURS = [
-    { d: "2026-09-08", t: "Inici de curs" },
+    { d: "2026-09-08", t: "Inici de curs d'ESO i batxillerat" },
     { d: "2026-09-11", t: "Diada Nacional de Catalunya", nl: true },
     { d: "2026-10-12", t: "Festa nacional d'Espanya", nl: true },
+    { d: "2026-12-06", t: "Dia de la Constitució", nl: true },
     { d: "2026-12-08", t: "La Immaculada", nl: true },
     { d: "2026-12-22", f: "2027-01-07", t: "Vacances de Nadal", nl: true, vac: true },
     { d: "2027-03-20", f: "2027-03-29", t: "Vacances de Setmana Santa", nl: true, vac: true },
-    { d: "2027-06-21", t: "Final de curs" }
+    { d: "2027-05-01", t: "Festa del Treball", nl: true },
+    { d: "2027-06-21", t: "Final de curs" },
+    { d: "2027-06-24", t: "Sant Joan", nl: true }
+  ];
+  // Dates pròpies de l'institut: entren com a activitats editables la primera vegada que s'obre l'Institut
+  const SEMBRA_INS = [
+    { d: "2026-09-14", t: "Inici de curs dels cicles formatius", tipus: "altres" },
+    { d: "2026-11-02", t: "Lliure disposició", tipus: "nolectiu" },
+    { d: "2026-12-07", t: "Lliure disposició", tipus: "nolectiu" },
+    { d: "2027-02-05", t: "Lliure disposició", tipus: "nolectiu" },
+    { d: "2027-02-08", t: "Lliure disposició", tipus: "nolectiu" },
+    { d: "2027-04-30", t: "Lliure disposició", tipus: "nolectiu" },
+    { d: "2027-05-17", t: "Festa local", tipus: "nolectiu" }
   ];
   const TIPUS = {
     classe: { n: "Classe", c: "#2f6db5" },
@@ -380,6 +394,7 @@ dialog .check{display:flex;gap:8px;align-items:center;color:var(--text);font-siz
       if (Array.isArray(d.activitats)) r.activitats = d.activitats.filter(a => a && esISO(a.data));
       if (Array.isArray(d.reunions)) r.reunions = d.reunions.filter(a => a && esISO(a.data));
       if (typeof d.notes === "string") r.notes = d.notes;
+      if (typeof d.sembrat === "string") r.sembrat = d.sembrat;
       if (d.qualificacions && Array.isArray(d.qualificacions.grups)) r.qualificacions = d.qualificacions;
     }
     return r;
@@ -412,6 +427,14 @@ dialog .check{display:flex;gap:8px;align-items:center;color:var(--text);font-siz
       dades = normalitza(d.dades);
       lsEscriu("tauler.dades", JSON.stringify(dades));
       estatSinc("ok", "Sincronitzat");
+      if (dades.sembrat !== "ins-2026-2027") {
+        SEMBRA_INS.forEach(x => {
+          if (!dades.activitats.some(a => a.data === x.d && a.titol === x.t))
+            dades.activitats.push({ id: nouId(), titol: x.t, tipus: x.tipus, lloc: "", data: x.d, fins: "", hora: "", horaFi: "", repeteix: false, repFins: "", excepcions: [], notes: "" });
+        });
+        dades.sembrat = "ins-2026-2027";
+        desa();
+      }
       return "ok";
     } catch (e) {
       if (e.estat === 401) { estatSinc("err", "Clau incorrecta"); return "clau"; }
@@ -1072,7 +1095,7 @@ dialog .check{display:flex;gap:8px;align-items:center;color:var(--text);font-siz
     $("actHora").value = a ? (a.hora || "") : "";
     $("actHoraFi").value = a ? (a.horaFi || "") : "";
     $("actRepeteix").checked = !!(a && a.repeteix);
-    $("actRepFins").value = a && a.repFins ? a.repFins : CURS[CURS.length - 1].d;
+    $("actRepFins").value = a && a.repFins ? a.repFins : FI_CURS;
     $("actNotes").value = a ? (a.notes || "") : "";
     $("actEsborra").hidden = !a;
     $("actSalta").hidden = !(a && a.repeteix && dia);
@@ -1184,14 +1207,14 @@ dialog .check{display:flex;gap:8px;align-items:center;color:var(--text);font-siz
   // ================= Resum del curs =================
   function pintaCurs() {
     const avui = avuiISO();
-    const inici = CURS[0].d, final = CURS[CURS.length - 1].d;
+    const inici = INICI_CURS, final = FI_CURS;
     const total = dies(inici, final), fet = Math.min(Math.max(dies(inici, avui), 0), total);
     const pct = Math.round(fet / total * 100);
     const vac = CURS.find(e => e.vac && dies(avui, e.f) >= 0);
     let h = "";
     if (vac) {
       const n = dies(avui, vac.d);
-      h = n > 0 ? '<div class="compte">' + n + " <small>" + (n === 1 ? "dia" : "dies") + " per a les " + vac.t.toLowerCase() + " (" + dm(vac.d) + "–" + dm(vac.f) + ")</small></div>"
+      h = n > 0 ? '<div class="compte">' + n + " <small>" + (n === 1 ? "dia" : "dies") + " per a les " + (vac.t.charAt(0).toLowerCase() + vac.t.slice(1)) + " (" + dm(vac.d) + "–" + dm(vac.f) + ")</small></div>"
                 : '<div class="compte">🎉 <small>' + vac.t + " fins " + art(dma(vac.f)) + dma(vac.f) + "</small></div>";
     }
     h += '<div class="barra"><i style="width:' + pct + '%"></i></div><p class="font" style="margin:0 0 12px">Curs fet en un ' + pct + " % · queden " + Math.max(dies(avui, final), 0) + " dies fins al final de curs (" + dma(final) + ").</p>";
