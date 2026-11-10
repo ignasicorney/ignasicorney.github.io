@@ -94,6 +94,8 @@ ul.tasques button{background:none;border:0;color:var(--suau);padding:0 2px}
 .ag-any td.cap-setmana{background:#f3e3c3}
 .ag-any td.nolectiu{background:var(--nolectiu)}
 .ag-any td.avui{outline:2px solid var(--accent);outline-offset:-2px}
+.ag-any td.passat{background:#dedcd6}
+.ag-any td.passat .dn,.ag-any td.passat input{color:#8f8d87}
 .ag-any .dn{display:inline-block;width:3.2em;color:var(--suau)}
 .ag-any input{border:0;background:transparent;font:inherit;width:calc(100% - 3.4em);padding:3px 0}
 .ag-mes{display:grid;grid-template-columns:repeat(5,minmax(0,1fr)) minmax(0,1.3fr);border-top:1px solid var(--linia);border-left:1px solid var(--linia)}
@@ -806,7 +808,7 @@ dialog .check{display:flex;gap:8px;align-items:center;color:var(--text);font-siz
           const iso = yy + "-" + z(mm + 1) + "-" + z(d);
           const existeix = deUTC(aUTC(iso)) === iso;
           if (!existeix) { h += '<td class="buida"></td>'; continue; }
-          const cl = [dsem(iso) >= 5 ? "cap-setmana" : "", esNoLectiu(iso) && dsem(iso) < 5 ? "nolectiu" : "", iso === avui ? "avui" : ""].join(" ").trim();
+          const cl = [dsem(iso) >= 5 ? "cap-setmana" : "", esNoLectiu(iso) && dsem(iso) < 5 ? "nolectiu" : "", iso === avui ? "avui" : "", iso < avui ? "passat" : ""].join(" ").trim();
           h += '<td class="' + cl + '"><span class="dn">' + d + " " + inicialDia(dsem(iso)) + '</span><input type="text" maxlength="24" data-agc="macro" data-k="' + iso + '" value="' + esc(a.macro[iso] || "") + '" aria-label="' + dma(iso) + '"></td>';
         }
         h += "</tr>";
