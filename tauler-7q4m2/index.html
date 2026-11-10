@@ -1,0 +1,936 @@
+---
+layout: null
+sitemap: false
+permalink: /tauler-7q4m2/
+---
+<!doctype html>
+<html lang="ca">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow, noarchive">
+<meta name="color-scheme" content="light only">
+<title>El meu tauler</title>
+<style>
+:root{--fons:#f6f5f2;--targeta:#fff;--text:#1d1d1b;--suau:#6b6b66;--linia:#e3e1db;--accent:#b4462c;--nolectiu:#f3efe6}
+*{box-sizing:border-box}
+body{margin:0;background:var(--fons);color:var(--text);font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+header,main,footer{max-width:1100px;margin:0 auto;padding-left:16px;padding-right:16px}
+header{padding-top:24px}
+h1{margin:0;font-size:1.6rem}
+.sub{color:var(--suau);margin:4px 0 12px}
+nav{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}
+nav a{color:var(--text);text-decoration:none;font-size:.85rem;padding:3px 10px;border:1px solid var(--linia);border-radius:999px;background:var(--targeta);white-space:nowrap}
+nav a:hover{color:var(--accent);border-color:var(--accent)}
+main{display:grid;gap:16px;padding-top:16px;padding-bottom:32px}
+@media (min-width:860px){main{grid-template-columns:1fr 1fr}.ample{grid-column:1 / -1}}
+section{background:var(--targeta);border:1px solid var(--linia);border-radius:12px;padding:16px;min-width:0;scroll-margin-top:16px}
+h2{margin:0 0 8px;font-size:1.1rem;text-transform:uppercase}
+h3{margin:14px 0 6px;font-size:1rem}
+a{color:var(--accent)}
+.font{color:var(--suau);font-size:.85rem;margin:10px 0 0}
+.buit{color:var(--suau)}
+footer{color:var(--suau);font-size:.85rem;padding-bottom:32px}
+button{font:inherit;cursor:pointer}
+.boto{padding:6px 12px;border:1px solid var(--accent);border-radius:8px;background:var(--accent);color:#fff}
+.boto.clar{background:var(--targeta);color:var(--accent)}
+.boto.perill{background:var(--targeta);color:#a3161b;border-color:#a3161b}
+input[type=text],input[type=time],input[type=search],input[type=password],select,textarea{font:inherit;padding:6px 8px;border:1px solid var(--linia);border-radius:8px;background:var(--targeta);color:var(--text)}
+textarea{width:100%;min-height:90px;resize:vertical}
+.capcalera{display:flex;align-items:center;gap:10px 16px;flex-wrap:wrap}
+.capcalera h1{margin-right:auto}
+.panells{display:flex;gap:14px}
+.panells a{font-size:1.5rem;line-height:1;text-decoration:none}
+.capinst{display:flex;align-items:center;gap:10px 14px;flex-wrap:wrap}
+.capinst h2{margin-right:auto!important}
+#institutClau,#institutCos{margin-top:14px}
+.bloc{border-top:1px solid var(--linia);padding-top:14px;margin-top:16px}
+.bloc:first-child{border-top:0;margin-top:0;padding-top:0}
+h3.bt{margin:0 0 8px;font-size:1rem;text-transform:uppercase}
+.alum-eines{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
+.taula{overflow-x:auto;border:1px solid var(--linia);border-radius:10px}
+.taula table{border-collapse:collapse;font-size:.88rem;width:100%}
+.taula th,.taula td{padding:6px 8px;border-bottom:1px solid var(--linia);white-space:nowrap;text-align:right;font-variant-numeric:tabular-nums}
+.taula th{color:var(--suau);font-weight:600;font-size:.78rem;background:#faf9f6}
+.taula th:first-child,.taula td:first-child{text-align:left;position:sticky;left:0;background:var(--targeta);box-shadow:inset -1px 0 0 var(--linia);max-width:52vw;overflow:hidden;text-overflow:ellipsis}
+.taula th:first-child{background:#faf9f6}
+.taula td.susp{color:#a3161b;font-weight:700}
+.taula td.apro{color:#2e7d32;font-weight:700}
+/* Temps */
+.gran{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.gran .ico{font-size:2.6rem;line-height:1}
+.gran .temp{font-size:2.4rem;font-weight:700;line-height:1}
+.gran .estat{color:var(--suau)}
+.xifres{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-top:12px}
+.xifra{border:1px solid var(--linia);border-radius:10px;padding:8px 10px}
+.xifra b{display:block;font-size:1.15rem}
+.xifra span{color:var(--suau);font-size:.8rem}
+.dies{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;margin-top:12px}
+.dia{border:1px solid var(--linia);border-radius:10px;padding:8px;text-align:center;font-size:.85rem}
+.dia .i{font-size:1.5rem}
+.dia .m{color:var(--suau)}
+.uv{display:inline-block;padding:1px 8px;border-radius:999px;color:#fff;font-weight:600;font-size:.8rem}
+.franja{display:flex;gap:3px;margin-top:6px;overflow-x:auto;padding-bottom:4px}
+.franja div{flex:1 0 34px;text-align:center;font-size:.72rem;color:var(--suau)}
+.franja i{display:block;height:28px;border-radius:6px;color:#fff;font-style:normal;font-weight:700;font-size:.8rem;line-height:28px;margin-bottom:2px}
+/* Comptes enrere */
+.compte{font-size:2.6rem;font-weight:800;line-height:1.05;color:var(--accent)}
+.compte small{font-size:1rem;font-weight:600;color:var(--text)}
+.rellotges{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+.rellotge{border:1px solid var(--linia);border-radius:10px;padding:8px 10px}
+.rellotge b{display:block;font-size:1.6rem;font-variant-numeric:tabular-nums}
+.rellotge span{color:var(--suau);font-size:.8rem}
+.barra{height:8px;border-radius:999px;background:var(--linia);overflow:hidden;margin:10px 0 4px}
+.barra i{display:block;height:100%;background:var(--accent)}
+/* Calendari */
+.eines{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
+.eines .titol{font-weight:700;font-size:1.05rem;margin:0 6px;min-width:9em}
+.eines .esq{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap}
+.vistes{display:inline-flex;border:1px solid var(--linia);border-radius:8px;overflow:hidden}
+.vistes button{background:var(--targeta);border:0;padding:5px 12px;color:var(--text)}
+.vistes button[aria-pressed=true]{background:var(--accent);color:#fff}
+.nav-b{background:var(--targeta);border:1px solid var(--linia);border-radius:8px;padding:5px 10px;color:var(--text)}
+.mes{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));border-top:1px solid var(--linia);border-left:1px solid var(--linia)}
+.mes .cap{font-size:.75rem;color:var(--suau);text-align:center;padding:4px 0;border-right:1px solid var(--linia);border-bottom:1px solid var(--linia);text-transform:uppercase}
+.mes .cel{min-height:92px;border-right:1px solid var(--linia);border-bottom:1px solid var(--linia);padding:3px;cursor:pointer;min-width:0;overflow:hidden}
+.mes .cel.fora{background:#fafaf8;color:#b9b8b2}
+.mes .cel.nolectiu{background:var(--nolectiu)}
+.mes .cel.avui .num{background:var(--accent);color:#fff;border-radius:999px;padding:0 6px}
+.mes .num{font-size:.8rem;font-weight:600;display:inline-block}
+.mes .marca{font-size:.65rem;color:var(--suau);display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.xip{display:block;font-size:.72rem;line-height:1.3;color:#fff;border-radius:4px;padding:1px 4px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mes .mesxips{font-size:.7rem;color:var(--suau)}
+@media (max-width:600px){.mes .cel{min-height:62px}.xip{font-size:0;height:6px;padding:0;margin-top:2px}.mes .marca{display:none}}
+.setmana .jorn{display:grid;grid-template-columns:6.5em minmax(0,1fr);gap:10px;padding:8px 0;border-bottom:1px solid var(--linia)}
+.setmana .jorn:last-child{border-bottom:0}
+.setmana .jorn.nolectiu{background:var(--nolectiu);border-radius:8px;padding-left:6px;padding-right:6px}
+.setmana .jorn.avui .qd{color:var(--accent)}
+.qd{font-weight:700;cursor:pointer}
+.qd small{display:block;font-weight:400;color:var(--suau)}
+.esdev{display:flex;gap:8px;align-items:baseline;padding:4px 6px;border-left:4px solid;border-radius:4px;margin:3px 0;background:#faf9f6;cursor:pointer}
+.esdev .h{font-variant-numeric:tabular-nums;color:var(--suau);font-size:.85rem;white-space:nowrap}
+.esdev .l{color:var(--suau);font-size:.85rem}
+.diavista .marca-dia{color:var(--suau);margin:0 0 8px}
+.llegenda{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:.8rem;color:var(--suau);margin-top:10px}
+.llegenda span{display:inline-flex;align-items:center;gap:5px}
+.llegenda i{width:10px;height:10px;border-radius:3px;display:inline-block}
+/* Llistes */
+ul.llista{list-style:none;margin:0;padding:0}
+ul.llista li{display:grid;grid-template-columns:7.5em minmax(0,1fr) auto;gap:4px 10px;align-items:baseline;padding:7px 0;border-bottom:1px solid var(--linia)}
+ul.llista li:last-child{border-bottom:0}
+ul.llista .d{font-variant-numeric:tabular-nums;color:var(--suau);font-size:.9rem}
+ul.llista .q{color:var(--accent);font-weight:600;font-size:.85rem;white-space:nowrap}
+ul.llista li.passat{opacity:.45}
+ul.llista li.ara .q{color:#fff;background:var(--accent);border-radius:999px;padding:0 8px}
+/* Reunions */
+.reunio{border:1px solid var(--linia);border-radius:10px;margin-top:8px}
+.reunio>summary{cursor:pointer;list-style:none;padding:8px 12px;display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+.reunio>summary::-webkit-details-marker{display:none}
+.reunio>summary .d{font-variant-numeric:tabular-nums;color:var(--suau);font-size:.9rem}
+.reunio>summary b{flex:1 1 auto}
+.reunio .cos{padding:0 12px 10px}
+.reunio .cos h4{margin:8px 0 2px;font-size:.85rem;text-transform:uppercase;color:var(--suau)}
+.reunio .cos p{margin:0;white-space:pre-wrap}
+.reunio .accions{display:flex;gap:6px;margin-top:10px}
+.pendent{font-size:.75rem;color:#fff;background:var(--accent);border-radius:999px;padding:0 8px}
+/* Diàlegs */
+dialog{border:0;border-radius:14px;padding:0;width:min(560px,calc(100vw - 24px));max-height:calc(100vh - 24px);box-shadow:0 10px 40px rgba(0,0,0,.25)}
+dialog::backdrop{background:rgba(0,0,0,.35)}
+dialog form{padding:16px;display:grid;gap:10px}
+dialog h2{margin:0}
+dialog label{display:grid;gap:3px;font-size:.85rem;color:var(--suau)}
+dialog label>input[type=text],dialog label>select,dialog label>textarea,dialog label>input[type=time]{color:var(--text);width:100%}
+dialog .fila{display:flex;gap:10px;flex-wrap:wrap}
+dialog .fila>label{flex:1 1 140px}
+dialog .botons{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;margin-top:4px}
+dialog .botons .esq{margin-right:auto;display:flex;gap:6px;flex-wrap:wrap}
+dialog .check{display:flex;gap:8px;align-items:center;color:var(--text);font-size:.9rem}
+.avis{color:#a3161b;font-size:.85rem;margin:0}
+/* GitHub */
+.recursos{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px}
+.recurs{border:1px solid var(--linia);border-radius:10px;padding:10px 12px}
+.recurs h3{margin:0 0 4px}
+.recurs p{margin:0;font-size:.9rem}
+.recurs .ja{display:inline-block;margin-top:6px;font-size:.75rem;color:var(--suau)}
+.estat-sinc{display:inline-flex;align-items:center;gap:6px;font-size:.85rem;color:var(--suau)}
+.estat-sinc i{width:9px;height:9px;border-radius:50%;background:#bbb;display:inline-block}
+.estat-sinc.ok i{background:#3a9a3a}.estat-sinc.err i{background:#d0262b}.estat-sinc.desant i{background:#d1a000}
+</style>
+</head>
+<body>
+<header>
+  <div class="capcalera">
+    <h1>🧭 El meu tauler</h1>
+    <div class="panells">
+      <a href="https://latdg.github.io/redaccio/" title="La TdG redacció" aria-label="La TdG redacció">✍️</a>
+      <a href="https://latdg.github.io/tauler/" title="La TdG ampliada" aria-label="La TdG ampliada">➕</a>
+      <a href="https://latdg.github.io/redaccio/dades/" title="La TdG dades" aria-label="La TdG dades">📊</a>
+      <a href="https://latdg.github.io/redaccio/tdt/" title="La TdG sala de control audiovisual" aria-label="La TdG sala de control audiovisual">📺</a>
+      <a href="https://latdg.github.io/tauler/fonoteca/" title="La TdG fonoteca" aria-label="La TdG fonoteca">🎙️</a>
+    </div>
+  </div>
+  <p class="sub" id="ara"></p>
+  <nav>
+    <a href="#temps">☀️ Temps i UV</a>
+    <a href="#mexic">✈️ Mèxic</a>
+    <a href="#institut">🏫 Institut</a>
+    <a href="#github">🐙 GitHub</a>
+  </nav>
+</header>
+
+<main>
+
+
+  <section id="temps">
+    <h2>☀️ Temps i UV a la Bisbal d'Empordà</h2>
+    <div id="tempsAra" class="buit">Carregant…</div>
+    <h3>Índex UV d'avui, hora a hora</h3>
+    <div id="uvHores" class="buit">—</div>
+    <div id="tempsDies"></div>
+    <p class="font">Font: <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a>. S'actualitza cada 30 minuts.</p>
+  </section>
+
+  <section id="mexic">
+    <h2>✈️ Viatge a Mèxic</h2>
+    <div id="mexicCompte" class="buit">—</div>
+    <div class="rellotges">
+      <div class="rellotge"><b id="horaBisbal">--:--</b><span>la Bisbal d'Empordà</span></div>
+      <div class="rellotge"><b id="horaMexic">--:--</b><span>Ciutat de Mèxic</span></div>
+    </div>
+    <div id="mexicTemps" class="font"></div>
+  </section>
+
+
+  <section id="institut" class="ample">
+    <div class="capinst">
+      <h2 style="margin:0">🏫 Institut</h2>
+      <span class="estat-sinc" id="estatSinc"><i></i><span>Tancat</span></span>
+      <button type="button" class="boto" id="instBoto">🔒 Obre</button>
+    </div>
+    <div id="institutClau" hidden>
+      <p style="margin:0 0 8px">Escriu la clau de GitHub per obrir l'apartat. Es recorda en aquest aparell fins que el tanquis amb «Oblida la clau».</p>
+      <div class="eines">
+        <input type="password" id="sincClau" placeholder="Clau de GitHub (github_pat_…)" autocomplete="current-password" style="flex:1 1 240px">
+        <button type="button" class="boto" id="sincConnecta">Obre</button>
+      </div>
+      <p class="avis" id="sincText" hidden></p>
+      <p class="font">Les dades de l'Institut es desen al repo privat <b>ignasicorney/tauler-privat</b>, que només veus tu. La clau pot ser la mateixa de l'editor del web, amb aquest repo afegit i permís «Contents: Read and write».</p>
+    </div>
+    <div id="institutCos" hidden>
+  <div class="bloc" id="calendari">
+    <h3 class="bt">📅 Calendari escolar · curs 2026-2027</h3>
+    <div id="cursResum"></div>
+    <div class="eines">
+      <button type="button" class="nav-b" id="calAnt" aria-label="Anterior">‹</button>
+      <button type="button" class="nav-b" id="calAvui">Avui</button>
+      <button type="button" class="nav-b" id="calSeg" aria-label="Següent">›</button>
+      <span class="titol" id="calTitol"></span>
+      <div class="esq">
+        <div class="vistes" role="group" aria-label="Vista">
+          <button type="button" data-vista="mes">Mes</button>
+          <button type="button" data-vista="setmana">Setmana</button>
+          <button type="button" data-vista="dia">Dia</button>
+        </div>
+        <button type="button" class="boto" id="calNou">+ Activitat</button>
+      </div>
+    </div>
+    <div id="calCos"></div>
+    <div class="llegenda" id="calLlegenda"></div>
+    <p class="font">Hi surten sols les vacances i els festius del calendari escolar de Catalunya (Ordre EDF/66/2026). Les festes locals i els dies de lliure disposició de l'INS la Bisbal s'hi poden afegir com a activitat «No lectiu». Les classes setmanals se salten soles els dies no lectius.</p>
+  </div>
+  <div class="bloc" id="reunions">
+    <h3 class="bt">🗣️ Reunions</h3>
+    <div class="eines">
+      <input type="search" id="reuCerca" placeholder="Cerca en les reunions…" style="flex:1 1 200px">
+      <button type="button" class="boto" id="reuNova">+ Reunió</button>
+    </div>
+    <div id="reuLlista"></div>
+  </div>
+    <div class="bloc" id="alumnes">
+      <h3 class="bt">🎓 Alumnes i qualificacions</h3>
+      <div id="alumCos"><p class="buit">Encara no hi ha qualificacions carregades.</p></div>
+    </div>
+  <div class="bloc" id="notes">
+    <h3 class="bt">📝 Notes de feina</h3>
+    <textarea id="notesText" placeholder="Escriu aquí el que vulguis recordar…"></textarea>
+  </div>
+      <p class="font"><button type="button" class="boto clar" id="sincDesconnecta">Oblida la clau en aquest aparell</button></p>
+    </div>
+  </section>
+
+  <section id="github" class="ample">
+    <h2>🐙 Què et pot oferir GitHub per a ús personal</h2>
+    <div class="recursos">
+      <div class="recurs"><h3>⏰ Actions programades</h3><p>Tasques que s'executen soles cada hora o cada dia: avisos al teu Telegram, còpies de seguretat, comprovar preus de vols, baixar dades. En repos públics són gratuïtes; en privats, 2.000 minuts al mes.</p><span class="ja">Ja ho fas servir a La TdG</span></div>
+      <div class="recurs"><h3>🌐 Pages</h3><p>Pàgines web gratuïtes com aquesta: taulers, la videoteca, un CV, materials per als alumnes amb adreça pròpia.</p><span class="ja">Ja ho fas servir</span></div>
+      <div class="recurs"><h3>🔒 Repos privats</h3><p>Il·limitats i gratuïts: aquí s'hi desen el calendari i les reunions d'aquest tauler; també hi caben apunts, materials de classe o l'arbre genealògic, amb tot l'historial de canvis.</p></div>
+      <div class="recurs"><h3>✅ Issues com a llista de tasques</h3><p>Cada issue d'un repo privat és una tasca o una idea, amb etiquetes (classe, casa, La TdG). Es gestiona bé des de l'app de GitHub al mòbil.</p></div>
+      <div class="recurs"><h3>🗂️ Projects</h3><p>Taulers tipus kanban (per fer · fent · fet) amb les issues: per preparar unitats didàctiques, els treballs de la UOC o el viatge.</p></div>
+      <div class="recurs"><h3>📎 Gists</h3><p>Fragments de text o codi desats amb un enllaç propi, públics o secrets: plantilles de correus, ordres útils, receptes.</p></div>
+      <div class="recurs"><h3>💻 Codespaces</h3><p>Un ordinador al núvol dins el navegador per provar codi sense instal·lar res: 120 hores de nucli i 15 GB al mes, gratis.</p></div>
+      <div class="recurs"><h3>📦 Git LFS</h3><p>Per guardar fitxers grans (vídeos, PDF de revistes) al costat d'un repo: 10 GB d'espai al mes en el pla gratuït.</p></div>
+      <div class="recurs"><h3>🔔 App mòbil i avisos</h3><p>L'app de GitHub avisa quan falla una Action o quan algú et comenta; també permet editar fitxers i issues des del telèfon.</p></div>
+    </div>
+    <p class="font">Límits del pla gratuït segons <a href="https://docs.github.com/en/billing/reference/product-usage-included" target="_blank" rel="noopener">la documentació de GitHub</a> (consulta del 10.11.2026).</p>
+  </section>
+
+</main>
+<footer>Tauler personal · no surt als cercadors ni al menú del web.</footer>
+
+<!-- Diàleg d'activitat -->
+<dialog id="dlgAct">
+  <form method="dialog" id="formAct">
+    <h2 id="dlgActTitol">Activitat</h2>
+    <label>Títol<input type="text" id="actTitol" maxlength="120"></label>
+    <div class="fila">
+      <label>Tipus<select id="actTipus"></select></label>
+      <label>Lloc<input type="text" id="actLloc" maxlength="80" placeholder="Aula, sala…"></label>
+    </div>
+    <div class="fila">
+      <label>Dia<input type="date" id="actData"></label>
+      <label>Fins al dia (opcional)<input type="date" id="actFins"></label>
+    </div>
+    <div class="fila">
+      <label>Hora d'inici<input type="time" id="actHora"></label>
+      <label>Hora de final<input type="time" id="actHoraFi"></label>
+    </div>
+    <label class="check"><input type="checkbox" id="actRepeteix"> Es repeteix cada setmana (classes, guàrdies…)</label>
+    <label id="actRepFinsBox">Repetir fins al dia<input type="date" id="actRepFins"></label>
+    <label>Notes<textarea id="actNotes" maxlength="2000"></textarea></label>
+    <p class="avis" id="actAvis" hidden></p>
+    <div class="botons">
+      <div class="esq">
+        <button type="button" class="boto perill" id="actEsborra">Esborra</button>
+        <button type="button" class="boto clar" id="actSalta">Treu només aquest dia</button>
+      </div>
+      <button type="button" class="boto clar" id="actCancela">Cancel·la</button>
+      <button type="button" class="boto" id="actDesa">Desa</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- Diàleg de reunió -->
+<dialog id="dlgReu">
+  <form method="dialog" id="formReu">
+    <h2 id="dlgReuTitol">Reunió</h2>
+    <label>Títol<input type="text" id="reuTitol" maxlength="120" placeholder="Claustre, departament, tutoria…"></label>
+    <div class="fila">
+      <label>Dia<input type="date" id="reuData"></label>
+      <label>Hora<input type="time" id="reuHora"></label>
+    </div>
+    <label>Amb qui<input type="text" id="reuAmb" maxlength="200"></label>
+    <label>Ordre del dia<textarea id="reuOrdre" maxlength="4000"></textarea></label>
+    <label>Acords i notes<textarea id="reuAcords" maxlength="8000"></textarea></label>
+    <label>Tasques pendents<textarea id="reuPendents" maxlength="4000" placeholder="Una per línia"></textarea></label>
+    <p class="avis" id="reuAvis" hidden></p>
+    <div class="botons">
+      <div class="esq"><button type="button" class="boto perill" id="reuEsborra">Esborra</button></div>
+      <button type="button" class="boto clar" id="reuCancela">Cancel·la</button>
+      <button type="button" class="boto" id="reuDesa">Desa</button>
+    </div>
+  </form>
+</dialog>
+
+<script>
+(function () {
+  "use strict";
+  // ================= Configuració =================
+  const BISBAL = { lat: 41.9600, lon: 3.0386 };
+  const MEXIC = { lat: 19.4326, lon: -99.1332 };
+  const VIATGE = { anada: "2026-12-24", tornadaDes: "2027-01-07", tornadaFins: "2027-01-15" };
+  const REPO_PRIVAT = "ignasicorney/tauler-privat";
+  const FITXER = "dades.json";
+  const TZ = "Europe/Madrid";
+  // Calendari escolar oficial (fix, no editable)
+  const CURS = [
+    { d: "2026-09-08", t: "Inici de curs" },
+    { d: "2026-09-11", t: "Diada Nacional de Catalunya", nl: true },
+    { d: "2026-10-12", t: "Festa nacional d'Espanya", nl: true },
+    { d: "2026-12-08", t: "La Immaculada", nl: true },
+    { d: "2026-12-22", f: "2027-01-07", t: "Vacances de Nadal", nl: true, vac: true },
+    { d: "2027-03-20", f: "2027-03-29", t: "Vacances de Setmana Santa", nl: true, vac: true },
+    { d: "2027-06-21", t: "Final de curs" }
+  ];
+  const TIPUS = {
+    classe: { n: "Classe", c: "#2f6db5" },
+    examen: { n: "Examen o entrega", c: "#b4462c" },
+    claustre: { n: "Claustre o comissió", c: "#7b3fa0" },
+    tutoria: { n: "Tutoria o famílies", c: "#c27c0e" },
+    sortida: { n: "Sortida o activitat", c: "#2e8b57" },
+    nolectiu: { n: "No lectiu", c: "#8a8780" },
+    altres: { n: "Altres", c: "#4f4e4a" },
+    reunio: { n: "Reunió", c: "#1d1d1b" }
+  };
+
+  // ================= Utilitats =================
+  const $ = id => document.getElementById(id);
+  const z = n => String(n).padStart(2, "0");
+  const avuiISO = () => new Intl.DateTimeFormat("en-CA", { timeZone: TZ, year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
+  const aUTC = s => { const [y, m, d] = s.split("-").map(Number); return Date.UTC(y, m - 1, d); };
+  const deUTC = t => { const x = new Date(t); return x.getUTCFullYear() + "-" + z(x.getUTCMonth() + 1) + "-" + z(x.getUTCDate()); };
+  const suma = (iso, n) => deUTC(aUTC(iso) + n * 86400000);
+  const dies = (de, a) => Math.round((aUTC(a) - aUTC(de)) / 86400000);
+  const dma = iso => { const [a, m, d] = iso.split("-"); return d + "." + m + "." + a; };
+  const dm = iso => { const [, m, d] = iso.split("-"); return d + "." + m; };
+  const dsem = iso => (new Date(aUTC(iso)).getUTCDay() + 6) % 7; // 0 = dilluns
+  const NOMS_DIA = ["dilluns", "dimarts", "dimecres", "dijous", "divendres", "dissabte", "diumenge"];
+  const NOMS_MES = ["gener", "febrer", "març", "abril", "maig", "juny", "juliol", "agost", "setembre", "octubre", "novembre", "desembre"];
+  const deMes = m => (/^[aeiou]/.test(NOMS_MES[m]) ? "d'" : "de ") + NOMS_MES[m];
+  const majus = s => s.charAt(0).toUpperCase() + s.slice(1);
+  const art = dd => (/^(01|11)\./.test(dd) ? "l'" : "el ");
+  const hora = tz => new Intl.DateTimeFormat("ca", { timeZone: tz, hour: "2-digit", minute: "2-digit", hour12: false }).format(new Date());
+  const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const quan = n => n === 0 ? "avui" : n === 1 ? "demà" : n > 1 ? "d'aquí a " + n + " dies" : "fa " + (-n) + (n === -1 ? " dia" : " dies");
+  const esISO = s => /^\d{4}-\d{2}-\d{2}$/.test(s || "");
+  const nouId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+  const lsLlegeix = k => { try { return localStorage.getItem(k); } catch (e) { return null; } };
+  const lsEscriu = (k, v) => { try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch (e) {} };
+  const b64aText = b64 => new TextDecoder().decode(Uint8Array.from(atob(b64.replace(/\n/g, "")), c => c.charCodeAt(0)));
+  const textAb64 = txt => { const b = new TextEncoder().encode(txt); let s = ""; for (let i = 0; i < b.length; i += 0x8000) s += String.fromCharCode.apply(null, b.subarray(i, i + 0x8000)); return btoa(s); };
+
+  // ================= Dades i sincronització =================
+  const BUIDES = () => ({ versio: 1, activitats: [], reunions: [], notes: "" });
+  function normalitza(d) {
+    const r = BUIDES();
+    if (d && typeof d === "object") {
+      if (Array.isArray(d.activitats)) r.activitats = d.activitats.filter(a => a && esISO(a.data));
+      if (Array.isArray(d.reunions)) r.reunions = d.reunions.filter(a => a && esISO(a.data));
+      if (typeof d.notes === "string") r.notes = d.notes;
+    }
+    return r;
+  }
+  let clau = lsLlegeix("tauler.clau") || lsLlegeix("editorWebClau") || "";
+  let dades = BUIDES();
+  let alumnes = null;
+  let sha = null, temporitzador = null, desant = false, pendent = false, obert = false;
+
+  function estatSinc(tipus, text) {
+    const el = $("estatSinc");
+    el.className = "estat-sinc " + (tipus || "");
+    el.lastElementChild.textContent = text;
+  }
+  function errorClau(text) { $("sincText").textContent = text; $("sincText").hidden = !text; }
+  async function api(cami, opcions) {
+    return fetch("https://api.github.com/repos/" + REPO_PRIVAT + cami, Object.assign({}, opcions, {
+      headers: Object.assign({ "Authorization": "Bearer " + clau, "Accept": "application/vnd.github+json", "X-GitHub-Api-Version": "2022-11-28" },
+        opcions && opcions.body ? { "Content-Type": "application/json" } : {}),
+      cache: "no-store"
+    }));
+  }
+  // Retorna "ok", "clau" (clau o repo incorrectes) o "xarxa"
+  async function baixa() {
+    if (!clau) return "clau";
+    estatSinc("desant", "Connectant…");
+    try {
+      const r = await api("/contents/" + FITXER);
+      if (r.status === 401 || r.status === 403) { estatSinc("err", "Clau sense permís"); return "clau"; }
+      if (r.status === 404) {
+        const repo = await api("");
+        if (!repo.ok) { estatSinc("err", "Repo no trobat"); return "clau"; }
+        sha = null; dades = BUIDES();
+      } else if (!r.ok) {
+        throw new Error(r.status);
+      } else {
+        const j = await r.json();
+        sha = j.sha;
+        dades = normalitza(JSON.parse(b64aText(j.content)));
+      }
+      lsEscriu("tauler.dades", JSON.stringify(dades));
+      try {
+        const a = await api("/contents/alumnes.json");
+        alumnes = a.ok ? JSON.parse(b64aText((await a.json()).content)) : null;
+      } catch (e) { alumnes = null; }
+      estatSinc("ok", "Sincronitzat");
+      return "ok";
+    } catch (e) {
+      try { dades = normalitza(JSON.parse(lsLlegeix("tauler.dades") || "null")); } catch (x) { dades = BUIDES(); }
+      estatSinc("err", "Sense connexió: còpia d'aquest aparell");
+      return "xarxa";
+    }
+  }
+  async function desaRemot() {
+    temporitzador = null;
+    if (!clau) return;
+    if (desant) { pendent = true; return; }
+    desant = true; pendent = false;
+    estatSinc("desant", "Desant…");
+    try {
+      for (let intent = 0; intent < 2; intent++) {
+        const cos = { message: "Tauler: dades actualitzades", content: textAb64(JSON.stringify(dades, null, 1)) };
+        if (sha) cos.sha = sha;
+        const r = await api("/contents/" + FITXER, { method: "PUT", body: JSON.stringify(cos) });
+        if (r.ok) { sha = (await r.json()).content.sha; estatSinc("ok", "Sincronitzat"); break; }
+        if ((r.status === 409 || r.status === 422) && intent === 0) {
+          const g = await api("/contents/" + FITXER);
+          sha = g.ok ? (await g.json()).sha : null;
+          continue;
+        }
+        throw new Error(r.status);
+      }
+    } catch (e) { estatSinc("err", "No desat a GitHub (queda en aquest aparell)"); }
+    desant = false;
+    if (pendent) desaRemot();
+  }
+  function desa() {
+    lsEscriu("tauler.dades", JSON.stringify(dades));
+    clearTimeout(temporitzador);
+    temporitzador = setTimeout(desaRemot, 1200);
+  }
+  function mostraInstitut(si) {
+    obert = si;
+    $("institutCos").hidden = !si;
+    $("institutClau").hidden = true;
+    $("instBoto").textContent = si ? "🔓 Tanca" : "🔒 Obre";
+    if (si) pintaTot(); else estatSinc("", "Tancat");
+  }
+  async function obre() {
+    if (!clau) { $("institutClau").hidden = false; $("sincClau").focus(); return; }
+    $("instBoto").disabled = true;
+    const r = await baixa();
+    $("instBoto").disabled = false;
+    if (r === "clau") {
+      clau = ""; lsEscriu("tauler.clau", null);
+      $("institutClau").hidden = false;
+      errorClau("La clau no obre el repo privat ignasicorney/tauler-privat. Comprova que el repo existeix i que la clau hi té accés.");
+      return;
+    }
+    errorClau("");
+    mostraInstitut(true);
+  }
+  $("instBoto").addEventListener("click", () => { if (obert) mostraInstitut(false); else obre(); });
+  $("sincConnecta").addEventListener("click", () => {
+    const v = $("sincClau").value.trim();
+    if (!v) return;
+    clau = v; lsEscriu("tauler.clau", v); $("sincClau").value = ""; obre();
+  });
+  $("sincClau").addEventListener("keydown", e => { if (e.key === "Enter") $("sincConnecta").click(); });
+  $("sincDesconnecta").addEventListener("click", () => {
+    clau = ""; sha = null; dades = BUIDES(); alumnes = null;
+    lsEscriu("tauler.clau", null); lsEscriu("tauler.dades", null);
+    mostraInstitut(false);
+  });
+
+  // ================= Alumnes i qualificacions =================
+  let alumGrup = 0, alumFull = 0;
+  function pintaAlumnes() {
+    const cos = $("alumCos");
+    if (!alumnes || !Array.isArray(alumnes.grups) || !alumnes.grups.length) {
+      cos.innerHTML = '<p class="buit">Encara no hi ha qualificacions carregades.</p>'; return;
+    }
+    const g = alumnes.grups[Math.min(alumGrup, alumnes.grups.length - 1)];
+    const fulls = g.fulls || [];
+    const f = fulls[Math.min(alumFull, fulls.length - 1)] || { columnes: [], files: [] };
+    const cerca = ($("alumCerca") && $("alumCerca").value || "").trim().toLowerCase();
+    const nota = (v, col) => {
+      if (v === "" || v == null) return "<td></td>";
+      const n = Number(String(v).replace(",", "."));
+      if (isNaN(n)) return "<td>" + esc(v) + "</td>";
+      const clau = /NOTA|GLOBAL|FINAL/i.test(col) ? (n < 5 ? ' class="susp"' : ' class="apro"') : "";
+      return "<td" + clau + ">" + (Number.isInteger(n) ? n : n.toFixed(2).replace(".", ",")) + "</td>";
+    };
+    const files = (f.files || []).filter(r => !cerca || String(r[0]).toLowerCase().includes(cerca));
+    cos.innerHTML =
+      '<div class="alum-eines"><div class="vistes" role="group" aria-label="Grup">' +
+      alumnes.grups.map((x, i) => '<button type="button" data-grup="' + i + '" aria-pressed="' + (x === g) + '">' + esc(x.nom) + "</button>").join("") + "</div>" +
+      '<select id="alumFull" aria-label="Full">' + fulls.map((x, i) => '<option value="' + i + '"' + (x === f ? " selected" : "") + ">" + esc(x.nom) + "</option>").join("") + "</select>" +
+      '<input type="search" id="alumCerca" placeholder="Cerca alumne…" value="' + esc(cerca) + '" style="flex:1 1 140px"></div>' +
+      '<div class="taula"><table><thead><tr>' + (f.columnes || []).map(c => "<th>" + esc(c) + "</th>").join("") + "</tr></thead><tbody>" +
+      (files.map(r => "<tr><td>" + esc(r[0]) + "</td>" + r.slice(1).map((v, i) => nota(v, (f.columnes || [])[i + 1] || "")).join("") + "</tr>").join("") ||
+        '<tr><td colspan="' + Math.max((f.columnes || []).length, 1) + '" class="buit">Cap alumne no coincideix.</td></tr>') +
+      "</tbody></table></div>" +
+      '<p class="font">' + files.length + " alumnes · dades del " + esc(alumnes.actualitzat ? dma(alumnes.actualitzat) : "—") + ".</p>";
+  }
+  $("alumCos").addEventListener("click", ev => {
+    const b = ev.target.closest("[data-grup]");
+    if (b) { alumGrup = Number(b.dataset.grup); alumFull = 0; pintaAlumnes(); }
+  });
+  $("alumCos").addEventListener("change", ev => { if (ev.target.id === "alumFull") { alumFull = Number(ev.target.value); pintaAlumnes(); } });
+  $("alumCos").addEventListener("input", ev => {
+    if (ev.target.id !== "alumCerca") return;
+    const pos = ev.target.selectionStart; pintaAlumnes();
+    const c = $("alumCerca"); c.focus(); try { c.setSelectionRange(pos, pos); } catch (e) {}
+  });
+
+  // ================= Calendari: esdeveniments =================
+  const noLectiuOficial = iso => CURS.find(e => e.nl && iso >= e.d && iso <= (e.f || e.d));
+  function marquesDia(iso) {
+    return CURS.filter(e => iso >= e.d && iso <= (e.f || e.d)).map(e => e.t);
+  }
+  function esNoLectiu(iso) {
+    if (dsem(iso) >= 5 || noLectiuOficial(iso)) return true;
+    return dades.activitats.some(a => a.tipus === "nolectiu" && iso >= a.data && iso <= (a.fins || a.data));
+  }
+  // Retorna un mapa iso -> llista d'esdeveniments entre de i fins (inclosos)
+  function esdeveniments(de, fins) {
+    const mapa = {};
+    const posa = (iso, e) => { (mapa[iso] = mapa[iso] || []).push(e); };
+    dades.activitats.forEach(a => {
+      if (a.repeteix && esISO(a.repFins)) {
+        const salta = new Set(a.excepcions || []);
+        for (let iso = a.data; iso <= a.repFins && iso <= fins; iso = suma(iso, 7)) {
+          if (iso < de || salta.has(iso)) continue;
+          if (a.tipus !== "nolectiu" && esNoLectiu(iso)) continue;
+          posa(iso, { tipus: a.tipus, titol: a.titol, hora: a.hora, horaFi: a.horaFi, lloc: a.lloc, ref: "a", id: a.id, dia: iso });
+        }
+      } else {
+        const fi = esISO(a.fins) && a.fins > a.data ? a.fins : a.data;
+        if (fi < de || a.data > fins) return;
+        for (let iso = a.data < de ? de : a.data; iso <= fi && iso <= fins; iso = suma(iso, 1))
+          posa(iso, { tipus: a.tipus, titol: a.titol, hora: a.hora, horaFi: a.horaFi, lloc: a.lloc, ref: "a", id: a.id, dia: iso });
+      }
+    });
+    dades.reunions.forEach(r => {
+      if (r.data >= de && r.data <= fins) posa(r.data, { tipus: "reunio", titol: r.titol, hora: r.hora, ref: "r", id: r.id, dia: r.data });
+    });
+    Object.values(mapa).forEach(l => l.sort((x, y) => (x.hora || "99").localeCompare(y.hora || "99")));
+    return mapa;
+  }
+  const colorDe = t => (TIPUS[t] || TIPUS.altres).c;
+  const atrEsdev = e => ' data-ref="' + e.ref + '" data-id="' + esc(e.id) + '" data-dia="' + e.dia + '"';
+
+  // ================= Calendari: vistes =================
+  let vista = lsLlegeix("tauler.vista") || "mes";
+  if (!["mes", "setmana", "dia"].includes(vista)) vista = "mes";
+  let focus = avuiISO();
+
+  function pintaCalendari() {
+    const avui = avuiISO();
+    document.querySelectorAll(".vistes button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.vista === vista)));
+    const cos = $("calCos");
+    if (vista === "mes") {
+      const [y, m] = focus.split("-").map(Number);
+      const primer = y + "-" + z(m) + "-01";
+      const inici = suma(primer, -dsem(primer));
+      const darrer = deUTC(Date.UTC(y, m, 0));
+      const fi = suma(darrer, 6 - dsem(darrer));
+      const mapa = esdeveniments(inici, fi);
+      $("calTitol").textContent = majus(NOMS_MES[m - 1]) + " " + y;
+      let h = '<div class="mes">' + ["dl", "dt", "dc", "dj", "dv", "ds", "dg"].map(d => '<div class="cap">' + d + "</div>").join("");
+      for (let iso = inici; iso <= fi; iso = suma(iso, 1)) {
+        const cls = ["cel"];
+        if (iso.slice(5, 7) !== z(m)) cls.push("fora");
+        else if (esNoLectiu(iso)) cls.push("nolectiu");
+        if (iso === avui) cls.push("avui");
+        const llista = mapa[iso] || [];
+        const marca = marquesDia(iso)[0];
+        h += '<div class="' + cls.join(" ") + '" data-dia="' + iso + '"><span class="num">' + Number(iso.slice(8)) + "</span>" +
+          (marca ? '<span class="marca">' + esc(marca) + "</span>" : "") +
+          llista.slice(0, 3).map(e => '<span class="xip" style="background:' + colorDe(e.tipus) + '"' + atrEsdev(e) + ' title="' + esc((e.hora ? e.hora + " " : "") + e.titol) + '">' + esc((e.hora ? e.hora + " " : "") + e.titol) + "</span>").join("") +
+          (llista.length > 3 ? '<span class="mesxips">+' + (llista.length - 3) + "</span>" : "") + "</div>";
+      }
+      cos.innerHTML = h + "</div>";
+    } else if (vista === "setmana") {
+      const inici = suma(focus, -dsem(focus)), fi = suma(inici, 6);
+      const mapa = esdeveniments(inici, fi);
+      $("calTitol").textContent = "Setmana del " + dm(inici) + " al " + dm(fi);
+      let h = '<div class="setmana">';
+      for (let iso = inici; iso <= fi; iso = suma(iso, 1)) {
+        const cls = ["jorn"];
+        if (esNoLectiu(iso)) cls.push("nolectiu");
+        if (iso === avui) cls.push("avui");
+        const marca = marquesDia(iso);
+        h += '<div class="' + cls.join(" ") + '"><div class="qd" data-dia="' + iso + '">' + majus(NOMS_DIA[dsem(iso)]) + "<small>" + dma(iso) + "</small></div><div>" +
+          (marca.length ? '<div class="buit" style="font-size:.85rem">' + esc(marca.join(" · ")) + "</div>" : "") +
+          ((mapa[iso] || []).map(filaEsdev).join("") || (marca.length ? "" : '<span class="buit" style="font-size:.85rem">—</span>')) + "</div></div>";
+      }
+      cos.innerHTML = h + "</div>";
+    } else {
+      const mapa = esdeveniments(focus, focus);
+      $("calTitol").textContent = majus(NOMS_DIA[dsem(focus)]) + ", " + dma(focus);
+      const marca = marquesDia(focus);
+      cos.innerHTML = '<div class="diavista">' + (marca.length ? '<p class="marca-dia">' + esc(marca.join(" · ")) + "</p>" : "") +
+        ((mapa[focus] || []).map(e => filaEsdev(e, true)).join("") || '<p class="buit">No hi ha res previst aquest dia.</p>') +
+        '<p style="margin-top:12px"><button type="button" class="boto clar" id="calNouDia">+ Activitat aquest dia</button> <button type="button" class="boto clar" id="calReuDia">+ Reunió aquest dia</button></p></div>';
+    }
+  }
+  function filaEsdev(e, amplia) {
+    const h = e.hora ? e.hora + (e.horaFi ? "–" + e.horaFi : "") : "";
+    return '<div class="esdev" style="border-color:' + colorDe(e.tipus) + '"' + atrEsdev(e) + ">" +
+      (h ? '<span class="h">' + h + "</span>" : "") + "<span><b>" + esc(e.titol) + "</b>" +
+      (e.lloc ? ' <span class="l">· ' + esc(e.lloc) + "</span>" : "") +
+      (amplia ? ' <span class="l">· ' + esc((TIPUS[e.tipus] || TIPUS.altres).n) + "</span>" : "") + "</span></div>";
+  }
+  function mou(n) {
+    if (vista === "mes") { const [y, m] = focus.split("-").map(Number); focus = deUTC(Date.UTC(y, m - 1 + n, 1)); }
+    else focus = suma(focus, vista === "setmana" ? 7 * n : n);
+    pintaCalendari();
+  }
+  $("calAnt").addEventListener("click", () => mou(-1));
+  $("calSeg").addEventListener("click", () => mou(1));
+  $("calAvui").addEventListener("click", () => { focus = avuiISO(); pintaCalendari(); });
+  document.querySelectorAll(".vistes button").forEach(b => b.addEventListener("click", () => { vista = b.dataset.vista; lsEscriu("tauler.vista", vista); pintaCalendari(); }));
+  $("calNou").addEventListener("click", () => obreActivitat(null, vista === "mes" ? avuiISO() : focus));
+  $("calCos").addEventListener("click", ev => {
+    const e = ev.target.closest("[data-ref]");
+    if (e) { ev.stopPropagation(); if (e.dataset.ref === "r") obreReunio(e.dataset.id); else obreActivitat(e.dataset.id, e.dataset.dia); return; }
+    if (ev.target.closest("#calNouDia")) { obreActivitat(null, focus); return; }
+    if (ev.target.closest("#calReuDia")) { obreReunio(null, focus); return; }
+    const d = ev.target.closest("[data-dia]");
+    if (d) { focus = d.dataset.dia; vista = "dia"; lsEscriu("tauler.vista", vista); pintaCalendari(); }
+  });
+  $("calLlegenda").innerHTML = Object.values(TIPUS).map(t => '<span><i style="background:' + t.c + '"></i>' + t.n + "</span>").join("") +
+    '<span><i style="background:var(--nolectiu);border:1px solid var(--linia)"></i>Dia no lectiu</span>';
+
+  // ================= Diàleg d'activitat =================
+  $("actTipus").innerHTML = Object.keys(TIPUS).filter(k => k !== "reunio").map(k => '<option value="' + k + '">' + TIPUS[k].n + "</option>").join("");
+  let actId = null, actDia = null;
+  const repVisible = () => { $("actRepFinsBox").hidden = !$("actRepeteix").checked; };
+  $("actRepeteix").addEventListener("change", repVisible);
+  function obreActivitat(id, dia) {
+    const a = id ? dades.activitats.find(x => x.id === id) : null;
+    actId = a ? a.id : null; actDia = dia || null;
+    $("dlgActTitol").textContent = a ? "Edita l'activitat" : "Nova activitat";
+    $("actTitol").value = a ? a.titol : "";
+    $("actTipus").value = a ? a.tipus : "classe";
+    $("actLloc").value = a ? (a.lloc || "") : "";
+    $("actData").value = a ? a.data : (dia || avuiISO());
+    $("actFins").value = a ? (a.fins || "") : "";
+    $("actHora").value = a ? (a.hora || "") : "";
+    $("actHoraFi").value = a ? (a.horaFi || "") : "";
+    $("actRepeteix").checked = !!(a && a.repeteix);
+    $("actRepFins").value = a && a.repFins ? a.repFins : CURS[CURS.length - 1].d;
+    $("actNotes").value = a ? (a.notes || "") : "";
+    $("actEsborra").hidden = !a;
+    $("actSalta").hidden = !(a && a.repeteix && dia);
+    $("actAvis").hidden = true;
+    repVisible();
+    $("dlgAct").showModal();
+  }
+  function avis(id, text) { $(id).textContent = text; $(id).hidden = false; }
+  $("actDesa").addEventListener("click", () => {
+    const titol = $("actTitol").value.trim(), data = $("actData").value, fins = $("actFins").value;
+    const rep = $("actRepeteix").checked, repFins = $("actRepFins").value;
+    if (!titol) return avis("actAvis", "Cal posar-hi un títol.");
+    if (!esISO(data)) return avis("actAvis", "Cal posar-hi el dia (dd.mm.aaaa).");
+    if (fins && (!esISO(fins) || fins < data)) return avis("actAvis", "El dia final ha de ser posterior al d'inici.");
+    if (rep && (!esISO(repFins) || repFins < data)) return avis("actAvis", "Cal un dia final per a la repetició, posterior al d'inici.");
+    const vell = actId ? dades.activitats.find(x => x.id === actId) : null;
+    const a = {
+      id: actId || nouId(), titol: titol, tipus: $("actTipus").value, lloc: $("actLloc").value.trim(),
+      data: data, fins: !rep && fins && fins > data ? fins : "", hora: $("actHora").value, horaFi: $("actHoraFi").value,
+      repeteix: rep, repFins: rep ? repFins : "", excepcions: rep && vell ? (vell.excepcions || []) : [], notes: $("actNotes").value.trim()
+    };
+    if (vell) dades.activitats[dades.activitats.indexOf(vell)] = a; else dades.activitats.push(a);
+    desa(); $("dlgAct").close(); focus = data; pintaTot();
+  });
+  $("actEsborra").addEventListener("click", () => {
+    if (!actId) return;
+    const a = dades.activitats.find(x => x.id === actId);
+    if (!a || !confirm("Vols esborrar «" + a.titol + "»" + (a.repeteix ? " (tots els dies)" : "") + "?")) return;
+    dades.activitats = dades.activitats.filter(x => x.id !== actId);
+    desa(); $("dlgAct").close(); pintaTot();
+  });
+  $("actSalta").addEventListener("click", () => {
+    const a = dades.activitats.find(x => x.id === actId);
+    if (!a || !actDia) return;
+    a.excepcions = Array.from(new Set((a.excepcions || []).concat(actDia)));
+    desa(); $("dlgAct").close(); pintaTot();
+  });
+  $("actCancela").addEventListener("click", () => $("dlgAct").close());
+
+  // ================= Reunions =================
+  let reuId = null;
+  function obreReunio(id, dia) {
+    const r = id ? dades.reunions.find(x => x.id === id) : null;
+    reuId = r ? r.id : null;
+    $("dlgReuTitol").textContent = r ? "Edita la reunió" : "Nova reunió";
+    $("reuTitol").value = r ? r.titol : "";
+    $("reuData").value = r ? r.data : (dia || avuiISO());
+    $("reuHora").value = r ? (r.hora || "") : "";
+    $("reuAmb").value = r ? (r.amb || "") : "";
+    $("reuOrdre").value = r ? (r.ordre || "") : "";
+    $("reuAcords").value = r ? (r.acords || "") : "";
+    $("reuPendents").value = r ? (r.pendents || "") : "";
+    $("reuEsborra").hidden = !r;
+    $("reuAvis").hidden = true;
+    $("dlgReu").showModal();
+  }
+  $("reuDesa").addEventListener("click", () => {
+    const titol = $("reuTitol").value.trim(), data = $("reuData").value;
+    if (!titol) return avis("reuAvis", "Cal posar-hi un títol.");
+    if (!esISO(data)) return avis("reuAvis", "Cal posar-hi el dia (dd.mm.aaaa).");
+    const r = { id: reuId || nouId(), titol: titol, data: data, hora: $("reuHora").value, amb: $("reuAmb").value.trim(),
+      ordre: $("reuOrdre").value.trim(), acords: $("reuAcords").value.trim(), pendents: $("reuPendents").value.trim() };
+    const i = dades.reunions.findIndex(x => x.id === reuId);
+    if (i >= 0) dades.reunions[i] = r; else dades.reunions.push(r);
+    desa(); $("dlgReu").close(); pintaTot();
+  });
+  $("reuEsborra").addEventListener("click", () => {
+    const r = dades.reunions.find(x => x.id === reuId);
+    if (!r || !confirm("Vols esborrar la reunió «" + r.titol + "»?")) return;
+    dades.reunions = dades.reunions.filter(x => x.id !== reuId);
+    desa(); $("dlgReu").close(); pintaTot();
+  });
+  $("reuCancela").addEventListener("click", () => $("dlgReu").close());
+  $("reuNova").addEventListener("click", () => obreReunio(null, avuiISO()));
+  $("reuCerca").addEventListener("input", pintaReunions);
+  function pintaReunions() {
+    const cerca = $("reuCerca").value.trim().toLowerCase();
+    const llista = dades.reunions.slice()
+      .filter(r => !cerca || [r.titol, r.amb, r.ordre, r.acords, r.pendents].join(" ").toLowerCase().includes(cerca))
+      .sort((a, b) => (b.data + (b.hora || "")).localeCompare(a.data + (a.hora || "")));
+    const avui = avuiISO();
+    if (!llista.length) { $("reuLlista").innerHTML = '<p class="buit">' + (cerca ? "Cap reunió no coincideix amb la cerca." : "Encara no hi ha cap reunió anotada.") + "</p>"; return; }
+    $("reuLlista").innerHTML = llista.map(r => {
+      const nPend = (r.pendents || "").split("\n").filter(l => l.trim()).length;
+      const futura = r.data >= avui;
+      const bloc = (t, v) => v ? "<h4>" + t + "</h4><p>" + esc(v) + "</p>" : "";
+      return '<details class="reunio"><summary><span class="d">' + dma(r.data) + (r.hora ? " · " + r.hora : "") + "</span><b>" + esc(r.titol) + "</b>" +
+        (futura ? '<span class="d">' + quan(dies(avui, r.data)) + "</span>" : "") +
+        (nPend ? '<span class="pendent">' + nPend + (nPend === 1 ? " pendent" : " pendents") + "</span>" : "") + "</summary>" +
+        '<div class="cos">' + bloc("Amb qui", r.amb) + bloc("Ordre del dia", r.ordre) + bloc("Acords i notes", r.acords) + bloc("Tasques pendents", r.pendents) +
+        (!r.amb && !r.ordre && !r.acords && !r.pendents ? '<p class="buit">Sense notes encara.</p>' : "") +
+        '<div class="accions"><button type="button" class="boto clar" data-edita="' + esc(r.id) + '">Edita</button><button type="button" class="boto clar" data-copia="' + esc(r.id) + '">Copia el text</button></div></div></details>';
+    }).join("");
+  }
+  $("reuLlista").addEventListener("click", ev => {
+    const e = ev.target.closest("[data-edita]");
+    if (e) { obreReunio(e.dataset.edita); return; }
+    const c = ev.target.closest("[data-copia]");
+    if (c) {
+      const r = dades.reunions.find(x => x.id === c.dataset.copia);
+      if (!r) return;
+      const t = [r.titol + " — " + dma(r.data) + (r.hora ? ", " + r.hora : ""), r.amb && "Amb qui: " + r.amb, r.ordre && "\nOrdre del dia:\n" + r.ordre,
+        r.acords && "\nAcords i notes:\n" + r.acords, r.pendents && "\nTasques pendents:\n" + r.pendents].filter(Boolean).join("\n");
+      const fet = () => { c.textContent = "Copiat ✓"; setTimeout(() => { c.textContent = "Copia el text"; }, 1500); };
+      if (navigator.clipboard) navigator.clipboard.writeText(t).then(fet, () => {});
+    }
+  });
+
+  // ================= Resum del curs =================
+  function pintaCurs() {
+    const avui = avuiISO();
+    const inici = CURS[0].d, final = CURS[CURS.length - 1].d;
+    const total = dies(inici, final), fet = Math.min(Math.max(dies(inici, avui), 0), total);
+    const pct = Math.round(fet / total * 100);
+    const vac = CURS.find(e => e.vac && dies(avui, e.f) >= 0);
+    let h = "";
+    if (vac) {
+      const n = dies(avui, vac.d);
+      h = n > 0 ? '<div class="compte">' + n + " <small>" + (n === 1 ? "dia" : "dies") + " per a les " + vac.t.toLowerCase() + " (" + dm(vac.d) + "–" + dm(vac.f) + ")</small></div>"
+                : '<div class="compte">🎉 <small>' + vac.t + " fins " + art(dma(vac.f)) + dma(vac.f) + "</small></div>";
+    }
+    h += '<div class="barra"><i style="width:' + pct + '%"></i></div><p class="font" style="margin:0 0 12px">Curs fet en un ' + pct + " % · queden " + Math.max(dies(avui, final), 0) + " dies fins al final de curs (" + dma(final) + ").</p>";
+    $("cursResum").innerHTML = h;
+  }
+
+  // ================= Notes =================
+  $("notesText").addEventListener("input", () => { dades.notes = $("notesText").value; desa(); });
+
+  // ================= Temps =================
+  const CODIS = {
+    0: ["☀️", "Cel serè"], 1: ["🌤️", "Gairebé serè"], 2: ["⛅", "Mig ennuvolat"], 3: ["☁️", "Cobert"],
+    45: ["🌫️", "Boira"], 48: ["🌫️", "Boira gebradora"],
+    51: ["🌦️", "Plugim feble"], 53: ["🌦️", "Plugim"], 55: ["🌦️", "Plugim intens"], 56: ["🌧️", "Plugim gelat"], 57: ["🌧️", "Plugim gelat"],
+    61: ["🌧️", "Pluja feble"], 63: ["🌧️", "Pluja"], 65: ["🌧️", "Pluja forta"], 66: ["🌧️", "Pluja gelada"], 67: ["🌧️", "Pluja gelada"],
+    71: ["🌨️", "Neu feble"], 73: ["🌨️", "Neu"], 75: ["❄️", "Neu forta"], 77: ["🌨️", "Neu granulada"],
+    80: ["🌦️", "Ruixats"], 81: ["🌦️", "Ruixats"], 82: ["⛈️", "Ruixats forts"], 85: ["🌨️", "Ruixats de neu"], 86: ["🌨️", "Ruixats de neu"],
+    95: ["⛈️", "Tempesta"], 96: ["⛈️", "Tempesta amb calamarsa"], 99: ["⛈️", "Tempesta amb calamarsa"]
+  };
+  const codi = c => CODIS[c] || ["🌡️", "—"];
+  function nivellUV(v) {
+    if (v < 3) return { n: "Baix", c: "#3a9a3a", con: "No cal protecció especial." };
+    if (v < 6) return { n: "Moderat", c: "#d1a000", con: "Ulleres de sol i crema si estàs molta estona fora." };
+    if (v < 8) return { n: "Alt", c: "#e06a00", con: "Crema, gorra i ombra a les hores centrals." };
+    if (v < 11) return { n: "Molt alt", c: "#d0262b", con: "Evita el sol entre les 12 i les 16 h." };
+    return { n: "Extrem", c: "#7b3fa0", con: "Evita el sol: protecció màxima." };
+  }
+  const num = (v, dec) => Number(v || 0).toFixed(dec).replace(".", ",");
+  const xipUV = v => { const n = nivellUV(v); return '<span class="uv" style="background:' + n.c + '">' + num(v, 1) + " · " + n.n + "</span>"; };
+  async function carregaTemps() {
+    const url = "https://api.open-meteo.com/v1/forecast?latitude=" + BISBAL.lat + "&longitude=" + BISBAL.lon +
+      "&current=temperature_2m,apparent_temperature,relative_humidity_2m,weather_code,wind_speed_10m,wind_gusts_10m" +
+      "&hourly=uv_index&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,uv_index_max,sunrise,sunset" +
+      "&timezone=Europe%2FMadrid&forecast_days=5";
+    try {
+      const r = await fetch(url);
+      if (!r.ok) throw new Error(r.status);
+      const j = await r.json();
+      const c = j.current, d = j.daily;
+      const [ic, est] = codi(c.weather_code);
+      const uvMax = d.uv_index_max[0] || 0;
+      $("tempsAra").className = "";
+      $("tempsAra").innerHTML =
+        '<div class="gran"><span class="ico">' + ic + '</span><span class="temp">' + num(c.temperature_2m, 1) + ' °C</span>' +
+        '<span class="estat">' + est + "<br>Sensació de " + num(c.apparent_temperature, 1) + " °C</span></div>" +
+        '<div class="xifres">' +
+        '<div class="xifra"><b>' + num(d.temperature_2m_min[0], 0) + " / " + num(d.temperature_2m_max[0], 0) + ' °C</b><span>Mínima / màxima</span></div>' +
+        '<div class="xifra"><b>' + (c.relative_humidity_2m ?? "—") + ' %</b><span>Humitat</span></div>' +
+        '<div class="xifra"><b>' + num(c.wind_speed_10m, 0) + " km/h</b><span>Vent (ratxes de " + num(c.wind_gusts_10m, 0) + ")</span></div>" +
+        '<div class="xifra"><b>' + (d.precipitation_probability_max[0] ?? 0) + ' %</b><span>Probabilitat de pluja</span></div>' +
+        '<div class="xifra"><b>' + String(d.sunrise[0]).slice(11) + " · " + String(d.sunset[0]).slice(11) + '</b><span>Sortida i posta del sol</span></div>' +
+        '<div class="xifra"><b>' + xipUV(uvMax) + '</b><span>UV màxim · ' + nivellUV(uvMax).con + "</span></div></div>";
+      const avui = avuiISO();
+      let franja = "";
+      j.hourly.time.forEach((t, i) => {
+        const h = Number(t.slice(11, 13));
+        if (t.slice(0, 10) === avui && h >= 8 && h <= 20) {
+          const v = j.hourly.uv_index[i] || 0;
+          franja += '<div><i style="background:' + nivellUV(v).c + '">' + Math.round(v) + "</i>" + z(h) + " h</div>";
+        }
+      });
+      $("uvHores").className = franja ? "franja" : "buit";
+      $("uvHores").innerHTML = franja || "Sense dades d'avui.";
+      let h = '<div class="dies">';
+      for (let i = 1; i < d.time.length; i++) {
+        const [ici, esti] = codi(d.weather_code[i]);
+        h += '<div class="dia"><div>' + majus(NOMS_DIA[dsem(d.time[i])].slice(0, 2)) + ". " + dm(d.time[i]) + '</div><div class="i" title="' + esti + '">' + ici + "</div>" +
+          "<div><b>" + num(d.temperature_2m_max[i], 0) + '°</b> <span class="m">' + num(d.temperature_2m_min[i], 0) + "°</span></div>" +
+          '<div class="m">💧 ' + (d.precipitation_probability_max[i] ?? 0) + " % · UV " + Math.round(d.uv_index_max[i] || 0) + "</div></div>";
+      }
+      $("tempsDies").innerHTML = h + "</div>";
+    } catch (e) {
+      $("tempsAra").className = "buit";
+      $("tempsAra").textContent = "Ara no es pot carregar el temps; es tornarà a provar d'aquí a 30 minuts.";
+    }
+  }
+  async function carregaTempsMexic() {
+    try {
+      const r = await fetch("https://api.open-meteo.com/v1/forecast?latitude=" + MEXIC.lat + "&longitude=" + MEXIC.lon + "&current=temperature_2m,weather_code&timezone=America%2FMexico_City");
+      if (!r.ok) throw new Error(r.status);
+      const c = (await r.json()).current;
+      const [ic, est] = codi(c.weather_code);
+      $("mexicTemps").textContent = "Ara a Ciutat de Mèxic: " + ic + " " + est.toLowerCase() + ", " + num(c.temperature_2m, 0) + " °C.";
+    } catch (e) { $("mexicTemps").textContent = ""; }
+  }
+
+  // ================= Mèxic =================
+  function pintaMexic() {
+    const avui = avuiISO();
+    const fins = dies(avui, VIATGE.anada);
+    const anada = dma(VIATGE.anada), des = dma(VIATGE.tornadaDes), finsT = dma(VIATGE.tornadaFins);
+    const tornada = "Tornada: entre " + art(des) + des + " i " + art(finsT) + finsT + ".";
+    $("mexicCompte").className = "";
+    if (fins > 0) $("mexicCompte").innerHTML = '<div class="compte">' + fins + " <small>" + (fins === 1 ? "dia" : "dies") + " per marxar</small></div>" +
+      '<p class="font">Anada: ' + NOMS_DIA[dsem(VIATGE.anada)] + ", " + anada + ". " + tornada + "</p>";
+    else if (dies(avui, VIATGE.tornadaFins) >= 0) $("mexicCompte").innerHTML = '<div class="compte">🇲🇽 <small>Bon viatge!</small></div><p class="font">' + tornada + "</p>";
+    else $("mexicCompte").innerHTML = '<p class="buit">Viatge acabat.</p>';
+  }
+
+  // ================= Capçalera i arrencada =================
+  function pintaAra() {
+    const avui = avuiISO();
+    $("ara").textContent = majus(NOMS_DIA[dsem(avui)]) + ", " + dma(avui) + " · " + hora(TZ);
+    $("horaBisbal").textContent = hora(TZ);
+    $("horaMexic").textContent = hora("America/Mexico_City");
+  }
+  function pintaTot() {
+    pintaMexic(); pintaCurs(); pintaCalendari(); pintaReunions(); pintaAlumnes();
+    if (document.activeElement !== $("notesText")) $("notesText").value = dades.notes || "";
+  }
+  let darrerDia = avuiISO();
+  setInterval(() => {
+    pintaAra();
+    if (avuiISO() !== darrerDia) { darrerDia = avuiISO(); pintaTot(); }
+  }, 30000);
+  setInterval(() => { carregaTemps(); carregaTempsMexic(); }, 30 * 60 * 1000);
+  // Quan es torna a la pestanya, es recarreguen les dades de GitHub (per si s'han canviat des d'un altre aparell)
+  document.addEventListener("visibilitychange", async () => { if (document.visibilityState === "visible" && obert && clau && !desant && !temporitzador && !document.querySelector("dialog[open]")) { if (await baixa() !== "clau") pintaTot(); } });
+
+  pintaAra(); pintaMexic(); estatSinc("", "Tancat");
+  carregaTemps(); carregaTempsMexic();
+})();
+</script>
+<script src="dates-ca.js?v=3"></script>
+</body>
+</html>
