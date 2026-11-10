@@ -339,6 +339,34 @@ dialog .check{display:flex;gap:8px;align-items:center;color:var(--text);font-siz
     { d: "2027-06-21", t: "Final de curs" },
     { d: "2027-06-24", t: "Sant Joan", nl: true }
   ];
+  // Horari setmanal (calendari «Feina» d'icorney@xtec.cat, setmana del 09.11.2026): entra una sola vegada com a activitats setmanals editables
+  const SEMBRA_HORARI = [
+    ["2026-11-09", "10:30", "11:30", "Guàrdia", "", "altres"],
+    ["2026-11-09", "12:00", "13:00", "1J", "A5", "classe"],
+    ["2026-11-09", "13:00", "14:00", "4B", "B3", "classe"],
+    ["2026-11-09", "14:00", "15:00", "1I · Lectura", "P7", "classe"],
+    ["2026-11-10", "08:30", "09:30", "1I", "P7", "classe"],
+    ["2026-11-10", "09:30", "10:30", "4G", "B1", "classe"],
+    ["2026-11-10", "10:30", "11:30", "1A", "T1", "classe"],
+    ["2026-11-10", "11:30", "12:30", "4B", "B3", "classe"],
+    ["2026-11-10", "14:00", "15:00", "4D", "Q8", "classe"],
+    ["2026-11-10", "16:00", "17:00", "ED / Departament", "", "claustre"],
+    ["2026-11-11", "09:30", "10:30", "4C", "Q9", "classe"],
+    ["2026-11-11", "10:30", "11:30", "1A · Lectura", "T1", "classe"],
+    ["2026-11-11", "11:30", "12:30", "4D", "Q8", "classe"],
+    ["2026-11-11", "12:30", "13:00", "Biblioteca", "", "altres"],
+    ["2026-11-11", "13:00", "14:00", "4B · Lectura", "B3", "classe"],
+    ["2026-11-12", "08:30", "09:30", "4G", "B1", "classe"],
+    ["2026-11-12", "09:30", "10:30", "Guàrdia", "", "altres"],
+    ["2026-11-12", "11:30", "12:30", "4C · Lectura", "Q9", "classe"],
+    ["2026-11-12", "12:30", "13:00", "Guàrdia de pati 2", "", "altres"],
+    ["2026-11-13", "08:30", "09:30", "4C", "Q9", "classe"],
+    ["2026-11-13", "09:30", "10:30", "4G · Lectura", "B1", "classe"],
+    ["2026-11-13", "10:30", "11:30", "1J · Lectura", "T1", "classe"],
+    ["2026-11-13", "13:00", "14:00", "4D · Lectura", "Q8", "classe"],
+    ["2026-11-13", "14:00", "15:00", "Guàrdia", "", "altres"],
+    ["2026-11-13", "16:30", "17:30", "Trampolí", "", "altres"]
+  ];
   // Dates pròpies de l'institut: entren com a activitats editables la primera vegada que s'obre l'Institut
   const SEMBRA_INS = [
     { d: "2026-09-14", t: "Inici de curs dels cicles formatius", tipus: "altres" },
@@ -395,6 +423,7 @@ dialog .check{display:flex;gap:8px;align-items:center;color:var(--text);font-siz
       if (Array.isArray(d.reunions)) r.reunions = d.reunions.filter(a => a && esISO(a.data));
       if (typeof d.notes === "string") r.notes = d.notes;
       if (typeof d.sembrat === "string") r.sembrat = d.sembrat;
+      if (typeof d.sembratHorari === "string") r.sembratHorari = d.sembratHorari;
       if (d.qualificacions && Array.isArray(d.qualificacions.grups)) r.qualificacions = d.qualificacions;
     }
     return r;
@@ -433,6 +462,14 @@ dialog .check{display:flex;gap:8px;align-items:center;color:var(--text);font-siz
             dades.activitats.push({ id: nouId(), titol: x.t, tipus: x.tipus, lloc: "", data: x.d, fins: "", hora: "", horaFi: "", repeteix: false, repFins: "", excepcions: [], notes: "" });
         });
         dades.sembrat = "ins-2026-2027";
+        desa();
+      }
+      if (dades.sembratHorari !== "xtec-2026-11-10") {
+        SEMBRA_HORARI.forEach(([d, hi, hf, t, lloc, tipus]) => {
+          if (!dades.activitats.some(a => a.repeteix && a.data === d && a.hora === hi && a.titol === t))
+            dades.activitats.push({ id: nouId(), titol: t, tipus: tipus, lloc: lloc, data: d, fins: "", hora: hi, horaFi: hf, repeteix: true, repFins: FI_CURS, excepcions: [], notes: "" });
+        });
+        dades.sembratHorari = "xtec-2026-11-10";
         desa();
       }
       return "ok";
