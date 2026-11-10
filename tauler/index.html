@@ -159,6 +159,16 @@ dialog#dlgRub{width:min(760px,calc(100vw - 24px))}
 .rub-niv input{accent-color:#fff;margin:0;cursor:pointer}
 .rub-nota{font-size:1.1rem;margin:4px 0}
 .taula td.rub{cursor:pointer;background:#fbf6ea}
+/* Assistent */
+.fila-as{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0}
+.fila-as label{display:grid;gap:2px;font-size:.8rem;color:var(--suau)}
+#asCos textarea{width:100%;margin:6px 0}
+.as-errs{margin:4px 0 8px;padding-left:20px;font-size:.9rem}
+.as-doc{border:1px solid var(--linia);border-radius:10px;padding:10px 16px;margin-top:8px;max-height:70vh;overflow:auto}
+.as-dis{font-family:Verdana,Arial,sans-serif;line-height:1.9;letter-spacing:.03em}
+.as-butll td{vertical-align:top;padding:6px;border-bottom:1px solid var(--linia)}
+.as-butll td:first-child{white-space:nowrap;font-weight:600}
+.as-butll textarea{width:100%;min-width:260px}
 /* Temps */
 .temps-linia{display:flex;align-items:center;gap:6px 14px;flex-wrap:wrap}
 .temps-linia .ico{font-size:1.6rem;line-height:1}
@@ -359,6 +369,17 @@ dialog .check{display:flex;gap:8px;align-items:center;color:var(--text);font-siz
       <h3 class="bt">🎓 Alumnes i qualificacions</h3>
       <div id="alumCos"></div>
     </div>
+  <div class="bloc" id="assistent">
+    <h3 class="bt">🤖 Assistent</h3>
+    <div class="vistes" role="group" aria-label="Eina" id="asEines" style="flex-wrap:wrap;margin-bottom:10px">
+      <button type="button" data-as="corregir">✍️ Corregir</button>
+      <button type="button" data-as="activitats">📚 Activitats</button>
+      <button type="button" data-as="adaptar">🧩 Adaptar</button>
+      <button type="button" data-as="rubrica">📋 Rúbrica</button>
+      <button type="button" data-as="butlleti">💬 Butlletí</button>
+    </div>
+    <div id="asCos"></div>
+  </div>
   <div class="bloc" id="notes">
     <h3 class="bt">📝 Notes de feina</h3>
     <textarea id="notesText" placeholder="Escriu aquí el que vulguis recordar…"></textarea>
@@ -1095,6 +1116,222 @@ dialog .check{display:flex;gap:8px;align-items:center;color:var(--text);font-siz
     }
   }
 
+  // ================= Assistent (IA i corrector) =================
+  // Passa pel Worker (clau de Gemini guardada allà). Mai s'hi envien noms d'alumnes.
+  let asEina = "corregir", asResultat = "", asOcupat = false, asDades = null;
+  async function ia(sistema, text, opcions) {
+    const d = await crida(Object.assign({ accio: "ia", sistema: sistema, text: text, json: !!(opcions && opcions.json) }, opcions && opcions.imatge ? { imatge: opcions.imatge } : {}));
+    if (opcions && opcions.json) { try { return JSON.parse(d.resposta.replace(/^```(json)?\s*|\s*```$/g, "")); } catch (e) { throw new Error("La IA no ha retornat dades vàlides; torna-ho a provar."); } }
+    return d.resposta;
+  }
+  // Markdown senzill → HTML (títols, negreta, cursiva, llistes, taules senzilles)
+  function md(t) {
+    const linies = esc(t).split("\n"); let h = "", llista = null;
+    const tanca = () => { if (llista) { h += "</" + llista + ">"; llista = null; } };
+    const inl = x => x.replace(/\*\*(.+?)\*\*/g, "<b>$1</b>").replace(/(^|[^*])\*([^*]+)\*/g, "$1<i>$2</i>");
+    linies.forEach(l => {
+      let m;
+      if ((m = l.match(/^(#{1,4})\s+(.*)/))) { tanca(); const n = Math.min(m[1].length + 2, 6); h += "<h" + n + ">" + inl(m[2]) + "</h" + n + ">"; }
+      else if ((m = l.match(/^\s*[-*•]\s+(.*)/))) { if (llista !== "ul") { tanca(); llista = "ul"; h += "<ul>"; } h += "<li>" + inl(m[1]) + "</li>"; }
+      else if ((m = l.match(/^\s*\d+[.)]\s+(.*)/))) { if (llista !== "ol") { tanca(); llista = "ol"; h += "<ol>"; } h += "<li>" + inl(m[1]) + "</li>"; }
+      else if (!l.trim()) { tanca(); }
+      else { tanca(); h += "<p>" + inl(l) + "</p>"; }
+    });
+    tanca(); return h;
+  }
+  function imprimeix(titol, html, dis) {
+    const w = window.open("", "_blank");
+    if (!w) { alert("El navegador ha bloquejat la finestra. Permet les finestres emergents per a aquesta pàgina."); return; }
+    w.document.write('<!doctype html><html lang="ca"><head><meta charset="utf-8"><title>' + esc(titol) + "</title><style>" +
+      (dis ? "body{font:18px/1.9 Verdana,Arial,sans-serif;letter-spacing:.04em;word-spacing:.12em;max-width:68ch;margin:24px auto;color:#1d1d1b;background:#fffdf5}p,li{text-align:left}i,em{font-style:normal;font-weight:700}"
+           : "body{font:15px/1.6 Georgia,serif;max-width:72ch;margin:24px auto;color:#1d1d1b}") +
+      "h3,h4{margin:1.2em 0 .4em}@media print{body{margin:0 auto}}</style></head><body>" + html + "<script>setTimeout(()=>print(),300)<\/script></body></html>");
+    w.document.close();
+  }
+  const fitxerABase64 = f => new Promise((ok, ko) => {
+    const r = new FileReader();
+    r.onload = () => {
+      // Redueix la foto (màx. 1600 px) perquè vagi lleugera
+      const img = new Image();
+      img.onload = () => { const k = Math.min(1, 1600 / Math.max(img.width, img.height)); const c = document.createElement("canvas"); c.width = Math.round(img.width * k); c.height = Math.round(img.height * k); c.getContext("2d").drawImage(img, 0, 0, c.width, c.height); ok({ tipus: "image/jpeg", dades: c.toDataURL("image/jpeg", 0.85).split(",")[1] }); };
+      img.onerror = () => ko(new Error("No s'ha pogut llegir la imatge."));
+      img.src = r.result;
+    };
+    r.onerror = () => ko(new Error("No s'ha pogut llegir el fitxer."));
+    r.readAsDataURL(f);
+  });
+  const ESTIL_COMENTARIS = "Estil dels comentaris del professor (exemples reals): «24,25 / 29 = 8,36. Cuidado con la puntuación, referencias externas sin dejar claro dónde estamos, mayúsculas después del punto, errores ortográficos abundantes: vivía, tenía, huracán…» · «27,75 / 29 = 9,56. Correcta la estructuración. Pocas faltas.» · «Debes estructurar frase-punto, frase-punto. Ortografía, errores graves: …». Comentaris breus, directes, en la llengua del text, que comencen amb la puntuació si n'hi ha i després valoren estructura, puntuació i llisten les faltes d'ortografia entre comes.";
+
+  function selectorsAlumne(prefix) {
+    const q = Q(); if (!q.grups.length) return '<p class="font">Importa o crea primer algun grup per poder desar la nota a una columna.</p>';
+    const g = q.grups[Math.min(Number(prefix.g || 0), q.grups.length - 1)];
+    const f = g.fulls[Math.min(Number(prefix.f || 0), g.fulls.length - 1)] || { columnes: [], files: [] };
+    return '<div class="fila-as"><label>Grup<select data-as="g">' + q.grups.map((x, i) => '<option value="' + i + '"' + (x === g ? " selected" : "") + ">" + esc(x.nom) + "</option>").join("") + "</select></label>" +
+      '<label>Full<select data-as="f">' + g.fulls.map((x, i) => '<option value="' + i + '"' + (x === f ? " selected" : "") + ">" + esc(x.nom) + "</option>").join("") + "</select></label>" +
+      '<label>Alumne<select data-as="a"><option value="">—</option>' + f.files.map(r => '<option value="' + esc(r.nom) + '"' + (prefix.a === r.nom ? " selected" : "") + ">" + esc(r.nom.replace(/\s+DIS$/i, "")) + "</option>").join("") + "</select></label>" +
+      '<label>Columna<select data-as="c"><option value="">—</option>' + f.columnes.filter(c => c.tipus !== "calc").map(c => '<option value="' + esc(c.nom) + '"' + (prefix.c === c.nom ? " selected" : "") + ">" + esc(c.nom) + "</option>").join("") + "</select></label></div>";
+  }
+  let asSel = { g: 0, f: 0, a: "", c: "" };
+  function pintaAssistent() {
+    const cos = $("asCos"); if (!cos) return;
+    const textAbans = $("asText") ? $("asText").value : "";
+    document.querySelectorAll("#asEines button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.as === asEina)));
+    const rbOpts = '<option value="">Sense rúbrica</option>' + rubriques().map(r => '<option value="' + r.id + '">' + esc(r.nom) + "</option>").join("");
+    let h = "";
+    if (asEina === "corregir") {
+      h = '<p class="font">Enganxa la redacció o fes-ne una foto. El corrector marca les faltes i la IA en proposa la nota i el comentari amb el teu estil. No s\'envia el nom de l\'alumne.</p>' +
+        '<div class="fila-as"><label>Llengua<select id="asLleng"><option value="ca">Català</option><option value="es">Castellà</option></select></label><label>Rúbrica<select id="asRub">' + rbOpts + '</select></label><label>Puntuació sobre<input type="text" id="asMax" value="10" inputmode="decimal" style="width:5em"></label></div>' +
+        '<textarea id="asText" placeholder="Enganxa aquí el text de la redacció…" rows="8"></textarea>' +
+        '<div class="alum-eines"><label class="boto clar" style="display:inline-block">📷 Foto del full<input type="file" id="asFoto" accept="image/*" capture="environment" hidden></label><span class="font" id="asFotoNom"></span></div>' +
+        '<div class="alum-eines"><button type="button" class="boto clar" data-asb="ortografia">🔤 Només ortografia</button><button type="button" class="boto" data-asb="corregeix">✍️ Corregeix amb IA</button></div>';
+    } else if (asEina === "activitats") {
+      h = '<p class="font">Genera una activitat en tres nivells (bàsic, mitjà i avançat) amb solucionari.</p>' +
+        '<div class="fila-as"><label>Curs<select id="asCurs"><option>1r d\'ESO</option><option>2n d\'ESO</option><option>3r d\'ESO</option><option>4t d\'ESO</option><option>1r de batxillerat</option><option>2n de batxillerat</option></select></label><label>Llengua<select id="asLleng"><option value="català">Català</option><option value="castellà">Castellà</option></select></label>' +
+        '<label>Tipus<select id="asTipus"><option>Comprensió lectora</option><option>Dictat</option><option>Ortografia</option><option>Gramàtica</option><option>Vocabulari</option><option>Expressió escrita (consignes)</option><option>Qüestionari tipus test</option><option>Literatura</option></select></label><label>Preguntes<input type="text" id="asN" value="6" inputmode="numeric" style="width:4em"></label></div>' +
+        '<textarea id="asText" placeholder="Tema, objectius o text de partida (pots enganxar-hi un text)…" rows="6"></textarea>' +
+        '<label class="font"><input type="checkbox" id="asDisAct"> Afegeix també una versió adaptada DIS/PSI</label>' +
+        '<div class="alum-eines"><button type="button" class="boto" data-asb="activitat">📚 Genera l\'activitat</button></div>';
+    } else if (asEina === "adaptar") {
+      h = '<p class="font">Enganxa un text o uns enunciats i en tens la versió per a alumnat amb dislèxia (DIS) o amb pla de suport (PSI).</p>' +
+        '<div class="fila-as"><label>Adaptació<select id="asAdap"><option value="DIS">DIS (dislèxia)</option><option value="PSI">PSI (simplificada, amb glossari)</option><option value="totes">Totes dues</option></select></label></div>' +
+        '<textarea id="asText" placeholder="Text o enunciats a adaptar…" rows="8"></textarea>' +
+        '<div class="alum-eines"><button type="button" class="boto" data-asb="adapta">🧩 Adapta</button></div>';
+    } else if (asEina === "rubrica") {
+      h = '<p class="font">Descriu què vols avaluar i en surt una rúbrica que pots afegir al banc i vincular a una columna.</p>' +
+        '<textarea id="asText" placeholder="Ex.: rúbrica per avaluar un comentari de text de 4t d\'ESO: comprensió, estructura, adequació, correcció lingüística…" rows="5"></textarea>' +
+        '<div class="alum-eines"><button type="button" class="boto" data-asb="rubrica">📋 Crea la rúbrica</button></div>';
+    } else {
+      const q = Q(); const g = q.grups[Math.min(asSel.g, Math.max(q.grups.length - 1, 0))];
+      h = '<p class="font">Proposa un comentari per a cada alumne a partir de les notes del full i de les marques PSI i DIS. S\'envien les notes sense noms.</p>' +
+        (g ? '<div class="fila-as"><label>Grup<select data-as="g">' + q.grups.map((x, i) => '<option value="' + i + '"' + (x === g ? " selected" : "") + ">" + esc(x.nom) + "</option>").join("") + "</select></label>" +
+          '<label>Full<select data-as="f">' + g.fulls.map((x, i) => '<option value="' + i + '"' + (i === asSel.f ? " selected" : "") + ">" + esc(x.nom) + "</option>").join("") + "</select></label>" +
+          '<label>Llengua<select id="asLleng"><option value="català">Català</option><option value="castellà">Castellà</option></select></label></div>' +
+          '<textarea id="asText" placeholder="Indicacions (opcional): to, aspectes a destacar, matèria…" rows="3"></textarea>' +
+          '<div class="alum-eines"><button type="button" class="boto" data-asb="butlleti">💬 Proposa els comentaris</button></div>' : '<p class="buit">Primer cal tenir algun grup amb notes.</p>');
+    }
+    if (asEina === "corregir") h += selectorsAlumne(asSel);
+    h += '<div id="asSortida">' + (asOcupat ? '<p class="cr-buit">Treballant… pot trigar uns segons.</p>' : asResultat) + "</div>";
+    cos.innerHTML = h;
+    if ($("asText") && textAbans) $("asText").value = textAbans;
+  }
+  function errorsHTML(errs) {
+    if (!errs.length) return '<p class="font">El corrector no hi ha trobat cap falta.</p>';
+    return '<ul class="as-errs">' + errs.map(e => "<li><b>" + esc(e.original) + "</b>" + (e.suggeriments.length ? " → " + esc(e.suggeriments.join(" / ")) : "") + ' <span class="font">' + esc(e.missatge) + "</span></li>").join("") + "</ul>";
+  }
+  async function executa(b) {
+    const a = b.dataset.asb, txt = (($("asText") || {}).value || "").trim();
+    const fet = html => { asOcupat = false; asResultat = html; pintaAssistent(); };
+    const err = e => fet('<p class="avis">' + esc(e.message) + "</p>");
+    if (a === "copia") { navigator.clipboard && navigator.clipboard.writeText(asDades && asDades.text || ""); b.textContent = "Copiat ✓"; return; }
+    if (a === "imprimeix") { imprimeix(asDades.titol, asDades.html, false); return; }
+    if (a === "imprimeixdis") { imprimeix(asDades.titol, asDades.htmlDis || asDades.html, true); return; }
+    if (a === "alBanc") { rubriques().push(Object.assign({ id: nouId() }, asDades.rubrica)); desa(); b.textContent = "Afegida al banc ✓"; b.disabled = true; pintaAlumnes(); return; }
+    if (a === "desaNota") {
+      const g = Q().grups[asSel.g], f = g && g.fulls[asSel.f], fila = f && f.files.find(r => r.nom === asSel.a), col = f && f.columnes.find(c => c.nom === asSel.c);
+      if (!fila || !col) { alert("Tria grup, full, alumne i columna a sota."); return; }
+      const nota = Number(String($("asNota").value).replace(",", "."));
+      if (isNaN(nota)) { alert("La nota no és un número."); return; }
+      fila.v[col.nom] = nota;
+      if (col.tipus === "rubrica" && asDades.sel) { fila.rb = fila.rb || {}; fila.rb[col.nom] = { rubrica: col.rubrica, sel: asDades.sel, comentari: $("asComent").value }; }
+      desa(); pintaAlumnes(); b.textContent = "Desat a " + col.nom + " ✓"; b.disabled = true; return;
+    }
+    // Es llegeix tot el formulari abans de redibuixar
+    const val = id => ($(id) ? ($(id).type === "checkbox" ? $(id).checked : $(id).value) : "");
+    const F = { lleng: val("asLleng"), rub: val("asRub"), max: val("asMax"), foto: $("asFoto") && $("asFoto").files[0], curs: val("asCurs"), tipus: val("asTipus"), n: val("asN"), dis: val("asDisAct"), adap: val("asAdap") };
+    asOcupat = true; asResultat = ""; pintaAssistent();
+    try {
+      if (a === "ortografia") {
+        if (!txt) return fet('<p class="avis">Enganxa primer el text.</p>');
+        const d = await crida({ accio: "ortografia", text: txt, llengua: F.lleng || "ca" });
+        asDades = { text: d.errors.map(e => e.original).join(", ") };
+        return fet("<h4>Faltes trobades (" + d.errors.length + ")</h4>" + errorsHTML(d.errors) + '<div class="alum-eines"><button type="button" class="boto clar" data-asb="copia">Copia la llista</button></div>');
+      }
+      if (a === "corregeix") {
+        const foto = F.foto;
+        if (!txt && !foto) return fet('<p class="avis">Enganxa el text o tria una foto.</p>');
+        const lleng = F.lleng, rb = rubriques().find(r => r.id === F.rub), max = F.max || "10";
+        let ort = [];
+        if (txt) { try { ort = (await crida({ accio: "ortografia", text: txt, llengua: lleng })).errors; } catch (e) { ort = []; } }
+        const sistema = "Ets un professor de llengua " + (lleng === "es" ? "castellana" : "catalana") + " de secundària que corregeix redaccions. " + ESTIL_COMENTARIS +
+          " Respon només JSON amb aquest format: {\"transcripcio\": text (si t'arriba una imatge, la transcripció literal; si no, buit), \"faltes\": [{\"original\":..,\"correccio\":..}], \"puntuacio\": nombre sobre " + max + ", \"nivells\": " + (rb ? "[índex del nivell triat per a cada criteri, en ordre, 0 = " + rb.nivells[0].nom + "]" : "[]") + ", \"comentari\": text}. " +
+          (rb ? "Rúbrica: criteris " + JSON.stringify(rb.criteris.map(c => c.nom)) + "; nivells " + JSON.stringify(rb.nivells.map(n => n.nom)) + ". " : "") +
+          (ort.length ? "El corrector automàtic hi ha detectat: " + ort.map(e => e.original + (e.suggeriments[0] ? "→" + e.suggeriments[0] : "")).join("; ") + ". Comprova-ho i inclou les faltes reals. " : "") +
+          "No inventis el nom de l'alumne.";
+        const imatge = foto ? await fitxerABase64(foto) : null;
+        const r = await ia(sistema, txt || "Corregeix la redacció de la imatge.", { json: true, imatge });
+        const sel = rb && Array.isArray(r.nivells) && r.nivells.length === rb.criteris.length ? r.nivells.map(x => Math.max(0, Math.min(rb.nivells.length - 1, Number(x) || 0))) : null;
+        let nota = Number(r.puntuacio); if (sel) nota = notaRubrica(rb, sel); else if (Number(max) && Number(max) !== 10) nota = Math.round(nota / Number(max) * 1000) / 100;
+        asDades = { text: r.comentari || "", sel };
+        return fet((r.transcripcio ? '<details><summary class="font">Transcripció de la foto</summary><p style="white-space:pre-wrap">' + esc(r.transcripcio) + "</p></details>" : "") +
+          (ort.length ? "<h4>Corrector (" + ort.length + ")</h4>" + errorsHTML(ort) : "") +
+          ((r.faltes || []).length ? "<h4>Faltes segons la IA</h4><ul class=\"as-errs\">" + r.faltes.map(x => "<li><b>" + esc(x.original) + "</b> → " + esc(x.correccio) + "</li>").join("") + "</ul>" : "") +
+          (sel ? "<h4>Rúbrica: " + esc(rb.nom) + "</h4><ul class=\"as-errs\">" + rb.criteris.map((c, i) => "<li>" + esc(c.nom) + ": <b>" + esc(rb.nivells[sel[i]].nom) + "</b></li>").join("") + "</ul>" : "") +
+          '<div class="fila-as"><label>Nota (sobre 10)<input type="text" id="asNota" value="' + String(isNaN(nota) ? "" : nota).replace(".", ",") + '" style="width:6em"></label></div>' +
+          '<label class="font">Comentari<textarea id="asComent" rows="4">' + esc(r.comentari || "") + "</textarea></label>" +
+          '<div class="alum-eines"><button type="button" class="boto clar" data-asb="copia">Copia el comentari</button><button type="button" class="boto" data-asb="desaNota">Desa la nota a la columna</button></div>');
+      }
+      if (a === "activitat") {
+        if (!txt) return fet('<p class="avis">Escriu el tema o enganxa el text de partida.</p>');
+        const dis = F.dis;
+        const sistema = "Ets un professor de llengua de secundària a Catalunya. Prepara una activitat de tipus «" + F.tipus + "» per a " + F.curs + ", redactada en " + F.lleng + ", amb " + (F.n || 6) + " preguntes o exercicis per nivell. " +
+          "Fes TRES NIVELLS: «## Nivell bàsic», «## Nivell mitjà», «## Nivell avançat», cadascun amb les seves instruccions i preguntes numerades. Si cal un text de lectura, posa'l al principi amb «## Text». Al final, «## Solucionari» amb les respostes de cada nivell." +
+          (dis ? " Després, «## Versió adaptada (DIS/PSI)»: frases curtes, una instrucció per frase, vocabulari senzill, preguntes més guiades i un petit glossari." : "") +
+          " Usa format Markdown senzill (##, llistes numerades, **negreta**). No posis cap introducció ni comentari fora de l'activitat.";
+        const r = await ia(sistema, txt);
+        asDades = { titol: F.tipus + " · " + F.curs, text: r, html: md(r) };
+        return fet('<div class="alum-eines"><button type="button" class="boto clar" data-asb="copia">Copia</button><button type="button" class="boto clar" data-asb="imprimeix">🖨️ Imprimeix / PDF</button><button type="button" class="boto clar" data-asb="imprimeixdis">🖨️ Format DIS</button></div><div class="as-doc">' + asDades.html + "</div>");
+      }
+      if (a === "adapta") {
+        if (!txt) return fet('<p class="avis">Enganxa primer el text.</p>');
+        const tipus = F.adap;
+        const sistema = "Ets especialista en atenció a la diversitat a secundària. Adapta el material que t'envien, en la mateixa llengua. " +
+          (tipus !== "PSI" ? "Versió DIS (dislèxia), amb el títol «## Versió DIS»: frases curtes, una idea per frase, paràgrafs breus, paraules clau en **negreta**, sense cursiva ni majúscules seguides, enunciats d'una sola instrucció. " : "") +
+          (tipus !== "DIS" ? "Versió PSI, amb el títol «## Versió PSI»: contingut essencial simplificat, vocabulari bàsic, preguntes guiades amb opcions quan calgui, i al final «### Glossari» amb les paraules difícils explicades. " : "") +
+          "Format Markdown senzill. No afegeixis comentaris fora del material.";
+        const r = await ia(sistema, txt);
+        asDades = { titol: "Material adaptat", text: r, html: md(r), htmlDis: md(r) };
+        return fet('<div class="alum-eines"><button type="button" class="boto clar" data-asb="copia">Copia</button><button type="button" class="boto clar" data-asb="imprimeixdis">🖨️ Imprimeix en format DIS</button><button type="button" class="boto clar" data-asb="imprimeix">🖨️ Format normal</button></div><div class="as-doc as-dis">' + asDades.html + "</div>");
+      }
+      if (a === "rubrica") {
+        if (!txt) return fet('<p class="avis">Descriu què vols avaluar.</p>');
+        const r = await ia("Crea una rúbrica d'avaluació per a secundària, en català. Respon només JSON: {\"nom\": text curt, \"criteris\": [{\"nom\": text, \"pes\": nombre (importància relativa, p. ex. 0,5 a 2), \"extra\": false}], \"nivells\": [{\"nom\": text, \"valor\": nombre de 0 a 1, de més alt a més baix}]}. Entre 3 i 7 criteris i 4 o 5 nivells.", txt, { json: true });
+        if (!r || !Array.isArray(r.criteris) || !Array.isArray(r.nivells)) throw new Error("La IA no ha retornat una rúbrica vàlida.");
+        const rubrica = { nom: String(r.nom || "Rúbrica nova"), criteris: r.criteris.map(c => ({ nom: String(c.nom), pes: Number(c.pes) > 0 ? Number(c.pes) : 1, extra: !!c.extra })), nivells: r.nivells.map(n => ({ nom: String(n.nom), valor: Math.max(0, Math.min(1, Number(n.valor) || 0)) })) };
+        asDades = { rubrica };
+        return fet("<h4>" + esc(rubrica.nom) + '</h4><table class="rub-taula"><thead><tr><th>Criteri</th><th>Pes</th></tr></thead><tbody>' + rubrica.criteris.map(c => "<tr><td>" + esc(c.nom) + (c.extra ? " (extra)" : "") + "</td><td>" + String(c.pes).replace(".", ",") + "</td></tr>").join("") + "</tbody></table>" +
+          '<p class="font">Nivells: ' + rubrica.nivells.map(n => esc(n.nom) + " (" + String(n.valor).replace(".", ",") + ")").join(" · ") + "</p>" +
+          '<div class="alum-eines"><button type="button" class="boto" data-asb="alBanc">Afegeix al banc de rúbriques</button></div>');
+      }
+      if (a === "butlleti") {
+        const g = Q().grups[asSel.g], f = g && g.fulls[asSel.f];
+        if (!f || !f.files.length) return fet('<p class="avis">Aquest full no té alumnes.</p>');
+        const valor = calculadora(g);
+        const anon = f.files.map((r, i) => {
+          const notes = {};
+          f.columnes.forEach(c => { if (c.tipus === "text") return; const v = valor(f, r, c); const n = numOpcional(v); if (n !== null) notes[c.nom] = Math.round(n * 100) / 100; });
+          return { id: i + 1, psi: (g.psi || []).includes(r.nom), dis: /\sDIS$/i.test(r.nom), notes };
+        });
+        const sistema = "Ets un professor de secundària que redacta comentaris per als butlletins de notes en " + F.lleng + ". Per a cada alumne (identificat només amb un número) escriu un comentari de 2 o 3 frases, constructiu, concret segons les seves notes (fortaleses i què ha de millorar), adequat a les famílies. Si té PSI o dislèxia, tingues-ho en compte amb tacte però sense esmentar-ho explícitament. Respon només JSON: [{\"id\": número, \"comentari\": text}].";
+        const r = await ia(sistema, ((txt ? "Indicacions del professor: " + txt + "\n" : "") + "Full: " + f.nom + "\nAlumnes: " + JSON.stringify(anon)), { json: true });
+        const llista = Array.isArray(r) ? r : (r.comentaris || []);
+        const files = f.files.map((al, i) => ({ nom: al.nom.replace(/\s+DIS$/i, ""), com: (llista.find(x => Number(x.id) === i + 1) || {}).comentari || "" }));
+        asDades = { text: files.map(x => x.nom + "\t" + x.com).join("\n") };
+        return fet('<div class="alum-eines"><button type="button" class="boto clar" data-asb="copia">Copia-ho tot (per enganxar a un full)</button></div><div class="taula"><table class="as-butll"><tbody>' + files.map(x => "<tr><td>" + esc(x.nom) + '</td><td><textarea rows="3">' + esc(x.com) + "</textarea></td></tr>").join("") + "</tbody></table></div>");
+      }
+      fet("");
+    } catch (e) { err(e); }
+  }
+  document.querySelectorAll("#asEines button").forEach(b => b.addEventListener("click", () => { asEina = b.dataset.as; asResultat = ""; pintaAssistent(); }));
+  $("asCos").addEventListener("click", ev => { const b = ev.target.closest("[data-asb]"); if (b && !asOcupat) executa(b); });
+  $("asCos").addEventListener("change", ev => {
+    const el = ev.target;
+    if (el.dataset.as === "g") { asSel = { g: Number(el.value), f: 0, a: "", c: "" }; const t = ($("asText") || {}).value; pintaAssistent(); if ($("asText")) $("asText").value = t || ""; }
+    else if (el.dataset.as === "f") { asSel.f = Number(el.value); asSel.a = ""; const t = ($("asText") || {}).value; pintaAssistent(); if ($("asText")) $("asText").value = t || ""; }
+    else if (el.dataset.as === "a") asSel.a = el.value;
+    else if (el.dataset.as === "c") asSel.c = el.value;
+    else if (el.id === "asFoto") $("asFotoNom").textContent = el.files[0] ? el.files[0].name : "";
+  });
+
   // ================= Qualificacions =================
   // Fórmules: {Columna} = mateixa fila; {Full|Columna} = el mateix alumne en un altre full.
   // Funcions com a l'Excel: SUM, AVERAGE, MIN, MAX, COUNT, COUNTA, IF, IFERROR, ROUND, ROUNDUP,
@@ -1313,6 +1550,7 @@ dialog .check{display:flex;gap:8px;align-items:center;color:var(--text);font-siz
         "</tbody></table></div><p class=\"font\">" + files.length + " alumnes · toca una nota per canviar-la; toca el nom per canviar-lo o esborrar l'alumne.</p>";
     }
     cos.innerHTML = h;
+    if (typeof pintaAssistent === "function" && $("asCos") && !$("asCos").contains(document.activeElement) && !asOcupat && !asResultat) pintaAssistent();
   }
   function editaCela(td) {
     const g = grupActual(), f = fullActual(g); if (!f) return;
@@ -1955,6 +2193,7 @@ dialog .check{display:flex;gap:8px;align-items:center;color:var(--text);font-siz
   }
   function pintaTot() {
     pintaCurs(); pintaTasques(); pintaReunions(); pintaAlumnes();
+    if (!$("asCos").contains(document.activeElement)) pintaAssistent();
     if (!$("calCos").contains(document.activeElement)) pintaCalendari();
     if (!gestorCorreu) muntaCorreu(); else gestorCorreu.pinta();
     if (obert && gestorCorreu && !correuCarregat) { correuCarregat = true; gestorCorreu.carrega(); }
