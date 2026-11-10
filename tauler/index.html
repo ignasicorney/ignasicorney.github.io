@@ -96,7 +96,7 @@ ul.tasques button{background:none;border:0;color:var(--suau);padding:0 2px}
 .ag-any td.avui{outline:2px solid var(--accent);outline-offset:-2px}
 .ag-any .dn{display:inline-block;width:3.2em;color:var(--suau)}
 .ag-any input{border:0;background:transparent;font:inherit;width:calc(100% - 3.4em);padding:3px 0}
-.ag-mes{display:grid;grid-template-columns:repeat(7,minmax(0,1fr)) minmax(0,1.3fr);border-top:1px solid var(--linia);border-left:1px solid var(--linia)}
+.ag-mes{display:grid;grid-template-columns:repeat(5,minmax(0,1fr)) minmax(0,1.3fr);border-top:1px solid var(--linia);border-left:1px solid var(--linia)}
 .ag-mes .cap{font-size:.75rem;text-align:center;padding:4px 0;background:#f3e3c3;color:#6b4e1e;border-right:1px solid var(--linia);border-bottom:1px solid var(--linia)}
 .ag-mes .cel{border-right:1px solid var(--linia);border-bottom:1px solid var(--linia);padding:3px;min-width:0;min-height:70px}
 .ag-mes .cel.fora{background:#fafaf8}
@@ -109,7 +109,7 @@ ul.tasques button{background:none;border:0;color:var(--suau);padding:0 2px}
 .ag-blocs .marca{display:block;font-size:.65rem;color:var(--suau);white-space:normal}
 .ag-mes .dn i{font-style:normal;color:var(--accent);font-weight:400}
 .ag-mes textarea{width:100%;border:0;background:transparent;resize:none;font:inherit;font-size:.8rem;padding:2px 0;min-height:0}
-@media (max-width:600px){.ag-mes{grid-template-columns:repeat(7,minmax(0,1fr))}.ag-mes .obj{grid-column:1 / -1;min-height:0}.ag-mes .cap.obj{display:none}.ag-mes textarea{font-size:.7rem}}
+@media (max-width:600px){.ag-mes{grid-template-columns:repeat(5,minmax(0,1fr))}.ag-mes .obj{grid-column:1 / -1;min-height:0}.ag-mes .cap.obj{display:none}.ag-mes textarea{font-size:.7rem}.ag-mes .cel{padding:2px}.ag-mes .xip{font-size:.62rem;height:auto;line-height:1.2;padding:1px 3px;margin-top:2px;white-space:normal;overflow-wrap:anywhere}}
 .ag-setmana{display:grid;grid-template-columns:260px minmax(0,1fr);gap:14px;align-items:start}
 @media (max-width:860px){.ag-setmana{grid-template-columns:minmax(0,1fr)}}
 .ag-lateral h4{margin:10px 0 4px;font-size:.85rem;text-transform:uppercase;color:#6b4e1e}
@@ -811,9 +811,10 @@ dialog .check{display:flex;gap:8px;align-items:center;color:var(--text);font-siz
       const darrer = deUTC(Date.UTC(y, m, 0)), fi = suma(darrer, 6 - dsem(darrer));
       const mapa = esdeveniments(ini, fi);
       $("calTitol").textContent = majus(NOMS_MES[m - 1]) + " " + y;
-      h = '<div class="ag-mes"><div class="cap">Dl</div><div class="cap">Dt</div><div class="cap">Dc</div><div class="cap">Dj</div><div class="cap">Dv</div><div class="cap">Ds</div><div class="cap">Dg</div><div class="cap obj">Objectius setmanals</div>';
+      h = '<div class="ag-mes"><div class="cap">Dl</div><div class="cap">Dt</div><div class="cap">Dc</div><div class="cap">Dj</div><div class="cap">Dv</div><div class="cap obj">Objectius setmanals</div>';
       for (let dl = ini; dl <= fi; dl = suma(dl, 7)) {
-        for (let i = 0; i < 7; i++) {
+        if (suma(dl, 4).slice(5, 7) !== z(m) && dl.slice(5, 7) !== z(m)) continue;   // setmana sense cap dia feiner del mes
+        for (let i = 0; i < 5; i++) {
           const iso = suma(dl, i), fora = iso.slice(5, 7) !== z(m);
           const llista = mapa[iso] || [], marca = marquesDia(iso)[0];
           h += '<div class="cel' + (fora ? " fora" : "") + (iso === avui ? " avui" : "") + (dsem(iso) >= 5 || esNoLectiu(iso) ? " nolectiu" : "") + '"><span class="dn" data-dia="' + iso + '" title="Obre el dia">' + Number(iso.slice(8)) + "</span>" +
