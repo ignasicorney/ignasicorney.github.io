@@ -209,13 +209,13 @@ dialog .check{display:flex;gap:8px;align-items:center;color:var(--text);font-siz
       <button type="button" class="boto" id="instBoto">🔒 Obre</button>
     </div>
     <div id="institutClau" hidden>
-      <p style="margin:0 0 8px">Escriu la clau de GitHub per obrir l'apartat. Es recorda en aquest aparell fins que el tanquis amb «Oblida la clau».</p>
+      <p style="margin:0 0 8px">Escriu la clau de La TdG (la dels llamps i del publicador). Es recorda en aquest aparell fins que premis «Oblida la clau».</p>
       <div class="eines">
-        <input type="password" id="sincClau" placeholder="Clau de GitHub (github_pat_…)" autocomplete="current-password" style="flex:1 1 240px">
+        <input type="password" id="sincClau" placeholder="Clau de La TdG" autocomplete="current-password" style="flex:1 1 240px">
         <button type="button" class="boto" id="sincConnecta">Obre</button>
       </div>
       <p class="avis" id="sincText" hidden></p>
-      <p class="font">Les dades de l'Institut es desen al repo privat <b>ignasicorney/tauler-privat</b>, que només veus tu. La clau pot ser la mateixa de l'editor del web, amb aquest repo afegit i permís «Contents: Read and write».</p>
+      <p class="font">Les dades de l'Institut es desen a la carpeta institut/ del repo privat latdg/noticies.</p>
     </div>
     <div id="institutCos" hidden>
   <div class="bloc" id="calendari">
@@ -264,7 +264,7 @@ dialog .check{display:flex;gap:8px;align-items:center;color:var(--text);font-siz
     <div class="recursos">
       <div class="recurs"><h3>⏰ Actions programades</h3><p>Tasques que s'executen soles cada hora o cada dia: avisos al teu Telegram, còpies de seguretat, comprovar preus de vols, baixar dades. En repos públics són gratuïtes; en privats, 2.000 minuts al mes.</p><span class="ja">Ja ho fas servir a La TdG</span></div>
       <div class="recurs"><h3>🌐 Pages</h3><p>Pàgines web gratuïtes com aquesta: taulers, la videoteca, un CV, materials per als alumnes amb adreça pròpia.</p><span class="ja">Ja ho fas servir</span></div>
-      <div class="recurs"><h3>🔒 Repos privats</h3><p>Il·limitats i gratuïts: aquí s'hi desen el calendari i les reunions d'aquest tauler; també hi caben apunts, materials de classe o l'arbre genealògic, amb tot l'historial de canvis.</p></div>
+      <div class="recurs"><h3>🔒 Repos privats</h3><p>Il·limitats i gratuïts: també hi caben apunts, materials de classe o l'arbre genealògic, amb tot l'historial de canvis.</p></div>
       <div class="recurs"><h3>✅ Issues com a llista de tasques</h3><p>Cada issue d'un repo privat és una tasca o una idea, amb etiquetes (classe, casa, La TdG). Es gestiona bé des de l'app de GitHub al mòbil.</p></div>
       <div class="recurs"><h3>🗂️ Projects</h3><p>Taulers tipus kanban (per fer · fent · fet) amb les issues: per preparar unitats didàctiques, els treballs de la UOC o el viatge.</p></div>
       <div class="recurs"><h3>📎 Gists</h3><p>Fragments de text o codi desats amb un enllaç propi, públics o secrets: plantilles de correus, ordres útils, receptes.</p></div>
@@ -339,8 +339,7 @@ dialog .check{display:flex;gap:8px;align-items:center;color:var(--text);font-siz
   const BISBAL = { lat: 41.9600, lon: 3.0386 };
   const MEXIC = { lat: 19.4326, lon: -99.1332 };
   const VIATGE = { anada: "2026-12-24", tornadaDes: "2027-01-07", tornadaFins: "2027-01-15" };
-  const REPO_PRIVAT = "ignasicorney/tauler-privat";
-  const FITXER = "dades.json";
+  const WORKER = "https://latdg-agenda.ignasicorney.workers.dev";
   const TZ = "Europe/Madrid";
   // Calendari escolar oficial (fix, no editable)
   const CURS = [
@@ -400,7 +399,7 @@ dialog .check{display:flex;gap:8px;align-items:center;color:var(--text);font-siz
     }
     return r;
   }
-  let clau = lsLlegeix("tauler.clau") || lsLlegeix("editorWebClau") || "";
+  let clau = lsLlegeix("tauler.clau") || "";
   let dades = BUIDES();
   let alumnes = null;
   let sha = null, temporitzador = null, desant = false, pendent = false, obert = false;
@@ -411,39 +410,28 @@ dialog .check{display:flex;gap:8px;align-items:center;color:var(--text);font-siz
     el.lastElementChild.textContent = text;
   }
   function errorClau(text) { $("sincText").textContent = text; $("sincText").hidden = !text; }
-  async function api(cami, opcions) {
-    return fetch("https://api.github.com/repos/" + REPO_PRIVAT + cami, Object.assign({}, opcions, {
-      headers: Object.assign({ "Authorization": "Bearer " + clau, "Accept": "application/vnd.github+json", "X-GitHub-Api-Version": "2022-11-28" },
-        opcions && opcions.body ? { "Content-Type": "application/json" } : {}),
-      cache: "no-store"
-    }));
+  // La mateixa clau i el mateix Worker que els llamps, l'agenda i el publicador de La TdG
+  async function crida(cos) {
+    const r = await fetch(WORKER, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(Object.assign({ pin: clau }, cos)) });
+    let d = {};
+    try { d = await r.json(); } catch (e) {}
+    if (!r.ok || !d.ok) { const e = new Error(d.error || ("HTTP " + r.status)); e.estat = r.status; e.conflicte = !!d.conflicte; throw e; }
+    return d;
   }
-  // Retorna "ok", "clau" (clau o repo incorrectes) o "xarxa"
+  // Retorna "ok", "clau" (clau incorrecta) o "xarxa"
   async function baixa() {
     if (!clau) return "clau";
     estatSinc("desant", "Connectant…");
     try {
-      const r = await api("/contents/" + FITXER);
-      if (r.status === 401 || r.status === 403) { estatSinc("err", "Clau sense permís"); return "clau"; }
-      if (r.status === 404) {
-        const repo = await api("");
-        if (!repo.ok) { estatSinc("err", "Repo no trobat"); return "clau"; }
-        sha = null; dades = BUIDES();
-      } else if (!r.ok) {
-        throw new Error(r.status);
-      } else {
-        const j = await r.json();
-        sha = j.sha;
-        dades = normalitza(JSON.parse(b64aText(j.content)));
-      }
+      const d = await crida({ accio: "institut-llegeix" });
+      sha = d.sha || null;
+      dades = normalitza(d.dades);
+      alumnes = d.alumnes || null;
       lsEscriu("tauler.dades", JSON.stringify(dades));
-      try {
-        const a = await api("/contents/alumnes.json");
-        alumnes = a.ok ? JSON.parse(b64aText((await a.json()).content)) : null;
-      } catch (e) { alumnes = null; }
       estatSinc("ok", "Sincronitzat");
       return "ok";
     } catch (e) {
+      if (e.estat === 401) { estatSinc("err", "Clau incorrecta"); return "clau"; }
       try { dades = normalitza(JSON.parse(lsLlegeix("tauler.dades") || "null")); } catch (x) { dades = BUIDES(); }
       estatSinc("err", "Sense connexió: còpia d'aquest aparell");
       return "xarxa";
@@ -457,18 +445,16 @@ dialog .check{display:flex;gap:8px;align-items:center;color:var(--text);font-siz
     estatSinc("desant", "Desant…");
     try {
       for (let intent = 0; intent < 2; intent++) {
-        const cos = { message: "Tauler: dades actualitzades", content: textAb64(JSON.stringify(dades, null, 1)) };
-        if (sha) cos.sha = sha;
-        const r = await api("/contents/" + FITXER, { method: "PUT", body: JSON.stringify(cos) });
-        if (r.ok) { sha = (await r.json()).content.sha; estatSinc("ok", "Sincronitzat"); break; }
-        if ((r.status === 409 || r.status === 422) && intent === 0) {
-          const g = await api("/contents/" + FITXER);
-          sha = g.ok ? (await g.json()).sha : null;
-          continue;
+        try {
+          sha = (await crida({ accio: "institut-desa", dades: dades, sha: sha })).sha;
+          estatSinc("ok", "Sincronitzat");
+          break;
+        } catch (e) {
+          if (!e.conflicte || intent > 0) throw e;
+          sha = (await crida({ accio: "institut-llegeix" })).sha || null;
         }
-        throw new Error(r.status);
       }
-    } catch (e) { estatSinc("err", "No desat a GitHub (queda en aquest aparell)"); }
+    } catch (e) { estatSinc("err", "No desat a internet (queda en aquest aparell)"); }
     desant = false;
     if (pendent) desaRemot();
   }
@@ -492,7 +478,7 @@ dialog .check{display:flex;gap:8px;align-items:center;color:var(--text);font-siz
     if (r === "clau") {
       clau = ""; lsEscriu("tauler.clau", null);
       $("institutClau").hidden = false;
-      errorClau("La clau no obre el repo privat ignasicorney/tauler-privat. Comprova que el repo existeix i que la clau hi té accés.");
+      errorClau("La clau no és correcta.");
       return;
     }
     errorClau("");
