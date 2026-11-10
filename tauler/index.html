@@ -68,6 +68,20 @@ td.txt .celaed{width:16em;text-align:left}
 .fcol{display:flex;gap:6px;flex-wrap:wrap;align-items:center;padding:4px 0}
 .fcol .fnom{flex:0 1 11em;min-width:7em}
 .fcol .fform{flex:1 1 16em;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.85rem}
+/* Tasques */
+ul.tasques{list-style:none;margin:0;padding:0}
+ul.tasques li{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--linia)}
+ul.tasques li label{display:flex;align-items:flex-start;gap:8px;flex:1 1 auto;cursor:pointer;min-width:0}
+ul.tasques li label input{margin-top:4px;width:18px;height:18px;flex:none;accent-color:var(--accent)}
+ul.tasques li.feta label span{text-decoration:line-through;color:var(--suau)}
+ul.tasques .tq{font-size:.8rem;color:var(--suau);white-space:nowrap}
+ul.tasques .tq.tard{color:#a3161b;font-weight:700}
+ul.tasques .tq.avui{color:var(--accent);font-weight:700}
+ul.tasques a{text-decoration:none}
+ul.tasques button{background:none;border:0;color:var(--suau);padding:0 2px}
+.afegir-t{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.afegir-t input[type=text]{flex:1 1 200px}
+.enllac-b{background:none;border:0;padding:0;color:var(--accent);font:inherit;cursor:pointer}
 /* Temps */
 .temps-linia{display:flex;align-items:center;gap:6px 14px;flex-wrap:wrap}
 .temps-linia .ico{font-size:1.6rem;line-height:1}
@@ -219,6 +233,20 @@ dialog .check{display:flex;gap:8px;align-items:center;color:var(--text);font-siz
       <p class="font">Les dades de l'Institut es desen a la carpeta institut/ del repo privat latdg/noticies.</p>
     </div>
     <div id="institutCos" hidden>
+  <div class="bloc" id="tasques">
+    <h3 class="bt">✅ Tasques</h3>
+    <ul class="tasques" id="tasLlista"></ul>
+    <form class="afegir-t" id="tasForm">
+      <input type="text" id="tasText" placeholder="Nova tasca…" maxlength="200">
+      <input type="date" id="tasData" aria-label="Per a quan (opcional)">
+      <button type="submit" class="boto">Afegeix</button>
+    </form>
+    <p class="font" id="tasPeu"></p>
+  </div>
+  <div class="bloc" id="correu">
+    <h3 class="bt">📬 Correu</h3>
+    <div id="correuCos"></div>
+  </div>
   <div class="bloc" id="calendari">
     <h3 class="bt">📅 Calendari escolar · curs 2026-2027</h3>
     <div id="cursResum"></div>
@@ -318,6 +346,7 @@ dialog .check{display:flex;gap:8px;align-items:center;color:var(--text);font-siz
   </form>
 </dialog>
 
+<script src="correu.js?v=1"></script>
 <script>
 (function () {
   "use strict";
@@ -415,7 +444,7 @@ dialog .check{display:flex;gap:8px;align-items:center;color:var(--text);font-siz
   const textAb64 = txt => { const b = new TextEncoder().encode(txt); let s = ""; for (let i = 0; i < b.length; i += 0x8000) s += String.fromCharCode.apply(null, b.subarray(i, i + 0x8000)); return btoa(s); };
 
   // ================= Dades i sincronització =================
-  const BUIDES = () => ({ versio: 1, activitats: [], reunions: [], notes: "", qualificacions: { grups: [] } });
+  const BUIDES = () => ({ versio: 1, activitats: [], reunions: [], notes: "", qualificacions: { grups: [] }, tasques: [], correu: { comptes: [] } });
   function normalitza(d) {
     const r = BUIDES();
     if (d && typeof d === "object") {
@@ -424,6 +453,8 @@ dialog .check{display:flex;gap:8px;align-items:center;color:var(--text);font-siz
       if (typeof d.notes === "string") r.notes = d.notes;
       if (typeof d.sembrat === "string") r.sembrat = d.sembrat;
       if (typeof d.sembratHorari === "string") r.sembratHorari = d.sembratHorari;
+      if (Array.isArray(d.tasques)) r.tasques = d.tasques.filter(t => t && typeof t.text === "string");
+      if (d.correu && Array.isArray(d.correu.comptes)) r.correu = { comptes: d.correu.comptes.filter(c => c && c.url) };
       if (d.qualificacions && Array.isArray(d.qualificacions.grups)) r.qualificacions = d.qualificacions;
     }
     return r;
@@ -535,10 +566,61 @@ dialog .check{display:flex;gap:8px;align-items:center;color:var(--text);font-siz
   });
   $("sincClau").addEventListener("keydown", e => { if (e.key === "Enter") $("sincConnecta").click(); });
   $("sincDesconnecta").addEventListener("click", () => {
-    clau = ""; sha = null; dades = BUIDES();
+    clau = ""; sha = null; dades = BUIDES(); correuCarregat = false; if (gestorCorreu) { $("correuCos").replaceWith(Object.assign(document.createElement("div"), { id: "correuCos" })); gestorCorreu = null; }
     lsEscriu("tauler.clau", null); lsEscriu("tauler.dades", null);
     mostraInstitut(false);
   });
+
+  // ================= Tasques =================
+  let tasFetes = false;
+  function pintaTasques() {
+    const avui = avuiISO(), l = dades.tasques || [];
+    const pend = l.filter(t => !t.feta).sort((a, b) => (a.data || "9999").localeCompare(b.data || "9999") || a.creada - b.creada);
+    const fetes = l.filter(t => t.feta).sort((a, b) => (b.fetaEl || "").localeCompare(a.fetaEl || ""));
+    const fila = t => {
+      const n = t.data ? dies(avui, t.data) : null;
+      const quanT = t.data ? '<span class="tq' + (!t.feta && n < 0 ? " tard" : !t.feta && n === 0 ? " avui" : "") + '">' + dma(t.data) + (t.feta ? "" : " · " + quan(n)) + "</span>" : "";
+      return '<li class="' + (t.feta ? "feta" : "") + '"><label><input type="checkbox" data-tas="marca" data-id="' + esc(t.id) + '"' + (t.feta ? " checked" : "") + "><span>" + esc(t.text) + "</span></label>" + quanT +
+        (t.enllac ? '<a href="' + esc(t.enllac) + '" target="_blank" rel="noopener" title="Obre el correu' + (t.compte ? " (" + esc(t.compte) + ")" : "") + '">✉️</a>' : "") +
+        '<button type="button" data-tas="treu" data-id="' + esc(t.id) + '" title="Esborra">✕</button></li>';
+    };
+    $("tasLlista").innerHTML = (pend.map(fila).join("") || '<li class="buit">Res pendent. ✓</li>') + (tasFetes ? fetes.map(fila).join("") : "");
+    $("tasPeu").innerHTML = pend.length + (pend.length === 1 ? " pendent" : " pendents") +
+      (fetes.length ? ' · <button type="button" class="enllac-b" data-tas="mostra">' + (tasFetes ? "Amaga" : "Mostra") + " les fetes (" + fetes.length + ")</button>" +
+        (tasFetes ? ' · <button type="button" class="enllac-b" data-tas="buida">Esborra les fetes</button>' : "") : "");
+  }
+  function novaTasca(t) {
+    dades.tasques = dades.tasques || [];
+    dades.tasques.push(Object.assign({ id: nouId(), text: "", data: "", feta: false, creada: Date.now() }, t));
+    desa(); pintaTasques();
+  }
+  $("tasForm").addEventListener("submit", ev => {
+    ev.preventDefault();
+    const text = $("tasText").value.trim(), data = $("tasData").value;
+    if (!text) return;
+    novaTasca({ text: text, data: esISO(data) ? data : "" });
+    $("tasText").value = ""; $("tasData").value = "";
+  });
+  ["tasLlista", "tasPeu"].forEach(id => $(id).addEventListener("click", ev => {
+    const b = ev.target.closest("[data-tas]"); if (!b) return;
+    const t = (dades.tasques || []).find(x => x.id === b.dataset.id);
+    if (b.dataset.tas === "marca" && t) { t.feta = b.checked; t.fetaEl = b.checked ? new Date().toISOString() : ""; desa(); setTimeout(pintaTasques, 250); }
+    else if (b.dataset.tas === "treu" && t) { if (confirm("Vols esborrar la tasca «" + t.text + "»?")) { dades.tasques = dades.tasques.filter(x => x !== t); desa(); pintaTasques(); } }
+    else if (b.dataset.tas === "mostra") { tasFetes = !tasFetes; pintaTasques(); }
+    else if (b.dataset.tas === "buida") { if (confirm("Vols esborrar totes les tasques fetes?")) { dades.tasques = dades.tasques.filter(x => !x.feta); desa(); pintaTasques(); } }
+  }));
+
+  // ================= Correu =================
+  let gestorCorreu = null, correuCarregat = false;
+  function muntaCorreu() {
+    if (gestorCorreu || !window.Correu) return;
+    gestorCorreu = window.Correu.munta($("correuCos"), {
+      comptes: () => (dades.correu && dades.correu.comptes) || [],
+      desaComptes: llista => { dades.correu = { comptes: llista }; desa(); pintaAlumnes(); },
+      clau: () => clau,
+      tasca: t => novaTasca({ text: t.text, enllac: t.enllac, compte: t.compte })
+    });
+  }
 
   // ================= Qualificacions =================
   // Fórmules: {Columna} = mateixa fila; {Full|Columna} = el mateix alumne en un altre full.
@@ -715,9 +797,9 @@ dialog .check{display:flex;gap:8px;align-items:center;color:var(--text);font-siz
   function fullActual(g) { if (!g || !g.fulls.length) return null; qFull = Math.min(qFull, g.fulls.length - 1); return g.fulls[qFull]; }
   function pintaAlumnes() {
     const cos = $("alumCos"), g = grupActual(), f = fullActual(g);
-    const importa = '<label class="boto clar" style="display:inline-block">⬆️ Importa Excel<input type="file" id="alumFitxer" accept=".xlsx,.xls,.zip" multiple hidden></label>';
+    const importa = (compteDrive() ? '<button type="button" class="boto clar" data-q="drive">⬇️ Importa de Drive</button>' : "") + '<label class="boto clar" style="display:inline-block">⬆️ Importa Excel<input type="file" id="alumFitxer" accept=".xlsx,.xls,.zip" multiple hidden></label>';
     if (!g) {
-      cos.innerHTML = '<p class="buit">Encara no hi ha cap grup. Baixa de Drive la carpeta de notes (o els fulls .xlsx) i importa-la aquí: s\'hi copien els alumnes, les notes i les fórmules.</p>' + importa;
+      cos.innerHTML = '<p class="buit">Encara no hi ha cap grup. ' + (compteDrive() ? "Prem «Importa de Drive» per copiar els fulls de notes de la carpeta de l'XTEC (alumnes, notes i fórmules), o puja'ls a mà." : "Quan el correu de l'XTEC estigui connectat (📬 Correu > ⚙️), es podran copiar directament de la carpeta de Drive. Mentrestant, pots pujar els fulls .xlsx (o la carpeta baixada en .zip).") + "</p>" + importa;
       return;
     }
     const valor = calculadora(g);
@@ -838,7 +920,9 @@ dialog .check{display:flex;gap:8px;align-items:center;color:var(--text);font-siz
       else g.fulls.forEach(fu => fu.files.forEach(r => { if (r.nom === vell) r.nom = nou.trim(); }));
       desa(); pintaAlumnes(); return;
     }
-    const q = ev.target.closest("[data-q]"); if (!q || !f) return;
+    const q = ev.target.closest("[data-q]"); if (!q) return;
+    if (q.dataset.q === "drive") { importaDeDrive(q); return; }
+    if (!f) return;
     if (q.dataset.q === "formules") { qFormules = !qFormules; pintaAlumnes(); }
     else if (q.dataset.q === "alumne") {
       const nom = (prompt("Nom de l'alumne nou (Cognoms , Nom):") || "").trim();
@@ -857,6 +941,7 @@ dialog .check{display:flex;gap:8px;align-items:center;color:var(--text);font-siz
       if (confirm("Vols treure la columna «" + el.querySelector(".fnom").value + "»? (No s'esborra del tot fins que premis «Desa les columnes».)")) el.remove();
     }
     else if (q.dataset.q === "desaform") desaFormules();
+    else if (q.dataset.q === "drive") importaDeDrive(q);
   });
   $("alumCos").addEventListener("change", ev => {
     if (ev.target.id === "alumFull") { qFull = Number(ev.target.value); pintaAlumnes(); }
@@ -931,6 +1016,20 @@ dialog .check{display:flex;gap:8px;align-items:center;color:var(--text);font-siz
     });
     return fora ? null : surt;
   }
+  const CARPETA_NOTES = "1e6CqJ5y6_qYxdmjv5jhID_ol-IBUrIyl";   // carpeta de notes del Drive de l'XTEC
+  function compteDrive() { const l = (dades.correu && dades.correu.comptes) || []; return l.find(c => /xtec/i.test(c.nom)) || null; }
+  async function importaDeDrive(boto) {
+    const c = compteDrive(); if (!c) return;
+    boto.disabled = true; boto.textContent = "Baixant de Drive…";
+    try {
+      const r = await fetch(c.url, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ pin: clau, accio: "fitxers", carpeta: CARPETA_NOTES }) });
+      const d = await r.json();
+      if (!d.ok) throw new Error(d.error || "Error de l'Apps Script");
+      const fitxers = (d.fitxers || []).map(x => ({ name: x.nom, buf: Uint8Array.from(atob(x.b64), ch => ch.charCodeAt(0)).buffer }));
+      if (!fitxers.length) throw new Error("La carpeta no té cap full .xlsx.");
+      await importaFitxers(fitxers);
+    } catch (e) { pintaAlumnes(); $("alumCos").insertAdjacentHTML("afterbegin", '<p class="avis">No s\'ha pogut importar de Drive: ' + esc(e.message) + "</p>"); }
+  }
   async function importaFitxers(fitxers) {
     if (!fitxers.length) return;
     const estat = t => { const el = $("alumCos").querySelector(".font") || $("alumCos"); el.insertAdjacentHTML("beforebegin", '<p class="avis" style="color:var(--suau)">' + esc(t) + "</p>"); };
@@ -946,7 +1045,7 @@ dialog .check{display:flex;gap:8px;align-items:center;color:var(--text);font-siz
           for (const nom of Object.keys(zip.files)) {
             if (/\.xlsx?$/i.test(nom) && !zip.files[nom].dir && !/(^|\/)(~\$|\._)/.test(nom)) llibres.push({ nom: nom.split("/").pop(), buf: await zip.files[nom].async("arraybuffer") });
           }
-        } else llibres.push({ nom: fi.name, buf: await fi.arrayBuffer() });
+        } else llibres.push({ nom: fi.name, buf: fi.buf || await fi.arrayBuffer() });
       }
       const q = Q(); let nous = 0, avisos = [];
       for (const ll of llibres) {
@@ -1317,7 +1416,9 @@ dialog .check{display:flex;gap:8px;align-items:center;color:var(--text);font-siz
     $("ara").textContent = majus(NOMS_DIA[dsem(avui)]) + ", " + dma(avui) + " · " + hora(TZ);
   }
   function pintaTot() {
-    pintaCurs(); pintaCalendari(); pintaReunions(); pintaAlumnes();
+    pintaCurs(); pintaTasques(); pintaCalendari(); pintaReunions(); pintaAlumnes();
+    if (!gestorCorreu) muntaCorreu(); else gestorCorreu.pinta();
+    if (obert && gestorCorreu && !correuCarregat) { correuCarregat = true; gestorCorreu.carrega(); }
     if (document.activeElement !== $("notesText")) $("notesText").value = dades.notes || "";
   }
   let darrerDia = avuiISO();
