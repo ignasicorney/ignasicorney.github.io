@@ -131,7 +131,7 @@ ul.tasques button{background:none;border:0;color:var(--suau);padding:0 2px}
 .ag-habits td.nomh{text-align:left;max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .ag-habits input{accent-color:var(--accent)}
 .ag-blocs{overflow-x:auto;border:1px solid var(--linia);border-radius:10px}
-.ag-blocs table{border-collapse:collapse;width:100%;min-width:760px;font-size:.8rem;table-layout:fixed}
+.ag-blocs table{border-collapse:collapse;width:100%;min-width:560px;font-size:.8rem;table-layout:fixed}
 .ag-blocs th{background:#f3e3c3;color:#6b4e1e;font-weight:600;padding:4px}
 .ag-blocs th.avui{background:var(--accent);color:#fff}
 .ag-blocs th.hora{width:3.6em;background:#fbf6ea;font-weight:400;font-variant-numeric:tabular-nums}
@@ -833,7 +833,7 @@ dialog .check{display:flex;gap:8px;align-items:center;color:var(--text);font-siz
       }
       h += "</div><p class=\"font\">Dues paraules per dia que resumeixin el rumb del matí i de la tarda, i els objectius de cada setmana.</p>";
     } else if (agVista === "setmana") {
-      const dl = dillunsDe(agFocus), dg = suma(dl, 6), s = setmana(dl);
+      const dl = dillunsDe(agFocus), dg = suma(dl, 4), s = setmana(dl);
       const mapa = esdeveniments(dl, dg);
       $("calTitol").textContent = "Setmana del " + dm(dl) + " al " + dm(dg);
       // Columna lateral: focus, tasques, hàbits, notes
@@ -841,16 +841,16 @@ dialog .check{display:flex;gap:8px;align-items:center;color:var(--text);font-siz
         '<h4>🎯 Focus no negociable</h4>' + s.focus.map((f, i) => '<input type="text" maxlength="120" data-agc="focus" data-i="' + i + '" value="' + esc(f) + '" placeholder="' + (i ? "Segon focus (opcional)" : "El més important de la setmana") + '">').join("") +
         '<h4>☑️ Tasques de la setmana</h4><ul class="ag-tasques">' + s.tasques.map(t => '<li class="' + (t.feta ? "feta" : "") + '"><label><input type="checkbox" data-agc="tasca" data-id="' + t.id + '"' + (t.feta ? " checked" : "") + "><span>" + esc(t.text) + '</span></label><button type="button" data-agb="treutasca" data-id="' + t.id + '" title="Esborra">✕</button></li>').join("") + "</ul>" +
         '<div class="ag-afegir"><input type="text" id="agNovaTasca" maxlength="160" placeholder="Nova tasca…"><button type="button" class="boto clar" data-agb="noutasca">+</button></div>' +
-        '<h4>🔁 Hàbits</h4><table class="ag-habits"><thead><tr><th></th>' + [0, 1, 2, 3, 4, 5, 6].map(i => "<th" + (suma(dl, i) === avui ? ' class="avui"' : "") + ">" + inicialDia(i) + "</th>").join("") + "<th></th></tr></thead><tbody>" +
-        s.habits.map((hb, j) => '<tr><td class="nomh">' + esc(hb.nom) + "</td>" + hb.fets.map((f, i) => '<td><input type="checkbox" data-agc="habit" data-j="' + j + '" data-i="' + i + '"' + (f ? " checked" : "") + ' aria-label="' + esc(hb.nom) + " " + inicialDia(i) + '"></td>').join("") + '<td><button type="button" data-agb="treuhabit" data-j="' + j + '" title="Treu l\'hàbit">✕</button></td></tr>').join("") + "</tbody></table>" +
+        '<h4>🔁 Hàbits</h4><table class="ag-habits"><thead><tr><th></th>' + [0, 1, 2, 3, 4].map(i => "<th" + (suma(dl, i) === avui ? ' class="avui"' : "") + ">" + inicialDia(i) + "</th>").join("") + "<th></th></tr></thead><tbody>" +
+        s.habits.map((hb, j) => '<tr><td class="nomh">' + esc(hb.nom) + "</td>" + hb.fets.slice(0, 5).map((f, i) => '<td><input type="checkbox" data-agc="habit" data-j="' + j + '" data-i="' + i + '"' + (f ? " checked" : "") + ' aria-label="' + esc(hb.nom) + " " + inicialDia(i) + '"></td>').join("") + '<td><button type="button" data-agb="treuhabit" data-j="' + j + '" title="Treu l\'hàbit">✕</button></td></tr>').join("") + "</tbody></table>" +
         '<div class="ag-afegir"><input type="text" id="agNouHabit" maxlength="40" placeholder="Nou hàbit (p. ex. llegir)"><button type="button" class="boto clar" data-agb="nouhabit">+</button></div>' +
         '<h4>📝 Notes</h4><textarea rows="4" data-agc="notes" placeholder="Notes de la setmana…">' + esc(s.notes) + "</textarea></div>";
       // Blocs horaris
-      h += '<div class="ag-blocs"><table><thead><tr><th></th>' + [0, 1, 2, 3, 4, 5, 6].map(i => { const iso = suma(dl, i); return '<th class="' + (iso === avui ? "avui" : "") + (esNoLectiu(iso) ? " nolectiu" : "") + '" data-dia="' + iso + '" title="Obre el dia" style="cursor:pointer">' + inicialDia(i) + " " + Number(iso.slice(8)) + "</th>"; }).join("") + "</tr></thead><tbody>" +
-        '<tr><th class="hora" title="Tot el dia">Dia</th>' + [0, 1, 2, 3, 4, 5, 6].map(i => { const iso = suma(dl, i); const marca = marquesDia(iso); return '<td class="' + (esNoLectiu(iso) ? "nolectiu" : "") + '">' + marca.map(t => '<span class="marca">' + esc(t) + "</span>").join("") + (mapa[iso] || []).filter(e => !e.hora).map(e => '<span class="xip" style="background:' + colorDe(e.tipus) + '"' + atrEsdev(e) + ' title="' + esc(e.titol) + '">' + esc(e.titol) + "</span>").join("") + "</td>"; }).join("") + "</tr>";
+      h += '<div class="ag-blocs"><table><thead><tr><th></th>' + [0, 1, 2, 3, 4].map(i => { const iso = suma(dl, i); return '<th class="' + (iso === avui ? "avui" : "") + (esNoLectiu(iso) ? " nolectiu" : "") + '" data-dia="' + iso + '" title="Obre el dia" style="cursor:pointer">' + inicialDia(i) + " " + Number(iso.slice(8)) + "</th>"; }).join("") + "</tr></thead><tbody>" +
+        '<tr><th class="hora" title="Tot el dia">Dia</th>' + [0, 1, 2, 3, 4].map(i => { const iso = suma(dl, i); const marca = marquesDia(iso); return '<td class="' + (esNoLectiu(iso) ? "nolectiu" : "") + '">' + marca.map(t => '<span class="marca">' + esc(t) + "</span>").join("") + (mapa[iso] || []).filter(e => !e.hora).map(e => '<span class="xip" style="background:' + colorDe(e.tipus) + '"' + atrEsdev(e) + ' title="' + esc(e.titol) + '">' + esc(e.titol) + "</span>").join("") + "</td>"; }).join("") + "</tr>";
       HORES.forEach(hh => {
         h += '<tr><th class="hora">' + hh + ":00</th>";
-        for (let i = 0; i < 7; i++) {
+        for (let i = 0; i < 5; i++) {
           const iso = suma(dl, i), k = iso + "|" + hh;
           const ev = (mapa[iso] || []).filter(e => e.hora && e.hora.slice(0, 2) === hh);
           h += '<td class="' + (esNoLectiu(iso) ? "nolectiu" : "") + '">' + ev.map(e => '<span class="xip" style="background:' + colorDe(e.tipus) + '"' + atrEsdev(e) + ' title="' + esc(e.hora + (e.horaFi ? "–" + e.horaFi : "") + " " + e.titol + (e.lloc ? " · " + e.lloc : "")) + '">' + esc(e.titol) + "</span>").join("") +
