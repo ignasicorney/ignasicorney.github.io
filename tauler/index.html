@@ -724,6 +724,7 @@ dialog .check{display:flex;gap:8px;align-items:center;color:var(--text);font-siz
     $("institutCos").hidden = !si;
     $("institutClau").hidden = true;
     $("instBoto").textContent = si ? "🔓 Tanca" : "🔒 Obre";
+    lsEscriu("tauler.obert", si ? "1" : null);   // queda obert en aquest aparell fins que es tanqui
     if (si) pintaTot(); else estatSinc("", "Tancat");
   }
   async function obre() {
@@ -1832,6 +1833,7 @@ dialog .check{display:flex;gap:8px;align-items:center;color:var(--text);font-siz
 
   pintaAra(); estatSinc("", "Tancat");
   carregaTemps();
+  if (clau && lsLlegeix("tauler.obert") === "1") obre();
 })();
 </script>
 <script src="dates-ca.js?v=3"></script>
