@@ -85,6 +85,62 @@ ul.tasques button{background:none;border:0;color:var(--suau);padding:0 2px}
 .afegir-t{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
 .afegir-t input[type=text]{flex:1 1 200px}
 .enllac-b{background:none;border:0;padding:0;color:var(--accent);font:inherit;cursor:pointer}
+/* Agenda */
+.ag-any{overflow-x:auto;border:1px solid var(--linia);border-radius:10px}
+.ag-any table{border-collapse:collapse;min-width:1100px;width:100%;font-size:.78rem}
+.ag-any th{background:#f3e3c3;color:#6b4e1e;font-weight:600;padding:4px;position:sticky;top:0}
+.ag-any td{border:1px solid var(--linia);padding:0 2px;white-space:nowrap}
+.ag-any td.buida{background:#faf9f6}
+.ag-any td.cap-setmana{background:#f3e3c3}
+.ag-any td.nolectiu{background:var(--nolectiu)}
+.ag-any td.avui{outline:2px solid var(--accent);outline-offset:-2px}
+.ag-any .dn{display:inline-block;width:3.2em;color:var(--suau)}
+.ag-any input{border:0;background:transparent;font:inherit;width:calc(100% - 3.4em);padding:3px 0}
+.ag-mes{display:grid;grid-template-columns:repeat(7,minmax(0,1fr)) minmax(0,1.3fr);border-top:1px solid var(--linia);border-left:1px solid var(--linia)}
+.ag-mes .cap{font-size:.75rem;text-align:center;padding:4px 0;background:#f3e3c3;color:#6b4e1e;border-right:1px solid var(--linia);border-bottom:1px solid var(--linia)}
+.ag-mes .cel{border-right:1px solid var(--linia);border-bottom:1px solid var(--linia);padding:3px;min-width:0;min-height:70px}
+.ag-mes .cel.fora{background:#fafaf8}
+.ag-mes .cel.nolectiu{background:var(--nolectiu)}
+.ag-mes .cel.avui .dn{background:var(--accent);color:#fff;border-radius:999px;padding:0 6px}
+.ag-mes .cel.obj{background:#fbf6ea}
+.ag-mes .dn{font-size:.75rem;font-weight:600}
+.ag-mes .dn i{font-style:normal;color:var(--accent);font-weight:400}
+.ag-mes textarea{width:100%;border:0;background:transparent;resize:none;font:inherit;font-size:.8rem;padding:2px 0;min-height:0}
+@media (max-width:600px){.ag-mes{grid-template-columns:repeat(7,minmax(0,1fr))}.ag-mes .obj{grid-column:1 / -1;min-height:0}.ag-mes .cap.obj{display:none}.ag-mes textarea{font-size:.7rem}}
+.ag-setmana{display:grid;grid-template-columns:260px minmax(0,1fr);gap:14px;align-items:start}
+@media (max-width:860px){.ag-setmana{grid-template-columns:minmax(0,1fr)}}
+.ag-lateral h4{margin:10px 0 4px;font-size:.85rem;text-transform:uppercase;color:#6b4e1e}
+.ag-lateral h4:first-child{margin-top:0}
+.ag-lateral input[type=text],.ag-lateral textarea{width:100%;margin-bottom:4px}
+.ag-lateral textarea{min-height:70px}
+.ag-tasques{list-style:none;margin:0;padding:0}
+.ag-tasques li{display:flex;align-items:center;gap:6px;padding:3px 0;border-bottom:1px solid var(--linia)}
+.ag-tasques li label{display:flex;gap:6px;align-items:flex-start;flex:1 1 auto;cursor:pointer}
+.ag-tasques li label input{margin-top:3px;accent-color:var(--accent)}
+.ag-tasques li.feta span{text-decoration:line-through;color:var(--suau)}
+.ag-tasques button,.ag-habits button,.ag-rep button{background:none;border:0;color:var(--suau);padding:0 2px}
+.ag-afegir{display:flex;gap:6px;margin:4px 0}
+.ag-afegir input[type=text]{flex:1 1 auto;margin:0}
+.ag-habits{border-collapse:collapse;width:100%;font-size:.8rem}
+.ag-habits th{font-weight:600;color:var(--suau);padding:2px}
+.ag-habits th.avui{color:var(--accent)}
+.ag-habits td{text-align:center;padding:2px;border-bottom:1px solid var(--linia)}
+.ag-habits td.nomh{text-align:left;max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ag-habits input{accent-color:var(--accent)}
+.ag-blocs{overflow-x:auto;border:1px solid var(--linia);border-radius:10px}
+.ag-blocs table{border-collapse:collapse;width:100%;min-width:760px;font-size:.8rem;table-layout:fixed}
+.ag-blocs th{background:#f3e3c3;color:#6b4e1e;font-weight:600;padding:4px}
+.ag-blocs th.avui{background:var(--accent);color:#fff}
+.ag-blocs th.hora{width:3.6em;background:#fbf6ea;font-weight:400;font-variant-numeric:tabular-nums}
+.ag-blocs td{border:1px solid var(--linia);padding:1px 2px;vertical-align:top}
+.ag-blocs td.nolectiu{background:var(--nolectiu)}
+.ag-blocs td .xip{font-size:.68rem;margin:1px 0}
+.ag-blocs input{width:100%;border:0;background:transparent;font:inherit;padding:2px 0}
+.ag-rep td label{white-space:nowrap;cursor:pointer}
+.ag-rep td.fet{color:var(--suau);text-decoration:line-through}
+.ag-rep td.avui{color:var(--accent);font-weight:700}
+.ag-rep td.tard{color:#a3161b;font-weight:700}
+.ag-rep th,.ag-rep td{text-align:left}
 /* Temps */
 .temps-linia{display:flex;align-items:center;gap:6px 14px;flex-wrap:wrap}
 .temps-linia .ico{font-size:1.6rem;line-height:1}
@@ -219,6 +275,25 @@ dialog .check{display:flex;gap:8px;align-items:center;color:var(--text);font-siz
   </section>
 
 
+
+  <section id="agenda" class="ample" hidden>
+    <h2>📒 Agenda</h2>
+    <div class="eines">
+      <button type="button" class="nav-b" id="agAnt" aria-label="Anterior">‹</button>
+      <button type="button" class="nav-b" id="agAvui">Avui</button>
+      <button type="button" class="nav-b" id="agSeg" aria-label="Següent">›</button>
+      <span class="titol" id="agTitol"></span>
+      <div class="esq">
+        <div class="vistes" role="group" aria-label="Vista de l'agenda" id="agVistes">
+          <button type="button" data-ag="any">Any</button>
+          <button type="button" data-ag="mes">Mes</button>
+          <button type="button" data-ag="setmana">Setmana</button>
+          <button type="button" data-ag="repassos">Repassos</button>
+        </div>
+      </div>
+    </div>
+    <div id="agCos"></div>
+  </section>
 
   <section id="institut" class="ample">
     <div class="capinst">
@@ -565,6 +640,7 @@ dialog .check{display:flex;gap:8px;align-items:center;color:var(--text);font-siz
       if (typeof d.sembrat === "string") r.sembrat = d.sembrat;
       if (typeof d.sembratHorari === "string") r.sembratHorari = d.sembratHorari;
       if (typeof d.sembratActes === "string") r.sembratActes = d.sembratActes;
+      if (d.agenda && typeof d.agenda === "object") r.agenda = d.agenda;
       if (Array.isArray(d.tasques)) r.tasques = d.tasques.filter(t => t && typeof t.text === "string");
       if (d.correu && Array.isArray(d.correu.comptes)) r.correu = { comptes: d.correu.comptes.filter(c => c && c.url) };
       if (d.qualificacions && Array.isArray(d.qualificacions.grups)) r.qualificacions = d.qualificacions;
@@ -660,6 +736,7 @@ dialog .check{display:flex;gap:8px;align-items:center;color:var(--text);font-siz
   function mostraInstitut(si) {
     obert = si;
     $("institutCos").hidden = !si;
+    $("agenda").hidden = !si;
     $("institutClau").hidden = true;
     $("instBoto").textContent = si ? "🔓 Tanca" : "🔒 Obre";
     if (si) pintaTot(); else estatSinc("", "Tancat");
@@ -689,6 +766,180 @@ dialog .check{display:flex;gap:8px;align-items:center;color:var(--text);font-siz
     clau = ""; sha = null; dades = BUIDES(); correuCarregat = false; if (gestorCorreu) { $("correuCos").replaceWith(Object.assign(document.createElement("div"), { id: "correuCos" })); gestorCorreu = null; }
     lsEscriu("tauler.clau", null); lsEscriu("tauler.dades", null);
     mostraInstitut(false);
+  });
+
+  // ================= Agenda mestra =================
+  // Les set tècniques: planificació anual, mensual, blocs horaris setmanals, focus no negociable,
+  // llista de tasques, seguiment d'hàbits i sistema de repassos.
+  let agVista = lsLlegeix("tauler.agVista") || "setmana", agFocus = avuiISO();
+  if (!["any", "mes", "setmana", "repassos"].includes(agVista)) agVista = "setmana";
+  const HORES = Array.from({ length: 16 }, (_, i) => z(i + 7));   // 07 a 22
+  const AG = () => {
+    if (!dades.agenda || typeof dades.agenda !== "object") dades.agenda = {};
+    const a = dades.agenda;
+    a.macro = a.macro || {}; a.mensual = a.mensual || {}; a.objectius = a.objectius || {};
+    a.setmanes = a.setmanes || {}; a.repassos = a.repassos || [];
+    return a;
+  };
+  const dillunsDe = iso => suma(iso, -dsem(iso));
+  function setmana(dl) {
+    const a = AG();
+    if (!a.setmanes[dl]) {
+      // Els hàbits passen d'una setmana a la següent (sense marcar)
+      const anteriors = Object.keys(a.setmanes).filter(k => k < dl).sort();
+      const prev = anteriors.length ? a.setmanes[anteriors[anteriors.length - 1]] : null;
+      a.setmanes[dl] = { blocs: {}, focus: ["", ""], tasques: [], habits: prev ? prev.habits.map(h => ({ nom: h.nom, fets: [0, 0, 0, 0, 0, 0, 0] })) : [], notes: "" };
+    }
+    return a.setmanes[dl];
+  }
+  const inicialDia = i => ["Dl", "Dt", "Dc", "Dj", "Dv", "Ds", "Dg"][i];
+  const repassosPendents = () => {
+    const avui = avuiISO(); let n = 0;
+    AG().repassos.forEach(r => ["r1", "r2", "r3"].forEach(k => { if (r[k] && r[k] <= avui && !(r.fets || {})[k]) n++; }));
+    return n;
+  };
+
+  function pintaAgenda() {
+    const cos = $("agCos"); if (!cos) return;
+    document.querySelectorAll("#agVistes button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.ag === agVista)));
+    const pend = repassosPendents();
+    const bRep = document.querySelector('#agVistes button[data-ag="repassos"]');
+    if (bRep) bRep.textContent = "Repassos" + (pend ? " (" + pend + ")" : "");
+    const avui = avuiISO(), a = AG();
+    let h = "";
+    if (agVista === "any") {
+      // Curs de setembre a agost
+      const [y, m] = agFocus.split("-").map(Number);
+      const any0 = m >= 9 ? y : y - 1;
+      $("agTitol").textContent = "Curs " + any0 + "-" + (any0 + 1);
+      h = '<div class="ag-any"><table><thead><tr>' + Array.from({ length: 12 }, (_, i) => "<th>" + majus(NOMS_MES[(8 + i) % 12]) + "</th>").join("") + "</tr></thead><tbody>";
+      for (let d = 1; d <= 31; d++) {
+        h += "<tr>";
+        for (let i = 0; i < 12; i++) {
+          const mm = (8 + i) % 12, yy = mm >= 8 ? any0 : any0 + 1;
+          const iso = yy + "-" + z(mm + 1) + "-" + z(d);
+          const existeix = deUTC(aUTC(iso)) === iso;
+          if (!existeix) { h += '<td class="buida"></td>'; continue; }
+          const cl = [dsem(iso) >= 5 ? "cap-setmana" : "", esNoLectiu(iso) && dsem(iso) < 5 ? "nolectiu" : "", iso === avui ? "avui" : ""].join(" ").trim();
+          h += '<td class="' + cl + '"><span class="dn">' + d + " " + inicialDia(dsem(iso)) + '</span><input type="text" maxlength="24" data-agc="macro" data-k="' + iso + '" value="' + esc(a.macro[iso] || "") + '" aria-label="' + dma(iso) + '"></td>';
+        }
+        h += "</tr>";
+      }
+      h += "</tbody></table></div><p class=\"font\">Una paraula per dia: la feina principal, classes, aniversaris o festes. Una visió de tot el curs d'un cop d'ull.</p>";
+    } else if (agVista === "mes") {
+      const [y, m] = agFocus.split("-").map(Number);
+      const primer = y + "-" + z(m) + "-01", ini = dillunsDe(primer);
+      const darrer = deUTC(Date.UTC(y, m, 0)), fi = suma(darrer, 6 - dsem(darrer));
+      const mapa = esdeveniments(ini, fi);
+      $("agTitol").textContent = majus(NOMS_MES[m - 1]) + " " + y;
+      h = '<div class="ag-mes"><div class="cap">Dl</div><div class="cap">Dt</div><div class="cap">Dc</div><div class="cap">Dj</div><div class="cap">Dv</div><div class="cap">Ds</div><div class="cap">Dg</div><div class="cap obj">Objectius setmanals</div>';
+      for (let dl = ini; dl <= fi; dl = suma(dl, 7)) {
+        for (let i = 0; i < 7; i++) {
+          const iso = suma(dl, i), fora = iso.slice(5, 7) !== z(m);
+          const n = (mapa[iso] || []).length;
+          h += '<div class="cel' + (fora ? " fora" : "") + (iso === avui ? " avui" : "") + (dsem(iso) >= 5 || esNoLectiu(iso) ? " nolectiu" : "") + '"><span class="dn">' + Number(iso.slice(8)) + (n ? ' <i title="' + n + ' al calendari">•' + n + "</i>" : "") + "</span>" +
+            (fora ? "" : '<textarea rows="2" maxlength="60" data-agc="mensual" data-k="' + iso + '" aria-label="' + dma(iso) + '">' + esc(a.mensual[iso] || "") + "</textarea>") + "</div>";
+        }
+        h += '<div class="cel obj"><textarea rows="3" maxlength="200" data-agc="objectius" data-k="' + dl + '" aria-label="Objectius de la setmana del ' + dm(dl) + '" placeholder="Objectius…">' + esc(a.objectius[dl] || "") + "</textarea></div>";
+      }
+      h += "</div><p class=\"font\">Dues paraules per dia que resumeixin el rumb del matí i de la tarda, i els objectius de cada setmana.</p>";
+    } else if (agVista === "setmana") {
+      const dl = dillunsDe(agFocus), dg = suma(dl, 6), s = setmana(dl);
+      const mapa = esdeveniments(dl, dg);
+      $("agTitol").textContent = "Setmana del " + dm(dl) + " al " + dm(dg);
+      // Columna lateral: focus, tasques, hàbits, notes
+      h = '<div class="ag-setmana"><div class="ag-lateral">' +
+        '<h4>🎯 Focus no negociable</h4>' + s.focus.map((f, i) => '<input type="text" maxlength="120" data-agc="focus" data-i="' + i + '" value="' + esc(f) + '" placeholder="' + (i ? "Segon focus (opcional)" : "El més important de la setmana") + '">').join("") +
+        '<h4>☑️ Tasques de la setmana</h4><ul class="ag-tasques">' + s.tasques.map(t => '<li class="' + (t.feta ? "feta" : "") + '"><label><input type="checkbox" data-agc="tasca" data-id="' + t.id + '"' + (t.feta ? " checked" : "") + "><span>" + esc(t.text) + '</span></label><button type="button" data-agb="treutasca" data-id="' + t.id + '" title="Esborra">✕</button></li>').join("") + "</ul>" +
+        '<div class="ag-afegir"><input type="text" id="agNovaTasca" maxlength="160" placeholder="Nova tasca…"><button type="button" class="boto clar" data-agb="noutasca">+</button></div>' +
+        '<h4>🔁 Hàbits</h4><table class="ag-habits"><thead><tr><th></th>' + [0, 1, 2, 3, 4, 5, 6].map(i => "<th" + (suma(dl, i) === avui ? ' class="avui"' : "") + ">" + inicialDia(i) + "</th>").join("") + "<th></th></tr></thead><tbody>" +
+        s.habits.map((hb, j) => '<tr><td class="nomh">' + esc(hb.nom) + "</td>" + hb.fets.map((f, i) => '<td><input type="checkbox" data-agc="habit" data-j="' + j + '" data-i="' + i + '"' + (f ? " checked" : "") + ' aria-label="' + esc(hb.nom) + " " + inicialDia(i) + '"></td>').join("") + '<td><button type="button" data-agb="treuhabit" data-j="' + j + '" title="Treu l\'hàbit">✕</button></td></tr>').join("") + "</tbody></table>" +
+        '<div class="ag-afegir"><input type="text" id="agNouHabit" maxlength="40" placeholder="Nou hàbit (p. ex. llegir)"><button type="button" class="boto clar" data-agb="nouhabit">+</button></div>' +
+        '<h4>📝 Notes</h4><textarea rows="4" data-agc="notes" placeholder="Notes de la setmana…">' + esc(s.notes) + "</textarea></div>";
+      // Blocs horaris
+      h += '<div class="ag-blocs"><table><thead><tr><th></th>' + [0, 1, 2, 3, 4, 5, 6].map(i => { const iso = suma(dl, i); return '<th class="' + (iso === avui ? "avui" : "") + (esNoLectiu(iso) ? " nolectiu" : "") + '">' + inicialDia(i) + " " + Number(iso.slice(8)) + "</th>"; }).join("") + "</tr></thead><tbody>";
+      HORES.forEach(hh => {
+        h += '<tr><th class="hora">' + hh + ":00</th>";
+        for (let i = 0; i < 7; i++) {
+          const iso = suma(dl, i), k = iso + "|" + hh;
+          const ev = (mapa[iso] || []).filter(e => e.hora && e.hora.slice(0, 2) === hh);
+          h += '<td class="' + (esNoLectiu(iso) ? "nolectiu" : "") + '">' + ev.map(e => '<span class="xip" style="background:' + colorDe(e.tipus) + '" title="' + esc(e.hora + (e.horaFi ? "–" + e.horaFi : "") + " " + e.titol + (e.lloc ? " · " + e.lloc : "")) + '">' + esc(e.titol) + "</span>").join("") +
+            '<input type="text" maxlength="80" data-agc="bloc" data-k="' + k + '" value="' + esc(s.blocs[k] || "") + '" aria-label="' + dma(iso) + " " + hh + ':00"></td>';
+        }
+        h += "</tr>";
+      });
+      h += "</tbody></table></div></div><p class=\"font\">Cada hora, una tasca concreta. Les classes i els actes del calendari hi surten sols; a sota hi escrius el que faràs.</p>";
+    } else {
+      $("agTitol").textContent = "Sistema de repassos";
+      const ord = a.repassos.slice().sort((x, y) => (x.memoritzat || "").localeCompare(y.memoritzat || ""));
+      const cel = (r, k) => {
+        const d = r[k] || "", fet = (r.fets || {})[k];
+        const cls = fet ? "fet" : d && d < avui ? "tard" : d === avui ? "avui" : "";
+        return '<td class="' + cls + '"><label><input type="checkbox" data-agc="repfet" data-id="' + r.id + '" data-r="' + k + '"' + (fet ? " checked" : "") + (d ? "" : " disabled") + "> " + (d ? dma(d) : "—") + "</label></td>";
+      };
+      h = '<div class="taula"><table class="ag-rep"><thead><tr><th>Tema</th><th>Memoritzat</th><th>Repàs 1</th><th>Repàs 2</th><th>Repàs 3</th><th></th></tr></thead><tbody>' +
+        (ord.map(r => "<tr><td>" + esc(r.tema) + "</td><td>" + (r.memoritzat ? dma(r.memoritzat) : "—") + "</td>" + cel(r, "r1") + cel(r, "r2") + cel(r, "r3") + '<td><button type="button" data-agb="treurep" data-id="' + r.id + '" title="Esborra">✕</button></td></tr>').join("") ||
+          '<tr><td colspan="6" class="buit">Encara no hi ha cap tema.</td></tr>') + "</tbody></table></div>" +
+        '<div class="ag-afegir" style="margin-top:10px"><input type="text" id="agRepTema" maxlength="120" placeholder="Tema (p. ex. Literatura del segle XIX)" style="flex:1 1 200px"><input type="date" id="agRepData" aria-label="Dia que s\'ha memoritzat"><button type="button" class="boto" data-agb="nourep">Afegeix</button></div>' +
+        '<p class="font">Els repassos es posen sols l\'endemà, al cap d\'una setmana i al cap d\'un mes del dia que s\'ha memoritzat. Els que toquen avui o s\'han passat surten destacats.</p>';
+    }
+    cos.innerHTML = h;
+  }
+  function agMou(n) {
+    if (agVista === "setmana") agFocus = suma(agFocus, 7 * n);
+    else if (agVista === "mes") { const [y, m] = agFocus.split("-").map(Number); agFocus = deUTC(Date.UTC(y, m - 1 + n, 1)); }
+    else if (agVista === "any") { const [y, m] = agFocus.split("-").map(Number); agFocus = (y + n) + "-" + z(m) + "-01"; }
+    pintaAgenda();
+  }
+  $("agAnt").addEventListener("click", () => agMou(-1));
+  $("agSeg").addEventListener("click", () => agMou(1));
+  $("agAvui").addEventListener("click", () => { agFocus = avuiISO(); pintaAgenda(); });
+  document.querySelectorAll("#agVistes button").forEach(b => b.addEventListener("click", () => { agVista = b.dataset.ag; lsEscriu("tauler.agVista", agVista); pintaAgenda(); }));
+  // Escriure no torna a pintar (no es perd el cursor); només es desa
+  $("agCos").addEventListener("input", ev => {
+    const el = ev.target, c = el.dataset.agc; if (!c) return;
+    const a = AG();
+    if (c === "macro" || c === "mensual" || c === "objectius") { if (el.value.trim()) a[c][el.dataset.k] = el.value; else delete a[c][el.dataset.k]; }
+    else {
+      const s = setmana(dillunsDe(agFocus));
+      if (c === "bloc") { if (el.value.trim()) s.blocs[el.dataset.k] = el.value; else delete s.blocs[el.dataset.k]; }
+      else if (c === "focus") s.focus[Number(el.dataset.i)] = el.value;
+      else if (c === "notes") s.notes = el.value;
+      else return;
+    }
+    desa();
+  });
+  $("agCos").addEventListener("change", ev => {
+    const el = ev.target, c = el.dataset.agc; if (!c) return;
+    const a = AG(), s = agVista === "setmana" ? setmana(dillunsDe(agFocus)) : null;
+    if (c === "tasca" && s) { const t = s.tasques.find(x => x.id === el.dataset.id); if (t) t.feta = el.checked; el.closest("li").classList.toggle("feta", el.checked); }
+    else if (c === "habit" && s) { s.habits[Number(el.dataset.j)].fets[Number(el.dataset.i)] = el.checked ? 1 : 0; }
+    else if (c === "repfet") { const r = a.repassos.find(x => x.id === el.dataset.id); if (r) { r.fets = r.fets || {}; r.fets[el.dataset.r] = el.checked; } desa(); pintaAgenda(); return; }
+    else return;
+    desa();
+  });
+  $("agCos").addEventListener("click", ev => {
+    const b = ev.target.closest("[data-agb]"); if (!b) return;
+    const a = AG(), s = agVista === "setmana" ? setmana(dillunsDe(agFocus)) : null;
+    const accio = b.dataset.agb;
+    if (accio === "noutasca" && s) { const t = $("agNovaTasca").value.trim(); if (!t) return; s.tasques.push({ id: nouId(), text: t, feta: false }); }
+    else if (accio === "treutasca" && s) s.tasques = s.tasques.filter(x => x.id !== b.dataset.id);
+    else if (accio === "nouhabit" && s) { const t = $("agNouHabit").value.trim(); if (!t) return; s.habits.push({ nom: t, fets: [0, 0, 0, 0, 0, 0, 0] }); }
+    else if (accio === "treuhabit" && s) { const hb = s.habits[Number(b.dataset.j)]; if (!hb || !confirm("Vols treure l'hàbit «" + hb.nom + "» d'aquesta setmana?")) return; s.habits.splice(Number(b.dataset.j), 1); }
+    else if (accio === "nourep") {
+      const tema = $("agRepTema").value.trim(), d = $("agRepData").value || avuiISO();
+      if (!tema || !esISO(d)) return;
+      a.repassos.push({ id: nouId(), tema: tema, memoritzat: d, r1: suma(d, 1), r2: suma(d, 7), r3: suma(d, 30), fets: {} });
+    }
+    else if (accio === "treurep") { const r = a.repassos.find(x => x.id === b.dataset.id); if (!r || !confirm("Vols esborrar el tema «" + r.tema + "»?")) return; a.repassos = a.repassos.filter(x => x !== r); }
+    else return;
+    desa(); pintaAgenda();
+  });
+  $("agCos").addEventListener("keydown", ev => {
+    if (ev.key !== "Enter") return;
+    const id = ev.target.id;
+    const boto = id === "agNovaTasca" ? "noutasca" : id === "agNouHabit" ? "nouhabit" : id === "agRepTema" ? "nourep" : null;
+    if (boto) { ev.preventDefault(); $("agCos").querySelector('[data-agb="' + boto + '"]').click(); }
   });
 
   // ================= Tasques =================
@@ -1586,6 +1837,7 @@ dialog .check{display:flex;gap:8px;align-items:center;color:var(--text);font-siz
   }
   function pintaTot() {
     pintaCurs(); pintaTasques(); pintaCalendari(); pintaReunions(); pintaAlumnes();
+    if (!document.activeElement || !$("agCos").contains(document.activeElement)) pintaAgenda();
     if (!gestorCorreu) muntaCorreu(); else gestorCorreu.pinta();
     if (obert && gestorCorreu && !correuCarregat) { correuCarregat = true; gestorCorreu.carrega(); }
     if (document.activeElement !== $("notesText")) $("notesText").value = dades.notes || "";
