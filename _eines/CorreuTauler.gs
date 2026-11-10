@@ -15,6 +15,12 @@
 //      Autoritza els permisos que demani (Gmail).
 //   4. Copia l'URL que acaba en /exec i posa-la al tauler (⚙️ Comptes).
 //
+// OPCIONAL (11.11.2026), per a una adreça d'un altre proveïdor que arriba a
+// aquest Gmail per reenviament (p. ex. latdg@laguait.cat a latdg-podcast@gmail.com):
+//   REMITENT = latdg@laguait.cat   → els correus surten amb aquesta adreça
+//                                    (cal tenir-la a Gmail > «Envia correu com a»)
+//   FILTRE   = to:latdg@laguait.cat → només es mostren els correus adreçats a ella
+//
 // Peticions (POST, cos JSON, sempre amb «pin»):
 //   { accio: "compte" }                               → { correu, quota }
 //   { accio: "llista", q, max }                       → { fils: [...] }
@@ -48,7 +54,8 @@ function doPost(e) {
         return json_({ ok: true, correu: Session.getEffectiveUser().getEmail(), quota: MailApp.getRemainingDailyQuota() });
 
       case "llista": {
-        const q = String(cos.q || "in:inbox");
+        const filtre = PropertiesService.getScriptProperties().getProperty("FILTRE") || "";
+        const q = String(cos.q || "in:inbox") + (filtre ? " " + filtre : "");
         const max = Math.min(Math.max(Number(cos.max) || 25, 1), 50);
         const fils = GmailApp.search(q, 0, max).map(function (f) {
           const m = f.getMessages();
@@ -164,6 +171,8 @@ function valida_(c) {
 function envia_(c) {
   valida_(c);
   const opcions = {};
+  const remitent = PropertiesService.getScriptProperties().getProperty("REMITENT");
+  if (remitent) opcions.from = remitent;
   if (c.cc) opcions.cc = c.cc;
   if (c.cco) opcions.bcc = c.cco;
   if (c.id) {
