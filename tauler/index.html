@@ -146,6 +146,19 @@ ul.tasques button{background:none;border:0;color:var(--suau);padding:0 2px}
 .ag-rep td.avui{color:var(--accent);font-weight:700}
 .ag-rep td.tard{color:#a3161b;font-weight:700}
 .ag-rep th,.ag-rep td{text-align:left}
+/* Rúbriques */
+.rub-bloc{border-top:1px solid var(--linia);padding:6px 0}
+.rub-bloc>summary{cursor:pointer}
+.rub-form{min-width:min(720px,calc(100vw - 24px))}
+dialog#dlgRub{width:min(760px,calc(100vw - 24px))}
+.rub-taula{border-collapse:collapse;width:100%;font-size:.88rem}
+.rub-taula th,.rub-taula td{border-bottom:1px solid var(--linia);padding:6px;text-align:center}
+.rub-taula th:first-child,.rub-taula td:first-child{text-align:left}
+.rub-niv{display:inline-flex;width:28px;height:28px;align-items:center;justify-content:center;border-radius:50%;cursor:pointer}
+.rub-niv.triat{background:var(--accent)}
+.rub-niv input{accent-color:#fff;margin:0;cursor:pointer}
+.rub-nota{font-size:1.1rem;margin:4px 0}
+.taula td.rub{cursor:pointer;background:#fbf6ea}
 /* Temps */
 .temps-linia{display:flex;align-items:center;gap:6px 14px;flex-wrap:wrap}
 .temps-linia .ico{font-size:1.6rem;line-height:1}
@@ -629,6 +642,8 @@ dialog .check{display:flex;gap:8px;align-items:center;color:var(--text);font-siz
       if (typeof d.sembratHorari === "string") r.sembratHorari = d.sembratHorari;
       if (typeof d.sembratActes === "string") r.sembratActes = d.sembratActes;
       if (d.guardiesBlau) r.guardiesBlau = true;
+      if (Array.isArray(d.rubriques)) r.rubriques = d.rubriques;
+      if (d.rubriquesInicials) r.rubriquesInicials = true;
       if (d.agenda && typeof d.agenda === "object") r.agenda = d.agenda;
       if (Array.isArray(d.tasques)) r.tasques = d.tasques.filter(t => t && typeof t.text === "string");
       if (d.correu && Array.isArray(d.correu.comptes)) r.correu = { comptes: d.correu.comptes.filter(c => c && c.url) };
@@ -678,6 +693,11 @@ dialog .check{display:flex;gap:8px;align-items:center;color:var(--text);font-siz
             dades.activitats.push({ id: nouId(), titol: t, tipus: tipus, lloc: lloc, data: d, fins: "", hora: hi, horaFi: hf, repeteix: true, repFins: FI_CURS, excepcions: [], notes: "" });
         });
         dades.sembratHorari = "xtec-2026-11-10";
+        desa();
+      }
+      if (!dades.rubriquesInicials) {   // banc de rúbriques amb les dues primeres
+        rubriques().push(...RUBRIQUES_INICIALS());
+        dades.rubriquesInicials = true;
         desa();
       }
       if (!dades.guardiesBlau) {   // 10.11.2026: guàrdies i biblioteca, del color de les classes
@@ -975,6 +995,106 @@ dialog .check{display:flex;gap:8px;align-items:center;color:var(--text);font-siz
     });
   }
 
+  // ================= Banc de rúbriques =================
+  // Nota d'una rúbrica = Σ (pes del criteri × valor del nivell triat) / Σ pes dels criteris no extra × 10 (màx. 10).
+  const RUBRIQUES_INICIALS = () => [
+    { id: nouId(), nom: "Lectura en veu alta", nivells: [{ nom: "Excel·lent", valor: 1 }, { nom: "Bé", valor: 0.75 }, { nom: "Suficient", valor: 0.5 }, { nom: "Cal millorar", valor: 0.25 }, { nom: "No assolit", valor: 0 }],
+      criteris: [{ nom: "Fluïdesa i ritme", pes: 1 }, { nom: "Pronunciació i articulació", pes: 1 }, { nom: "Entonació i expressivitat", pes: 1 }, { nom: "Respecte de la puntuació (pauses)", pes: 1 }, { nom: "Volum i to de veu", pes: 0.5 }, { nom: "Comprensió del que llegeix", pes: 1 }] },
+    { id: nouId(), nom: "Exposició oral", nivells: [{ nom: "Excel·lent", valor: 1 }, { nom: "Bé", valor: 0.75 }, { nom: "Suficient", valor: 0.5 }, { nom: "Cal millorar", valor: 0.25 }, { nom: "No assolit", valor: 0 }],
+      criteris: [{ nom: "Durada temporal", pes: 0.5 }, { nom: "Estructura del discurs", pes: 0.75 }, { nom: "No llegir i mirar al públic (expressivitat)", pes: 0.5 }, { nom: "Fluïdesa en el llenguatge", pes: 0.5 }, { nom: "Extra per creativitat", pes: 0.5, extra: true }] }
+  ];
+  const rubriques = () => { if (!Array.isArray(dades.rubriques)) dades.rubriques = []; return dades.rubriques; };
+  function notaRubrica(rb, sel) {
+    let max = 0, punts = 0;
+    rb.criteris.forEach((c, i) => {
+      const pes = Number(c.pes) || 0;
+      if (!c.extra) max += pes;
+      const n = sel && sel[i] != null ? rb.nivells[sel[i]] : null;
+      if (n) punts += pes * Number(n.valor);
+    });
+    if (!max) return 0;
+    return Math.min(10, Math.round(punts / max * 1000) / 100);
+  }
+  // Diàleg per avaluar un alumne amb la rúbrica d'una columna
+  function obreAvaluacio(g, f, fila, col) {
+    const rb = rubriques().find(r => r.id === col.rubrica);
+    if (!rb) { alert("Aquesta columna no té cap rúbrica vinculada. Tria-la a «Columnes i fórmules»."); return; }
+    fila.rb = fila.rb || {};
+    const prev = fila.rb[col.nom] || {};
+    const sel = (prev.sel || []).slice();
+    let dlg = $("dlgRub");
+    if (!dlg) { dlg = document.createElement("dialog"); dlg.id = "dlgRub"; document.body.appendChild(dlg); }
+    const pinta = () => {
+      const nota = notaRubrica(rb, sel);
+      dlg.innerHTML = '<form method="dialog" class="rub-form"><h2>' + esc(rb.nom) + "</h2><p class=\"font\" style=\"margin:0\">" + esc(fila.nom.replace(/\s+DIS$/i, "")) + " · " + esc(col.nom) + " · " + esc(f.nom) + "</p>" +
+        '<div class="taula"><table class="rub-taula"><thead><tr><th>Criteri</th>' + rb.nivells.map(n => "<th>" + esc(n.nom) + "</th>").join("") + "</tr></thead><tbody>" +
+        rb.criteris.map((c, i) => "<tr><td>" + esc(c.nom) + ' <span class="font">(' + String(c.pes).replace(".", ",") + (c.extra ? ", extra" : "") + ")</span></td>" +
+          rb.nivells.map((n, j) => '<td><label class="rub-niv' + (sel[i] === j ? " triat" : "") + '"><input type="radio" name="rc' + i + '" data-i="' + i + '" data-j="' + j + '"' + (sel[i] === j ? " checked" : "") + "></label></td>").join("") + "</tr>").join("") +
+        "</tbody></table></div>" +
+        '<label>Comentari (opcional)<textarea class="rub-com" maxlength="1000">' + esc(prev.comentari || "") + "</textarea></label>" +
+        '<p class="rub-nota">Nota: <b>' + String(nota).replace(".", ",") + "</b> / 10" + (sel.filter(x => x != null).length < rb.criteris.filter(c => !c.extra).length ? ' <span class="font">(falten criteris per marcar)</span>' : "") + "</p>" +
+        '<div class="botons"><div class="esq"><button type="button" class="boto perill" data-rb="buida">Esborra</button></div><button type="button" class="boto clar" data-rb="cancela">Cancel·la</button><button type="button" class="boto" data-rb="desa">Desa la nota</button></div></form>';
+    };
+    pinta();
+    dlg.onchange = ev => { const x = ev.target; if (x.type === "radio") { const com = dlg.querySelector(".rub-com").value; prev.comentari = com; sel[Number(x.dataset.i)] = Number(x.dataset.j); pinta(); } };
+    dlg.onclick = ev => {
+      const b = ev.target.closest("[data-rb]"); if (!b) return;
+      if (b.dataset.rb === "cancela") { dlg.close(); return; }
+      if (b.dataset.rb === "buida") { delete fila.rb[col.nom]; delete fila.v[col.nom]; }
+      else { const nota = notaRubrica(rb, sel); fila.rb[col.nom] = { rubrica: rb.id, sel: sel, comentari: dlg.querySelector(".rub-com").value.trim() }; fila.v[col.nom] = nota; }
+      dlg.close(); desa(); pintaAlumnes();
+    };
+    dlg.showModal();
+  }
+  // Editor del banc
+  let rubObert = false;
+  function htmlBanc() {
+    const l = rubriques();
+    return '<div class="formules"><b>📋 Banc de rúbriques</b><p class="font" style="margin:4px 0 8px">Cada criteri té un pes; els nivells valen d\'1 (màxim) a 0. Els criteris «extra» sumen però no compten al màxim. Una columna de tipus «Rúbrica» calcula la nota sobre 10.</p>' +
+      l.map((rb, k) => '<details class="rub-bloc" data-k="' + k + '"><summary><b>' + esc(rb.nom) + '</b> <span class="font">· ' + rb.criteris.length + " criteris</span></summary>" +
+        '<label class="font">Nom<input type="text" class="rb-nom" value="' + esc(rb.nom) + '"></label>' +
+        '<p class="font" style="margin:6px 0 2px">Criteris (nom · pes · extra)</p>' +
+        rb.criteris.map(c => '<div class="fcol rb-crit"><input type="text" class="rb-cnom" value="' + esc(c.nom) + '" style="flex:1 1 14em"><input type="text" class="rb-cpes" value="' + esc(String(c.pes).replace(".", ",")) + '" inputmode="decimal" style="width:4.5em"><label class="font"><input type="checkbox" class="rb-cext"' + (c.extra ? " checked" : "") + '> extra</label><button type="button" class="boto perill" data-rb2="treucrit">✕</button></div>').join("") +
+        '<button type="button" class="boto clar" data-rb2="noucrit">+ Criteri</button>' +
+        '<p class="font" style="margin:6px 0 2px">Nivells (nom · valor de 0 a 1)</p>' +
+        rb.nivells.map(n => '<div class="fcol rb-niv"><input type="text" class="rb-nnom" value="' + esc(n.nom) + '" style="flex:1 1 10em"><input type="text" class="rb-nval" value="' + esc(String(n.valor).replace(".", ",")) + '" inputmode="decimal" style="width:4.5em"><button type="button" class="boto perill" data-rb2="treuniv">✕</button></div>').join("") +
+        '<button type="button" class="boto clar" data-rb2="nouniv">+ Nivell</button>' +
+        '<div class="alum-eines" style="margin-top:8px"><button type="button" class="boto" data-rb2="desa">Desa</button><button type="button" class="boto clar" data-rb2="duplica">Duplica</button><button type="button" class="boto perill" data-rb2="esborra">Esborra la rúbrica</button></div></details>').join("") +
+      '<div class="alum-eines" style="margin-top:8px"><button type="button" class="boto clar" data-rb2="nova">+ Rúbrica nova</button></div><p class="avis" id="rbAvis" hidden></p></div>';
+  }
+  function llegeixRubrica(det) {
+    const num = v => Number(String(v).trim().replace(",", "."));
+    const nom = det.querySelector(".rb-nom").value.trim();
+    const criteris = Array.from(det.querySelectorAll(".rb-crit")).map(x => ({ nom: x.querySelector(".rb-cnom").value.trim(), pes: num(x.querySelector(".rb-cpes").value), extra: x.querySelector(".rb-cext").checked }));
+    const nivells = Array.from(det.querySelectorAll(".rb-niv")).map(x => ({ nom: x.querySelector(".rb-nnom").value.trim(), valor: num(x.querySelector(".rb-nval").value) }));
+    if (!nom) return "La rúbrica necessita un nom.";
+    if (!criteris.length || criteris.some(c => !c.nom || !(c.pes > 0))) return "Cada criteri necessita un nom i un pes més gran que 0.";
+    if (!nivells.length || nivells.some(n => !n.nom || isNaN(n.valor) || n.valor < 0 || n.valor > 1)) return "Cada nivell necessita un nom i un valor entre 0 i 1.";
+    return { nom, criteris, nivells };
+  }
+  function accioBanc(b) {
+    const det = b.closest(".rub-bloc"), l = rubriques();
+    const rb = det ? l[Number(det.dataset.k)] : null;
+    const avis = t => { const a = $("rbAvis"); if (a) { a.textContent = t; a.hidden = !t; } };
+    const a = b.dataset.rb2;
+    if (a === "nova") { l.push({ id: nouId(), nom: "Rúbrica nova", nivells: [{ nom: "Excel·lent", valor: 1 }, { nom: "Bé", valor: 0.75 }, { nom: "Suficient", valor: 0.5 }, { nom: "Cal millorar", valor: 0.25 }], criteris: [{ nom: "Criteri 1", pes: 1 }] }); desa(); pintaAlumnes(); return; }
+    if (!rb) return;
+    if (a === "noucrit" || a === "nouniv") {
+      const nou = document.createElement("div");
+      nou.className = "fcol " + (a === "noucrit" ? "rb-crit" : "rb-niv");
+      nou.innerHTML = a === "noucrit" ? '<input type="text" class="rb-cnom" placeholder="Criteri" style="flex:1 1 14em"><input type="text" class="rb-cpes" value="1" inputmode="decimal" style="width:4.5em"><label class="font"><input type="checkbox" class="rb-cext"> extra</label><button type="button" class="boto perill" data-rb2="treucrit">✕</button>'
+        : '<input type="text" class="rb-nnom" placeholder="Nivell" style="flex:1 1 10em"><input type="text" class="rb-nval" value="0" inputmode="decimal" style="width:4.5em"><button type="button" class="boto perill" data-rb2="treuniv">✕</button>';
+      b.before(nou); nou.querySelector("input").focus(); return;
+    }
+    if (a === "treucrit" || a === "treuniv") { b.closest(".fcol").remove(); return; }
+    if (a === "desa") { const r = llegeixRubrica(det); if (typeof r === "string") return avis(r); Object.assign(rb, r); avis(""); desa(); pintaAlumnes(); return; }
+    if (a === "duplica") { l.push(JSON.parse(JSON.stringify(Object.assign({}, rb, { id: nouId(), nom: rb.nom + " (còpia)" })))); desa(); pintaAlumnes(); return; }
+    if (a === "esborra") {
+      if (!confirm("Vols esborrar la rúbrica «" + rb.nom + "»? Les notes ja posades es mantenen, però les columnes vinculades quedaran sense rúbrica.")) return;
+      dades.rubriques = l.filter(x => x !== rb); desa(); pintaAlumnes();
+    }
+  }
+
   // ================= Qualificacions =================
   // Fórmules: {Columna} = mateixa fila; {Full|Columna} = el mateix alumne en un altre full.
   // Funcions com a l'Excel: SUM, AVERAGE, MIN, MAX, COUNT, COUNTA, IF, IFERROR, ROUND, ROUNDUP,
@@ -1165,12 +1285,13 @@ dialog .check{display:flex;gap:8px;align-items:center;color:var(--text);font-siz
       '<select id="alumFull" aria-label="Full">' + g.fulls.map((x, i) => '<option value="' + i + '"' + (x === f ? " selected" : "") + ">" + esc(x.nom) + "</option>").join("") + "</select>" +
       '<input type="search" id="alumCerca" placeholder="Cerca alumne…" value="' + esc(cerca) + '" style="flex:1 1 140px"></div>' +
       '<div class="alum-eines"><button type="button" class="boto clar" data-q="formules">⚙️ ' + (qFormules ? "Amaga les fórmules" : "Columnes i fórmules") + "</button>" +
-      '<button type="button" class="boto clar" data-q="alumne">+ Alumne</button>' + importa + "</div>";
+      '<button type="button" class="boto clar" data-q="alumne">+ Alumne</button><button type="button" class="boto clar" data-q="banc">📋 ' + (rubObert ? "Amaga les rúbriques" : "Rúbriques") + "</button>" + importa + "</div>" + (rubObert ? htmlBanc() : "");
     if (f && qFormules) {
       h += '<div class="formules"><p class="font" style="margin:0 0 8px">Fórmules com a l\'Excel. <b>{EX1}</b> és una columna d\'aquest full i <b>{1R TRIM|NOTA FINAL TRIM}</b> una columna d\'un altre full. Funcions: SUM, AVERAGE, MIN, MAX, IF, ROUND… Els buits compten com a 0 a les operacions i AVERAGE se\'ls salta.</p>' +
         f.columnes.map((c, i) => '<div class="fcol" data-col="' + i + '">' +
           '<input type="text" class="fnom" value="' + esc(c.nom) + '" aria-label="Nom de la columna">' +
-          '<select class="ftipus" aria-label="Tipus"><option value="nota"' + (c.tipus === "nota" ? " selected" : "") + '>Nota</option><option value="text"' + (c.tipus === "text" ? " selected" : "") + '>Text</option><option value="calc"' + (c.tipus === "calc" ? " selected" : "") + ">Calculada</option></select>" +
+          '<select class="ftipus" aria-label="Tipus"><option value="nota"' + (c.tipus === "nota" ? " selected" : "") + '>Nota</option><option value="text"' + (c.tipus === "text" ? " selected" : "") + '>Text</option><option value="calc"' + (c.tipus === "calc" ? " selected" : "") + ">Calculada</option><option value=\"rubrica\"" + (c.tipus === "rubrica" ? " selected" : "") + ">Rúbrica</option></select>" +
+          '<select class="frub" aria-label="Rúbrica"' + (c.tipus === "rubrica" ? "" : " hidden") + ">" + rubriques().map(r => '<option value="' + r.id + '"' + (c.rubrica === r.id ? " selected" : "") + ">" + esc(r.nom) + "</option>").join("") + "</select>" +
           '<input type="text" class="fform" value="' + esc(c.formula || "") + '" placeholder="Fórmula" aria-label="Fórmula"' + (c.tipus === "calc" ? "" : " hidden") + ">" +
           '<button type="button" class="boto perill" data-q="treucol" title="Esborra la columna">✕</button>' +
           (c.tipus === "calc" && desquadres[c.nom] ? '<span class="avis" style="flex-basis:100%">⚠️ No dona el mateix que l\'Excel en ' + desquadres[c.nom] + " alumne" + (desquadres[c.nom] === 1 ? "" : "s") + ".</span>" : "") +
@@ -1186,6 +1307,7 @@ dialog .check{display:flex;gap:8px;align-items:center;color:var(--text);font-siz
             const cls = ["calc"]; if (v && v.err) cls.push("susp"); else if (n !== null && /NOTA|GLOBAL|FINAL/i.test(c.nom)) cls.push(n < 5 ? "susp" : "apro");
             return '<td class="' + cls.join(" ") + '"' + (ok ? "" : ' title="A l\'Excel: ' + esc(r.o[c.nom]) + '"') + ">" + esc(txt) + (ok ? "" : " ⚠️") + "</td>";
           }
+          if (c.tipus === "rubrica") { const n = numOpcional(v); return '<td class="ed rub' + (n !== null && /NOTA|GLOBAL|FINAL/i.test(c.nom) ? (n < 5 ? " susp" : " apro") : "") + '" data-alumne="' + esc(r.nom) + '" data-c="' + esc(c.nom) + '" title="Avalua amb la rúbrica">' + (txt ? esc(txt) : '<span class="font">📋</span>') + "</td>"; }
           return '<td class="ed' + (c.tipus === "text" ? " txt" : "") + '" data-alumne="' + esc(r.nom) + '" data-c="' + esc(c.nom) + '" title="' + esc(txt) + '">' + esc(txt) + "</td>";
         }).join("") + "</tr>"; }).join("") || '<tr><td colspan="' + (f.columnes.length + 1) + '" class="buit">Cap alumne no coincideix.</td></tr>') +
         "</tbody></table></div><p class=\"font\">" + files.length + " alumnes · toca una nota per canviar-la; toca el nom per canviar-lo o esborrar l'alumne.</p>";
@@ -1226,9 +1348,9 @@ dialog .check{display:flex;gap:8px;align-items:center;color:var(--text);font-siz
   }
   function desaFormules() {
     const g = grupActual(), f = fullActual(g); if (!f) return;
-    const noves = Array.from($("alumCos").querySelectorAll(".fcol")).map(el => {
+    const noves = Array.from($("alumCos").querySelectorAll(".fcol[data-col]")).map(el => {
       const vell = f.columnes[Number(el.dataset.col)] || {};
-      return { vell: vell.nom, nom: el.querySelector(".fnom").value.trim(), tipus: el.querySelector(".ftipus").value, formula: el.querySelector(".fform").value.trim() };
+      return { vell: vell.nom, nom: el.querySelector(".fnom").value.trim(), tipus: el.querySelector(".ftipus").value, formula: el.querySelector(".fform").value.trim(), rubrica: el.querySelector(".frub") ? el.querySelector(".frub").value : "" };
     });
     const avis = t => { $("formAvis").textContent = t; $("formAvis").hidden = false; };
     const noms = noves.map(c => c.nom);
@@ -1251,18 +1373,25 @@ dialog .check{display:flex;gap:8px;align-items:center;color:var(--text);font-siz
     // Reanomena les dades i les referències
     noves.forEach(c => {
       if (!c.vell || c.vell === c.nom) return;
-      f.files.forEach(r => { if (c.vell in r.v) { r.v[c.nom] = r.v[c.vell]; delete r.v[c.vell]; } if (r.o && c.vell in r.o) { r.o[c.nom] = r.o[c.vell]; delete r.o[c.vell]; } });
+      f.files.forEach(r => { if (r.rb && c.vell in r.rb) { r.rb[c.nom] = r.rb[c.vell]; delete r.rb[c.vell]; } if (c.vell in r.v) { r.v[c.nom] = r.v[c.vell]; delete r.v[c.vell]; } if (r.o && c.vell in r.o) { r.o[c.nom] = r.o[c.vell]; delete r.o[c.vell]; } });
       const re = new RegExp("\\{\\s*" + c.vell.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "\\s*\\}", "g");
       noves.forEach(x => { if (x.formula) x.formula = x.formula.replace(re, "{" + c.nom + "}"); });
       g.fulls.forEach(fu => { if (fu !== f) fu.columnes.forEach(x => { if (x.formula) x.formula = x.formula.split("{" + f.nom + "|" + c.vell + "}").join("{" + f.nom + "|" + c.nom + "}"); }); });
     });
-    f.columnes = noves.map(c => c.tipus === "calc" ? { nom: c.nom, tipus: "calc", formula: c.formula } : { nom: c.nom, tipus: c.tipus });
+    if (noves.some(c => c.tipus === "rubrica" && !c.rubrica)) return avis("Tria la rúbrica de cada columna de tipus «Rúbrica» (primer crea-la al banc).");
+    f.columnes = noves.map(c => c.tipus === "calc" ? { nom: c.nom, tipus: "calc", formula: c.formula } : c.tipus === "rubrica" ? { nom: c.nom, tipus: "rubrica", rubrica: c.rubrica } : { nom: c.nom, tipus: c.tipus });
     desa(); pintaAlumnes();
   }
   $("alumCos").addEventListener("click", ev => {
     const b = ev.target.closest("[data-grup]");
     if (b) { qGrup = Number(b.dataset.grup); qFull = 0; pintaAlumnes(); return; }
-    const td = ev.target.closest("td.ed"); if (td) { editaCela(td); return; }
+    const bb = ev.target.closest("[data-rb2]"); if (bb) { accioBanc(bb); return; }
+    const td = ev.target.closest("td.ed");
+    if (td) {
+      const g0 = grupActual(), f0 = fullActual(g0), c0 = f0 && f0.columnes.find(c => c.nom === td.dataset.c);
+      if (c0 && c0.tipus === "rubrica") { const fl = f0.files.find(r => r.nom === td.dataset.alumne); if (fl) obreAvaluacio(g0, f0, fl, c0); return; }
+      editaCela(td); return;
+    }
     const nomal = ev.target.closest("td.nomal");
     const g = grupActual(), f = fullActual(g);
     if (nomal && g) {
@@ -1286,6 +1415,7 @@ dialog .check{display:flex;gap:8px;align-items:center;color:var(--text);font-siz
     if (q.dataset.q === "drive") { importaDeDrive(q); return; }
     if (!f) return;
     if (q.dataset.q === "formules") { qFormules = !qFormules; pintaAlumnes(); }
+    else if (q.dataset.q === "banc") { rubObert = !rubObert; pintaAlumnes(); }
     else if (q.dataset.q === "alumne") {
       const nom = (prompt("Nom de l'alumne nou (Cognoms , Nom):") || "").trim();
       if (!nom) return;
@@ -1295,7 +1425,7 @@ dialog .check{display:flex;gap:8px;align-items:center;color:var(--text);font-siz
     else if (q.dataset.q === "novacol") {
       const fila = document.createElement("div");
       fila.className = "fcol"; fila.dataset.col = "-1";
-      fila.innerHTML = '<input type="text" class="fnom" value="" placeholder="Nom (p. ex. EX3)" aria-label="Nom de la columna"><select class="ftipus" aria-label="Tipus"><option value="nota">Nota</option><option value="text">Text</option><option value="calc">Calculada</option></select><input type="text" class="fform" placeholder="Fórmula" aria-label="Fórmula" hidden><button type="button" class="boto perill" data-q="treucol" title="Esborra la columna">✕</button>';
+      fila.innerHTML = '<input type="text" class="fnom" value="" placeholder="Nom (p. ex. EX3)" aria-label="Nom de la columna"><select class="ftipus" aria-label="Tipus"><option value="nota">Nota</option><option value="text">Text</option><option value="calc">Calculada</option><option value="rubrica">Rúbrica</option></select><select class="frub" aria-label="Rúbrica" hidden>' + rubriques().map(r => '<option value="' + r.id + '">' + esc(r.nom) + "</option>").join("") + '</select><input type="text" class="fform" placeholder="Fórmula" aria-label="Fórmula" hidden><button type="button" class="boto perill" data-q="treucol" title="Esborra la columna">✕</button>';
       q.parentElement.before(fila); fila.querySelector(".fnom").focus();
     }
     else if (q.dataset.q === "treucol") {
@@ -1307,7 +1437,7 @@ dialog .check{display:flex;gap:8px;align-items:center;color:var(--text);font-siz
   });
   $("alumCos").addEventListener("change", ev => {
     if (ev.target.id === "alumFull") { qFull = Number(ev.target.value); pintaAlumnes(); }
-    else if (ev.target.classList.contains("ftipus")) ev.target.parentElement.querySelector(".fform").hidden = ev.target.value !== "calc";
+    else if (ev.target.classList.contains("ftipus")) { ev.target.parentElement.querySelector(".fform").hidden = ev.target.value !== "calc"; const fr = ev.target.parentElement.querySelector(".frub"); if (fr) fr.hidden = ev.target.value !== "rubrica"; }
     else if (ev.target.id === "alumFitxer") importaFitxers(Array.from(ev.target.files || []));
   });
   $("alumCos").addEventListener("input", ev => {
