@@ -1,7 +1,7 @@
 ---
 layout: null
 sitemap: false
-permalink: /tauler-7q4m2/
+permalink: /tauler/
 ---
 <!doctype html>
 <html lang="ca">
@@ -37,8 +37,9 @@ button{font:inherit;cursor:pointer}
 .boto.perill{background:var(--targeta);color:#a3161b;border-color:#a3161b}
 input[type=text],input[type=time],input[type=search],input[type=password],select,textarea{font:inherit;padding:6px 8px;border:1px solid var(--linia);border-radius:8px;background:var(--targeta);color:var(--text)}
 textarea{width:100%;min-height:90px;resize:vertical}
-.capcalera{display:flex;align-items:center;gap:10px 16px;flex-wrap:wrap}
-.capcalera h1{margin-right:auto}
+.capcalera{display:flex;align-items:center;gap:12px}
+.capcalera h1{margin-right:auto;min-width:0}
+@media (max-width:600px){.capcalera h1{font-size:1.25rem}.panells{gap:9px}.panells a{font-size:1.25rem}}
 .panells{display:flex;gap:14px}
 .panells a{font-size:1.5rem;line-height:1;text-decoration:none}
 .capinst{display:flex;align-items:center;gap:10px 14px;flex-wrap:wrap}
@@ -56,7 +57,26 @@ h3.bt{margin:0 0 8px;font-size:1rem;text-transform:uppercase}
 .taula th:first-child{background:#faf9f6}
 .taula td.susp{color:#a3161b;font-weight:700}
 .taula td.apro{color:#2e7d32;font-weight:700}
+.taula td.calc,.taula th.calc{background:#f7f5ef}
+.taula td.ed{cursor:pointer}
+.taula td.ed:hover{outline:1px solid var(--accent);outline-offset:-1px}
+.taula td.txt{max-width:220px;overflow:hidden;text-overflow:ellipsis;text-align:left}
+.taula td.nomal{cursor:pointer}
+.celaed{width:5.5em;font:inherit;padding:2px 4px;border:1px solid var(--accent);border-radius:4px;text-align:right}
+td.txt .celaed{width:16em;text-align:left}
+.formules{border:1px solid var(--linia);border-radius:10px;padding:10px;margin-bottom:10px;background:#faf9f6}
+.fcol{display:flex;gap:6px;flex-wrap:wrap;align-items:center;padding:4px 0}
+.fcol .fnom{flex:0 1 11em;min-width:7em}
+.fcol .fform{flex:1 1 16em;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.85rem}
 /* Temps */
+.temps-linia{display:flex;align-items:center;gap:6px 14px;flex-wrap:wrap}
+.temps-linia .ico{font-size:1.6rem;line-height:1}
+.temps-linia b{font-size:1.4rem}
+.temps-linia .m{color:var(--suau);font-size:.9rem}
+.temps-linia .llocT{margin-left:auto;font-size:.8rem}
+.temps-dies{display:flex;gap:6px 16px;flex-wrap:wrap;margin-top:8px;font-size:.85rem}
+.temps-dies:empty{display:none}
+.temps-dies i{font-style:normal;color:var(--suau);margin-left:4px}
 .gran{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
 .gran .ico{font-size:2.6rem;line-height:1}
 .gran .temp{font-size:2.4rem;font-weight:700;line-height:1}
@@ -171,35 +191,16 @@ dialog .check{display:flex;gap:8px;align-items:center;color:var(--text);font-siz
     </div>
   </div>
   <p class="sub" id="ara"></p>
-  <nav>
-    <a href="#temps">☀️ Temps i UV</a>
-    <a href="#mexic">✈️ Mèxic</a>
-    <a href="#institut">🏫 Institut</a>
-    <a href="#github">🐙 GitHub</a>
-  </nav>
 </header>
 
 <main>
 
 
-  <section id="temps">
-    <h2>☀️ Temps i UV a la Bisbal d'Empordà</h2>
-    <div id="tempsAra" class="buit">Carregant…</div>
-    <h3>Índex UV d'avui, hora a hora</h3>
-    <div id="uvHores" class="buit">—</div>
-    <div id="tempsDies"></div>
-    <p class="font">Font: <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a>. S'actualitza cada 30 minuts.</p>
+  <section id="temps" class="ample">
+    <div id="tempsAra" class="temps-linia buit">Carregant el temps…</div>
+    <div id="tempsDies" class="temps-dies"></div>
   </section>
 
-  <section id="mexic">
-    <h2>✈️ Viatge a Mèxic</h2>
-    <div id="mexicCompte" class="buit">—</div>
-    <div class="rellotges">
-      <div class="rellotge"><b id="horaBisbal">--:--</b><span>la Bisbal d'Empordà</span></div>
-      <div class="rellotge"><b id="horaMexic">--:--</b><span>Ciutat de Mèxic</span></div>
-    </div>
-    <div id="mexicTemps" class="font"></div>
-  </section>
 
 
   <section id="institut" class="ample">
@@ -249,7 +250,7 @@ dialog .check{display:flex;gap:8px;align-items:center;color:var(--text);font-siz
   </div>
     <div class="bloc" id="alumnes">
       <h3 class="bt">🎓 Alumnes i qualificacions</h3>
-      <div id="alumCos"><p class="buit">Encara no hi ha qualificacions carregades.</p></div>
+      <div id="alumCos"></div>
     </div>
   <div class="bloc" id="notes">
     <h3 class="bt">📝 Notes de feina</h3>
@@ -259,21 +260,6 @@ dialog .check{display:flex;gap:8px;align-items:center;color:var(--text);font-siz
     </div>
   </section>
 
-  <section id="github" class="ample">
-    <h2>🐙 Què et pot oferir GitHub per a ús personal</h2>
-    <div class="recursos">
-      <div class="recurs"><h3>⏰ Actions programades</h3><p>Tasques que s'executen soles cada hora o cada dia: avisos al teu Telegram, còpies de seguretat, comprovar preus de vols, baixar dades. En repos públics són gratuïtes; en privats, 2.000 minuts al mes.</p><span class="ja">Ja ho fas servir a La TdG</span></div>
-      <div class="recurs"><h3>🌐 Pages</h3><p>Pàgines web gratuïtes com aquesta: taulers, la videoteca, un CV, materials per als alumnes amb adreça pròpia.</p><span class="ja">Ja ho fas servir</span></div>
-      <div class="recurs"><h3>🔒 Repos privats</h3><p>Il·limitats i gratuïts: també hi caben apunts, materials de classe o l'arbre genealògic, amb tot l'historial de canvis.</p></div>
-      <div class="recurs"><h3>✅ Issues com a llista de tasques</h3><p>Cada issue d'un repo privat és una tasca o una idea, amb etiquetes (classe, casa, La TdG). Es gestiona bé des de l'app de GitHub al mòbil.</p></div>
-      <div class="recurs"><h3>🗂️ Projects</h3><p>Taulers tipus kanban (per fer · fent · fet) amb les issues: per preparar unitats didàctiques, els treballs de la UOC o el viatge.</p></div>
-      <div class="recurs"><h3>📎 Gists</h3><p>Fragments de text o codi desats amb un enllaç propi, públics o secrets: plantilles de correus, ordres útils, receptes.</p></div>
-      <div class="recurs"><h3>💻 Codespaces</h3><p>Un ordinador al núvol dins el navegador per provar codi sense instal·lar res: 120 hores de nucli i 15 GB al mes, gratis.</p></div>
-      <div class="recurs"><h3>📦 Git LFS</h3><p>Per guardar fitxers grans (vídeos, PDF de revistes) al costat d'un repo: 10 GB d'espai al mes en el pla gratuït.</p></div>
-      <div class="recurs"><h3>🔔 App mòbil i avisos</h3><p>L'app de GitHub avisa quan falla una Action o quan algú et comenta; també permet editar fitxers i issues des del telèfon.</p></div>
-    </div>
-    <p class="font">Límits del pla gratuït segons <a href="https://docs.github.com/en/billing/reference/product-usage-included" target="_blank" rel="noopener">la documentació de GitHub</a> (consulta del 10.11.2026).</p>
-  </section>
 
 </main>
 <footer>Tauler personal · no surt als cercadors ni al menú del web.</footer>
@@ -337,8 +323,6 @@ dialog .check{display:flex;gap:8px;align-items:center;color:var(--text);font-siz
   "use strict";
   // ================= Configuració =================
   const BISBAL = { lat: 41.9600, lon: 3.0386 };
-  const MEXIC = { lat: 19.4326, lon: -99.1332 };
-  const VIATGE = { anada: "2026-12-24", tornadaDes: "2027-01-07", tornadaFins: "2027-01-15" };
   const WORKER = "https://latdg-agenda.ignasicorney.workers.dev";
   const TZ = "Europe/Madrid";
   // Calendari escolar oficial (fix, no editable)
@@ -389,19 +373,19 @@ dialog .check{display:flex;gap:8px;align-items:center;color:var(--text);font-siz
   const textAb64 = txt => { const b = new TextEncoder().encode(txt); let s = ""; for (let i = 0; i < b.length; i += 0x8000) s += String.fromCharCode.apply(null, b.subarray(i, i + 0x8000)); return btoa(s); };
 
   // ================= Dades i sincronització =================
-  const BUIDES = () => ({ versio: 1, activitats: [], reunions: [], notes: "" });
+  const BUIDES = () => ({ versio: 1, activitats: [], reunions: [], notes: "", qualificacions: { grups: [] } });
   function normalitza(d) {
     const r = BUIDES();
     if (d && typeof d === "object") {
       if (Array.isArray(d.activitats)) r.activitats = d.activitats.filter(a => a && esISO(a.data));
       if (Array.isArray(d.reunions)) r.reunions = d.reunions.filter(a => a && esISO(a.data));
       if (typeof d.notes === "string") r.notes = d.notes;
+      if (d.qualificacions && Array.isArray(d.qualificacions.grups)) r.qualificacions = d.qualificacions;
     }
     return r;
   }
   let clau = lsLlegeix("tauler.clau") || "";
   let dades = BUIDES();
-  let alumnes = null;
   let sha = null, temporitzador = null, desant = false, pendent = false, obert = false;
 
   function estatSinc(tipus, text) {
@@ -426,7 +410,6 @@ dialog .check{display:flex;gap:8px;align-items:center;color:var(--text);font-siz
       const d = await crida({ accio: "institut-llegeix" });
       sha = d.sha || null;
       dades = normalitza(d.dades);
-      alumnes = d.alumnes || null;
       lsEscriu("tauler.dades", JSON.stringify(dades));
       estatSinc("ok", "Sincronitzat");
       return "ok";
@@ -492,51 +475,465 @@ dialog .check{display:flex;gap:8px;align-items:center;color:var(--text);font-siz
   });
   $("sincClau").addEventListener("keydown", e => { if (e.key === "Enter") $("sincConnecta").click(); });
   $("sincDesconnecta").addEventListener("click", () => {
-    clau = ""; sha = null; dades = BUIDES(); alumnes = null;
+    clau = ""; sha = null; dades = BUIDES();
     lsEscriu("tauler.clau", null); lsEscriu("tauler.dades", null);
     mostraInstitut(false);
   });
 
-  // ================= Alumnes i qualificacions =================
-  let alumGrup = 0, alumFull = 0;
-  function pintaAlumnes() {
-    const cos = $("alumCos");
-    if (!alumnes || !Array.isArray(alumnes.grups) || !alumnes.grups.length) {
-      cos.innerHTML = '<p class="buit">Encara no hi ha qualificacions carregades.</p>'; return;
+  // ================= Qualificacions =================
+  // Fórmules: {Columna} = mateixa fila; {Full|Columna} = el mateix alumne en un altre full.
+  // Funcions com a l'Excel: SUM, AVERAGE, MIN, MAX, COUNT, COUNTA, IF, IFERROR, ROUND, ROUNDUP,
+  // ROUNDDOWN, AND, OR, NOT, ABS, INT (també SUMA, MITJANA, SI, SIERROR, ARRODONEIX).
+  class ErrF extends Error { constructor(c) { super(c); this.codi = c; } }
+  const ALIES = { SUMA: "SUM", MITJANA: "AVERAGE", PROMEDIO: "AVERAGE", SI: "IF", SIERROR: "IFERROR", ARRODONEIX: "ROUND", REDONDEAR: "ROUND", COMPTA: "COUNT", I: "AND", O: "OR" };
+  function tokens(src) {
+    const t = []; let i = 0;
+    while (i < src.length) {
+      const c = src[i], resta = src.slice(i);
+      if (/\s/.test(c)) { i++; continue; }
+      if (c === "{") { const j = src.indexOf("}", i); if (j < 0) throw new Error("Falta tancar «}»"); t.push({ t: "ref", v: src.slice(i + 1, j).trim() }); i = j + 1; continue; }
+      if (/[0-9.]/.test(c)) { const m = resta.match(/^(\d+\.?\d*|\.\d+)(e[+-]?\d+)?/i); if (!m) throw new Error("Número mal escrit"); t.push({ t: "num", v: parseFloat(m[0]) }); i += m[0].length; continue; }
+      if (c === '"') { const j = src.indexOf('"', i + 1); if (j < 0) throw new Error("Falta tancar les cometes"); t.push({ t: "str", v: src.slice(i + 1, j) }); i = j + 1; continue; }
+      if (/[A-Za-zÀ-ÿ_]/.test(c)) { const m = resta.match(/^[A-Za-zÀ-ÿ_][A-Za-z0-9À-ÿ_.]*/); t.push({ t: "id", v: m[0].toUpperCase() }); i += m[0].length; continue; }
+      const dos = src.substr(i, 2);
+      if (dos === "<=" || dos === ">=" || dos === "<>") { t.push({ t: "op", v: dos }); i += 2; continue; }
+      if ("+-*/^(),;=<>&%".includes(c)) { t.push({ t: "op", v: c === ";" ? "," : c }); i++; continue; }
+      throw new Error("Caràcter no vàlid: «" + c + "»");
     }
-    const g = alumnes.grups[Math.min(alumGrup, alumnes.grups.length - 1)];
-    const fulls = g.fulls || [];
-    const f = fulls[Math.min(alumFull, fulls.length - 1)] || { columnes: [], files: [] };
-    const cerca = ($("alumCerca") && $("alumCerca").value || "").trim().toLowerCase();
-    const nota = (v, col) => {
-      if (v === "" || v == null) return "<td></td>";
-      const n = Number(String(v).replace(",", "."));
-      if (isNaN(n)) return "<td>" + esc(v) + "</td>";
-      const clau = /NOTA|GLOBAL|FINAL/i.test(col) ? (n < 5 ? ' class="susp"' : ' class="apro"') : "";
-      return "<td" + clau + ">" + (Number.isInteger(n) ? n : n.toFixed(2).replace(".", ",")) + "</td>";
-    };
-    const files = (f.files || []).filter(r => !cerca || String(r[0]).toLowerCase().includes(cerca));
-    cos.innerHTML =
-      '<div class="alum-eines"><div class="vistes" role="group" aria-label="Grup">' +
-      alumnes.grups.map((x, i) => '<button type="button" data-grup="' + i + '" aria-pressed="' + (x === g) + '">' + esc(x.nom) + "</button>").join("") + "</div>" +
-      '<select id="alumFull" aria-label="Full">' + fulls.map((x, i) => '<option value="' + i + '"' + (x === f ? " selected" : "") + ">" + esc(x.nom) + "</option>").join("") + "</select>" +
+    return t;
+  }
+  function analitza(src) {
+    const t = tokens(String(src).replace(/^=/, "")); let p = 0;
+    const mira = v => t[p] && t[p].t === "op" && t[p].v === v;
+    const espera = v => { if (!mira(v)) throw new Error("S'esperava «" + v + "»"); p++; };
+    function comp() { let a = conc(); while (t[p] && t[p].t === "op" && ["=", "<>", "<", ">", "<=", ">="].includes(t[p].v)) { const o = t[p++].v; a = { k: "bin", o, a, b: conc() }; } return a; }
+    function conc() { let a = suma(); while (mira("&")) { p++; a = { k: "bin", o: "&", a, b: suma() }; } return a; }
+    function suma() { let a = prod(); while (mira("+") || mira("-")) { const o = t[p++].v; a = { k: "bin", o, a, b: prod() }; } return a; }
+    function prod() { let a = pot(); while (mira("*") || mira("/")) { const o = t[p++].v; a = { k: "bin", o, a, b: pot() }; } return a; }
+    function pot() { let a = un(); while (mira("^")) { p++; a = { k: "bin", o: "^", a, b: un() }; } return a; }
+    function un() { if (mira("-")) { p++; return { k: "neg", a: un() }; } if (mira("+")) { p++; return un(); } let a = prim(); while (mira("%")) { p++; a = { k: "bin", o: "/", a, b: { k: "num", v: 100 } }; } return a; }
+    function prim() {
+      const x = t[p];
+      if (!x) throw new Error("La fórmula està incompleta");
+      if (x.t === "num") { p++; return { k: "num", v: x.v }; }
+      if (x.t === "str") { p++; return { k: "str", v: x.v }; }
+      if (x.t === "ref") { p++; return { k: "ref", v: x.v }; }
+      if (x.t === "id") {
+        p++;
+        if (x.v === "TRUE" || x.v === "CERT") return { k: "num", v: 1 };
+        if (x.v === "FALSE" || x.v === "FALS") return { k: "num", v: 0 };
+        espera("(");
+        const args = [];
+        if (!mira(")")) { args.push(comp()); while (mira(",")) { p++; args.push(comp()); } }
+        espera(")");
+        const nom = ALIES[x.v] || x.v;
+        if (!FUNCIONS[nom]) throw new Error("Funció desconeguda: " + x.v);
+        return { k: "fn", n: nom, args };
+      }
+      if (mira("(")) { p++; const a = comp(); espera(")"); return a; }
+      throw new Error("No s'entén «" + x.v + "»");
+    }
+    const arrel = comp();
+    if (p < t.length) throw new Error("Sobra «" + t[p].v + "»");
+    return arrel;
+  }
+  const esBuit = v => v === "" || v == null;
+  function aNum(v) {
+    if (esBuit(v)) return 0;
+    if (typeof v === "number") return v;
+    const n = Number(String(v).trim().replace(",", "."));
+    if (isNaN(n)) throw new ErrF("#VALOR!");
+    return n;
+  }
+  const numOpcional = v => { if (esBuit(v)) return null; if (typeof v === "number") return v; const n = Number(String(v).trim().replace(",", ".")); return isNaN(n) ? null : n; };
+  const pla = args => args.reduce((a, x) => a.concat(Array.isArray(x) ? x : [x]), []);
+  const arrodoneix = (x, n, mode) => { const f = Math.pow(10, n || 0); const y = x * f; const r = mode === "amunt" ? Math.sign(y) * Math.ceil(Math.abs(y) - 1e-9) : mode === "avall" ? Math.sign(y) * Math.floor(Math.abs(y) + 1e-9) : Math.sign(y) * Math.round(Math.abs(y) + 1e-9); return r / f; };
+  const FUNCIONS = {
+    SUM: (a, ev) => pla(a.map(ev)).reduce((s, v) => s + (numOpcional(v) || 0), 0),
+    AVERAGE: (a, ev) => { const n = pla(a.map(ev)).map(numOpcional).filter(v => v !== null); if (!n.length) throw new ErrF("#DIV/0!"); return n.reduce((s, v) => s + v, 0) / n.length; },
+    MIN: (a, ev) => { const n = pla(a.map(ev)).map(numOpcional).filter(v => v !== null); return n.length ? Math.min.apply(null, n) : 0; },
+    MAX: (a, ev) => { const n = pla(a.map(ev)).map(numOpcional).filter(v => v !== null); return n.length ? Math.max.apply(null, n) : 0; },
+    COUNT: (a, ev) => pla(a.map(ev)).map(numOpcional).filter(v => v !== null).length,
+    COUNTA: (a, ev) => pla(a.map(ev)).filter(v => !esBuit(v)).length,
+    IF: (a, ev) => (aNum(ev(a[0])) ? (a.length > 1 ? ev(a[1]) : 1) : (a.length > 2 ? ev(a[2]) : 0)),
+    IFERROR: (a, ev) => { try { return ev(a[0]); } catch (e) { if (e instanceof ErrF) return ev(a[1]); throw e; } },
+    ROUND: (a, ev) => arrodoneix(aNum(ev(a[0])), a[1] ? aNum(ev(a[1])) : 0),
+    ROUNDUP: (a, ev) => arrodoneix(aNum(ev(a[0])), a[1] ? aNum(ev(a[1])) : 0, "amunt"),
+    ROUNDDOWN: (a, ev) => arrodoneix(aNum(ev(a[0])), a[1] ? aNum(ev(a[1])) : 0, "avall"),
+    AND: (a, ev) => (a.every(x => aNum(ev(x))) ? 1 : 0),
+    OR: (a, ev) => (a.some(x => aNum(ev(x))) ? 1 : 0),
+    NOT: (a, ev) => (aNum(ev(a[0])) ? 0 : 1),
+    ABS: (a, ev) => Math.abs(aNum(ev(a[0]))),
+    INT: (a, ev) => Math.floor(aNum(ev(a[0])))
+  };
+  function avalua(n, refq) {
+    const ev = x => avalua(x, refq);
+    switch (n.k) {
+      case "num": case "str": return n.v;
+      case "ref": return refq(n.v);
+      case "neg": return -aNum(ev(n.a));
+      case "fn": return FUNCIONS[n.n](n.args, ev);
+      case "bin": {
+        const a = ev(n.a), b = ev(n.b);
+        if (n.o === "&") return String(esBuit(a) ? "" : a) + String(esBuit(b) ? "" : b);
+        if (["=", "<>", "<", ">", "<=", ">="].includes(n.o)) {
+          const x = numOpcional(a), y = numOpcional(b);
+          const [p, q] = x !== null && y !== null ? [x, y] : [String(esBuit(a) ? "" : a).toLowerCase(), String(esBuit(b) ? "" : b).toLowerCase()];
+          return ({ "=": p === q, "<>": p !== q, "<": p < q, ">": p > q, "<=": p <= q, ">=": p >= q })[n.o] ? 1 : 0;
+        }
+        const x = aNum(a), y = aNum(b);
+        if (n.o === "+") return x + y;
+        if (n.o === "-") return x - y;
+        if (n.o === "*") return x * y;
+        if (n.o === "^") return Math.pow(x, y);
+        if (y === 0) throw new ErrF("#DIV/0!");
+        return x / y;
+      }
+    }
+    throw new Error("Node desconegut");
+  }
+  function refsDe(n, out) {
+    out = out || [];
+    if (n.k === "ref") out.push(n.v);
+    if (n.a) refsDe(n.a, out); if (n.b) refsDe(n.b, out);
+    if (n.args) n.args.forEach(x => refsDe(x, out));
+    return out;
+  }
+
+  // Càlcul d'un grup: retorna funció valor(full, fila, columna)
+  function calculadora(g) {
+    const arbres = new Map(), memo = new Map(), enCurs = new Set();
+    const fullPerNom = nom => g.fulls.find(f => f.nom.toLowerCase() === String(nom).trim().toLowerCase());
+    const arbre = col => { if (!arbres.has(col)) { try { arbres.set(col, analitza(col.formula)); } catch (e) { arbres.set(col, e); } } return arbres.get(col); };
+    function valor(f, fila, col) {
+      if (col.tipus !== "calc") return fila.v[col.nom] == null ? "" : fila.v[col.nom];
+      const k = f.nom + "\u0001" + fila.nom + "\u0001" + col.nom;
+      if (memo.has(k)) return memo.get(k);
+      if (enCurs.has(k)) return { err: "#CICLE" };
+      enCurs.add(k);
+      let r;
+      const a = arbre(col);
+      if (a instanceof Error) r = { err: "#FÓRMULA" };
+      else {
+        try {
+          r = avalua(a, ref => {
+            let full = f, nomCol = ref;
+            const sep = ref.indexOf("|");
+            if (sep >= 0) { full = fullPerNom(ref.slice(0, sep)); nomCol = ref.slice(sep + 1).trim(); if (!full) throw new ErrF("#REF!"); }
+            const c = full.columnes.find(x => x.nom === nomCol);
+            if (!c) throw new ErrF("#REF!");
+            const fl = full === f ? fila : full.files.find(x => x.nom === fila.nom);
+            if (!fl) return "";
+            const v = valor(full, fl, c);
+            if (v && v.err) throw new ErrF(v.err);
+            return v;
+          });
+        } catch (e) { r = { err: e instanceof ErrF ? e.codi : "#ERROR" }; }
+      }
+      enCurs.delete(k); memo.set(k, r);
+      return r;
+    }
+    return valor;
+  }
+  const mostraValor = v => {
+    if (v && v.err) return v.err;
+    if (typeof v === "number") return Number.isInteger(v) ? String(v) : v.toFixed(2).replace(".", ",");
+    return String(v == null ? "" : v);
+  };
+  const coincideix = (v, o) => {
+    if (o == null || o === "") return true;
+    if (v && v.err) return typeof o === "string" && o.charAt(0) === "#";
+    const a = numOpcional(v), b = numOpcional(o);
+    if (a !== null && b !== null) return Math.abs(a - b) < 0.006;
+    return String(v) === String(o);
+  };
+
+  // ---- Interfície ----
+  let qGrup = 0, qFull = 0, qFormules = false;
+  const Q = () => { if (!dades.qualificacions || !Array.isArray(dades.qualificacions.grups)) dades.qualificacions = { grups: [] }; return dades.qualificacions; };
+  function grupActual() { const q = Q(); if (!q.grups.length) return null; qGrup = Math.min(qGrup, q.grups.length - 1); return q.grups[qGrup]; }
+  function fullActual(g) { if (!g || !g.fulls.length) return null; qFull = Math.min(qFull, g.fulls.length - 1); return g.fulls[qFull]; }
+  function pintaAlumnes() {
+    const cos = $("alumCos"), g = grupActual(), f = fullActual(g);
+    const importa = '<label class="boto clar" style="display:inline-block">⬆️ Importa Excel<input type="file" id="alumFitxer" accept=".xlsx,.xls,.zip" multiple hidden></label>';
+    if (!g) {
+      cos.innerHTML = '<p class="buit">Encara no hi ha cap grup. Baixa de Drive la carpeta de notes (o els fulls .xlsx) i importa-la aquí: s\'hi copien els alumnes, les notes i les fórmules.</p>' + importa;
+      return;
+    }
+    const valor = calculadora(g);
+    const cerca = (($("alumCerca") || {}).value || "").trim().toLowerCase();
+    const files = f ? f.files.filter(r => !cerca || r.nom.toLowerCase().includes(cerca)) : [];
+    const desquadres = {};
+    if (f) f.columnes.forEach(c => { if (c.tipus === "calc") desquadres[c.nom] = f.files.filter(r => !coincideix(valor(f, r, c), r.o && r.o[c.nom])).length; });
+    let h = '<div class="alum-eines"><div class="vistes" role="group" aria-label="Grup">' +
+      Q().grups.map((x, i) => '<button type="button" data-grup="' + i + '" aria-pressed="' + (x === g) + '">' + esc(x.nom) + "</button>").join("") + "</div>" +
+      '<select id="alumFull" aria-label="Full">' + g.fulls.map((x, i) => '<option value="' + i + '"' + (x === f ? " selected" : "") + ">" + esc(x.nom) + "</option>").join("") + "</select>" +
       '<input type="search" id="alumCerca" placeholder="Cerca alumne…" value="' + esc(cerca) + '" style="flex:1 1 140px"></div>' +
-      '<div class="taula"><table><thead><tr>' + (f.columnes || []).map(c => "<th>" + esc(c) + "</th>").join("") + "</tr></thead><tbody>" +
-      (files.map(r => "<tr><td>" + esc(r[0]) + "</td>" + r.slice(1).map((v, i) => nota(v, (f.columnes || [])[i + 1] || "")).join("") + "</tr>").join("") ||
-        '<tr><td colspan="' + Math.max((f.columnes || []).length, 1) + '" class="buit">Cap alumne no coincideix.</td></tr>') +
-      "</tbody></table></div>" +
-      '<p class="font">' + files.length + " alumnes · dades del " + esc(alumnes.actualitzat ? dma(alumnes.actualitzat) : "—") + ".</p>";
+      '<div class="alum-eines"><button type="button" class="boto clar" data-q="formules">⚙️ ' + (qFormules ? "Amaga les fórmules" : "Columnes i fórmules") + "</button>" +
+      '<button type="button" class="boto clar" data-q="alumne">+ Alumne</button>' + importa + "</div>";
+    if (f && qFormules) {
+      h += '<div class="formules"><p class="font" style="margin:0 0 8px">Fórmules com a l\'Excel. <b>{EX1}</b> és una columna d\'aquest full i <b>{1R TRIM|NOTA FINAL TRIM}</b> una columna d\'un altre full. Funcions: SUM, AVERAGE, MIN, MAX, IF, ROUND… Els buits compten com a 0 a les operacions i AVERAGE se\'ls salta.</p>' +
+        f.columnes.map((c, i) => '<div class="fcol" data-col="' + i + '">' +
+          '<input type="text" class="fnom" value="' + esc(c.nom) + '" aria-label="Nom de la columna">' +
+          '<select class="ftipus" aria-label="Tipus"><option value="nota"' + (c.tipus === "nota" ? " selected" : "") + '>Nota</option><option value="text"' + (c.tipus === "text" ? " selected" : "") + '>Text</option><option value="calc"' + (c.tipus === "calc" ? " selected" : "") + ">Calculada</option></select>" +
+          '<input type="text" class="fform" value="' + esc(c.formula || "") + '" placeholder="Fórmula" aria-label="Fórmula"' + (c.tipus === "calc" ? "" : " hidden") + ">" +
+          '<button type="button" class="boto perill" data-q="treucol" title="Esborra la columna">✕</button>' +
+          (c.tipus === "calc" && desquadres[c.nom] ? '<span class="avis" style="flex-basis:100%">⚠️ No dona el mateix que l\'Excel en ' + desquadres[c.nom] + " alumne" + (desquadres[c.nom] === 1 ? "" : "s") + ".</span>" : "") +
+          "</div>").join("") +
+        '<p class="avis" id="formAvis" hidden></p><div class="alum-eines" style="margin-top:8px"><button type="button" class="boto clar" data-q="novacol">+ Columna</button><button type="button" class="boto" data-q="desaform">Desa les columnes</button></div></div>';
+    }
+    if (f) {
+      h += '<div class="taula"><table><thead><tr><th>Alumne</th>' + f.columnes.map(c => "<th" + (c.tipus === "calc" ? ' class="calc" title="' + esc(c.formula) + '"' : "") + ">" + esc(c.nom) + (desquadres[c.nom] ? " ⚠️" : "") + "</th>").join("") + "</tr></thead><tbody>" +
+        (files.map(r => '<tr><td class="nomal" data-alumne="' + esc(r.nom) + '">' + esc(r.nom) + "</td>" + f.columnes.map(c => {
+          const v = valor(f, r, c), txt = mostraValor(v);
+          if (c.tipus === "calc") {
+            const n = numOpcional(v), ok = coincideix(v, r.o && r.o[c.nom]);
+            const cls = ["calc"]; if (v && v.err) cls.push("susp"); else if (n !== null && /NOTA|GLOBAL|FINAL/i.test(c.nom)) cls.push(n < 5 ? "susp" : "apro");
+            return '<td class="' + cls.join(" ") + '"' + (ok ? "" : ' title="A l\'Excel: ' + esc(r.o[c.nom]) + '"') + ">" + esc(txt) + (ok ? "" : " ⚠️") + "</td>";
+          }
+          return '<td class="ed' + (c.tipus === "text" ? " txt" : "") + '" data-alumne="' + esc(r.nom) + '" data-c="' + esc(c.nom) + '" title="' + esc(txt) + '">' + esc(txt) + "</td>";
+        }).join("") + "</tr>").join("") || '<tr><td colspan="' + (f.columnes.length + 1) + '" class="buit">Cap alumne no coincideix.</td></tr>') +
+        "</tbody></table></div><p class=\"font\">" + files.length + " alumnes · toca una nota per canviar-la; toca el nom per canviar-lo o esborrar l'alumne.</p>";
+    }
+    cos.innerHTML = h;
+  }
+  function editaCela(td) {
+    const g = grupActual(), f = fullActual(g); if (!f) return;
+    const fila = f.files.find(r => r.nom === td.dataset.alumne), col = f.columnes.find(c => c.nom === td.dataset.c);
+    if (!fila || !col || td.querySelector("input")) return;
+    const inp = document.createElement("input");
+    inp.type = "text"; inp.value = fila.v[col.nom] == null ? "" : String(fila.v[col.nom]).replace(".", col.tipus === "nota" ? "," : ".");
+    if (col.tipus === "nota") inp.inputMode = "decimal";
+    inp.className = "celaed";
+    td.textContent = ""; td.appendChild(inp); inp.focus(); inp.select();
+    let fet = false;
+    const tanca = (desar, mou) => {
+      if (fet) return; fet = true;
+      if (desar) {
+        let v = inp.value.trim();
+        if (col.tipus === "nota" && v !== "") { const n = Number(v.replace(",", ".")); if (!isNaN(n)) v = n; }
+        if (v === "") delete fila.v[col.nom]; else fila.v[col.nom] = v;
+        desa();
+      }
+      pintaAlumnes();
+      if (mou) {
+        const cel = Array.from($("alumCos").querySelectorAll("td.ed"));
+        const i = cel.findIndex(x => x.dataset.alumne === td.dataset.alumne && x.dataset.c === td.dataset.c);
+        const seg = cel[i + mou]; if (seg) editaCela(seg);
+      }
+    };
+    inp.addEventListener("keydown", e => {
+      if (e.key === "Enter") { e.preventDefault(); tanca(true, 0); }
+      else if (e.key === "Escape") tanca(false, 0);
+      else if (e.key === "Tab") { e.preventDefault(); tanca(true, e.shiftKey ? -1 : 1); }
+    });
+    inp.addEventListener("blur", () => tanca(true, 0));
+  }
+  function desaFormules() {
+    const g = grupActual(), f = fullActual(g); if (!f) return;
+    const noves = Array.from($("alumCos").querySelectorAll(".fcol")).map(el => {
+      const vell = f.columnes[Number(el.dataset.col)] || {};
+      return { vell: vell.nom, nom: el.querySelector(".fnom").value.trim(), tipus: el.querySelector(".ftipus").value, formula: el.querySelector(".fform").value.trim() };
+    });
+    const avis = t => { $("formAvis").textContent = t; $("formAvis").hidden = false; };
+    const noms = noves.map(c => c.nom);
+    if (noms.some(n => !n)) return avis("Totes les columnes necessiten un nom.");
+    if (new Set(noms).size !== noms.length) return avis("Hi ha dues columnes amb el mateix nom.");
+    for (const c of noves) {
+      if (c.tipus !== "calc") continue;
+      if (!c.formula) return avis("La columna «" + c.nom + "» és calculada però no té fórmula.");
+      let a; try { a = analitza(c.formula); } catch (e) { return avis("«" + c.nom + "»: " + e.message + "."); }
+      for (const r of refsDe(a)) {
+        const sep = r.indexOf("|");
+        if (sep < 0) { if (!noms.includes(r)) return avis("«" + c.nom + "»: no hi ha cap columna «" + r + "»."); }
+        else {
+          const fu = g.fulls.find(x => x.nom.toLowerCase() === r.slice(0, sep).trim().toLowerCase());
+          if (!fu) return avis("«" + c.nom + "»: no hi ha cap full «" + r.slice(0, sep).trim() + "».");
+          if (!fu.columnes.some(x => x.nom === r.slice(sep + 1).trim())) return avis("«" + c.nom + "»: el full «" + fu.nom + "» no té cap columna «" + r.slice(sep + 1).trim() + "».");
+        }
+      }
+    }
+    // Reanomena les dades i les referències
+    noves.forEach(c => {
+      if (!c.vell || c.vell === c.nom) return;
+      f.files.forEach(r => { if (c.vell in r.v) { r.v[c.nom] = r.v[c.vell]; delete r.v[c.vell]; } if (r.o && c.vell in r.o) { r.o[c.nom] = r.o[c.vell]; delete r.o[c.vell]; } });
+      const re = new RegExp("\\{\\s*" + c.vell.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "\\s*\\}", "g");
+      noves.forEach(x => { if (x.formula) x.formula = x.formula.replace(re, "{" + c.nom + "}"); });
+      g.fulls.forEach(fu => { if (fu !== f) fu.columnes.forEach(x => { if (x.formula) x.formula = x.formula.split("{" + f.nom + "|" + c.vell + "}").join("{" + f.nom + "|" + c.nom + "}"); }); });
+    });
+    f.columnes = noves.map(c => c.tipus === "calc" ? { nom: c.nom, tipus: "calc", formula: c.formula } : { nom: c.nom, tipus: c.tipus });
+    desa(); pintaAlumnes();
   }
   $("alumCos").addEventListener("click", ev => {
     const b = ev.target.closest("[data-grup]");
-    if (b) { alumGrup = Number(b.dataset.grup); alumFull = 0; pintaAlumnes(); }
+    if (b) { qGrup = Number(b.dataset.grup); qFull = 0; pintaAlumnes(); return; }
+    const td = ev.target.closest("td.ed"); if (td) { editaCela(td); return; }
+    const nomal = ev.target.closest("td.nomal");
+    const g = grupActual(), f = fullActual(g);
+    if (nomal && g) {
+      const vell = nomal.dataset.alumne;
+      const nou = prompt("Nom de l'alumne (deixa-ho buit per esborrar-lo de tots els fulls del grup):", vell);
+      if (nou === null) return;
+      if (!nou.trim()) { if (confirm("Vols esborrar «" + vell + "» i totes les seves notes del grup " + g.nom + "?")) g.fulls.forEach(fu => { fu.files = fu.files.filter(r => r.nom !== vell); }); }
+      else g.fulls.forEach(fu => fu.files.forEach(r => { if (r.nom === vell) r.nom = nou.trim(); }));
+      desa(); pintaAlumnes(); return;
+    }
+    const q = ev.target.closest("[data-q]"); if (!q || !f) return;
+    if (q.dataset.q === "formules") { qFormules = !qFormules; pintaAlumnes(); }
+    else if (q.dataset.q === "alumne") {
+      const nom = (prompt("Nom de l'alumne nou (Cognoms , Nom):") || "").trim();
+      if (!nom) return;
+      g.fulls.forEach(fu => { if (!fu.files.some(r => r.nom === nom)) fu.files.push({ nom: nom, v: {} }); });
+      desa(); pintaAlumnes();
+    }
+    else if (q.dataset.q === "novacol") {
+      const fila = document.createElement("div");
+      fila.className = "fcol"; fila.dataset.col = "-1";
+      fila.innerHTML = '<input type="text" class="fnom" value="" placeholder="Nom (p. ex. EX3)" aria-label="Nom de la columna"><select class="ftipus" aria-label="Tipus"><option value="nota">Nota</option><option value="text">Text</option><option value="calc">Calculada</option></select><input type="text" class="fform" placeholder="Fórmula" aria-label="Fórmula" hidden><button type="button" class="boto perill" data-q="treucol" title="Esborra la columna">✕</button>';
+      q.parentElement.before(fila); fila.querySelector(".fnom").focus();
+    }
+    else if (q.dataset.q === "treucol") {
+      const el = q.closest(".fcol");
+      if (confirm("Vols treure la columna «" + el.querySelector(".fnom").value + "»? (No s'esborra del tot fins que premis «Desa les columnes».)")) el.remove();
+    }
+    else if (q.dataset.q === "desaform") desaFormules();
   });
-  $("alumCos").addEventListener("change", ev => { if (ev.target.id === "alumFull") { alumFull = Number(ev.target.value); pintaAlumnes(); } });
+  $("alumCos").addEventListener("change", ev => {
+    if (ev.target.id === "alumFull") { qFull = Number(ev.target.value); pintaAlumnes(); }
+    else if (ev.target.classList.contains("ftipus")) ev.target.parentElement.querySelector(".fform").hidden = ev.target.value !== "calc";
+    else if (ev.target.id === "alumFitxer") importaFitxers(Array.from(ev.target.files || []));
+  });
   $("alumCos").addEventListener("input", ev => {
     if (ev.target.id !== "alumCerca") return;
     const pos = ev.target.selectionStart; pintaAlumnes();
     const c = $("alumCerca"); c.focus(); try { c.setSelectionRange(pos, pos); } catch (e) {}
   });
+
+  // ---- Importació d'Excel (amb les fórmules) ----
+  function carregaScript(url, prova) {
+    return new Promise((ok, ko) => {
+      if (prova()) return ok();
+      const s = document.createElement("script"); s.src = url; s.onload = () => ok(); s.onerror = () => ko(new Error("No s'ha pogut carregar " + url)); document.head.appendChild(s);
+    });
+  }
+  const colLletra = n => { let s = ""; n++; while (n > 0) { const m = (n - 1) % 26; s = String.fromCharCode(65 + m) + s; n = Math.floor((n - 1) / 26); } return s; };
+  const lletraCol = s => s.split("").reduce((a, c) => a * 26 + c.charCodeAt(0) - 64, 0) - 1;
+  function llegeixFull(XLSX, ws) {
+    if (!ws || !ws["!ref"]) return null;
+    const rang = XLSX.utils.decode_range(ws["!ref"]);
+    const cela = (r, c) => ws[XLSX.utils.encode_cell({ r, c })];
+    const val = cl => (!cl || cl.t === "z" || cl.v == null ? "" : cl.t === "e" ? (cl.w || "#ERROR") : cl.v);
+    // Capçalera: primera fila amb «nom» a la columna A
+    let cap = -1;
+    for (let r = rang.s.r; r <= Math.min(rang.e.r, rang.s.r + 15); r++) { if (/^\s*nom/i.test(String(val(cela(r, 0))))) { cap = r; break; } }
+    if (cap < 0) return null;
+    const cols = []; const usats = {};
+    for (let c = 1; c <= rang.e.c; c++) {
+      const t = String(val(cela(cap, c)) || "").trim();
+      if (!t) continue;
+      let nom = t; usats[t] = (usats[t] || 0) + 1; if (usats[t] > 1) nom = t + " (" + usats[t] + ")";
+      cols.push({ c, nom });
+    }
+    const files = [];
+    for (let r = cap + 1; r <= rang.e.r; r++) {
+      const nom = String(val(cela(r, 0)) || "").trim();
+      if (!nom) { if (files.length) break; else continue; }
+      if (!nom.includes(",")) { if (files.length) break; else continue; }
+      files.push({ r, nom });
+    }
+    return { cap, cols, files, cela, val };
+  }
+  function convertixFormula(XLSX, wb, nomFull, info, f, fila, llegits) {
+    // Substitueix les referències de cel·la per {Columna} o {Full|Columna}; les d'altres files, pel seu valor
+    const re = /(^|[^A-Za-z0-9_.$'!])(?:(?:'((?:[^']|'')+)'|([A-Za-z0-9_À-ÿ.]+))!)?(\$?)([A-Z]{1,3})(\$?)(\d+)(?::\$?([A-Z]{1,3})\$?(\d+))?(?![A-Za-z0-9_(])/g;
+    let fora = false;
+    const surt = f.replace(re, (tot, abans, fq, fs, d1, col, d2, fil, col2, fil2) => {
+      const nomAltre = (fq ? fq.replace(/''/g, "'") : fs) || null;
+      const fullNom = nomAltre || nomFull;
+      const inf = nomAltre ? llegits[fullNom] : info;
+      const ws = wb.Sheets[fullNom];
+      if (!ws) { fora = true; return tot; }
+      const r1 = Number(fil) - 1, c1 = lletraCol(col);
+      const c2 = col2 ? lletraCol(col2) : c1, r2 = fil2 ? Number(fil2) - 1 : r1;
+      const mateixaFila = r1 === fila && r2 === fila;
+      const llista = [];
+      for (let r = r1; r <= r2; r++) for (let c = c1; c <= c2; c++) {
+        const cc = inf && inf.cols.find(x => x.c === c);
+        if ((r === fila || (nomAltre && inf && inf.files.some(x => x.r === r))) && cc && (r === fila || mateixaFila)) llista.push("{" + (nomAltre ? fullNom + "|" : "") + cc.nom + "}");
+        else {
+          const cl = ws[XLSX.utils.encode_cell({ r, c })];
+          const v = cl ? cl.v : "";
+          const nv = numOpcional(v);
+          llista.push(nv !== null ? String(nv) : v === "" || v == null ? "0" : JSON.stringify(String(v)));
+        }
+      }
+      return abans + llista.join(",");
+    });
+    return fora ? null : surt;
+  }
+  async function importaFitxers(fitxers) {
+    if (!fitxers.length) return;
+    const estat = t => { const el = $("alumCos").querySelector(".font") || $("alumCos"); el.insertAdjacentHTML("beforebegin", '<p class="avis" style="color:var(--suau)">' + esc(t) + "</p>"); };
+    try {
+      estat("Llegint els fulls…");
+      await carregaScript("https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js", () => window.XLSX);
+      const XLSX = window.XLSX;
+      const llibres = [];
+      for (const fi of fitxers) {
+        if (/\.zip$/i.test(fi.name)) {
+          await carregaScript("https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js", () => window.JSZip);
+          const zip = await window.JSZip.loadAsync(await fi.arrayBuffer());
+          for (const nom of Object.keys(zip.files)) {
+            if (/\.xlsx?$/i.test(nom) && !zip.files[nom].dir && !/(^|\/)(~\$|\._)/.test(nom)) llibres.push({ nom: nom.split("/").pop(), buf: await zip.files[nom].async("arraybuffer") });
+          }
+        } else llibres.push({ nom: fi.name, buf: await fi.arrayBuffer() });
+      }
+      const q = Q(); let nous = 0, avisos = [];
+      for (const ll of llibres) {
+        const wb = XLSX.read(ll.buf, { type: "array", cellFormula: true, sheetStubs: true });
+        const nomGrup = ll.nom.replace(/\.xlsx?$/i, "").trim();
+        const llegits = {};
+        wb.SheetNames.forEach(n => { llegits[n] = llegeixFull(XLSX, wb.Sheets[n]); });
+        const ordre = wb.SheetNames.filter(n => llegits[n]);
+        ordre.sort((a, b) => (/final/i.test(a) ? 1 : 0) - (/final/i.test(b) ? 1 : 0) || wb.SheetNames.indexOf(b) - wb.SheetNames.indexOf(a));
+        const fulls = ordre.map(n => {
+          const inf = llegits[n];
+          const columnes = inf.cols.map(cc => {
+            const fr = inf.files.find(x => { const cl = inf.cela(x.r, cc.c); return cl && cl.f; });
+            if (fr) {
+              const conv = convertixFormula(XLSX, wb, n, inf, inf.cela(fr.r, cc.c).f, fr.r, llegits);
+              if (conv) { try { analitza(conv); return { nom: cc.nom, tipus: "calc", formula: conv }; } catch (e) {} }
+              avisos.push(nomGrup + " · " + n + " · " + cc.nom);
+              return { nom: cc.nom, tipus: "nota" };
+            }
+            const algunText = inf.files.some(x => { const v = inf.val(inf.cela(x.r, cc.c)); return typeof v === "string" && v.trim() && isNaN(Number(v.replace(",", "."))); });
+            return { nom: cc.nom, tipus: algunText ? "text" : "nota" };
+          });
+          const files = inf.files.map(x => {
+            const v = {}, o = {};
+            inf.cols.forEach((cc, i) => {
+              const val = inf.val(inf.cela(x.r, cc.c));
+              if (columnes[i].tipus === "calc") { if (val !== "") o[cc.nom] = val; }
+              else if (val !== "" && val != null) v[cc.nom] = typeof val === "number" ? Math.round(val * 1e6) / 1e6 : val;
+            });
+            return { nom: x.nom, v, o };
+          });
+          return { nom: n.trim(), columnes, files };
+        });
+        if (!fulls.length) { avisos.push(ll.nom + ": no s'hi ha trobat cap llista d'alumnes"); continue; }
+        const i = q.grups.findIndex(x => x.nom.toLowerCase() === nomGrup.toLowerCase());
+        if (i >= 0) { if (!confirm("El grup «" + nomGrup + "» ja hi és. Vols substituir-lo pel de l'Excel? (Es perdran els canvis fets aquí.)")) continue; q.grups[i] = { nom: nomGrup, fulls }; }
+        else q.grups.push({ nom: nomGrup, fulls });
+        nous++;
+      }
+      q.grups.sort((a, b) => a.nom.localeCompare(b.nom, "ca", { numeric: true }));
+      q.actualitzat = avuiISO();
+      desa(); qGrup = 0; qFull = 0; pintaAlumnes();
+      estat(nous + (nous === 1 ? " grup importat." : " grups importats.") + (avisos.length ? " Columnes amb una fórmula que no s'ha pogut copiar (han quedat com a notes): " + avisos.join("; ") + "." : ""));
+    } catch (e) {
+      pintaAlumnes(); estat("No s'ha pogut importar: " + e.message);
+    }
+  }
 
   // ================= Calendari: esdeveniments =================
   const noLectiuOficial = iso => CURS.find(e => e.nl && iso >= e.d && iso <= (e.f || e.d));
@@ -826,83 +1223,41 @@ dialog .check{display:flex;gap:8px;align-items:center;color:var(--text);font-siz
   const xipUV = v => { const n = nivellUV(v); return '<span class="uv" style="background:' + n.c + '">' + num(v, 1) + " · " + n.n + "</span>"; };
   async function carregaTemps() {
     const url = "https://api.open-meteo.com/v1/forecast?latitude=" + BISBAL.lat + "&longitude=" + BISBAL.lon +
-      "&current=temperature_2m,apparent_temperature,relative_humidity_2m,weather_code,wind_speed_10m,wind_gusts_10m" +
-      "&hourly=uv_index&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,uv_index_max,sunrise,sunset" +
-      "&timezone=Europe%2FMadrid&forecast_days=5";
+      "&current=temperature_2m,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,uv_index_max" +
+      "&timezone=Europe%2FMadrid&forecast_days=4";
     try {
       const r = await fetch(url);
       if (!r.ok) throw new Error(r.status);
       const j = await r.json();
       const c = j.current, d = j.daily;
       const [ic, est] = codi(c.weather_code);
-      const uvMax = d.uv_index_max[0] || 0;
-      $("tempsAra").className = "";
-      $("tempsAra").innerHTML =
-        '<div class="gran"><span class="ico">' + ic + '</span><span class="temp">' + num(c.temperature_2m, 1) + ' °C</span>' +
-        '<span class="estat">' + est + "<br>Sensació de " + num(c.apparent_temperature, 1) + " °C</span></div>" +
-        '<div class="xifres">' +
-        '<div class="xifra"><b>' + num(d.temperature_2m_min[0], 0) + " / " + num(d.temperature_2m_max[0], 0) + ' °C</b><span>Mínima / màxima</span></div>' +
-        '<div class="xifra"><b>' + (c.relative_humidity_2m ?? "—") + ' %</b><span>Humitat</span></div>' +
-        '<div class="xifra"><b>' + num(c.wind_speed_10m, 0) + " km/h</b><span>Vent (ratxes de " + num(c.wind_gusts_10m, 0) + ")</span></div>" +
-        '<div class="xifra"><b>' + (d.precipitation_probability_max[0] ?? 0) + ' %</b><span>Probabilitat de pluja</span></div>' +
-        '<div class="xifra"><b>' + String(d.sunrise[0]).slice(11) + " · " + String(d.sunset[0]).slice(11) + '</b><span>Sortida i posta del sol</span></div>' +
-        '<div class="xifra"><b>' + xipUV(uvMax) + '</b><span>UV màxim · ' + nivellUV(uvMax).con + "</span></div></div>";
-      const avui = avuiISO();
-      let franja = "";
-      j.hourly.time.forEach((t, i) => {
-        const h = Number(t.slice(11, 13));
-        if (t.slice(0, 10) === avui && h >= 8 && h <= 20) {
-          const v = j.hourly.uv_index[i] || 0;
-          franja += '<div><i style="background:' + nivellUV(v).c + '">' + Math.round(v) + "</i>" + z(h) + " h</div>";
-        }
-      });
-      $("uvHores").className = franja ? "franja" : "buit";
-      $("uvHores").innerHTML = franja || "Sense dades d'avui.";
-      let h = '<div class="dies">';
+      const uv = d.uv_index_max[0] || 0, n = nivellUV(uv);
+      $("tempsAra").className = "temps-linia";
+      $("tempsAra").innerHTML = '<span class="ico" title="' + esc(est) + '">' + ic + '</span><b>' + num(c.temperature_2m, 0) + ' °C</b>' +
+        '<span class="m">' + num(d.temperature_2m_min[0], 0) + "° / " + num(d.temperature_2m_max[0], 0) + "°</span>" +
+        '<span class="m">💧 ' + (d.precipitation_probability_max[0] ?? 0) + " %</span>" +
+        '<span class="uv" style="background:' + n.c + '" title="' + esc(n.con) + '">UV ' + Math.round(uv) + " · " + n.n.toLowerCase() + "</span>" +
+        '<span class="m llocT">la Bisbal d\'Empordà</span>';
+      let h = "";
       for (let i = 1; i < d.time.length; i++) {
         const [ici, esti] = codi(d.weather_code[i]);
-        h += '<div class="dia"><div>' + majus(NOMS_DIA[dsem(d.time[i])].slice(0, 2)) + ". " + dm(d.time[i]) + '</div><div class="i" title="' + esti + '">' + ici + "</div>" +
-          "<div><b>" + num(d.temperature_2m_max[i], 0) + '°</b> <span class="m">' + num(d.temperature_2m_min[i], 0) + "°</span></div>" +
-          '<div class="m">💧 ' + (d.precipitation_probability_max[i] ?? 0) + " % · UV " + Math.round(d.uv_index_max[i] || 0) + "</div></div>";
+        h += '<span title="' + esc(esti) + '">' + majus(NOMS_DIA[dsem(d.time[i])].slice(0, 2)) + " " + ici + " " + num(d.temperature_2m_max[i], 0) + "°<i>" + num(d.temperature_2m_min[i], 0) + "°</i></span>";
       }
-      $("tempsDies").innerHTML = h + "</div>";
+      $("tempsDies").innerHTML = h;
     } catch (e) {
-      $("tempsAra").className = "buit";
-      $("tempsAra").textContent = "Ara no es pot carregar el temps; es tornarà a provar d'aquí a 30 minuts.";
+      $("tempsAra").className = "temps-linia buit";
+      $("tempsAra").textContent = "Ara no es pot carregar el temps.";
+      $("tempsDies").innerHTML = "";
     }
-  }
-  async function carregaTempsMexic() {
-    try {
-      const r = await fetch("https://api.open-meteo.com/v1/forecast?latitude=" + MEXIC.lat + "&longitude=" + MEXIC.lon + "&current=temperature_2m,weather_code&timezone=America%2FMexico_City");
-      if (!r.ok) throw new Error(r.status);
-      const c = (await r.json()).current;
-      const [ic, est] = codi(c.weather_code);
-      $("mexicTemps").textContent = "Ara a Ciutat de Mèxic: " + ic + " " + est.toLowerCase() + ", " + num(c.temperature_2m, 0) + " °C.";
-    } catch (e) { $("mexicTemps").textContent = ""; }
-  }
-
-  // ================= Mèxic =================
-  function pintaMexic() {
-    const avui = avuiISO();
-    const fins = dies(avui, VIATGE.anada);
-    const anada = dma(VIATGE.anada), des = dma(VIATGE.tornadaDes), finsT = dma(VIATGE.tornadaFins);
-    const tornada = "Tornada: entre " + art(des) + des + " i " + art(finsT) + finsT + ".";
-    $("mexicCompte").className = "";
-    if (fins > 0) $("mexicCompte").innerHTML = '<div class="compte">' + fins + " <small>" + (fins === 1 ? "dia" : "dies") + " per marxar</small></div>" +
-      '<p class="font">Anada: ' + NOMS_DIA[dsem(VIATGE.anada)] + ", " + anada + ". " + tornada + "</p>";
-    else if (dies(avui, VIATGE.tornadaFins) >= 0) $("mexicCompte").innerHTML = '<div class="compte">🇲🇽 <small>Bon viatge!</small></div><p class="font">' + tornada + "</p>";
-    else $("mexicCompte").innerHTML = '<p class="buit">Viatge acabat.</p>';
   }
 
   // ================= Capçalera i arrencada =================
   function pintaAra() {
     const avui = avuiISO();
     $("ara").textContent = majus(NOMS_DIA[dsem(avui)]) + ", " + dma(avui) + " · " + hora(TZ);
-    $("horaBisbal").textContent = hora(TZ);
-    $("horaMexic").textContent = hora("America/Mexico_City");
   }
   function pintaTot() {
-    pintaMexic(); pintaCurs(); pintaCalendari(); pintaReunions(); pintaAlumnes();
+    pintaCurs(); pintaCalendari(); pintaReunions(); pintaAlumnes();
     if (document.activeElement !== $("notesText")) $("notesText").value = dades.notes || "";
   }
   let darrerDia = avuiISO();
@@ -910,12 +1265,12 @@ dialog .check{display:flex;gap:8px;align-items:center;color:var(--text);font-siz
     pintaAra();
     if (avuiISO() !== darrerDia) { darrerDia = avuiISO(); pintaTot(); }
   }, 30000);
-  setInterval(() => { carregaTemps(); carregaTempsMexic(); }, 30 * 60 * 1000);
+  setInterval(carregaTemps, 30 * 60 * 1000);
   // Quan es torna a la pestanya, es recarreguen les dades de GitHub (per si s'han canviat des d'un altre aparell)
   document.addEventListener("visibilitychange", async () => { if (document.visibilityState === "visible" && obert && clau && !desant && !temporitzador && !document.querySelector("dialog[open]")) { if (await baixa() !== "clau") pintaTot(); } });
 
-  pintaAra(); pintaMexic(); estatSinc("", "Tancat");
-  carregaTemps(); carregaTempsMexic();
+  pintaAra(); estatSinc("", "Tancat");
+  carregaTemps();
 })();
 </script>
 <script src="dates-ca.js?v=3"></script>
