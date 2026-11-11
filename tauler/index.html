@@ -1536,7 +1536,7 @@ dialog .check{display:flex;gap:8px;align-items:center;color:var(--text);font-siz
     }
     const valor = calculadora(g);
     const cerca = (($("alumCerca") || {}).value || "").trim().toLowerCase();
-    const files = f ? f.files.filter(r => !cerca || r.nom.toLowerCase().includes(cerca)) : [];
+    const files = f ? f.files.filter(r => !cerca || r.nom.toLowerCase().includes(cerca)).sort((a, b) => a.nom.localeCompare(b.nom, "ca", { sensitivity: "base", ignorePunctuation: true })) : [];
     const desquadres = {};
     if (f) f.columnes.forEach(c => { if (c.tipus === "calc") desquadres[c.nom] = f.files.filter(r => !coincideix(valor(f, r, c), r.o && r.o[c.nom])).length; });
     let h = '<div class="alum-eines"><div class="vistes" role="group" aria-label="Grup">' +
