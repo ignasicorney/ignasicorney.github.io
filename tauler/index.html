@@ -160,6 +160,7 @@ dialog#dlgRub{width:min(760px,calc(100vw - 24px))}
 .rub-nota{font-size:1.1rem;margin:4px 0}
 .taula td.rub{cursor:pointer;background:#fbf6ea}
 /* Assistent */
+.as-doc .cap-doc{width:100%;border-collapse:collapse;margin:0 0 12px;font:13px/1.35 Arial,Helvetica,sans-serif;letter-spacing:0}.as-doc .cap-doc td{border:1px solid #000;padding:4px 8px;vertical-align:top}.as-doc .cap-doc td.logo{width:80px;text-align:center;vertical-align:middle}.as-doc .cap-doc td.logo img{width:64px}.as-doc .cap-doc td.nota{width:22%}.as-doc .linia-al{font:bold 13px Arial,sans-serif;letter-spacing:0;margin:0 0 14px}
 .fila-as{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0}
 .fila-as label{display:grid;gap:2px;font-size:.8rem;color:var(--suau)}
 #asCos textarea{width:100%;margin:6px 0}
@@ -1139,13 +1140,29 @@ dialog .check{display:flex;gap:8px;align-items:center;color:var(--text);font-siz
     });
     tanca(); return h;
   }
+  // Capçalera dels documents de l'INS la Bisbal (com els exàmens) i peu amb numeració
+  const LOGO_INS = "data:image/jpeg;base64,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";
+  const cursActual = () => { const y = Number(INICI_CURS.slice(0, 4)); return y + "-" + (y + 1); };
+  function capcaleraDoc() {
+    const logo = LOGO_INS;
+    return '<table class="cap-doc"><tr><td class="logo"><img src="' + logo + '" alt="INS la Bisbal"></td>' +
+      '<td class="dades"><b>Generalitat de Catalunya.</b><br>Departament d\u2019Ensenyament. Curs ' + cursActual() + "<br>Professor: Ignasi Corney Oller</td>" +
+      '<td class="nota"><b>NOTA:</b></td></tr></table>' +
+      '<p class="linia-al"><b>CURS ............ GRUP .......... ALUMNE/A .......................................................................</b></p>';
+  }
+  const CSS_DOC = ".cap-doc{width:100%;border-collapse:collapse;margin:0 0 14px;font:14px/1.35 Arial,Helvetica,sans-serif;letter-spacing:0;word-spacing:0}" +
+    ".cap-doc td{border:1px solid #000;padding:4px 8px;vertical-align:top}.cap-doc td.logo{width:90px;text-align:center;vertical-align:middle}.cap-doc td.logo img{width:72px;display:block;margin:auto}" +
+    ".cap-doc td.nota{width:22%}.linia-al{font:bold 14px Arial,Helvetica,sans-serif;letter-spacing:0;word-spacing:0;margin:0 0 16px}";
   function imprimeix(titol, html, dis) {
     const w = window.open("", "_blank");
     if (!w) { alert("El navegador ha bloquejat la finestra. Permet les finestres emergents per a aquesta pàgina."); return; }
     w.document.write('<!doctype html><html lang="ca"><head><meta charset="utf-8"><title>' + esc(titol) + "</title><style>" +
-      (dis ? "body{font:18px/1.9 Verdana,Arial,sans-serif;letter-spacing:.04em;word-spacing:.12em;max-width:68ch;margin:24px auto;color:#1d1d1b;background:#fffdf5}p,li{text-align:left}i,em{font-style:normal;font-weight:700}"
-           : "body{font:15px/1.6 Georgia,serif;max-width:72ch;margin:24px auto;color:#1d1d1b}") +
-      "h3,h4{margin:1.2em 0 .4em}@media print{body{margin:0 auto}}</style></head><body>" + html + "<script>setTimeout(()=>print(),300)<\/script></body></html>");
+      "@page{size:A4;margin:16mm 16mm 20mm;@bottom-center{content:counter(page) \"/\" counter(pages);font:10px Arial,Helvetica,sans-serif;border-top:1px solid #000;margin:0 0 8mm;padding-top:2mm}}" +
+      (dis ? "body{font:18px/1.9 Verdana,Arial,sans-serif;letter-spacing:.04em;word-spacing:.12em;color:#1d1d1b;margin:0}p,li{text-align:left}i,em{font-style:normal;font-weight:700}"
+           : "body{font:14px/1.5 Arial,Helvetica,sans-serif;color:#000;margin:0}p{text-align:justify}") +
+      "h3,h4{margin:1.1em 0 .4em}h3{font-size:1.05em;text-transform:uppercase}li{margin:.25em 0}" + CSS_DOC +
+      "@media screen{body{max-width:180mm;margin:24px auto;padding:0 16px}}</style></head><body>" + capcaleraDoc() + html +
+      "<script>window.onload=()=>setTimeout(()=>print(),200)<\/script></body></html>");
     w.document.close();
   }
   const fitxerABase64 = f => new Promise((ok, ko) => {
@@ -1279,7 +1296,7 @@ dialog .check{display:flex;gap:8px;align-items:center;color:var(--text);font-siz
           " Usa format Markdown senzill (##, llistes numerades, **negreta**). No posis cap introducció ni comentari fora de l'activitat.";
         const r = await ia(sistema, txt);
         asDades = { titol: F.tipus + " · " + F.curs, text: r, html: md(r) };
-        return fet('<div class="alum-eines"><button type="button" class="boto clar" data-asb="copia">Copia</button><button type="button" class="boto clar" data-asb="imprimeix">🖨️ Imprimeix / PDF</button><button type="button" class="boto clar" data-asb="imprimeixdis">🖨️ Format DIS</button></div><div class="as-doc">' + asDades.html + "</div>");
+        return fet('<div class="alum-eines"><button type="button" class="boto clar" data-asb="copia">Copia</button><button type="button" class="boto clar" data-asb="imprimeix">🖨️ Imprimeix / PDF</button><button type="button" class="boto clar" data-asb="imprimeixdis">🖨️ Format DIS</button></div><div class="as-doc">' + capcaleraDoc() + asDades.html + "</div>");
       }
       if (a === "adapta") {
         if (!txt) return fet('<p class="avis">Enganxa primer el text.</p>');
@@ -1290,7 +1307,7 @@ dialog .check{display:flex;gap:8px;align-items:center;color:var(--text);font-siz
           "Format Markdown senzill. No afegeixis comentaris fora del material.";
         const r = await ia(sistema, txt);
         asDades = { titol: "Material adaptat", text: r, html: md(r), htmlDis: md(r) };
-        return fet('<div class="alum-eines"><button type="button" class="boto clar" data-asb="copia">Copia</button><button type="button" class="boto clar" data-asb="imprimeixdis">🖨️ Imprimeix en format DIS</button><button type="button" class="boto clar" data-asb="imprimeix">🖨️ Format normal</button></div><div class="as-doc as-dis">' + asDades.html + "</div>");
+        return fet('<div class="alum-eines"><button type="button" class="boto clar" data-asb="copia">Copia</button><button type="button" class="boto clar" data-asb="imprimeixdis">🖨️ Imprimeix en format DIS</button><button type="button" class="boto clar" data-asb="imprimeix">🖨️ Format normal</button></div><div class="as-doc as-dis">' + capcaleraDoc() + asDades.html + "</div>");
       }
       if (a === "rubrica") {
         if (!txt) return fet('<p class="avis">Descriu què vols avaluar.</p>');
