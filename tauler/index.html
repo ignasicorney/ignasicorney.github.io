@@ -72,6 +72,9 @@ td.txt .celaed{width:16em;text-align:left}
 .formules{border:1px solid var(--linia);border-radius:10px;padding:10px;margin-bottom:10px;background:#faf9f6}
 .fcol{display:flex;gap:6px;flex-wrap:wrap;align-items:center;padding:4px 0}
 .fcol .fnom{flex:0 1 11em;min-width:7em}
+.fmou{cursor:grab;touch-action:none;user-select:none;padding:6px 4px;font-size:1.2rem;line-height:1;opacity:.55}
+.fmou:hover{opacity:1}
+.fcol.arrossega{opacity:.6;outline:2px dashed currentColor;border-radius:8px}
 .fcol .fform{flex:1 1 16em;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.85rem}
 /* Tasques */
 ul.tasques{list-style:none;margin:0;padding:0}
@@ -1550,6 +1553,7 @@ dialog .check{display:flex;gap:8px;align-items:center;color:var(--text);font-siz
     if (f && qFormules) {
       h += '<div class="formules"><p class="font" style="margin:0 0 8px">Fórmules com a l\'Excel. <b>{EX1}</b> és una columna d\'aquest full i <b>{1R TRIM|NOTA FINAL TRIM}</b> una columna d\'un altre full. Funcions: SUM, AVERAGE, MIN, MAX, IF, ROUND… Els buits compten com a 0 a les operacions i AVERAGE se\'ls salta.</p>' +
         f.columnes.map((c, i) => '<div class="fcol" data-col="' + i + '">' +
+          '<span class="fmou" title="Arrossega per canviar l\'ordre de la columna" aria-hidden="true">⠿</span>' +
           '<input type="text" class="fnom" value="' + esc(c.nom) + '" aria-label="Nom de la columna">' +
           '<select class="ftipus" aria-label="Tipus"><option value="nota"' + (c.tipus === "nota" ? " selected" : "") + '>Nota</option><option value="text"' + (c.tipus === "text" ? " selected" : "") + '>Text</option><option value="calc"' + (c.tipus === "calc" ? " selected" : "") + ">Calculada</option><option value=\"rubrica\"" + (c.tipus === "rubrica" ? " selected" : "") + ">Rúbrica</option></select>" +
           '<select class="frub" aria-label="Rúbrica"' + (c.tipus === "rubrica" ? "" : " hidden") + ">" + rubriques().map(r => '<option value="' + r.id + '"' + (c.rubrica === r.id ? " selected" : "") + ">" + esc(r.nom) + "</option>").join("") + "</select>" +
@@ -1648,6 +1652,20 @@ dialog .check{display:flex;gap:8px;align-items:center;color:var(--text);font-siz
     f.columnes = noves.map(c => c.tipus === "calc" ? { nom: c.nom, tipus: "calc", formula: c.formula } : c.tipus === "rubrica" ? { nom: c.nom, tipus: "rubrica", rubrica: c.rubrica } : { nom: c.nom, tipus: c.tipus });
     desa(); pintaAlumnes();
   }
+  // Arrossegar columnes al panell de fórmules (ratolí i dit); en deixar-la anar, es desa l'ordre
+  $("alumCos").addEventListener("pointerdown", ev => {
+    const h = ev.target.closest(".fmou"); if (!h) return;
+    const fila = h.closest(".fcol[data-col]"); if (!fila) return;
+    ev.preventDefault(); fila.classList.add("arrossega");
+    const mou = e => {
+      const sota = document.elementFromPoint(e.clientX, e.clientY), altra = sota && sota.closest(".fcol[data-col]");
+      if (!altra || altra === fila || altra.parentNode !== fila.parentNode) return;
+      const r = altra.getBoundingClientRect();
+      altra.parentNode.insertBefore(fila, e.clientY < r.top + r.height / 2 ? altra : altra.nextSibling);
+    };
+    const deixa = () => { document.removeEventListener("pointermove", mou); document.removeEventListener("pointerup", deixa); document.removeEventListener("pointercancel", deixa); fila.classList.remove("arrossega"); desaFormules(); };
+    document.addEventListener("pointermove", mou); document.addEventListener("pointerup", deixa); document.addEventListener("pointercancel", deixa);
+  });
   $("alumCos").addEventListener("click", ev => {
     const b = ev.target.closest("[data-grup]");
     if (b) { qGrup = Number(b.dataset.grup); qFull = 0; pintaAlumnes(); return; }
