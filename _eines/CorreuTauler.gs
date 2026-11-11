@@ -24,7 +24,9 @@
 // Peticions (POST, cos JSON, sempre amb «pin»):
 //   { accio: "compte" }                               → { correu, quota }
 //   { accio: "llista", q, max }                       → { fils: [...] }
-//   { accio: "llegeix", id, marca }                   → { fil }
+//   { accio: "llegeix", id, marca }                   → { fil }  (adjunts: [{ nom, mida, tipus }])
+//   { accio: "adjunt", id, m, a }                     → { nom, tipus, b64 }: l'adjunt «a» del missatge «m»
+//                                                       del fil (12.11.2026, per llegir-lo i baixar-lo al tauler)
 //   { accio: "llegit", id, llegit }                   → marca com a llegit / no llegit
 //   { accio: "arxiva", id }                           → treu de la safata d'entrada
 //   { accio: "esborra", id }                          → a la paperera (30 dies per recuperar-lo)
@@ -88,11 +90,21 @@ function doPost(e) {
               return {
                 de: m.getFrom(), a: m.getTo(), cc: m.getCc(), data: m.getDate().toISOString(),
                 cos: m.getPlainBody().slice(0, 30000),
-                adjunts: m.getAttachments({ includeInlineImages: false }).map(function (a) { return a.getName(); })
+                adjunts: m.getAttachments({ includeInlineImages: false }).map(function (a) { return { nom: a.getName(), mida: a.getSize(), tipus: a.getContentType() }; })
               };
             })
           }
         });
+      }
+
+      case "adjunt": {
+        const f = GmailApp.getThreadById(String(cos.id));
+        if (!f) return json_({ ok: false, error: "No s'ha trobat aquest correu." });
+        const m = f.getMessages()[Number(cos.m)];
+        const a = m && m.getAttachments({ includeInlineImages: false })[Number(cos.a)];
+        if (!a) return json_({ ok: false, error: "No s'ha trobat aquest adjunt." });
+        if (a.getSize() > 25 * 1024 * 1024) return json_({ ok: false, error: "L'adjunt fa més de 25 MB: obre'l a Gmail." });
+        return json_({ ok: true, nom: a.getName(), tipus: a.getContentType(), b64: Utilities.base64Encode(a.getBytes()) });
       }
 
       case "llegit": {

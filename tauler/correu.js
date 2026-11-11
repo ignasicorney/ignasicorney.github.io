@@ -25,6 +25,34 @@
   const adrecaDe = de => { const m = String(de || "").match(/<([^>]+)>/); return m ? m[1] : String(de || "").trim(); };
   const enllaca = t => esc(t).replace(/(https?:\/\/[^\s<>"']+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>');
 
+  // --- Adjunts i signatura (12.11.2026) ---
+  const MAMMOTH = "https://cdn.jsdelivr.net/npm/mammoth@1.8.0/mammoth.browser.min.js";
+  const SHEETJS = "https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js";
+  const mida = n => { n = Number(n) || 0; return n >= 1048576 ? (n / 1048576).toFixed(1).replace(".", ",") + " MB" : Math.max(1, Math.round(n / 1024)) + " kB"; };
+  function classe(nom, tipus) {
+    const e = ((String(nom || "").match(/\.([a-z0-9]+)$/i) || [])[1] || "").toLowerCase(), t = String(tipus || "").toLowerCase();
+    if (t.indexOf("image/") === 0 || /^(png|jpe?g|gif|webp|bmp|svg)$/.test(e)) return "imatge";
+    if (t === "application/pdf" || e === "pdf") return "pdf";
+    if (e === "docx" || t.indexOf("wordprocessingml") >= 0) return "docx";
+    if (/^(xlsx|xls|ods|csv)$/.test(e) || t.indexOf("spreadsheetml") >= 0 || t === "application/vnd.ms-excel" || t === "text/csv") return "full";
+    if (/^html?$/.test(e) || t === "text/html") return "html";
+    if (t.indexOf("text/") === 0 || /^(txt|md|json|xml|ics|vcf|log|srt|vtt)$/.test(e) || t === "application/json") return "text";
+    if (t.indexOf("audio/") === 0 || /^(mp3|wav|ogg|m4a|opus)$/.test(e)) return "audio";
+    if (t.indexOf("video/") === 0 || /^(mp4|webm|mov)$/.test(e)) return "video";
+    return "";
+  }
+  const scripts = {};
+  const carregaLib = (src, test) => test() ? Promise.resolve(test()) : (scripts[src] = scripts[src] || new Promise((ok, ko) => {
+    const s = document.createElement("script"); s.src = src;
+    s.onload = () => test() ? ok(test()) : ko(new Error("No s'ha pogut carregar el lector d'aquest fitxer."));
+    s.onerror = () => { delete scripts[src]; ko(new Error("No s'ha pogut carregar el lector d'aquest fitxer.")); };
+    document.head.appendChild(s);
+  }));
+  // La signatura de cada compte (⚙️) s'afegeix al text en escriure un correu
+  const sigCos = c => { const s = String((c && c.signatura) || "").replace(/\s+$/, ""); return s.trim() ? "\n\n" + s : ""; };
+  const filaCompte = x => '<div class="cr-compte"><div class="fila"><input type="text" class="cr-nom" placeholder="Nom (p. ex. XTEC)" value="' + esc(x.nom) + '" style="flex:0 1 9em"><input type="text" class="cr-url" placeholder="https://script.google.com/macros/s/…/exec" value="' + esc(x.url) + '"><button type="button" class="boto perill" data-cr="treucompte" title="Treu">✕</button></div>' +
+    '<label>Signatura (s\'afegeix sola als correus que s\'escriuen des d\'aquest compte)<textarea class="cr-sig" rows="3" style="min-height:70px" placeholder="Nom i cognoms&#10;Càrrec · Centre">' + esc(x.signatura || "") + "</textarea></label></div>";
+
   const CSS = `
 .cr-eines{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
 .cr-eines .esq{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap}
@@ -51,6 +79,24 @@
 .cr-avis.err{color:#a3161b}
 .cr-buit{color:var(--suau,#6b6b66);padding:10px 0}
 .cr-compte-et{display:inline-block;font-size:.7rem;font-weight:700;color:#fff;background:var(--accent,#b4462c);border-radius:4px;padding:0 4px;vertical-align:1px}
+.cr-compte{display:grid;gap:4px;padding-bottom:8px;border-bottom:1px dashed var(--linia,#e3e1db)}
+.cr-adj{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.cr-adj button{font:inherit;font-size:.85rem;border:1px solid var(--linia,#e3e1db);border-radius:8px;background:#fff;color:var(--text,#1d1d1b);padding:3px 9px;cursor:pointer;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cr-adj button span{color:var(--suau,#6b6b66);font-size:.8rem}
+.cr-adj button[aria-pressed=true]{border-color:var(--accent,#b4462c);color:var(--accent,#b4462c)}
+.cr-visor{border:1px solid var(--linia,#e3e1db);border-radius:10px;padding:8px;margin-top:8px;background:#fff}
+.cr-visor .vc{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:8px}
+.cr-visor .vc b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
+.cr-visor a.boto{text-decoration:none;display:inline-block}
+.cr-visor iframe{width:100%;height:70vh;border:0;background:#fff}
+.cr-visor img,.cr-visor video{max-width:100%;height:auto}
+.cr-visor audio{width:100%}
+.cr-visor .doc{max-height:70vh;overflow:auto;font-size:.95rem;line-height:1.5}
+.cr-visor .doc pre{white-space:pre-wrap;word-break:break-word;margin:0}
+.cr-visor .doc img{max-width:100%}
+.cr-visor .doc table{border-collapse:collapse;font-size:.85rem;margin-bottom:12px}
+.cr-visor .doc td,.cr-visor .doc th{border:1px solid var(--linia,#e3e1db);padding:2px 6px;vertical-align:top}
+.cr-visor .doc h4{margin:10px 0 4px}
 `;
 
   function munta(arrel, op) {
@@ -108,6 +154,60 @@
     // Precàrrega: quan arriba la llista, es baixen de fons els fils (sense marcar-los com a llegits)
     // perquè, en prémer un correu, s'obri al moment sense esperar l'Apps Script.
     const memo = new Map(); let gen = 0;
+    // Adjunts: el que s'obre es baixa una vegada i es desa mentre la pàgina és oberta
+    let visor = null; const adjMemo = new Map();
+    const compteFil = () => fil && fil.ci != null ? comptes()[fil.ci] : actual();
+    async function obreAdjunt(mi, ai) {
+      const m = fil && fil.missatges[mi], a = m && m.adjunts && m.adjunts[ai];
+      if (!a || typeof a === "string") return;
+      const k = fil.id + "|" + mi + "|" + ai;
+      if (visor && visor.k === k) { visor = null; pinta(); return; }
+      if (adjMemo.has(k)) { visor = adjMemo.get(k); pinta(); return; }
+      const v = { k: k, fid: fil.id, mi: mi, nom: a.nom, classe: classe(a.nom, a.tipus), url: "" };
+      visor = v; pinta();
+      try {
+        const d = await crida({ accio: "adjunt", id: fil.id, m: mi, a: ai }, compteFil());
+        const bin = atob(d.b64 || ""), bytes = new Uint8Array(bin.length);
+        for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+        const tipus = d.tipus || a.tipus || "application/octet-stream";
+        v.nom = d.nom || a.nom; v.classe = classe(v.nom, tipus);
+        v.url = URL.createObjectURL(new Blob([bytes], { type: v.classe === "pdf" ? "application/pdf" : tipus }));
+        if (v.classe === "text") v.contingut = "<pre>" + enllaca(new TextDecoder("utf-8").decode(bytes)) + "</pre>";
+        else if (v.classe === "html") v.srcdoc = new TextDecoder("utf-8").decode(bytes);
+        else if (v.classe === "docx") {
+          const mam = await carregaLib(MAMMOTH, () => window.mammoth);
+          v.contingut = (await mam.convertToHtml({ arrayBuffer: bytes.buffer })).value || "<p>(El document és buit.)</p>";
+        } else if (v.classe === "full") {
+          const X = await carregaLib(SHEETJS, () => window.XLSX);
+          const ll = X.read(bytes, { type: "array" });
+          v.contingut = ll.SheetNames.map(n => (ll.SheetNames.length > 1 ? "<h4>" + esc(n) + "</h4>" : "") + X.utils.sheet_to_html(ll.Sheets[n], { header: "", footer: "" })).join("");
+        }
+        adjMemo.set(k, v);
+      } catch (e) { v.err = e.message; }
+      if (visor === v) pinta();
+    }
+    function pintaVisor() {
+      const v = visor;
+      let h = '<div class="cr-visor"><div class="vc"><b>' + esc(v.nom) + "</b>";
+      if (v.url) h += '<a class="boto clar" href="' + v.url + '" download="' + esc(v.nom) + '">⬇ Baixa</a>' + (/^(pdf|imatge|text|audio|video)$/.test(v.classe) ? '<a class="boto clar" href="' + v.url + '" target="_blank" rel="noopener">Obre en una pestanya ↗</a>' : "");
+      h += '<button type="button" class="boto clar" data-cr="tancavisor" style="margin-left:auto">✕ Tanca</button></div>';
+      if (v.err) h += '<p class="cr-avis err">' + esc(v.err) + (v.url ? " Pots baixar-lo i obrir-lo amb el programa que toqui." : "") + "</p>";
+      else if (!v.url) h += '<p class="cr-buit">Obrint «' + esc(v.nom) + "»…</p>";
+      else if (v.classe === "imatge") h += '<img src="' + v.url + '" alt="' + esc(v.nom) + '">';
+      else if (v.classe === "pdf") h += '<iframe src="' + v.url + '" title="' + esc(v.nom) + '"></iframe>';
+      else if (v.classe === "html") h += '<iframe sandbox="" srcdoc="' + esc(v.srcdoc) + '" title="' + esc(v.nom) + '"></iframe>';
+      else if (v.classe === "audio") h += '<audio controls src="' + v.url + '"></audio>';
+      else if (v.classe === "video") h += '<video controls src="' + v.url + '"></video>';
+      else if (v.contingut != null) h += '<div class="doc">' + v.contingut + "</div>";
+      else h += '<p class="cr-buit">Aquest tipus de fitxer no es pot llegir aquí. Baixa\'l i obre\'l amb el programa que toqui.</p>';
+      return h + "</div>";
+    }
+    function adjunts(m, mi) {
+      const l = m.adjunts || []; if (!l.length) return "";
+      if (typeof l[0] === "string") return '<div class="adj">📎 ' + l.map(esc).join(" · ") + " (obre'ls a Gmail; per obrir-los aquí cal actualitzar l'Apps Script del compte)</div>";
+      return '<div class="cr-adj">' + l.map((a, ai) => '<button type="button" data-cr="adjunt" data-m="' + mi + '" data-a="' + ai + '" aria-pressed="' + !!(visor && visor.k === fil.id + "|" + mi + "|" + ai) + '" title="Obre «' + esc(a.nom) + '»">📎 ' + esc(a.nom) + " <span>" + mida(a.mida) + "</span></button>").join("") + "</div>" +
+        (visor && visor.fid === fil.id && visor.mi === mi ? pintaVisor() : "");
+    }
     const clauFil = (id, ci) => (ci != null ? ci : compte) + "|" + id;
     function precarrega() {
       const g = ++gen, cua = fils.map(f => ({ id: f.id, ci: f.ci }));
@@ -167,8 +267,8 @@
       if (configura || !l.length) {
         const llista = op.comptes() || [];
         h += '<div class="cr-form" data-cr-form="comptes"><b>Comptes de correu</b><p class="cr-avis" style="margin:0">Per a cada compte, l\'URL de l\'Apps Script «Correu del tauler» (acaba en /exec).</p>' +
-          (llista.length ? llista : [{ nom: "", url: "" }]).map(x => '<div class="fila cr-compte"><input type="text" class="cr-nom" placeholder="Nom (p. ex. XTEC)" value="' + esc(x.nom) + '" style="flex:0 1 9em"><input type="text" class="cr-url" placeholder="https://script.google.com/macros/s/…/exec" value="' + esc(x.url) + '"><button type="button" class="boto perill" data-cr="treucompte" title="Treu">✕</button></div>').join("") +
-          '<div class="fila"><button type="button" class="boto clar" data-cr="noucompte" style="flex:0 0 auto">+ Compte</button><button type="button" class="boto" data-cr="desacomptes" style="flex:0 0 auto">Desa</button>' + (l.length ? '<button type="button" class="boto clar" data-cr="tancacomptes" style="flex:0 0 auto">Tanca</button>' : "") + "</div></div>";
+          (llista.length ? llista : [{ nom: "", url: "" }]).map(filaCompte).join("") +
+          '<div class="fila cr-botons"><button type="button" class="boto clar" data-cr="noucompte" style="flex:0 0 auto">+ Compte</button><button type="button" class="boto" data-cr="desacomptes" style="flex:0 0 auto">Desa</button>' + (l.length ? '<button type="button" class="boto clar" data-cr="tancacomptes" style="flex:0 0 auto">Tanca</button>' : "") + "</div></div>";
       }
       if (redacta) {
         const r = redacta;
@@ -178,7 +278,7 @@
           (r.id ? "" : '<label>Per a<input type="text" class="cr-a" value="' + esc(r.a || "") + '" placeholder="adreça@exemple.cat, …"></label>') +
           '<div class="fila"><label>Cc<input type="text" class="cr-cc" value="' + esc(r.cc || "") + '"></label><label>Cco<input type="text" class="cr-cco" value="' + esc(r.cco || "") + '"></label></div>' +
           (r.id ? "" : '<label>Assumpte<input type="text" class="cr-as" value="' + esc(r.assumpte || "") + '"></label>') +
-          '<label>Missatge<textarea class="cr-cos">' + esc(r.cos || "") + "</textarea></label>" +
+          '<label>Missatge<textarea class="cr-cos">\n' + esc(r.cos || "") + "</textarea></label>" +
           '<div class="fila"><label style="display:flex;gap:8px;align-items:center;color:var(--text,#1d1d1b);flex:0 1 auto"><input type="checkbox" class="cr-prog"' + (r.prog ? " checked" : "") + '> Programa l\'enviament</label><input type="datetime-local" class="cr-quan" value="' + esc(r.quan || "") + '"' + (r.prog ? "" : " hidden") + "></div>" +
           '<div class="fila" style="justify-content:flex-end"><button type="button" class="boto clar" data-cr="cancela" style="flex:0 0 auto">Cancel·la</button><button type="button" class="boto" data-cr="envia" style="flex:0 0 auto">' + (r.prog ? "Programa" : "Envia") + "</button></div></div>";
       }
@@ -191,7 +291,7 @@
           (op.tasca ? '<button type="button" class="boto clar" data-cr="tasca">+ Tasca</button>' : "") +
           '<button type="button" class="boto clar" data-cr="nollegit">No llegit</button><button type="button" class="boto" data-cr="arxiva" title="L\'arxiva i surt de la safata">✓ Fet</button><button type="button" class="boto perill" data-cr="esborra" title="A la paperera del compte (30 dies per recuperar-lo)">🗑 Esborra</button></div></div>' +
           '<h3 style="margin:4px 0 6px">' + esc(fil.assumpte) + ' <a href="' + esc(fil.enllac) + '" target="_blank" rel="noopener" style="font-size:.8rem;font-weight:400">obre a Gmail ↗</a></h3>' +
-          fil.missatges.map(m => '<div class="cr-msg"><div class="cap"><b>' + esc(nomDe(m.de)) + "</b><span>" + esc(adrecaDe(m.de)) + "</span><span>" + dataLlarga(m.data) + "</span>" + (m.a ? "<span>Per a: " + esc(m.a) + "</span>" : "") + (m.cc ? "<span>Cc: " + esc(m.cc) + "</span>" : "") + '</div><div class="cos">' + enllaca(m.cos) + "</div>" + (m.adjunts && m.adjunts.length ? '<div class="adj">📎 ' + m.adjunts.map(esc).join(" · ") + " (obre'ls a Gmail)</div>" : "") + "</div>").join("");
+          fil.missatges.map((m, mi) => '<div class="cr-msg"><div class="cap"><b>' + esc(nomDe(m.de)) + "</b><span>" + esc(adrecaDe(m.de)) + "</span><span>" + dataLlarga(m.data) + "</span>" + (m.a ? "<span>Per a: " + esc(m.a) + "</span>" : "") + (m.cc ? "<span>Cc: " + esc(m.cc) + "</span>" : "") + '</div><div class="cos">' + enllaca(m.cos) + "</div>" + adjunts(m, mi) + "</div>").join("");
       } else if (vista === "programats") {
         h += programats.length ? programats.map(p => '<div class="cr-fil" style="cursor:default"><span class="de">' + (tots() ? '<span class="cr-compte-et">' + esc((l[p.ci] || {}).nom || "") + "</span> " : "") + esc(p.id ? "Resposta" : p.a) + '</span><span class="dt">' + dataLlarga(p.quan) + '</span><span class="as">' + esc(p.assumpte || "(resposta)") + '</span><span class="fr"><button type="button" class="boto perill" data-cr="anulla" data-ci="' + p.ci + '" data-clau="' + esc(p.clau) + '">Anul·la</button></span></div>').join("") : '<p class="cr-buit">No hi ha cap correu programat.</p>';
       } else {
@@ -215,15 +315,17 @@
       if (a === "compte") { compte = Number(b.dataset.i); vista = vista === "programats" ? "programats" : "llista"; fil = null; carrega(); }
       else if (a === "refresca") { if (vista === "fil" && fil) obre(fil.id, fil.ci, true); else carrega(); }
       else if (a === "obre") obre(b.dataset.id, b.dataset.ci != null && b.dataset.ci !== "undefined" ? Number(b.dataset.ci) : null);
-      else if (a === "torna") { vista = "llista"; fil = null; pinta(); }
+      else if (a === "torna") { vista = "llista"; fil = null; visor = null; pinta(); }
       else if (a === "arxiva" && fil) accio("arxiva", fil.id, "Arxivat: «" + fil.assumpte + "».");
       else if (a === "esborra" && fil) { if (confirm("Vols enviar «" + fil.assumpte + "» a la paperera del compte? (S'hi podrà recuperar durant 30 dies.)")) accio("esborra", fil.id, "A la paperera: «" + fil.assumpte + "»."); }
       else if (a === "nollegit" && fil) accio("llegit", fil.id, "Marcat com a no llegit.");
       else if (a === "tasca" && fil && op.tasca) { op.tasca({ text: fil.assumpte, enllac: fil.enllac, compte: (deFil(fil) || {}).nom }); diu("Afegit a les tasques: «" + fil.assumpte + "»."); vista = "fil"; pinta(); }
-      else if (a === "nou") { redacta = { a: "", cc: "", cco: "", assumpte: "", cos: "" }; configura = false; pinta(); }
+      else if (a === "adjunt" && fil) obreAdjunt(Number(b.dataset.m), Number(b.dataset.a));
+      else if (a === "tancavisor") { visor = null; pinta(); }
+      else if (a === "nou") { redacta = { a: "", cc: "", cco: "", assumpte: "", cos: sigCos(comptes()[Math.max(compte, 0)]) }; configura = false; pinta(); }
       else if ((a === "respon" || a === "respontots") && fil) {
         const darrer = fil.missatges[fil.missatges.length - 1];
-        redacta = { id: fil.id, ci: fil.ci, tots: a === "respontots", assumpte: fil.assumpte, cos: "\n\n— " + nomDe(darrer.de) + ", " + dataLlarga(darrer.data) + ":\n" + darrer.cos.split("\n").slice(0, 40).map(x => "> " + x).join("\n") };
+        redacta = { id: fil.id, ci: fil.ci, tots: a === "respontots", assumpte: fil.assumpte, cos: sigCos(compteFil()) + "\n\n— " + nomDe(darrer.de) + ", " + dataLlarga(darrer.data) + ":\n" + darrer.cos.split("\n").slice(0, 40).map(x => "> " + x).join("\n") };
         pinta();
         const t = arrel.querySelector(".cr-cos"); if (t) { t.focus(); t.setSelectionRange(0, 0); }
       }
@@ -243,11 +345,11 @@
       }
       else if (a === "anulla") { try { await crida({ accio: "anulla", clau: b.dataset.clau }, comptes()[Number(b.dataset.ci)] || actual()); programats = programats.filter(p => p.clau !== b.dataset.clau); diu("Enviament anul·lat."); } catch (e) { diu(e.message, true); } }
       else if (a === "comptes") { configura = !configura; redacta = null; pinta(); }
-      else if (a === "noucompte") { const f = arrel.querySelector('[data-cr-form="comptes"]'); const fila = document.createElement("div"); fila.className = "fila cr-compte"; fila.innerHTML = '<input type="text" class="cr-nom" placeholder="Nom (p. ex. XTEC)" style="flex:0 1 9em"><input type="text" class="cr-url" placeholder="https://script.google.com/macros/s/…/exec"><button type="button" class="boto perill" data-cr="treucompte" title="Treu">✕</button>'; f.querySelector(".fila:last-child").before(fila); }
+      else if (a === "noucompte") { const f = arrel.querySelector('[data-cr-form="comptes"]'); const t = document.createElement("div"); t.innerHTML = filaCompte({ nom: "", url: "" }); f.querySelector(".cr-botons").before(t.firstChild); }
       else if (a === "treucompte") b.closest(".cr-compte").remove();
       else if (a === "tancacomptes") { configura = false; pinta(); }
       else if (a === "desacomptes") {
-        const llista = Array.from(arrel.querySelectorAll(".cr-compte")).map(f => ({ nom: f.querySelector(".cr-nom").value.trim(), url: f.querySelector(".cr-url").value.trim() })).filter(x => x.nom || x.url);
+        const llista = Array.from(arrel.querySelectorAll(".cr-compte")).map(f => ({ nom: f.querySelector(".cr-nom").value.trim(), url: f.querySelector(".cr-url").value.trim(), signatura: (f.querySelector(".cr-sig") || {}).value || "" })).filter(x => x.nom || x.url);
         if (llista.some(x => !x.nom || !/^https:\/\/script\.google\.com\/macros\/s\/[^/]+\/exec$/.test(x.url))) return diu("Cada compte necessita un nom i l'URL de l'Apps Script (https://script.google.com/macros/s/…/exec).", true);
         op.desaComptes(llista); recompte.clear(); configura = false; compte = llista.length > 1 ? -1 : 0; avis = ""; carrega();
       }
@@ -256,6 +358,14 @@
       const el = ev.target;
       if (el.dataset.cr === "filtre") { if (el.value === "programats") vista = "programats"; else { vista = "llista"; filtre = el.value; } carrega(); }
       else if (el.classList.contains("cr-prog")) { llegeixFormulari(); pinta(); }
+      else if (el.classList.contains("cr-desde") && redacta) {
+        // En canviar el compte de sortida, es canvia també la signatura
+        const abans = sigCos(comptes()[redacta.ci != null ? redacta.ci : Math.max(compte, 0)]);
+        llegeixFormulari();
+        const ara = sigCos(comptes()[redacta.ci]), cos = redacta.cos || "";
+        if (abans !== ara) { if (!abans) redacta.cos = cos + ara; else if (cos.indexOf(abans) >= 0) redacta.cos = cos.replace(abans, ara); }
+        pinta();
+      }
     });
     arrel.addEventListener("keydown", ev => { if (ev.target.dataset && ev.target.dataset.cr === "cerca" && ev.key === "Enter") { cerca = ev.target.value.trim(); carrega(); } });
     arrel.addEventListener("search", ev => { if (ev.target.dataset && ev.target.dataset.cr === "cerca") { cerca = ev.target.value.trim(); carrega(); } });
