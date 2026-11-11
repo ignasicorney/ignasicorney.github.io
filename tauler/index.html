@@ -47,8 +47,15 @@ textarea{width:100%;min-height:90px;resize:vertical}
 .capinst-dreta{display:flex;align-items:center;justify-content:flex-end;gap:10px 14px;flex-wrap:wrap}
 .logo-inst{height:52px;width:auto;display:block}
 #institutClau,#institutCos{margin-top:14px}
-.bloc{border-top:1px solid var(--linia);padding-top:14px;margin-top:16px}
-.bloc:first-child{border-top:0;margin-top:0;padding-top:0}
+.bloc{border:1px solid var(--linia);border-radius:12px;background:#fbfaf7;padding:12px 14px;margin-top:14px}
+.bloc:first-child{margin-top:0}
+.bloc>h3.bt{margin:0}
+.bloc>h3.bt>button{all:unset;box-sizing:border-box;width:100%;display:flex;align-items:center;gap:8px;cursor:pointer;font:inherit;text-transform:inherit}
+.bloc>h3.bt>button:focus-visible{outline:2px solid var(--accent);outline-offset:4px;border-radius:6px}
+.bloc>h3.bt .fletxa{margin-left:auto;color:var(--suau);font-size:.9rem;transition:transform .15s}
+.bloc.plegat>h3.bt .fletxa{transform:rotate(-90deg)}
+.bloc-cos{margin-top:10px}
+.bloc.plegat>.bloc-cos{display:none}
 h3.bt{margin:0 0 8px;font-size:1rem;text-transform:uppercase}
 .alum-eines{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
 .taula{overflow-x:auto;border:1px solid var(--linia);border-radius:10px}
@@ -637,6 +644,23 @@ dialog .check{display:flex;gap:8px;align-items:center;color:var(--text);font-siz
 
   // ================= Utilitats =================
   const $ = id => document.getElementById(id);
+  // Blocs plegables de l'Institut: cada apartat s'obre i es tanca tocant-ne el títol
+  (function () {
+    const PLEGATS = { reunions: 1, alumnes: 1, assistent: 1 };
+    document.querySelectorAll("#institutCos > .bloc").forEach(b => {
+      const h = b.querySelector(":scope > h3.bt"); if (!h) return;
+      const cos = document.createElement("div"); cos.className = "bloc-cos"; cos.id = "plec-" + b.id;
+      while (h.nextSibling) cos.appendChild(h.nextSibling);
+      b.appendChild(cos);
+      const bt = document.createElement("button"); bt.type = "button"; bt.setAttribute("aria-controls", cos.id);
+      while (h.firstChild) bt.appendChild(h.firstChild);
+      const fl = document.createElement("span"); fl.className = "fletxa"; fl.setAttribute("aria-hidden", "true"); fl.textContent = "▾"; bt.appendChild(fl);
+      h.appendChild(bt);
+      const posa = plegat => { b.classList.toggle("plegat", plegat); bt.setAttribute("aria-expanded", String(!plegat)); };
+      posa(!!PLEGATS[b.id]);
+      bt.addEventListener("click", () => posa(!b.classList.contains("plegat")));
+    });
+  })();
   const z = n => String(n).padStart(2, "0");
   const avuiISO = () => new Intl.DateTimeFormat("en-CA", { timeZone: TZ, year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
   const aUTC = s => { const [y, m, d] = s.split("-").map(Number); return Date.UTC(y, m - 1, d); };
