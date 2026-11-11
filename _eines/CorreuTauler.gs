@@ -29,6 +29,7 @@
 //                                                       del fil (12.11.2026, per llegir-lo i baixar-lo al tauler)
 //   { accio: "llegit", id, llegit }                   → marca com a llegit / no llegit
 //   { accio: "arxiva", id }                           → treu de la safata d'entrada
+//   { accio: "desarxiva", id }                        → el torna a la safata d'entrada (12.11.2026, «Desfés»)
 //   { accio: "esborra", id }                          → a la paperera (30 dies per recuperar-lo)
 //   { accio: "envia", a, cc, cco, assumpte, cos, id, tots }  → envia (o respon al fil «id»)
 //   { accio: "programa", ..., quan }                  → l'envia a l'hora «quan» (ISO)
@@ -114,6 +115,7 @@ function doPost(e) {
       }
 
       case "arxiva": GmailApp.getThreadById(String(cos.id)).moveToArchive(); return json_({ ok: true });
+      case "desarxiva": GmailApp.getThreadById(String(cos.id)).moveToInbox(); return json_({ ok: true });
       case "esborra": GmailApp.getThreadById(String(cos.id)).moveToTrash(); return json_({ ok: true });
 
       case "envia":
