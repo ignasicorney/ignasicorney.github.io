@@ -39,6 +39,13 @@
 .cr-msg{border:1px solid var(--linia,#e3e1db);border-radius:10px;padding:10px 12px;margin:8px 0}
 .cr-msg .cap{display:flex;gap:6px 12px;flex-wrap:wrap;color:var(--suau,#6b6b66);font-size:.85rem;margin-bottom:6px}
 .cr-msg .cap b{color:var(--text,#1d1d1b)}
+.cr-msg>summary{cursor:pointer;list-style:none;margin-bottom:0}
+.cr-msg>summary::-webkit-details-marker{display:none}
+.cr-msg>summary::before{content:"▸";color:var(--accent,#b4462c)}
+.cr-msg[open]>summary::before{content:"▾"}
+.cr-msg[open]>summary{margin-bottom:6px}
+.cr-msg .resum{flex-basis:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cr-msg[open] .resum{display:none}
 .cr-msg .cos{white-space:pre-wrap;word-break:break-word;font-size:.95rem;max-height:60vh;overflow:auto}
 .cr-msg .adj{margin-top:6px;font-size:.85rem;color:var(--suau,#6b6b66)}
 .cr-form{display:grid;gap:8px;border:1px solid var(--linia,#e3e1db);border-radius:10px;padding:12px;margin-bottom:10px;background:#faf9f6}
@@ -150,7 +157,7 @@
           (op.tasca ? '<button type="button" class="boto clar" data-cr="tasca">+ Tasca</button>' : "") +
           '<button type="button" class="boto clar" data-cr="nollegit">No llegit</button><button type="button" class="boto" data-cr="arxiva" title="L\'arxiva i surt de la safata">✓ Fet</button><button type="button" class="boto perill" data-cr="esborra" title="A la paperera del compte (30 dies per recuperar-lo)">🗑 Esborra</button></div></div>' +
           '<h3 style="margin:4px 0 6px">' + esc(fil.assumpte) + ' <a href="' + esc(fil.enllac) + '" target="_blank" rel="noopener" style="font-size:.8rem;font-weight:400">obre a Gmail ↗</a></h3>' +
-          fil.missatges.map(m => '<div class="cr-msg"><div class="cap"><b>' + esc(nomDe(m.de)) + "</b><span>" + esc(adrecaDe(m.de)) + "</span><span>" + dataLlarga(m.data) + "</span>" + (m.a ? "<span>Per a: " + esc(m.a) + "</span>" : "") + (m.cc ? "<span>Cc: " + esc(m.cc) + "</span>" : "") + '</div><div class="cos">' + enllaca(m.cos) + "</div>" + (m.adjunts && m.adjunts.length ? '<div class="adj">📎 ' + m.adjunts.map(esc).join(" · ") + " (obre'ls a Gmail)</div>" : "") + "</div>").join("");
+          fil.missatges.map(m => '<details class="cr-msg"><summary class="cap"><b>' + esc(nomDe(m.de)) + "</b><span>" + esc(adrecaDe(m.de)) + "</span><span>" + dataLlarga(m.data) + "</span>" + (m.a ? "<span>Per a: " + esc(m.a) + "</span>" : "") + (m.cc ? "<span>Cc: " + esc(m.cc) + "</span>" : "") + '<span class="resum">' + esc(String(m.cos || "").replace(/\s+/g, " ").trim().slice(0, 160)) + '</span></summary><div class="cos">' + enllaca(m.cos) + "</div>" + (m.adjunts && m.adjunts.length ? '<div class="adj">📎 ' + m.adjunts.map(esc).join(" · ") + " (obre'ls a Gmail)</div>" : "") + "</details>").join("");
       } else if (vista === "programats") {
         h += programats.length ? programats.map(p => '<div class="cr-fil" style="cursor:default"><span class="de">' + (tots() ? '<span class="cr-compte-et">' + esc((l[p.ci] || {}).nom || "") + "</span> " : "") + esc(p.id ? "Resposta" : p.a) + '</span><span class="dt">' + dataLlarga(p.quan) + '</span><span class="as">' + esc(p.assumpte || "(resposta)") + '</span><span class="fr"><button type="button" class="boto perill" data-cr="anulla" data-ci="' + p.ci + '" data-clau="' + esc(p.clau) + '">Anul·la</button></span></div>').join("") : '<p class="cr-buit">No hi ha cap correu programat.</p>';
       } else {
