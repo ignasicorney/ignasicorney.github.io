@@ -72,6 +72,7 @@ td.txt .celaed{width:16em;text-align:left}
 .formules{border:1px solid var(--linia);border-radius:10px;padding:10px;margin-bottom:10px;background:#faf9f6}
 .fcol{display:flex;gap:6px;flex-wrap:wrap;align-items:center;padding:4px 0}
 .fcol .fnom{flex:0 1 11em;min-width:7em}
+td.exempt{color:#888;font-style:italic}
 .fmou{cursor:grab;touch-action:none;user-select:none;padding:6px 4px;font-size:1.2rem;line-height:1;opacity:.55}
 .fmou:hover{opacity:1}
 .fcol.arrossega{opacity:.6;outline:2px dashed currentColor;border-radius:8px}
@@ -1425,7 +1426,10 @@ dialog .check{display:flex;gap:8px;align-items:center;color:var(--text);font-siz
   const numOpcional = v => { if (esBuit(v)) return null; if (typeof v === "number") return v; const n = Number(String(v).trim().replace(",", ".")); return isNaN(n) ? null : n; };
   const pla = args => args.reduce((a, x) => a.concat(Array.isArray(x) ? x : [x]), []);
   const arrodoneix = (x, n, mode) => { const f = Math.pow(10, n || 0); const y = x * f; const r = mode === "amunt" ? Math.sign(y) * Math.ceil(Math.abs(y) - 1e-9) : mode === "avall" ? Math.sign(y) * Math.floor(Math.abs(y) + 1e-9) : Math.sign(y) * Math.round(Math.abs(y) + 1e-9); return r / f; };
+  const esExempt = v => typeof v === "string" && /^ex$/i.test(v.trim());
   const FUNCIONS = {
+    // Mitjana de les proves fetes: «EX» (exempt) no compta; els buits compten com a 0
+    MITJANAFETS: (a, ev) => { const n = pla(a.map(ev)).filter(v => !esExempt(v)).map(v => numOpcional(v) || 0); return n.length ? n.reduce((s, v) => s + v, 0) / n.length : ""; },
     SUM: (a, ev) => pla(a.map(ev)).reduce((s, v) => s + (numOpcional(v) || 0), 0),
     AVERAGE: (a, ev) => { const n = pla(a.map(ev)).map(numOpcional).filter(v => v !== null); if (!n.length) throw new ErrF("#DIV/0!"); return n.reduce((s, v) => s + v, 0) / n.length; },
     MIN: (a, ev) => { const n = pla(a.map(ev)).map(numOpcional).filter(v => v !== null); return n.length ? Math.min.apply(null, n) : 0; },
@@ -1551,7 +1555,7 @@ dialog .check{display:flex;gap:8px;align-items:center;color:var(--text);font-siz
       '<div class="alum-eines"><button type="button" class="boto clar" data-q="formules">⚙️ ' + (qFormules ? "Amaga les fórmules" : "Columnes i fórmules") + "</button>" +
       '<button type="button" class="boto clar" data-q="alumne">+ Alumne</button><button type="button" class="boto clar" data-q="banc">📋 ' + (rubObert ? "Amaga les rúbriques" : "Rúbriques") + "</button>" + importa + "</div>" + (rubObert ? htmlBanc() : "");
     if (f && qFormules) {
-      h += '<div class="formules"><p class="font" style="margin:0 0 8px">Fórmules com a l\'Excel. <b>{EX1}</b> és una columna d\'aquest full i <b>{1R TRIM|NOTA FINAL TRIM}</b> una columna d\'un altre full. Funcions: SUM, AVERAGE, MIN, MAX, IF, ROUND… Els buits compten com a 0 a les operacions i AVERAGE se\'ls salta.</p>' +
+      h += '<div class="formules"><p class="font" style="margin:0 0 8px">Fórmules com a l\'Excel. <b>{EX1}</b> és una columna d\'aquest full i <b>{1R TRIM|NOTA FINAL TRIM}</b> una columna d\'un altre full. Funcions: SUM, AVERAGE, MIN, MAX, IF, ROUND… Els buits compten com a 0 a les operacions i AVERAGE se\'ls salta. <b>MITJANAFETS({DIC1};{DIC2})</b> fa la mitjana de les proves fetes: si a una nota hi escrius <b>EX</b> (o x, o -), no compta; un buit compta com a 0.</p>' +
         f.columnes.map((c, i) => '<div class="fcol" data-col="' + i + '">' +
           '<span class="fmou" title="Arrossega per canviar l\'ordre de la columna" aria-hidden="true">⠿</span>' +
           '<input type="text" class="fnom" value="' + esc(c.nom) + '" aria-label="Nom de la columna">' +
@@ -1573,7 +1577,7 @@ dialog .check{display:flex;gap:8px;align-items:center;color:var(--text);font-siz
             return '<td class="' + cls.join(" ") + '"' + (ok ? "" : ' title="A l\'Excel: ' + esc(r.o[c.nom]) + '"') + ">" + esc(txt) + (ok ? "" : " ⚠️") + "</td>";
           }
           if (c.tipus === "rubrica") { const n = numOpcional(v); return '<td class="ed rub' + (n !== null && /NOTA|GLOBAL|FINAL/i.test(c.nom) ? (n < 5 ? " susp" : " apro") : "") + '" data-alumne="' + esc(r.nom) + '" data-c="' + esc(c.nom) + '" title="Avalua amb la rúbrica">' + (txt ? esc(txt) : '<span class="font">📋</span>') + "</td>"; }
-          return '<td class="ed' + (c.tipus === "text" ? " txt" : "") + '" data-alumne="' + esc(r.nom) + '" data-c="' + esc(c.nom) + '" title="' + esc(txt) + '">' + esc(txt) + "</td>";
+          return '<td class="ed' + (c.tipus === "text" ? " txt" : "") + (esExempt(v) ? " exempt" : "") + '" data-alumne="' + esc(r.nom) + '" data-c="' + esc(c.nom) + '" title="' + esc(txt) + '">' + esc(txt) + "</td>";
         }).join("") + "</tr>"; }).join("") || '<tr><td colspan="' + (f.columnes.length + 1) + '" class="buit">Cap alumne no coincideix.</td></tr>') +
         "</tbody></table></div><p class=\"font\">" + files.length + " alumnes · toca una nota per canviar-la; toca el nom per canviar-lo o esborrar l'alumne.</p>";
     }
@@ -1594,7 +1598,7 @@ dialog .check{display:flex;gap:8px;align-items:center;color:var(--text);font-siz
       if (fet) return; fet = true;
       if (desar) {
         let v = inp.value.trim();
-        if (col.tipus === "nota" && v !== "") { const n = Number(v.replace(",", ".")); if (!isNaN(n)) v = n; }
+        if (col.tipus === "nota" && v !== "") { const n = Number(v.replace(",", ".")); if (!isNaN(n)) v = n; else if (/^(ex|x|-)$/i.test(v)) v = "EX"; }
         const abans = fila.v[col.nom];
         if (v === "") delete fila.v[col.nom]; else fila.v[col.nom] = v;
         if (abans !== fila.v[col.nom]) oblidaExcel(fila);
