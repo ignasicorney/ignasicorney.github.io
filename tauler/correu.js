@@ -61,6 +61,19 @@
     const actual = () => { const l = comptes(); if (!l.length) return null; if (compte === -1 && l.length > 1) return null; compte = Math.max(0, Math.min(compte, l.length - 1)); return l[compte]; };
     const tots = () => compte === -1 && comptes().length > 1;
     const deFil = f => comptes()[f && f.ci != null ? f.ci : compte] || actual();
+    // Comptador de la safata d'entrada de cada compte (al costat del títol del bloc).
+    // «ple»: la llista d'aquell compte ha arribat al màxim que es demana, i per tant n'hi pot haver més.
+    const MAX = 30, recompte = new Map(); let carregats = [];
+    const esSafata = () => vista !== "programats" && filtre === "in:inbox" && !cerca;
+    function compta() {
+      if (!op.comptador) return;
+      if (esSafata() && !carregant) carregats.forEach(i => {
+        const d = fils.filter(f => f.ci === i), ant = recompte.get(i);
+        recompte.set(i, { n: d.length, nl: d.filter(f => f.noLlegit).length, ple: !!(ant && ant.ple) });
+      });
+      const l = comptes(), v = l.map((c, i) => recompte.has(i) ? Object.assign({ nom: c.nom }, recompte.get(i)) : null).filter(Boolean);
+      op.comptador(v.length ? { n: v.reduce((s, x) => s + x.n, 0), nl: v.reduce((s, x) => s + x.nl, 0), ple: v.some(x => x.ple), comptes: v } : null);
+    }
 
     async function crida(cos, c) {
       c = c || actual();
@@ -77,7 +90,7 @@
       if (!actual() && !tots()) { pinta(); return; }
       carregant = true; pinta();
       const l = comptes(), quins = tots() ? l.map((c, i) => i) : [compte];
-      const cos = vista === "programats" ? { accio: "programats" } : { accio: "llista", q: (cerca ? cerca + " " : "") + filtre, max: 30 };
+      const cos = vista === "programats" ? { accio: "programats" } : { accio: "llista", q: (cerca ? cerca + " " : "") + filtre, max: MAX };
       const res = await Promise.allSettled(quins.map(i => crida(cos, l[i]).then(d => ({ i, d }))));
       const errors = [];
       let tot = [];
@@ -87,6 +100,8 @@
       });
       if (vista === "programats") programats = tot.sort((a, b) => (a.quan || "").localeCompare(b.quan || ""));
       else { fils = tot.sort((a, b) => (b.data || "").localeCompare(a.data || "")); memo.clear(); precarrega(); }
+      carregats = vista === "programats" ? [] : quins.filter((i, k) => res[k].status === "fulfilled");
+      if (esSafata()) carregats.forEach(i => recompte.set(i, { n: 0, nl: 0, ple: fils.filter(f => f.ci === i).length >= MAX }));
       avis = errors.join(" · "); avisErr = errors.length > 0;
       carregant = false; pinta();
     }
@@ -132,6 +147,7 @@
     }
 
     function pinta() {
+      compta();
       const l = comptes(), c = actual();
       let h = '<div class="cr-eines">';
       if (l.length > 1) h += '<div class="vistes" role="group" aria-label="Compte"><button type="button" data-cr="compte" data-i="-1" aria-pressed="' + tots() + '">Tots</button>' + l.map((x, i) => '<button type="button" data-cr="compte" data-i="' + i + '" aria-pressed="' + (!tots() && x === c) + '">' + esc(x.nom) + "</button>").join("") + "</div>";
@@ -233,7 +249,7 @@
       else if (a === "desacomptes") {
         const llista = Array.from(arrel.querySelectorAll(".cr-compte")).map(f => ({ nom: f.querySelector(".cr-nom").value.trim(), url: f.querySelector(".cr-url").value.trim() })).filter(x => x.nom || x.url);
         if (llista.some(x => !x.nom || !/^https:\/\/script\.google\.com\/macros\/s\/[^/]+\/exec$/.test(x.url))) return diu("Cada compte necessita un nom i l'URL de l'Apps Script (https://script.google.com/macros/s/…/exec).", true);
-        op.desaComptes(llista); configura = false; compte = llista.length > 1 ? -1 : 0; avis = ""; carrega();
+        op.desaComptes(llista); recompte.clear(); configura = false; compte = llista.length > 1 ? -1 : 0; avis = ""; carrega();
       }
     });
     arrel.addEventListener("change", ev => {

@@ -57,6 +57,8 @@ textarea{width:100%;min-height:90px;resize:vertical}
 .bloc-cos{margin-top:10px}
 .bloc.plegat>.bloc-cos{display:none}
 h3.bt{margin:0 0 8px;font-size:1rem;text-transform:uppercase}
+.cr-num{display:inline-block;margin-left:6px;padding:1px 9px;border-radius:999px;background:var(--accent,#b4462c);color:#fff;font-size:.8rem;font-weight:700;text-transform:none;vertical-align:2px}
+.cr-num small{font-weight:400;opacity:.9;font-size:inherit}
 .alum-eines{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
 .taula{overflow-x:auto;border:1px solid var(--linia);border-radius:10px}
 .taula table{border-collapse:collapse;font-size:.88rem;width:100%}
@@ -354,7 +356,7 @@ dialog .check{display:flex;gap:8px;align-items:center;color:var(--text);font-siz
     <p class="font" id="tasPeu"></p>
   </div>
   <div class="bloc" id="correu">
-    <h3 class="bt">📬 Correu</h3>
+    <h3 class="bt">📬 Correu <span class="cr-num" id="correuNum" hidden></span></h3>
     <div id="correuCos"></div>
   </div>
   <div class="bloc" id="calendari">
@@ -469,7 +471,7 @@ dialog .check{display:flex;gap:8px;align-items:center;color:var(--text);font-siz
   </form>
 </dialog>
 
-<script src="correu.js?v=5"></script>
+<script src="correu.js?v=6"></script>
 <script>
 (function () {
   "use strict";
@@ -838,7 +840,7 @@ dialog .check{display:flex;gap:8px;align-items:center;color:var(--text);font-siz
   });
   $("sincClau").addEventListener("keydown", e => { if (e.key === "Enter") $("sincConnecta").click(); });
   $("sincDesconnecta").addEventListener("click", () => {
-    clau = ""; sha = null; dades = BUIDES(); correuCarregat = false; if (gestorCorreu) { $("correuCos").replaceWith(Object.assign(document.createElement("div"), { id: "correuCos" })); gestorCorreu = null; }
+    clau = ""; sha = null; dades = BUIDES(); correuCarregat = false; if (gestorCorreu) { $("correuCos").replaceWith(Object.assign(document.createElement("div"), { id: "correuCos" })); gestorCorreu = null; } if ($("correuNum")) { $("correuNum").hidden = true; $("correuNum").textContent = ""; }
     lsEscriu("tauler.clau", null); lsEscriu("tauler.dades", null);
     mostraInstitut(false);
   });
@@ -1052,7 +1054,15 @@ dialog .check{display:flex;gap:8px;align-items:center;color:var(--text);font-siz
       comptes: () => (dades.correu && dades.correu.comptes) || [],
       desaComptes: llista => { dades.correu = { comptes: llista }; desa(); pintaAlumnes(); },
       clau: () => clau,
-      tasca: t => novaTasca({ text: t.text, enllac: t.enllac, compte: t.compte })
+      tasca: t => novaTasca({ text: t.text, enllac: t.enllac, compte: t.compte }),
+      comptador: r => {
+        const el = $("correuNum");
+        if (!el) return;
+        if (!r) { el.hidden = true; el.textContent = ""; return; }
+        el.hidden = false;
+        el.innerHTML = r.n + (r.ple ? "+" : "") + (r.nl ? " <small>· " + r.nl + " sense llegir</small>" : "");
+        el.title = r.comptes.map(c => c.nom + ": " + c.n + (c.ple ? "+" : "") + " a la safata d'entrada" + (c.nl ? " (" + c.nl + " sense llegir)" : "")).join("\n");
+      }
     });
   }
 
