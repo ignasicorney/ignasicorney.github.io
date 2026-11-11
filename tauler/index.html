@@ -89,6 +89,7 @@ td.exempt{color:#888;font-style:italic}
 .taula td.n-blau{background:#cfe2f6}
 .taula td.f-0{background:#fbdcbf}
 .taula td.f-1{background:#d3ecd4}
+.taula td.n-sobre{background:#e6dbf5}
 .taula td.ambf{line-height:1.15}
 .nf-ini{display:block;font-size:.72rem;color:var(--suau);font-weight:400}
 .nf-fin{display:block;font-size:1.2rem;font-weight:700}
@@ -1608,7 +1609,8 @@ dialog .check{display:flex;gap:8px;align-items:center;color:var(--text);font-siz
     if (c.tipus === "text") return "";
     const vals = f.files.map(r => numOpcional(valor(f, r, c))).filter(n => n !== null);
     if (/^F\d+$/i.test(c.nom.trim()) || (vals.length && vals.every(n => n === 0 || n === 1))) return "form";
-    if (/^SOBRE\b/i.test(c.nom.trim()) || (vals.length && Math.max(...vals) <= 3)) return "";
+    if (/^SOBRE\b/i.test(c.nom.trim())) return "sobre";
+    if ((vals.length && Math.max(...vals) <= 3)) return "";
     return "nota";
   }
   function pintaAlumnes() {
@@ -1647,7 +1649,7 @@ dialog .check{display:flex;gap:8px;align-items:center;color:var(--text);font-siz
     }
     if (f) {
       const tcol = {}; f.columnes.forEach(c => { tcol[c.nom] = tipusColor(f, c, valor); });
-      const ombra = (c, v) => { if (!tcol[c.nom]) return ""; if (esExempt(v)) return " n-ex"; const n = numOpcional(v); if (n === null) return ""; return tcol[c.nom] === "form" ? (n === 0 ? " f-0" : " f-1") : " " + colorNota(n); };
+      const ombra = (c, v) => { if (!tcol[c.nom]) return ""; if (esExempt(v)) return " n-ex"; const n = numOpcional(v); if (n === null) return ""; if (tcol[c.nom] === "sobre") return " n-sobre"; return tcol[c.nom] === "form" ? (n === 0 ? " f-0" : " f-1") : " " + colorNota(n); };
       h += '<div class="taula"><table><thead><tr><th>Alumne</th>' + f.columnes.map(c => "<th" + (c.tipus === "calc" ? ' class="calc" title="' + esc(c.formula) + '"' : "") + ">" + esc(c.nom) + (desquadres[c.nom] ? " ⚠️" : "") + "</th>").join("") + "</tr></thead><tbody>" +
         (files.map(r => { const psi = (g.psi || []).includes(r.nom), dis = /\sDIS$/i.test(r.nom); return '<tr><td class="nomal' + (psi ? " psi" : "") + '" data-alumne="' + esc(r.nom) + '" title="' + (psi ? "PSI" : "") + (psi && dis ? " · " : "") + (dis ? "Dislèxia" : "") + '">' + esc(dis ? r.nom.replace(/\s+DIS$/i, "") : r.nom) + (psi ? ' <span class="marca-al psi">PSI</span>' : "") + (dis ? ' <span class="marca-al">DIS</span>' : "") + "</td>" + f.columnes.map(c => {
           const v = valor(f, r, c), txt = mostraValor(v);
