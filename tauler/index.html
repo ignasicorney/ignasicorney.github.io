@@ -82,6 +82,13 @@ td.txt .celaed{width:16em;text-align:left}
 .fcol{display:flex;gap:6px;flex-wrap:wrap;align-items:center;padding:4px 0}
 .fcol .fnom{flex:0 1 11em;min-width:7em}
 td.exempt{color:#888;font-style:italic}
+.taula td.n-ex{background:#e4e4e4;color:#666;font-style:italic}
+.taula td.n-roig{background:#f8d0cf}
+.taula td.n-groc{background:#fdeeb0}
+.taula td.n-verd{background:#d3ecd4}
+.taula td.n-blau{background:#cfe2f6}
+.taula td.f-0{background:#fbdcbf}
+.taula td.f-1{background:#d3ecd4}
 .taula td.ambf{line-height:1.15}
 .nf-ini{display:block;font-size:.72rem;color:var(--suau);font-weight:400}
 .nf-fin{display:block;font-size:1.2rem;font-weight:700}
@@ -1591,7 +1598,21 @@ dialog .check{display:flex;gap:8px;align-items:center;color:var(--text);font-siz
   const num2 = n => (Math.round(n * 100) / 100).toFixed(2).replace(".", ",");
   function grupActual() { const q = Q(); if (!q.grups.length) return null; qGrup = Math.min(qGrup, q.grups.length - 1); return q.grups[qGrup]; }
   function fullActual(g) { if (!g || !g.fulls.length) return null; qFull = Math.min(qFull, g.fulls.length - 1); return g.fulls[qFull]; }
+  // Ordre dels grups per curs i lletra (1r A, 1r I, 1r J, 4t B…) i nom de mostra amb espai
+  const clauGrup = nom => { const m = String(nom).trim().match(/^(\d+)\s*([a-zàèé]*)\s*([A-Z])$/i); return m ? [Number(m[1]), m[3].toUpperCase()] : [99, String(nom)]; };
+  const ordenaGrups = (a, b) => { const x = clauGrup(a.nom), y = clauGrup(b.nom); return x[0] - y[0] || x[1].localeCompare(y[1], "ca"); };
+  const nomGrup = nom => String(nom).trim().replace(/^(\d+)\s*([a-zàèé]*)\s*([A-Z])$/i, (t, n, s, l) => n + s + " " + l.toUpperCase());
+  // Ombrejat de les notes: EX gris, <4,7 vermell, <6,7 groc, <8,7 verd, la resta blau; formularis 0 taronja i 1 verd
+  const colorNota = n => n < 4.7 ? "n-roig" : n < 6.7 ? "n-groc" : n < 8.7 ? "n-verd" : "n-blau";
+  function tipusColor(f, c, valor) {
+    if (c.tipus === "text") return "";
+    const vals = f.files.map(r => numOpcional(valor(f, r, c))).filter(n => n !== null);
+    if (/^F\d+$/i.test(c.nom.trim()) || (vals.length && vals.every(n => n === 0 || n === 1))) return "form";
+    if (/^SOBRE\b/i.test(c.nom.trim()) || (vals.length && Math.max(...vals) <= 3)) return "";
+    return "nota";
+  }
   function pintaAlumnes() {
+    { const q = Q(), act = q.grups[qGrup]; q.grups.sort(ordenaGrups); if (act) qGrup = q.grups.indexOf(act); }
     const cos = $("alumCos"), g = grupActual(), f = fullActual(g);
     const importa = (compteDrive() ? '<button type="button" class="boto clar" data-q="drive">⬇️ Importa de Drive</button>' : "") + '<label class="boto clar" style="display:inline-block">⬆️ Importa Excel<input type="file" id="alumFitxer" accept=".xlsx,.xls,.zip" multiple hidden></label>';
     if (!g) {
@@ -1604,7 +1625,7 @@ dialog .check{display:flex;gap:8px;align-items:center;color:var(--text);font-siz
     const desquadres = {};
     if (f) f.columnes.forEach(c => { if (c.tipus === "calc") desquadres[c.nom] = f.files.filter(r => !coincideix(valor(f, r, c), r.o && r.o[c.nom])).length; });
     let h = '<div class="alum-eines"><div class="vistes" role="group" aria-label="Grup">' +
-      Q().grups.map((x, i) => '<button type="button" data-grup="' + i + '" aria-pressed="' + (x === g) + '">' + esc(x.nom) + "</button>").join("") + "</div>" +
+      Q().grups.map((x, i) => '<button type="button" data-grup="' + i + '" aria-pressed="' + (x === g) + '">' + esc(nomGrup(x.nom)) + "</button>").join("") + "</div>" +
       '<select id="alumFull" aria-label="Full">' + g.fulls.map((x, i) => '<option value="' + i + '"' + (x === f ? " selected" : "") + ">" + esc(x.nom) + "</option>").join("") + "</select>" +
       '<input type="search" id="alumCerca" placeholder="Cerca alumne…" value="' + esc(cerca) + '" style="flex:1 1 140px"></div>' +
       '<div class="alum-eines"><button type="button" class="boto clar" data-q="formules">⚙️ ' + (qFormules ? "Amaga les fórmules" : "Columnes i fórmules") + "</button>" +
@@ -1625,18 +1646,20 @@ dialog .check{display:flex;gap:8px;align-items:center;color:var(--text);font-siz
         '<p class="avis" id="formAvis" hidden></p><div class="alum-eines" style="margin-top:8px"><button type="button" class="boto clar" data-q="novacol">+ Columna</button><button type="button" class="boto" data-q="desaform">Desa les columnes</button></div></div>';
     }
     if (f) {
+      const tcol = {}; f.columnes.forEach(c => { tcol[c.nom] = tipusColor(f, c, valor); });
+      const ombra = (c, v) => { if (!tcol[c.nom]) return ""; if (esExempt(v)) return " n-ex"; const n = numOpcional(v); if (n === null) return ""; return tcol[c.nom] === "form" ? (n === 0 ? " f-0" : " f-1") : " " + colorNota(n); };
       h += '<div class="taula"><table><thead><tr><th>Alumne</th>' + f.columnes.map(c => "<th" + (c.tipus === "calc" ? ' class="calc" title="' + esc(c.formula) + '"' : "") + ">" + esc(c.nom) + (desquadres[c.nom] ? " ⚠️" : "") + "</th>").join("") + "</tr></thead><tbody>" +
         (files.map(r => { const psi = (g.psi || []).includes(r.nom), dis = /\sDIS$/i.test(r.nom); return '<tr><td class="nomal' + (psi ? " psi" : "") + '" data-alumne="' + esc(r.nom) + '" title="' + (psi ? "PSI" : "") + (psi && dis ? " · " : "") + (dis ? "Dislèxia" : "") + '">' + esc(dis ? r.nom.replace(/\s+DIS$/i, "") : r.nom) + (psi ? ' <span class="marca-al psi">PSI</span>' : "") + (dis ? ' <span class="marca-al">DIS</span>' : "") + "</td>" + f.columnes.map(c => {
           const v = valor(f, r, c), txt = mostraValor(v);
           if (c.tipus === "calc") {
             const n = numOpcional(v), ok = coincideix(v, r.o && r.o[c.nom]);
             const cls = ["calc"]; if (v && v.err) cls.push("susp"); else if (n !== null && /NOTA|GLOBAL|FINAL/i.test(c.nom)) cls.push(n < 5 ? "susp" : "apro");
-            return '<td class="' + cls.join(" ") + '"' + (ok ? "" : ' title="A l\'Excel: ' + esc(r.o[c.nom]) + '"') + ">" + esc(txt) + (ok ? "" : " ⚠️") + "</td>";
+            return '<td class="' + cls.join(" ") + (v && v.err ? "" : ombra(c, v)) + '"' + (ok ? "" : ' title="A l\'Excel: ' + esc(r.o[c.nom]) + '"') + ">" + esc(txt) + (ok ? "" : " ⚠️") + "</td>";
           }
-          if (c.tipus === "rubrica") { const n = numOpcional(v); return '<td class="ed rub' + (n !== null && /NOTA|GLOBAL|FINAL/i.test(c.nom) ? (n < 5 ? " susp" : " apro") : "") + '" data-alumne="' + esc(r.nom) + '" data-c="' + esc(c.nom) + '" title="Avalua amb la rúbrica">' + (txt ? esc(txt) : '<span class="font">📋</span>') + "</td>"; }
+          if (c.tipus === "rubrica") { const n = numOpcional(v); return '<td class="ed rub' + (n !== null && /NOTA|GLOBAL|FINAL/i.test(c.nom) ? (n < 5 ? " susp" : " apro") : "") + ombra(c, v) + '" data-alumne="' + esc(r.nom) + '" data-c="' + esc(c.nom) + '" title="Avalua amb la rúbrica">' + (txt ? esc(txt) : '<span class="font">📋</span>') + "</td>"; }
           const df = typeof r.v[c.nom] === "number" ? descompteFaltes(r, c) : null;
-          if (df) return '<td class="ed ambf' + (/NOTA|GLOBAL|FINAL/i.test(c.nom) ? (v < 5 ? " susp" : " apro") : "") + '" data-alumne="' + esc(r.nom) + '" data-c="' + esc(c.nom) + '" title="Nota de l\'examen ' + num2(r.v[c.nom]) + ' · ' + df.faltes + ' falt' + (df.faltes === 1 ? "a" : "es") + ' · −' + num2(df.resta) + '"><span class="nf-ini">' + num2(r.v[c.nom]) + " · −" + num2(df.resta) + " (" + df.faltes + " f.)</span><span class=\"nf-fin\">" + num2(v) + "</span></td>";
-          return '<td class="ed' + (c.tipus === "text" ? " txt" : "") + (esExempt(v) ? " exempt" : "") + '" data-alumne="' + esc(r.nom) + '" data-c="' + esc(c.nom) + '" title="' + esc(txt) + '">' + esc(txt) + "</td>";
+          if (df) return '<td class="ed ambf' + (/NOTA|GLOBAL|FINAL/i.test(c.nom) ? (v < 5 ? " susp" : " apro") : "") + ombra(c, v) + '" data-alumne="' + esc(r.nom) + '" data-c="' + esc(c.nom) + '" title="Nota de l\'examen ' + num2(r.v[c.nom]) + ' · ' + df.faltes + ' falt' + (df.faltes === 1 ? "a" : "es") + ' · −' + num2(df.resta) + '"><span class="nf-ini">' + num2(r.v[c.nom]) + " · −" + num2(df.resta) + " (" + df.faltes + " f.)</span><span class=\"nf-fin\">" + num2(v) + "</span></td>";
+          return '<td class="ed' + (c.tipus === "text" ? " txt" : "") + (esExempt(v) ? " exempt" : "") + ombra(c, v) + '" data-alumne="' + esc(r.nom) + '" data-c="' + esc(c.nom) + '" title="' + esc(txt) + '">' + esc(txt) + "</td>";
         }).join("") + "</tr>"; }).join("") || '<tr><td colspan="' + (f.columnes.length + 1) + '" class="buit">Cap alumne no coincideix.</td></tr>') +
         "</tbody></table></div><p class=\"font\">" + files.length + " alumnes · toca una nota per canviar-la; toca el nom per canviar-lo o esborrar l'alumne.</p>";
     }
@@ -1985,7 +2008,7 @@ dialog .check{display:flex;gap:8px;align-items:center;color:var(--text);font-siz
         else q.grups.push({ nom: nomGrup, fulls, psi });
         nous++;
       }
-      q.grups.sort((a, b) => a.nom.localeCompare(b.nom, "ca", { numeric: true }));
+      q.grups.sort(ordenaGrups);
       q.actualitzat = avuiISO();
       desa(); qGrup = 0; qFull = 0; pintaAlumnes();
       estat(nous + (nous === 1 ? " grup importat." : " grups importats.") + (avisos.length ? " Columnes amb una fórmula que no s'ha pogut copiar (han quedat com a notes): " + avisos.join("; ") + "." : ""));
