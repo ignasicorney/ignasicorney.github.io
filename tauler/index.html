@@ -80,6 +80,12 @@ td.txt .celaed{width:16em;text-align:left}
 .fcol{display:flex;gap:6px;flex-wrap:wrap;align-items:center;padding:4px 0}
 .fcol .fnom{flex:0 1 11em;min-width:7em}
 td.exempt{color:#888;font-style:italic}
+.taula td.ambf{line-height:1.15}
+.nf-ini{display:block;font-size:.72rem;color:var(--suau);font-weight:400}
+.nf-fin{display:block;font-size:1.2rem;font-weight:700}
+.celaed.falt{width:4.2em;margin-left:4px}
+.fcol .ffalt{font-size:.85rem;white-space:nowrap}
+.fparam input{width:4em;text-align:right}
 .fmou{cursor:grab;touch-action:none;user-select:none;padding:6px 4px;font-size:1.2rem;line-height:1;opacity:.55}
 .fmou:hover{opacity:1}
 .fcol.arrossega{opacity:.6;outline:2px dashed currentColor;border-radius:8px}
@@ -1511,7 +1517,11 @@ dialog .check{display:flex;gap:8px;align-items:center;color:var(--text);font-siz
     const fullPerNom = nom => g.fulls.find(f => f.nom.toLowerCase() === String(nom).trim().toLowerCase());
     const arbre = col => { if (!arbres.has(col)) { try { arbres.set(col, analitza(col.formula)); } catch (e) { arbres.set(col, e); } } return arbres.get(col); };
     function valor(f, fila, col) {
-      if (col.tipus !== "calc") return fila.v[col.nom] == null ? "" : fila.v[col.nom];
+      if (col.tipus !== "calc") {
+        const cru = fila.v[col.nom] == null ? "" : fila.v[col.nom];
+        const d = typeof cru === "number" ? descompteFaltes(fila, col) : null;
+        return d ? Math.max(0, Math.round((cru - d.resta) * 100) / 100) : cru;
+      }
       const k = f.nom + "\u0001" + fila.nom + "\u0001" + col.nom;
       if (memo.has(k)) return memo.get(k);
       if (enCurs.has(k)) return { err: "#CICLE" };
@@ -1558,6 +1568,17 @@ dialog .check{display:flex;gap:8px;align-items:center;color:var(--text);font-siz
   // ---- Interfície ----
   let qGrup = 0, qFull = 0, qFormules = false;
   const Q = () => { if (!dades.qualificacions || !Array.isArray(dades.qualificacions.grups)) dades.qualificacions = { grups: [] }; return dades.qualificacions; };
+  // Faltes d'ortografia als exàmens: es resta «pes» per falta fins a «max»; a l'alumnat DIS, el descompte es divideix entre «dis»
+  const paramFaltes = () => { const q = Q(); q.faltes = Object.assign({ pes: 0.1, max: 2, dis: 3 }, q.faltes || {}); return q.faltes; };
+  const ambFaltes = col => col.tipus === "nota" && (col.faltes != null ? !!col.faltes : /^EX\s*\d*$/i.test(col.nom.trim()));
+  function descompteFaltes(fila, col) {
+    if (!ambFaltes(col) || !fila.f || fila.f[col.nom] == null) return null;
+    const p = paramFaltes(), n = Number(fila.f[col.nom]);
+    let d = Math.min(n * p.pes, p.max);
+    if (/\sDIS$/i.test(fila.nom)) d = d / p.dis;
+    return { faltes: n, resta: Math.round(d * 100) / 100 };
+  }
+  const num2 = n => (Math.round(n * 100) / 100).toFixed(2).replace(".", ",");
   function grupActual() { const q = Q(); if (!q.grups.length) return null; qGrup = Math.min(qGrup, q.grups.length - 1); return q.grups[qGrup]; }
   function fullActual(g) { if (!g || !g.fulls.length) return null; qFull = Math.min(qFull, g.fulls.length - 1); return g.fulls[qFull]; }
   function pintaAlumnes() {
@@ -1580,12 +1601,14 @@ dialog .check{display:flex;gap:8px;align-items:center;color:var(--text);font-siz
       '<button type="button" class="boto clar" data-q="alumne">+ Alumne</button><button type="button" class="boto clar" data-q="banc">📋 ' + (rubObert ? "Amaga les rúbriques" : "Rúbriques") + "</button>" + importa + "</div>" + (rubObert ? htmlBanc() : "");
     if (f && qFormules) {
       h += '<div class="formules"><p class="font" style="margin:0 0 8px">Fórmules com a l\'Excel. <b>{EX1}</b> és una columna d\'aquest full i <b>{1R TRIM|NOTA FINAL TRIM}</b> una columna d\'un altre full. Funcions: SUM, AVERAGE, MIN, MAX, IF, ROUND… Els buits compten com a 0 a les operacions i AVERAGE se\'ls salta. <b>MITJANAFETS({DIC1};{DIC2})</b> fa la mitjana de les proves fetes: si a una nota hi escrius <b>EX</b> (o x, o -), no compta; un buit compta com a 0.</p>' +
+        (pf => '<p class="font fparam" style="margin:0 0 8px"><b>Faltes d\'ortografia</b> (columnes amb «Faltes» marcat): es resten <input type="text" id="fPes" inputmode="decimal" value="' + String(pf.pes).replace(".", ",") + '"> punts per falta, fins a un màxim de <input type="text" id="fMax" inputmode="decimal" value="' + String(pf.max).replace(".", ",") + '"> punts; a l\'alumnat DIS, el descompte es divideix entre <input type="text" id="fDis" inputmode="decimal" value="' + String(pf.dis).replace(".", ",") + '">. Les fórmules fan servir la nota final, ja descomptada.</p>')(paramFaltes()) +
         f.columnes.map((c, i) => '<div class="fcol" data-col="' + i + '">' +
           '<span class="fmou" title="Arrossega per canviar l\'ordre de la columna" aria-hidden="true">⠿</span>' +
           '<input type="text" class="fnom" value="' + esc(c.nom) + '" aria-label="Nom de la columna">' +
           '<select class="ftipus" aria-label="Tipus"><option value="nota"' + (c.tipus === "nota" ? " selected" : "") + '>Nota</option><option value="text"' + (c.tipus === "text" ? " selected" : "") + '>Text</option><option value="calc"' + (c.tipus === "calc" ? " selected" : "") + ">Calculada</option><option value=\"rubrica\"" + (c.tipus === "rubrica" ? " selected" : "") + ">Rúbrica</option></select>" +
           '<select class="frub" aria-label="Rúbrica"' + (c.tipus === "rubrica" ? "" : " hidden") + ">" + rubriques().map(r => '<option value="' + r.id + '"' + (c.rubrica === r.id ? " selected" : "") + ">" + esc(r.nom) + "</option>").join("") + "</select>" +
           '<input type="text" class="fform" value="' + esc(c.formula || "") + '" placeholder="Fórmula" aria-label="Fórmula"' + (c.tipus === "calc" ? "" : " hidden") + ">" +
+          '<label class="ffalt"' + (c.tipus === "nota" ? "" : " hidden") + '><input type="checkbox"' + (ambFaltes(c) ? " checked" : "") + '> Faltes</label>' +
           '<button type="button" class="boto perill" data-q="treucol" title="Esborra la columna">✕</button>' +
           (c.tipus === "calc" && desquadres[c.nom] ? '<span class="avis" style="flex-basis:100%">⚠️ No dona el mateix que l\'Excel en ' + desquadres[c.nom] + " alumne" + (desquadres[c.nom] === 1 ? "" : "s") + ".</span>" : "") +
           "</div>").join("") +
@@ -1601,6 +1624,8 @@ dialog .check{display:flex;gap:8px;align-items:center;color:var(--text);font-siz
             return '<td class="' + cls.join(" ") + '"' + (ok ? "" : ' title="A l\'Excel: ' + esc(r.o[c.nom]) + '"') + ">" + esc(txt) + (ok ? "" : " ⚠️") + "</td>";
           }
           if (c.tipus === "rubrica") { const n = numOpcional(v); return '<td class="ed rub' + (n !== null && /NOTA|GLOBAL|FINAL/i.test(c.nom) ? (n < 5 ? " susp" : " apro") : "") + '" data-alumne="' + esc(r.nom) + '" data-c="' + esc(c.nom) + '" title="Avalua amb la rúbrica">' + (txt ? esc(txt) : '<span class="font">📋</span>') + "</td>"; }
+          const df = typeof r.v[c.nom] === "number" ? descompteFaltes(r, c) : null;
+          if (df) return '<td class="ed ambf' + (/NOTA|GLOBAL|FINAL/i.test(c.nom) ? (v < 5 ? " susp" : " apro") : "") + '" data-alumne="' + esc(r.nom) + '" data-c="' + esc(c.nom) + '" title="Nota de l\'examen ' + num2(r.v[c.nom]) + ' · ' + df.faltes + ' falt' + (df.faltes === 1 ? "a" : "es") + ' · −' + num2(df.resta) + '"><span class="nf-ini">' + num2(r.v[c.nom]) + " · −" + num2(df.resta) + " (" + df.faltes + " f.)</span><span class=\"nf-fin\">" + num2(v) + "</span></td>";
           return '<td class="ed' + (c.tipus === "text" ? " txt" : "") + (esExempt(v) ? " exempt" : "") + '" data-alumne="' + esc(r.nom) + '" data-c="' + esc(c.nom) + '" title="' + esc(txt) + '">' + esc(txt) + "</td>";
         }).join("") + "</tr>"; }).join("") || '<tr><td colspan="' + (f.columnes.length + 1) + '" class="buit">Cap alumne no coincideix.</td></tr>') +
         "</tbody></table></div><p class=\"font\">" + files.length + " alumnes · toca una nota per canviar-la; toca el nom per canviar-lo o esborrar l'alumne.</p>";
@@ -1616,7 +1641,14 @@ dialog .check{display:flex;gap:8px;align-items:center;color:var(--text);font-siz
     inp.type = "text"; inp.value = fila.v[col.nom] == null ? "" : String(fila.v[col.nom]).replace(".", col.tipus === "nota" ? "," : ".");
     if (col.tipus === "nota") inp.inputMode = "decimal";
     inp.className = "celaed";
-    td.textContent = ""; td.appendChild(inp); inp.focus(); inp.select();
+    let inpF = null;
+    if (ambFaltes(col)) {
+      inp.placeholder = "nota"; inp.title = "Nota de l'examen";
+      inpF = document.createElement("input");
+      inpF.type = "text"; inpF.inputMode = "numeric"; inpF.className = "celaed falt"; inpF.placeholder = "faltes"; inpF.title = "Faltes d'ortografia";
+      inpF.value = fila.f && fila.f[col.nom] != null ? String(fila.f[col.nom]) : "";
+    }
+    td.textContent = ""; td.appendChild(inp); if (inpF) td.appendChild(inpF); inp.focus(); inp.select();
     let fet = false;
     const tanca = (desar, mou) => {
       if (fet) return; fet = true;
@@ -1625,7 +1657,14 @@ dialog .check{display:flex;gap:8px;align-items:center;color:var(--text);font-siz
         if (col.tipus === "nota" && v !== "") { const n = Number(v.replace(",", ".")); if (!isNaN(n)) v = n; else if (/^(ex|x|-)$/i.test(v)) v = "EX"; }
         const abans = fila.v[col.nom];
         if (v === "") delete fila.v[col.nom]; else fila.v[col.nom] = v;
-        if (abans !== fila.v[col.nom]) oblidaExcel(fila);
+        let canviF = false;
+        if (inpF) {
+          const t = inpF.value.trim(), n = parseInt(t, 10), vell = fila.f ? fila.f[col.nom] : undefined;
+          if (t === "" || isNaN(n) || n < 0) { if (fila.f) delete fila.f[col.nom]; }
+          else { fila.f = fila.f || {}; fila.f[col.nom] = n; }
+          canviF = vell !== (fila.f ? fila.f[col.nom] : undefined);
+        }
+        if (abans !== fila.v[col.nom] || canviF) oblidaExcel(fila);
         desa();
       }
       pintaAlumnes();
@@ -1635,23 +1674,29 @@ dialog .check{display:flex;gap:8px;align-items:center;color:var(--text);font-siz
         const seg = cel[i + mou]; if (seg) editaCela(seg);
       }
     };
-    inp.addEventListener("keydown", e => {
+    [inp, inpF].forEach(el => { if (el) el.addEventListener("keydown", e => {
       if (e.key === "Enter") { e.preventDefault(); tanca(true, 0); }
       else if (e.key === "Escape") tanca(false, 0);
-      else if (e.key === "Tab") { e.preventDefault(); tanca(true, e.shiftKey ? -1 : 1); }
-    });
-    inp.addEventListener("blur", () => tanca(true, 0));
+      else if (e.key === "Tab") {
+        if (inpF && ((el === inp && !e.shiftKey) || (el === inpF && e.shiftKey))) return; // salta entre nota i faltes
+        e.preventDefault(); tanca(true, e.shiftKey ? -1 : 1);
+      }
+    }); });
+    td.addEventListener("focusout", e => { if (!td.contains(e.relatedTarget)) tanca(true, 0); });
   }
   function desaFormules() {
     const g = grupActual(), f = fullActual(g); if (!f) return;
     const noves = Array.from($("alumCos").querySelectorAll(".fcol[data-col]")).map(el => {
       const vell = f.columnes[Number(el.dataset.col)] || {};
-      return { vell: vell.nom, nom: el.querySelector(".fnom").value.trim(), tipus: el.querySelector(".ftipus").value, formula: el.querySelector(".fform").value.trim(), rubrica: el.querySelector(".frub") ? el.querySelector(".frub").value : "" };
+      return { vell: vell.nom, nom: el.querySelector(".fnom").value.trim(), tipus: el.querySelector(".ftipus").value, formula: el.querySelector(".fform").value.trim(), rubrica: el.querySelector(".frub") ? el.querySelector(".frub").value : "", faltes: !!(el.querySelector(".ffalt input") || {}).checked };
     });
     const avis = t => { $("formAvis").textContent = t; $("formAvis").hidden = false; };
     const noms = noves.map(c => c.nom);
     if (noms.some(n => !n)) return avis("Totes les columnes necessiten un nom.");
     if (new Set(noms).size !== noms.length) return avis("Hi ha dues columnes amb el mateix nom.");
+    const llegeix = id => Number(String(($(id) || {}).value || "").replace(",", "."));
+    const pes = llegeix("fPes"), max = llegeix("fMax"), dis = llegeix("fDis");
+    if (!(pes >= 0) || !(max >= 0) || !(dis >= 1)) return avis("Revisa els valors de les faltes: el descompte i el màxim han de ser números, i el divisor DIS, 1 o més.");
     for (const c of noves) {
       if (c.tipus !== "calc") continue;
       if (!c.formula) return avis("La columna «" + c.nom + "» és calculada però no té fórmula.");
@@ -1671,13 +1716,14 @@ dialog .check{display:flex;gap:8px;align-items:center;color:var(--text);font-siz
     // Reanomena les dades i les referències
     noves.forEach(c => {
       if (!c.vell || c.vell === c.nom) return;
-      f.files.forEach(r => { if (r.rb && c.vell in r.rb) { r.rb[c.nom] = r.rb[c.vell]; delete r.rb[c.vell]; } if (c.vell in r.v) { r.v[c.nom] = r.v[c.vell]; delete r.v[c.vell]; } if (r.o && c.vell in r.o) { r.o[c.nom] = r.o[c.vell]; delete r.o[c.vell]; } });
+      f.files.forEach(r => { if (r.rb && c.vell in r.rb) { r.rb[c.nom] = r.rb[c.vell]; delete r.rb[c.vell]; } if (c.vell in r.v) { r.v[c.nom] = r.v[c.vell]; delete r.v[c.vell]; } if (r.o && c.vell in r.o) { r.o[c.nom] = r.o[c.vell]; delete r.o[c.vell]; } if (r.f && c.vell in r.f) { r.f[c.nom] = r.f[c.vell]; delete r.f[c.vell]; } });
       const re = new RegExp("\\{\\s*" + c.vell.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "\\s*\\}", "g");
       noves.forEach(x => { if (x.formula) x.formula = x.formula.replace(re, "{" + c.nom + "}"); });
       g.fulls.forEach(fu => { if (fu !== f) fu.columnes.forEach(x => { if (x.formula) x.formula = x.formula.split("{" + f.nom + "|" + c.vell + "}").join("{" + f.nom + "|" + c.nom + "}"); }); });
     });
     if (noves.some(c => c.tipus === "rubrica" && !c.rubrica)) return avis("Tria la rúbrica de cada columna de tipus «Rúbrica» (primer crea-la al banc).");
-    f.columnes = noves.map(c => c.tipus === "calc" ? { nom: c.nom, tipus: "calc", formula: c.formula } : c.tipus === "rubrica" ? { nom: c.nom, tipus: "rubrica", rubrica: c.rubrica } : { nom: c.nom, tipus: c.tipus });
+    f.columnes = noves.map(c => c.tipus === "calc" ? { nom: c.nom, tipus: "calc", formula: c.formula } : c.tipus === "rubrica" ? { nom: c.nom, tipus: "rubrica", rubrica: c.rubrica } : c.tipus === "nota" ? { nom: c.nom, tipus: "nota", faltes: c.faltes } : { nom: c.nom, tipus: c.tipus });
+    Object.assign(paramFaltes(), { pes: pes, max: max, dis: dis });
     desa(); pintaAlumnes();
   }
   // Arrossegar columnes al panell de fórmules (ratolí i dit); en deixar-la anar, es desa l'ordre
@@ -1737,7 +1783,7 @@ dialog .check{display:flex;gap:8px;align-items:center;color:var(--text);font-siz
     else if (q.dataset.q === "novacol") {
       const fila = document.createElement("div");
       fila.className = "fcol"; fila.dataset.col = "-1";
-      fila.innerHTML = '<input type="text" class="fnom" value="" placeholder="Nom (p. ex. EX3)" aria-label="Nom de la columna"><select class="ftipus" aria-label="Tipus"><option value="nota">Nota</option><option value="text">Text</option><option value="calc">Calculada</option><option value="rubrica">Rúbrica</option></select><select class="frub" aria-label="Rúbrica" hidden>' + rubriques().map(r => '<option value="' + r.id + '">' + esc(r.nom) + "</option>").join("") + '</select><input type="text" class="fform" placeholder="Fórmula" aria-label="Fórmula" hidden><button type="button" class="boto perill" data-q="treucol" title="Esborra la columna">✕</button>';
+      fila.innerHTML = '<input type="text" class="fnom" value="" placeholder="Nom (p. ex. EX3)" aria-label="Nom de la columna"><select class="ftipus" aria-label="Tipus"><option value="nota">Nota</option><option value="text">Text</option><option value="calc">Calculada</option><option value="rubrica">Rúbrica</option></select><select class="frub" aria-label="Rúbrica" hidden>' + rubriques().map(r => '<option value="' + r.id + '">' + esc(r.nom) + "</option>").join("") + '</select><input type="text" class="fform" placeholder="Fórmula" aria-label="Fórmula" hidden><label class="ffalt"><input type="checkbox"> Faltes</label><button type="button" class="boto perill" data-q="treucol" title="Esborra la columna">✕</button>';
       q.parentElement.before(fila); fila.querySelector(".fnom").focus();
     }
     else if (q.dataset.q === "treucol") {
@@ -1749,7 +1795,7 @@ dialog .check{display:flex;gap:8px;align-items:center;color:var(--text);font-siz
   });
   $("alumCos").addEventListener("change", ev => {
     if (ev.target.id === "alumFull") { qFull = Number(ev.target.value); pintaAlumnes(); }
-    else if (ev.target.classList.contains("ftipus")) { ev.target.parentElement.querySelector(".fform").hidden = ev.target.value !== "calc"; const fr = ev.target.parentElement.querySelector(".frub"); if (fr) fr.hidden = ev.target.value !== "rubrica"; }
+    else if (ev.target.classList.contains("ftipus")) { ev.target.parentElement.querySelector(".fform").hidden = ev.target.value !== "calc"; const fr = ev.target.parentElement.querySelector(".frub"); if (fr) fr.hidden = ev.target.value !== "rubrica"; const ff = ev.target.parentElement.querySelector(".ffalt"); if (ff) ff.hidden = ev.target.value !== "nota"; }
     else if (ev.target.id === "alumFitxer") importaFitxers(Array.from(ev.target.files || []));
   });
   $("alumCos").addEventListener("input", ev => {
