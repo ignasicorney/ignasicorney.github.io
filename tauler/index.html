@@ -212,6 +212,7 @@ dialog#dlgRub{width:min(760px,calc(100vw - 24px))}
 .temps-linia .ico{font-size:1.6rem;line-height:1}
 .temps-linia b{font-size:1.4rem}
 .temps-linia .m{color:var(--suau);font-size:.9rem}
+.temps-linia .lloc{font-weight:600;font-size:.95rem}
 .temps-dies{display:flex;gap:6px 16px;flex-wrap:wrap;margin-top:8px;font-size:.85rem}
 .temps-dies:empty{display:none}
 .temps-dies i{font-style:normal;color:var(--suau);margin-left:4px}
@@ -2341,7 +2342,7 @@ dialog .check{display:flex;gap:8px;align-items:center;color:var(--text);font-siz
       const [ic, est] = codi(c.weather_code);
       const uv = d.uv_index_max[0] || 0, n = nivellUV(uv);
       $("tempsAra").className = "temps-linia";
-      $("tempsAra").innerHTML = '<span class="ico" title="' + esc(est) + '">' + ic + '</span><b>' + num(c.temperature_2m, 0) + ' °C</b>' +
+      $("tempsAra").innerHTML = '<span class="lloc">la Bisbal d\'Empordà</span><span class="ico" title="' + esc(est) + '">' + ic + '</span><b>' + num(c.temperature_2m, 0) + ' °C</b>' +
         '<span class="m">' + num(d.temperature_2m_min[0], 0) + "° / " + num(d.temperature_2m_max[0], 0) + "°</span>" +
         '<span class="m">💧 ' + (d.precipitation_probability_max[0] ?? 0) + " %</span>" +
         '<span class="uv" style="background:' + n.c + '" title="' + esc(n.con) + '">UV ' + Math.round(uv) + " · " + n.n.toLowerCase() + "</span>" ;
