@@ -86,20 +86,45 @@
         else errors.push((l[quins[k]] || {}).nom + ": " + r.reason.message);
       });
       if (vista === "programats") programats = tot.sort((a, b) => (a.quan || "").localeCompare(b.quan || ""));
-      else fils = tot.sort((a, b) => (b.data || "").localeCompare(a.data || ""));
+      else { fils = tot.sort((a, b) => (b.data || "").localeCompare(a.data || "")); memo.clear(); precarrega(); }
       avis = errors.join(" · "); avisErr = errors.length > 0;
       carregant = false; pinta();
     }
-    async function obre(id, ci) {
-      vista = "fil"; fil = null; carregant = true; pinta();
+    // Precàrrega: quan arriba la llista, es baixen de fons els fils (sense marcar-los com a llegits)
+    // perquè, en prémer un correu, s'obri al moment sense esperar l'Apps Script.
+    const memo = new Map(); let gen = 0;
+    const clauFil = (id, ci) => (ci != null ? ci : compte) + "|" + id;
+    function precarrega() {
+      const g = ++gen, cua = fils.map(f => ({ id: f.id, ci: f.ci }));
+      const treballa = async () => {
+        while (g === gen && cua.length) {
+          const x = cua.shift(), k = clauFil(x.id, x.ci); if (memo.has(k)) continue;
+          const c = x.ci != null ? comptes()[x.ci] : actual(); if (!c) continue;
+          const e = { p: crida({ accio: "llegeix", id: x.id, marca: false }, c).then(d => { d.fil.ci = x.ci != null ? x.ci : compte; return (e.fil = d.fil); }) };
+          memo.set(k, e);
+          try { await e.p; } catch (err) { memo.delete(k); }
+        }
+      };
+      for (let i = 0; i < 3; i++) treballa();
+    }
+    async function obre(id, ci, fresc) {
+      const k = clauFil(id, ci), e = fresc ? null : memo.get(k);
+      const cc = ci != null ? ci : compte, f = fils.find(x => x.id === id && (x.ci != null ? x.ci : compte) === cc);
+      if (fresc) memo.delete(k);
       const c = ci != null ? comptes()[ci] : actual();
-      try { fil = (await crida({ accio: "llegeix", id: id, marca: true }, c)).fil; fil.ci = ci != null ? ci : compte; const f = fils.find(x => x.id === id && x.ci === fil.ci); if (f) f.noLlegit = false; avis = ""; }
-      catch (e) { avis = e.message; avisErr = true; vista = "llista"; }
+      if (e && e.fil) {
+        vista = "fil"; fil = e.fil; avis = ""; pinta();
+        if (f && f.noLlegit) { f.noLlegit = false; crida({ accio: "llegit", id: id, llegit: true }, c).catch(() => {}); }
+        return;
+      }
+      vista = "fil"; fil = null; carregant = true; pinta();
+      try { fil = (await crida({ accio: "llegeix", id: id, marca: true }, c)).fil; fil.ci = cc; memo.set(k, { fil: fil }); if (f) f.noLlegit = false; avis = ""; }
+      catch (err) { avis = err.message; avisErr = true; vista = "llista"; }
       carregant = false; pinta();
     }
     async function accio(nom, id, text) {
       try {
-        await crida({ accio: nom, id: id, llegit: false }, deFil(fil));
+        await crida({ accio: nom, id: id, llegit: false }, deFil(fil)); memo.delete(clauFil(id, fil && fil.ci));
         fils = fils.filter(x => x.id !== id || nom === "llegit");
         if (nom === "llegit") { const f = fils.find(x => x.id === id); if (f) f.noLlegit = true; }
         vista = "llista"; fil = null; diu(text);
@@ -172,7 +197,7 @@
       const b = ev.target.closest("[data-cr]"); if (!b || b.tagName === "SELECT" || b.tagName === "INPUT") return;
       const a = b.dataset.cr;
       if (a === "compte") { compte = Number(b.dataset.i); vista = vista === "programats" ? "programats" : "llista"; fil = null; carrega(); }
-      else if (a === "refresca") { if (vista === "fil" && fil) obre(fil.id, fil.ci); else carrega(); }
+      else if (a === "refresca") { if (vista === "fil" && fil) obre(fil.id, fil.ci, true); else carrega(); }
       else if (a === "obre") obre(b.dataset.id, b.dataset.ci != null && b.dataset.ci !== "undefined" ? Number(b.dataset.ci) : null);
       else if (a === "torna") { vista = "llista"; fil = null; pinta(); }
       else if (a === "arxiva" && fil) accio("arxiva", fil.id, "Arxivat: «" + fil.assumpte + "».");
