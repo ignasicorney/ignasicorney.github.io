@@ -42,9 +42,9 @@ textarea{width:100%;min-height:90px;resize:vertical}
 @media (max-width:600px){.capcalera h1{font-size:1.25rem}.panells{gap:9px}.panells a{font-size:1.25rem}}
 .panells{display:flex;gap:14px}
 .panells a{font-size:1.5rem;line-height:1;text-decoration:none}
-.curs-inst{margin:0 0 10px;text-align:center;font-weight:700;letter-spacing:.06em}
-.capinst{display:flex;align-items:center;gap:10px 14px;flex-wrap:wrap}
-.capinst h2{margin-right:auto!important}
+.capinst{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:10px 14px}
+.curs-inst{margin:0;text-align:center;font-weight:700;letter-spacing:.06em;white-space:nowrap}
+.capinst-dreta{display:flex;align-items:center;justify-content:flex-end;gap:10px 14px;flex-wrap:wrap}
 .logo-inst{height:52px;width:auto;display:block}
 #institutClau,#institutCos{margin-top:14px}
 .bloc{border-top:1px solid var(--linia);padding-top:14px;margin-top:16px}
@@ -308,11 +308,13 @@ dialog .check{display:flex;gap:8px;align-items:center;color:var(--text);font-siz
 
 
   <section id="institut" class="ample">
-    <p class="curs-inst">CURS 2026-2027</p>
     <div class="capinst">
       <h2 style="margin:0;display:flex;align-items:center"><img src="logo-ins.png" alt="INS la Bisbal" class="logo-inst"></h2>
-      <span class="estat-sinc" id="estatSinc"><i></i><span>Tancat</span></span>
-      <button type="button" class="boto" id="instBoto">🔒 Obre</button>
+      <p class="curs-inst">CURS 2026-2027</p>
+      <div class="capinst-dreta">
+        <span class="estat-sinc" id="estatSinc"><i></i><span>Tancat</span></span>
+        <button type="button" class="boto" id="instBoto">🔒 Obre</button>
+      </div>
     </div>
     <div id="institutClau" hidden>
       <p style="margin:0 0 8px">Escriu la clau de La TdG (la dels llamps i del publicador). Es recorda en aquest aparell fins que premis «Oblida la clau».</p>
