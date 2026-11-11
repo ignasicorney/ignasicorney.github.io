@@ -337,8 +337,8 @@ dialog .check{display:flex;gap:8px;align-items:center;color:var(--text);font-siz
     <p class="font" id="tasPeu"></p>
   </div>
   <div class="bloc" id="correu">
-    <h3 class="bt"><button type="button" class="plega-correu" id="plegaCorreu" aria-expanded="false" aria-controls="correuCos">📬 Correu <span class="fletxa" aria-hidden="true">▸</span></button></h3>
-    <div id="correuCos" hidden></div>
+    <h3 class="bt">📬 Correu</h3>
+    <div id="correuCos"></div>
   </div>
   <div class="bloc" id="calendari">
     <h3 class="bt">📅 Calendari i agenda</h3>
@@ -452,8 +452,6 @@ dialog .check{display:flex;gap:8px;align-items:center;color:var(--text);font-siz
   </form>
 </dialog>
 
-<style>.plega-correu{background:none;border:0;padding:0;margin:0;font:inherit;color:inherit;text-transform:inherit;letter-spacing:inherit;cursor:pointer;display:inline-flex;align-items:center;gap:6px}.plega-correu .fletxa{color:var(--accent,#b4462c)}</style>
-<script>document.getElementById("plegaCorreu").addEventListener("click", function () { const c = document.getElementById("correuCos"), obre = c.hidden; c.hidden = !obre; this.setAttribute("aria-expanded", obre); this.querySelector(".fletxa").textContent = obre ? "▾" : "▸"; });</script>
 <script src="correu.js?v=4"></script>
 <script>
 (function () {
@@ -806,7 +804,7 @@ dialog .check{display:flex;gap:8px;align-items:center;color:var(--text);font-siz
   });
   $("sincClau").addEventListener("keydown", e => { if (e.key === "Enter") $("sincConnecta").click(); });
   $("sincDesconnecta").addEventListener("click", () => {
-    clau = ""; sha = null; dades = BUIDES(); correuCarregat = false; if (gestorCorreu) { $("correuCos").replaceWith(Object.assign(document.createElement("div"), { id: "correuCos", hidden: true })); $("plegaCorreu").setAttribute("aria-expanded", "false"); $("plegaCorreu").querySelector(".fletxa").textContent = "▸"; gestorCorreu = null; }
+    clau = ""; sha = null; dades = BUIDES(); correuCarregat = false; if (gestorCorreu) { $("correuCos").replaceWith(Object.assign(document.createElement("div"), { id: "correuCos" })); gestorCorreu = null; }
     lsEscriu("tauler.clau", null); lsEscriu("tauler.dades", null);
     mostraInstitut(false);
   });
