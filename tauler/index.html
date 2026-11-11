@@ -46,7 +46,15 @@ textarea{width:100%;min-height:90px;resize:vertical}
 .curs-inst{margin:0;text-align:center;font-weight:700;letter-spacing:.06em;white-space:nowrap}
 .capinst-dreta{display:flex;align-items:center;justify-content:flex-end;gap:10px 14px;flex-wrap:wrap}
 .logo-inst{height:52px;width:auto;display:block}
+.temps-cap{display:flex;align-items:center;gap:10px 14px}
+.temps-cap #tempsAra{flex:1 1 auto;min-width:0}
+.logo-boto{flex:0 0 auto;margin-left:auto;padding:4px;border:2px solid transparent;border-radius:10px;background:none;line-height:0}
+.logo-boto:hover,.logo-boto:focus-visible{border-color:var(--linia);outline:none}
+.logo-boto[aria-expanded="true"]{border-color:var(--accent)}
+.logo-boto:disabled{opacity:.6;cursor:wait}
+@media (max-width:600px){.logo-boto .logo-inst{height:42px}}
 #institutClau,#institutCos{margin-top:14px}
+.curs-inst{font-size:1.1rem}
 .bloc{border:1px solid var(--linia);border-radius:12px;background:#fbfaf7;padding:12px 14px;margin-top:14px}
 .bloc:first-child{margin-top:0}
 .bloc>h3.bt{margin:0}
@@ -204,7 +212,6 @@ dialog#dlgRub{width:min(760px,calc(100vw - 24px))}
 .temps-linia .ico{font-size:1.6rem;line-height:1}
 .temps-linia b{font-size:1.4rem}
 .temps-linia .m{color:var(--suau);font-size:.9rem}
-.temps-linia .llocT{margin-left:auto;font-size:.8rem}
 .temps-dies{display:flex;gap:6px 16px;flex-wrap:wrap;margin-top:8px;font-size:.85rem}
 .temps-dies:empty{display:none}
 .temps-dies i{font-style:normal;color:var(--suau);margin-left:4px}
@@ -328,19 +335,21 @@ dialog .check{display:flex;gap:8px;align-items:center;color:var(--text);font-siz
 
 
   <section id="temps" class="ample">
-    <div id="tempsAra" class="temps-linia buit">Carregant el temps…</div>
+    <div class="temps-cap">
+      <div id="tempsAra" class="temps-linia buit">Carregant el temps…</div>
+      <button type="button" class="logo-boto" id="instBoto" aria-expanded="false" aria-controls="institut" title="Obre l'Institut"><img src="logo-ins.png" alt="INS la Bisbal" class="logo-inst"></button>
+    </div>
     <div id="tempsDies" class="temps-dies"></div>
   </section>
 
 
 
-  <section id="institut" class="ample">
+  <section id="institut" class="ample" hidden>
     <div class="capinst">
-      <h2 style="margin:0;display:flex;align-items:center"><img src="logo-ins.png" alt="INS la Bisbal" class="logo-inst"></h2>
-      <p class="curs-inst">CURS 2026-2027</p>
+      <span></span>
+      <h2 class="curs-inst">CURS 2026-2027</h2>
       <div class="capinst-dreta">
         <span class="estat-sinc" id="estatSinc"><i></i><span>Tancat</span></span>
-        <button type="button" class="boto" id="instBoto">🔒 Obre</button>
       </div>
     </div>
     <div id="institutClau" hidden>
@@ -822,17 +831,26 @@ dialog .check{display:flex;gap:8px;align-items:center;color:var(--text);font-siz
     obert = si;
     $("institutCos").hidden = !si;
     $("institutClau").hidden = true;
-    $("instBoto").textContent = si ? "🔓 Tanca" : "🔒 Obre";
+    $("institut").hidden = !si;
+    $("instBoto").setAttribute("aria-expanded", si ? "true" : "false");
+    $("instBoto").title = si ? "Tanca l'Institut" : "Obre l'Institut";
     lsEscriu("tauler.obert", si ? "1" : null);   // queda obert en aquest aparell fins que es tanqui
     if (si) pintaTot(); else estatSinc("", "Tancat");
   }
   async function obre() {
-    if (!clau) { $("institutClau").hidden = false; $("sincClau").focus(); return; }
+    if (!clau) {
+      // Sense clau: mostra només la demanda de clau (un altre clic al logo l'amaga)
+      const amaga = !$("institut").hidden;
+      $("institut").hidden = amaga; $("institutClau").hidden = amaga;
+      if (!amaga) $("sincClau").focus();
+      return;
+    }
     $("instBoto").disabled = true;
     const r = await baixa();
     $("instBoto").disabled = false;
     if (r === "clau") {
       clau = ""; lsEscriu("tauler.clau", null);
+      $("institut").hidden = false;
       $("institutClau").hidden = false;
       errorClau("La clau no és correcta.");
       return;
@@ -2326,8 +2344,7 @@ dialog .check{display:flex;gap:8px;align-items:center;color:var(--text);font-siz
       $("tempsAra").innerHTML = '<span class="ico" title="' + esc(est) + '">' + ic + '</span><b>' + num(c.temperature_2m, 0) + ' °C</b>' +
         '<span class="m">' + num(d.temperature_2m_min[0], 0) + "° / " + num(d.temperature_2m_max[0], 0) + "°</span>" +
         '<span class="m">💧 ' + (d.precipitation_probability_max[0] ?? 0) + " %</span>" +
-        '<span class="uv" style="background:' + n.c + '" title="' + esc(n.con) + '">UV ' + Math.round(uv) + " · " + n.n.toLowerCase() + "</span>" +
-        '<span class="m llocT">la Bisbal d\'Empordà</span>';
+        '<span class="uv" style="background:' + n.c + '" title="' + esc(n.con) + '">UV ' + Math.round(uv) + " · " + n.n.toLowerCase() + "</span>" ;
       let h = "";
       for (let i = 1; i < d.time.length; i++) {
         const [ici, esti] = codi(d.weather_code[i]);
