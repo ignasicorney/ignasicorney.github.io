@@ -333,9 +333,11 @@ a.tira-it:hover{color:var(--accent);text-decoration:underline}
 .tdg-acces{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--linia);border-radius:10px;background:#fbfaf7;color:var(--text);text-decoration:none;font-size:.92rem;line-height:1.25}
 .tdg-acces:hover{border-color:var(--accent);color:var(--accent)}
 .tdg-ico{font-size:1.5rem;line-height:1;flex:none}
+.acces-bloc{display:flex;align-items:center;gap:12px}
+.acces-bloc h2{margin:0}
+.acces-bloc .logo-boto{margin-left:auto}
 /* Genealogia (12.11.2026) */
 .gen-boto{font-size:2.6rem;line-height:52px;height:64px;min-width:64px;margin-left:auto}
-.gen-boto+.logo-boto{margin-left:0}
 @media (max-width:600px){.gen-boto{font-size:2.1rem;line-height:42px;height:54px;min-width:54px}}
 .gen-marc{width:100%;height:78vh;min-height:420px;border:1px solid var(--linia);border-radius:10px;background:#fff;display:block}
 </style>
@@ -357,51 +359,16 @@ a.tira-it:hover{color:var(--accent);text-decoration:underline}
   <section id="temps" class="ample">
     <div class="temps-cap">
       <div id="tempsAra" class="temps-linia buit">Carregant el temps…</div>
-      <button type="button" class="logo-boto gen-boto" id="genBoto" aria-expanded="false" aria-controls="genealogia" title="Obre la genealogia">🌳</button>
-      <button type="button" class="logo-boto" id="instBoto" aria-expanded="false" aria-controls="institut" title="Obre l'Institut"><img src="logo-ins.png" alt="INS la Bisbal" class="logo-inst"></button>
     </div>
     <div id="tempsDies" class="temps-dies"></div>
   </section>
 
 
 
-  <section id="latdg" class="ample">
-    <h2 style="text-transform:none">La TdG</h2>
-    <div class="tdg-accessos">
-      <a class="tdg-acces" target="_blank" rel="noopener" href="https://latdg.github.io/redaccio/"><span class="tdg-ico">✍️</span><span>Redacció</span></a>
-      <a class="tdg-acces" target="_blank" rel="noopener" href="https://latdg.github.io/tauler/"><span class="tdg-ico">➕</span><span>Ampliada</span></a>
-      <a class="tdg-acces" target="_blank" rel="noopener" href="https://latdg.github.io/redaccio/dades/"><span class="tdg-ico">📊</span><span>Dades</span></a>
-      <a class="tdg-acces" target="_blank" rel="noopener" href="https://latdg.github.io/redaccio/tdt/"><span class="tdg-ico">📺</span><span>Sala de control audiovisual</span></a>
-      <a class="tdg-acces" target="_blank" rel="noopener" href="https://latdg.github.io/tauler/fonoteca/"><span class="tdg-ico">🎙️</span><span>Fonoteca</span></a>
-    </div>
+  <section id="feina" class="ample acces-bloc">
+    <h2 style="text-transform:none">Feina</h2>
+    <button type="button" class="logo-boto" id="instBoto" aria-expanded="false" aria-controls="institut" title="Obre l'Institut"><img src="logo-ins.png" alt="INS la Bisbal" class="logo-inst"></button>
   </section>
-
-  <section id="web" class="ample">
-    <h2 style="text-transform:none">Pàgina web</h2>
-    <div class="tdg-accessos">
-      <a class="tdg-acces" target="_blank" rel="noopener" href="/"><span class="tdg-ico">🌐</span><span>ignasicorney.github.io</span></a>
-    </div>
-  </section>
-
-  <section id="xarxes" class="ample">
-    <h2 style="text-transform:none">Xarxes socials</h2>
-    <h3>Personals</h3>
-    <div class="tdg-accessos">
-      <a class="tdg-acces" target="_blank" rel="noopener" href="https://x.com/ignasicorney"><span class="tdg-ico"><b style="font-family:serif">𝕏</b></span><span>X</span></a>
-      <a class="tdg-acces" target="_blank" rel="noopener" href="https://www.instagram.com/ignasicorney/"><span class="tdg-ico">📸</span><span>Instagram</span></a>
-      <a class="tdg-acces" target="_blank" rel="noopener" href="https://www.youtube.com/ignasicorney"><span class="tdg-ico">▶️</span><span>YouTube</span></a>
-    </div>
-    <h3>La TdG</h3>
-    <div class="tdg-accessos">
-      <a class="tdg-acces" target="_blank" rel="noopener" href="https://t.me/laTdG_podcast"><span class="tdg-ico">✈️</span><span>Telegram</span></a>
-      <a class="tdg-acces" target="_blank" rel="noopener" href="https://wa.me/message/IP6CLF4SE6TME1"><span class="tdg-ico">💬</span><span>WhatsApp</span></a>
-      <a class="tdg-acces" target="_blank" rel="noopener" href="https://x.com/laTdeG"><span class="tdg-ico"><b style="font-family:serif">𝕏</b></span><span>X</span></a>
-      <a class="tdg-acces" target="_blank" rel="noopener" href="https://bsky.app/profile/latdg-podcast.bsky.social"><span class="tdg-ico">🦋</span><span>Bluesky</span></a>
-      <a class="tdg-acces" target="_blank" rel="noopener" href="https://mastodon.social/@latdg"><span class="tdg-ico">🐘</span><span>Mastodon</span></a>
-      <a class="tdg-acces" target="_blank" rel="noopener" href="https://www.facebook.com/latdg.podcast"><span class="tdg-ico">📘</span><span>Facebook</span></a>
-    </div>
-  </section>
-
   <section id="institut" class="ample" hidden>
     <div class="capinst">
       <span></span>
@@ -488,10 +455,53 @@ a.tira-it:hover{color:var(--accent);text-decoration:underline}
     </div>
   </section>
 
+  <section id="latdg" class="ample">
+    <h2 style="text-transform:none">La TdG</h2>
+    <div class="tdg-accessos">
+      <a class="tdg-acces" target="_blank" rel="noopener" href="https://latdg.github.io/redaccio/"><span class="tdg-ico">✍️</span><span>Redacció</span></a>
+      <a class="tdg-acces" target="_blank" rel="noopener" href="https://latdg.github.io/tauler/"><span class="tdg-ico">➕</span><span>Ampliada</span></a>
+      <a class="tdg-acces" target="_blank" rel="noopener" href="https://latdg.github.io/redaccio/dades/"><span class="tdg-ico">📊</span><span>Dades</span></a>
+      <a class="tdg-acces" target="_blank" rel="noopener" href="https://latdg.github.io/redaccio/tdt/"><span class="tdg-ico">📺</span><span>Sala de control audiovisual</span></a>
+      <a class="tdg-acces" target="_blank" rel="noopener" href="https://latdg.github.io/tauler/fonoteca/"><span class="tdg-ico">🎙️</span><span>Fonoteca</span></a>
+    </div>
+  </section>
+
+  <section id="web" class="ample">
+    <h2 style="text-transform:none">Pàgina web</h2>
+    <div class="tdg-accessos">
+      <a class="tdg-acces" target="_blank" rel="noopener" href="/"><span class="tdg-ico">🌐</span><span>ignasicorney.github.io</span></a>
+    </div>
+  </section>
+
+  <section id="genbloc" class="ample acces-bloc">
+    <h2 style="text-transform:none">Genealogia</h2>
+    <button type="button" class="logo-boto gen-boto" id="genBoto" aria-expanded="false" aria-controls="genealogia" title="Obre la genealogia">🌳</button>
+  </section>
   <section id="genealogia" class="ample" hidden>
-    <h2>🌳 Genealogia</h2>
+    <h2>🌳 Arbre genealògic</h2>
     <div id="genCos"><p class="buit">Carregant l'arbre…</p></div>
   </section>
+
+  <section id="xarxes" class="ample">
+    <h2 style="text-transform:none">Xarxes socials</h2>
+    <h3>Personals</h3>
+    <div class="tdg-accessos">
+      <a class="tdg-acces" target="_blank" rel="noopener" href="https://x.com/ignasicorney"><span class="tdg-ico"><b style="font-family:serif">𝕏</b></span><span>X</span></a>
+      <a class="tdg-acces" target="_blank" rel="noopener" href="https://www.instagram.com/ignasicorney/"><span class="tdg-ico">📸</span><span>Instagram</span></a>
+      <a class="tdg-acces" target="_blank" rel="noopener" href="https://www.youtube.com/ignasicorney"><span class="tdg-ico">▶️</span><span>YouTube</span></a>
+    </div>
+    <h3>La TdG</h3>
+    <div class="tdg-accessos">
+      <a class="tdg-acces" target="_blank" rel="noopener" href="https://t.me/laTdG_podcast"><span class="tdg-ico">✈️</span><span>Telegram</span></a>
+      <a class="tdg-acces" target="_blank" rel="noopener" href="https://wa.me/message/IP6CLF4SE6TME1"><span class="tdg-ico">💬</span><span>WhatsApp</span></a>
+      <a class="tdg-acces" target="_blank" rel="noopener" href="https://x.com/laTdeG"><span class="tdg-ico"><b style="font-family:serif">𝕏</b></span><span>X</span></a>
+      <a class="tdg-acces" target="_blank" rel="noopener" href="https://bsky.app/profile/latdg-podcast.bsky.social"><span class="tdg-ico">🦋</span><span>Bluesky</span></a>
+      <a class="tdg-acces" target="_blank" rel="noopener" href="https://mastodon.social/@latdg"><span class="tdg-ico">🐘</span><span>Mastodon</span></a>
+      <a class="tdg-acces" target="_blank" rel="noopener" href="https://www.facebook.com/latdg.podcast"><span class="tdg-ico">📘</span><span>Facebook</span></a>
+    </div>
+  </section>
+
+
 
 
 </main>
