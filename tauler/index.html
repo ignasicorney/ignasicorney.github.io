@@ -314,22 +314,6 @@ dialog .check{display:flex;gap:8px;align-items:center;color:var(--text);font-siz
 .estat-sinc{display:inline-flex;align-items:center;gap:6px;font-size:.85rem;color:var(--suau)}
 .estat-sinc i{width:9px;height:9px;border-radius:50%;background:#bbb;display:inline-block}
 .estat-sinc.ok i{background:#3a9a3a}.estat-sinc.err i{background:#d0262b}.estat-sinc.desant i{background:#d1a000}
-/* Tira de titulars (12.11.2026) */
-.tira{display:flex;align-items:stretch;border:1px solid var(--linia);border-radius:10px;background:#fbfaf7;overflow:hidden;font-size:.92rem;min-width:0}
-.tira[hidden]{display:none}
-.tira-marc{flex:1 1 auto;min-width:0;overflow:hidden;position:relative}
-.tira-pista{display:inline-flex;white-space:nowrap;padding:7px 0;animation:tira-corre var(--tira-durada,120s) linear infinite}
-.tira:hover .tira-pista,.tira:focus-within .tira-pista{animation-play-state:paused}
-@keyframes tira-corre{from{transform:translateX(0)}to{transform:translateX(-50%)}}
-.tira-grup{display:inline-flex;align-items:center;gap:0;padding-right:28px}
-.tira-etq{display:inline-block;padding:1px 9px;margin-right:10px;border-radius:999px;background:var(--accent);color:#fff;font-size:.75rem;font-weight:700;letter-spacing:.03em;text-transform:uppercase}
-.tira-etq.loc{background:#2f6f8f}.tira-etq.gen{background:#5d5d58}
-.tira-it{margin-right:22px;color:var(--text);text-decoration:none}
-a.tira-it:hover{color:var(--accent);text-decoration:underline}
-.tira-it b{font-weight:700;margin-right:4px;color:#a81116}
-.tira-it b::after{content:" ·"}
-.tira-titol{flex:0 0 auto;display:flex;align-items:center;padding:0 12px;background:#c8102e;color:#fff;font-size:.78rem;font-weight:800;letter-spacing:.05em;text-transform:uppercase;white-space:nowrap}
-.tira-pista{padding-left:12px}
 .tdg-accessos{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}
 .tdg-acces{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--linia);border-radius:10px;background:#fbfaf7;color:var(--text);text-decoration:none;font-size:.92rem;line-height:1.25}
 .tdg-acces:hover{border-color:var(--accent);color:var(--accent)}
@@ -337,28 +321,10 @@ a.tira-it:hover{color:var(--accent);text-decoration:underline}
 .acces-bloc{display:flex;align-items:center;gap:12px}
 .acces-bloc h2{margin:0}
 .acces-bloc .logo-boto{margin-left:auto}
-.xs-ico{width:1.5rem;height:1.5rem;display:block}
 /* Genealogia (12.11.2026) */
 .gen-boto{font-size:2.6rem;line-height:52px;height:64px;min-width:64px;margin-left:auto}
 @media (max-width:600px){.gen-boto{font-size:2.1rem;line-height:42px;height:54px;min-width:54px}}
 .gen-marc{width:100%;height:78vh;min-height:420px;border:1px solid var(--linia);border-radius:10px;background:#fff;display:block}
-/* Actes del dia, de l'agenda de La TdG (12.11.2026) */
-.act-dia{display:grid;gap:14px}
-.act-data{margin:0 0 8px;font-size:1rem;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-.act-llista{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px}
-.act-acte{background:var(--fons);border:1px solid var(--linia);border-left:4px solid var(--accent);border-radius:10px;padding:10px 12px;display:flex;flex-direction:column;gap:6px}
-.act-avui .act-acte{border-left-color:#e53935}
-.act-cap{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:.88rem}
-.act-hora{font-weight:700;color:var(--accent);white-space:nowrap}
-.act-mun{font-weight:600}
-.act-text{font-size:.95rem;line-height:1.45}
-.act-etq{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.03em;padding:2px 9px;border-radius:999px;background:#efece6;color:var(--suau)}
-.act-etq.avui{background:#fde8e6;color:#c0392b}
-.act-boleta{display:inline-block;width:10px;height:10px;border-radius:50%;background:#e53935;margin-right:5px;vertical-align:middle;animation:actPulsa 1.2s infinite}
-@keyframes actPulsa{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.25;transform:scale(.72)}}
-.act-setmana{margin-top:10px}
-.act-setmana summary{cursor:pointer;color:var(--accent);font-weight:600;font-size:.92rem;padding:4px 0}
-.act-setmana[open] summary{margin-bottom:10px}
 /* 12.11.2026: el temps, a dalt a la dreta de la capçalera */
 .cap-temps{display:flex;align-items:flex-start;justify-content:space-between;gap:8px 20px;flex-wrap:wrap}
 .cap-esq{min-width:0;flex:1 1 260px}
@@ -394,18 +360,6 @@ a.tira-it:hover{color:var(--accent);text-decoration:underline}
 </header>
 
 <main>
-
-
-  <div class="tira ample" id="tira" hidden aria-label="Titulars de La TdG i dels mitjans">
-    <div class="tira-titol">Últimes notícies</div><div class="tira-marc"><div class="tira-pista" id="tiraPista"></div></div>
-  </div>
-  <section id="actes" class="ample" hidden>
-    <h2>📅 Agenda d'actes</h2>
-    <p class="font" id="actesPeu" style="margin:0 0 8px"></p>
-    <div id="actesCos"><p class="buit">Carregant…</p></div>
-  </section>
-
-
 
   <section id="feina" class="ample">
     <h2 style="text-transform:none">Feina</h2>
@@ -513,24 +467,6 @@ a.tira-it:hover{color:var(--accent);text-decoration:underline}
     <div id="genCos"><p class="buit">Carregant l'arbre…</p></div>
   </section>
 
-  <section id="xarxes" class="ample">
-    <h2 style="text-transform:none">Xarxes socials</h2>
-    <h3>Personals</h3>
-    <div class="tdg-accessos">
-      <a class="tdg-acces" target="_blank" rel="noopener" href="https://x.com/ignasicorney"><span class="tdg-ico"><svg class="xs-ico" viewBox="0 0 24 24" fill="#000000" aria-hidden="true"><path d="M14.234 10.162 22.977 0h-2.072l-7.591 8.824L7.251 0H.258l9.168 13.343L.258 24H2.33l8.016-9.318L16.749 24h6.993zm-2.837 3.299-.929-1.329L3.076 1.56h3.182l5.965 8.532.929 1.329 7.754 11.09h-3.182z"/></svg></span><span>X</span></a>
-      <a class="tdg-acces" target="_blank" rel="noopener" href="https://www.instagram.com/ignasicorney/"><span class="tdg-ico"><svg class="xs-ico" viewBox="0 0 24 24" fill="#FF0069" aria-hidden="true"><path d="M7.0301.084c-1.2768.0602-2.1487.264-2.911.5634-.7888.3075-1.4575.72-2.1228 1.3877-.6652.6677-1.075 1.3368-1.3802 2.127-.2954.7638-.4956 1.6365-.552 2.914-.0564 1.2775-.0689 1.6882-.0626 4.947.0062 3.2586.0206 3.6671.0825 4.9473.061 1.2765.264 2.1482.5635 2.9107.308.7889.72 1.4573 1.388 2.1228.6679.6655 1.3365 1.0743 2.1285 1.38.7632.295 1.6361.4961 2.9134.552 1.2773.056 1.6884.069 4.9462.0627 3.2578-.0062 3.668-.0207 4.9478-.0814 1.28-.0607 2.147-.2652 2.9098-.5633.7889-.3086 1.4578-.72 2.1228-1.3881.665-.6682 1.0745-1.3378 1.3795-2.1284.2957-.7632.4966-1.636.552-2.9124.056-1.2809.0692-1.6898.063-4.948-.0063-3.2583-.021-3.6668-.0817-4.9465-.0607-1.2797-.264-2.1487-.5633-2.9117-.3084-.7889-.72-1.4568-1.3876-2.1228C21.2982 1.33 20.628.9208 19.8378.6165 19.074.321 18.2017.1197 16.9244.0645 15.6471.0093 15.236-.005 11.977.0014 8.718.0076 8.31.0215 7.0301.0839m.1402 21.6932c-1.17-.0509-1.8053-.2453-2.2287-.408-.5606-.216-.96-.4771-1.3819-.895-.422-.4178-.6811-.8186-.9-1.378-.1644-.4234-.3624-1.058-.4171-2.228-.0595-1.2645-.072-1.6442-.079-4.848-.007-3.2037.0053-3.583.0607-4.848.05-1.169.2456-1.805.408-2.2282.216-.5613.4762-.96.895-1.3816.4188-.4217.8184-.6814 1.3783-.9003.423-.1651 1.0575-.3614 2.227-.4171 1.2655-.06 1.6447-.072 4.848-.079 3.2033-.007 3.5835.005 4.8495.0608 1.169.0508 1.8053.2445 2.228.408.5608.216.96.4754 1.3816.895.4217.4194.6816.8176.9005 1.3787.1653.4217.3617 1.056.4169 2.2263.0602 1.2655.0739 1.645.0796 4.848.0058 3.203-.0055 3.5834-.061 4.848-.051 1.17-.245 1.8055-.408 2.2294-.216.5604-.4763.96-.8954 1.3814-.419.4215-.8181.6811-1.3783.9-.4224.1649-1.0577.3617-2.2262.4174-1.2656.0595-1.6448.072-4.8493.079-3.2045.007-3.5825-.006-4.848-.0608M16.953 5.5864A1.44 1.44 0 1 0 18.39 4.144a1.44 1.44 0 0 0-1.437 1.4424M5.8385 12.012c.0067 3.4032 2.7706 6.1557 6.173 6.1493 3.4026-.0065 6.157-2.7701 6.1506-6.1733-.0065-3.4032-2.771-6.1565-6.174-6.1498-3.403.0067-6.156 2.771-6.1496 6.1738M8 12.0077a4 4 0 1 1 4.008 3.9921A3.9996 3.9996 0 0 1 8 12.0077"/></svg></span><span>Instagram</span></a>
-      <a class="tdg-acces" target="_blank" rel="noopener" href="https://www.youtube.com/ignasicorney"><span class="tdg-ico"><svg class="xs-ico" viewBox="0 0 24 24" fill="#FF0000" aria-hidden="true"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg></span><span>YouTube</span></a>
-    </div>
-    <h3>La TdG</h3>
-    <div class="tdg-accessos">
-      <a class="tdg-acces" target="_blank" rel="noopener" href="https://t.me/laTdG_podcast"><span class="tdg-ico"><svg class="xs-ico" viewBox="0 0 24 24" fill="#26A5E4" aria-hidden="true"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg></span><span>Telegram</span></a>
-      <a class="tdg-acces" target="_blank" rel="noopener" href="https://wa.me/message/IP6CLF4SE6TME1"><span class="tdg-ico"><svg class="xs-ico" viewBox="0 0 24 24" fill="#25D366" aria-hidden="true"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg></span><span>WhatsApp</span></a>
-      <a class="tdg-acces" target="_blank" rel="noopener" href="https://x.com/laTdeG"><span class="tdg-ico"><svg class="xs-ico" viewBox="0 0 24 24" fill="#000000" aria-hidden="true"><path d="M14.234 10.162 22.977 0h-2.072l-7.591 8.824L7.251 0H.258l9.168 13.343L.258 24H2.33l8.016-9.318L16.749 24h6.993zm-2.837 3.299-.929-1.329L3.076 1.56h3.182l5.965 8.532.929 1.329 7.754 11.09h-3.182z"/></svg></span><span>X</span></a>
-      <a class="tdg-acces" target="_blank" rel="noopener" href="https://bsky.app/profile/latdg-podcast.bsky.social"><span class="tdg-ico"><svg class="xs-ico" viewBox="0 0 24 24" fill="#1185FE" aria-hidden="true"><path d="M5.202 2.857C7.954 4.922 10.913 9.11 12 11.358c1.087-2.247 4.046-6.436 6.798-8.501C20.783 1.366 24 .213 24 3.883c0 .732-.42 6.156-.667 7.037-.856 3.061-3.978 3.842-6.755 3.37 4.854.826 6.089 3.562 3.422 6.299-5.065 5.196-7.28-1.304-7.847-2.97-.104-.305-.152-.448-.153-.327 0-.121-.05.022-.153.327-.568 1.666-2.782 8.166-7.847 2.97-2.667-2.737-1.432-5.473 3.422-6.3-2.777.473-5.899-.308-6.755-3.369C.42 10.04 0 4.615 0 3.883c0-3.67 3.217-2.517 5.202-1.026"/></svg></span><span>Bluesky</span></a>
-      <a class="tdg-acces" target="_blank" rel="noopener" href="https://mastodon.social/@latdg"><span class="tdg-ico"><svg class="xs-ico" viewBox="0 0 24 24" fill="#6364FF" aria-hidden="true"><path d="M23.268 5.313c-.35-2.578-2.617-4.61-5.304-5.004C17.51.242 15.792 0 11.813 0h-.03c-3.98 0-4.835.242-5.288.309C3.882.692 1.496 2.518.917 5.127.64 6.412.61 7.837.661 9.143c.074 1.874.088 3.745.26 5.611.118 1.24.325 2.47.62 3.68.55 2.237 2.777 4.098 4.96 4.857 2.336.792 4.849.923 7.256.38.265-.061.527-.132.786-.213.585-.184 1.27-.39 1.774-.753a.057.057 0 0 0 .023-.043v-1.809a.052.052 0 0 0-.02-.041.053.053 0 0 0-.046-.01 20.282 20.282 0 0 1-4.709.545c-2.73 0-3.463-1.284-3.674-1.818a5.593 5.593 0 0 1-.319-1.433.053.053 0 0 1 .066-.054c1.517.363 3.072.546 4.632.546.376 0 .75 0 1.125-.01 1.57-.044 3.224-.124 4.768-.422.038-.008.077-.015.11-.024 2.435-.464 4.753-1.92 4.989-5.604.008-.145.03-1.52.03-1.67.002-.512.167-3.63-.024-5.545zm-3.748 9.195h-2.561V8.29c0-1.309-.55-1.976-1.67-1.976-1.23 0-1.846.79-1.846 2.35v3.403h-2.546V8.663c0-1.56-.617-2.35-1.848-2.35-1.112 0-1.668.668-1.67 1.977v6.218H4.822V8.102c0-1.31.337-2.35 1.011-3.12.696-.77 1.608-1.164 2.74-1.164 1.311 0 2.302.5 2.962 1.498l.638 1.06.638-1.06c.66-.999 1.65-1.498 2.96-1.498 1.13 0 2.043.395 2.74 1.164.675.77 1.012 1.81 1.012 3.12z"/></svg></span><span>Mastodon</span></a>
-      <a class="tdg-acces" target="_blank" rel="noopener" href="https://www.facebook.com/latdg.podcast"><span class="tdg-ico"><svg class="xs-ico" viewBox="0 0 24 24" fill="#0866FF" aria-hidden="true"><path d="M9.101 23.691v-7.98H6.627v-3.667h2.474v-1.58c0-4.085 1.848-5.978 5.858-5.978.401 0 .955.042 1.468.103a8.68 8.68 0 0 1 1.141.195v3.325a8.623 8.623 0 0 0-.653-.036 26.805 26.805 0 0 0-.733-.009c-.707 0-1.259.096-1.675.309a1.686 1.686 0 0 0-.679.622c-.258.42-.374.995-.374 1.752v1.297h3.919l-.386 2.103-.287 1.564h-3.246v8.245C19.396 23.238 24 18.179 24 12.044c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.628 3.874 10.35 9.101 11.647Z"/></svg></span><span>Facebook</span></a>
-    </div>
-  </section>
 
 
 
@@ -2492,137 +2428,11 @@ a.tira-it:hover{color:var(--accent);text-decoration:underline}
 <script src="dates-ca.js?v=3"></script>
 <script>
 // =============================================================================
-// Tira de titulars (12.11.2026): els titulars de La TdG (els de la tele) i la
-// premsa local i generalista del darrer resum de La TdG redacció.
 // Genealogia (12.11.2026): l'arbre familiar amb el Topola Viewer, dins del candau.
 // =============================================================================
 (() => {
   const $ = id => document.getElementById(id);
   const esc = t => String(t ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-  const BASE = "https://latdg.github.io/redaccio/dades/";
-  const NOMS_GEN = [
-    [/vilaweb/, "VilaWeb"], [/naciodigital/, "Nació Digital"], [/^ara\.cat$/, "Ara"], [/elperiodico/, "El Periódico"],
-    [/lavanguardia/, "La Vanguardia"], [/elpais/, "El País"], [/elnacional/, "El Nacional"], [/rac1/, "RAC1"],
-    [/elmon/, "El Món"], [/cadenaser/, "Cadena SER"], [/3cat|ccma/, "3Cat"], [/europapress/, "Europa Press"],
-    [/elpuntavui/, "El Punt Avui"], [/rtve/, "RTVE"], [/catradio/, "Catalunya Ràdio"], [/elmundo/, "El Mundo"],
-    [/eldiario/, "elDiario.es"], [/acn\.cat/, "ACN"], [/msn\.com/, "MSN"], [/diaridegirona/, "Diari de Girona"]
-  ];
-  const nomMitja = n => { const t = String(n).toLowerCase(); const m = NOMS_GEN.find(([rx]) => rx.test(t)); return m ? m[1] : n; };
-  const obtenir = async (url, text) => { const r = await fetch(url, { cache: "no-cache" }); if (!r.ok) throw new Error(r.status); return text ? r.text() : r.json(); };
-
-  // Treu dels blocs PREMSA LOCAL i PREMSA GENERALISTA les notícies: [{mitja, titol, url}]
-  function premsaDelResum(html) {
-    const doc = new DOMParser().parseFromString(html, "text/html");
-    const RX = /^\s*((?:\d️?⃣)+)\s*(.+)$/s;
-    const blocs = {}; let actual = null;
-    Array.from(doc.body.childNodes).forEach(node => {
-      const text = (node.textContent || "").trim();
-      if (node.nodeType === 1 && node.tagName === "DIV" && text.length < 200) {
-        const m = text.match(RX);
-        if (m) { const t = m[2].trim().toUpperCase(); actual = /^PREMSA LOCAL/.test(t) ? "local" : /^PREMSA GENERALISTA/.test(t) ? "gen" : null; if (actual) blocs[actual] = ""; return; }
-      }
-      if (!actual) return;
-      if (node.nodeType === 1 && node.tagName === "BR") blocs[actual] += "\n";
-      else if (node.nodeType === 1) blocs[actual] += (node.innerHTML || "").replace(/<br\s*\/?>/gi, "\n").replace(/<[^>]+>/g, "");
-      else blocs[actual] += node.textContent || "";
-    });
-    const fora = {};
-    Object.entries(blocs).forEach(([clau, txt]) => {
-      const llista = []; let mitja = "";
-      const linies = txt.split("\n").map(x => x.trim()).filter(Boolean);
-      linies.forEach((l, i) => {
-        const m = l.match(/^▶\s*(.+?):\s*$/);
-        if (m) { mitja = m[1].trim(); return; }
-        const n = l.match(/^•\s*(?:\d{2}\.\d{2}\.\d{4}\s*[—–-]\s*)?(.+)$/);
-        if (n && mitja && !/^No s.han trobat/i.test(n[1])) {
-          const seg = linies[i + 1] || "";
-          llista.push({ mitja, titol: n[1].trim(), url: /^https?:\/\//.test(seg) ? seg : "" });
-        }
-      });
-      const vist = new Set();
-      fora[clau] = llista.filter(x => { const k = x.titol.toLowerCase(); if (vist.has(k)) return false; vist.add(k); return true; });
-    });
-    return fora;
-  }
-
-  function grup(etiqueta, classe, items) {
-    if (!items.length) return "";
-    return '<span class="tira-grup">' +
-      items.map(it => {
-        const cos = (it.mitja ? "<b>" + esc(it.mitja) + "</b>" : "") + esc(it.titol);
-        return it.url ? '<a class="tira-it" href="' + esc(it.url) + '" target="_blank" rel="noopener">' + cos + "</a>" : '<span class="tira-it">' + cos + "</span>";
-      }).join("") + "</span>";
-  }
-
-  async function carregaTira() {
-    let dies = [];
-    try { dies = (await obtenir(BASE + "dies.json")).slice().sort().reverse(); } catch (e) { return; }
-    let tdg = [], premsa = { local: [], gen: [] };
-    for (const d of dies.slice(0, 3)) {
-      if (!tdg.length) { try { const t = await obtenir(BASE + d + "/titulars.json"); tdg = (t.titulars || []).filter(Boolean).map(x => ({ mitja: "La TdG", titol: x, url: "" })); } catch (e) {} }
-      if (!premsa.local.length && !premsa.gen.length) { try { premsa = Object.assign({ local: [], gen: [] }, premsaDelResum(await obtenir(BASE + d + "/resum.html", true))); } catch (e) {} }
-      if (tdg.length && (premsa.local.length || premsa.gen.length)) break;
-    }
-    premsa.gen = premsa.gen.slice(0, 10).map(x => Object.assign({}, x, { mitja: nomMitja(x.mitja) }));
-    const h = grup("La TdG", "", tdg) + grup("Mitjans", "loc", premsa.local.concat(premsa.gen));
-    if (!h) { $("tira").hidden = true; return; }
-    // Dues còpies seguides perquè la tira giri sense salts
-    $("tiraPista").innerHTML = '<span class="tira-copia-1" style="display:inline-flex">' + h + '</span><span class="tira-copia" aria-hidden="true" style="display:inline-flex">' + h + "</span>";
-    $("tiraPista").querySelectorAll(".tira-copia a").forEach(a => a.tabIndex = -1);
-    $("tira").hidden = false;
-    requestAnimationFrame(() => {
-      const ample = $("tiraPista").scrollWidth / 2;
-      $("tiraPista").style.setProperty("--tira-durada", Math.max(30, Math.round(ample / 60)) + "s");   // uns 60 px per segon
-    });
-  }
-  carregaTira();
-  setInterval(carregaTira, 30 * 60 * 1000);
-
-  // ---------------- Agenda d'actes (12.11.2026) ----------------
-  // Els mateixos actes que La TdG ampliada (latdg/tauler, dades/agenda.json):
-  // els d'avui (o, si avui no n'hi ha, els del pròxim dia) i la resta de la setmana plegada.
-  const AG_FONTS = ["https://raw.githubusercontent.com/latdg/tauler/main/dades/agenda.json", "https://latdg.github.io/tauler/dades/agenda.json"];
-  const AG_NOMS = { "LB": "La Bisbal d'Empordà", "La Bisbal": "La Bisbal d'Empordà", "CMSS": "Cruïlles, Monells i Sant Sadurní de l'Heura" };
-  const DIES = ["Diumenge", "Dilluns", "Dimarts", "Dimecres", "Dijous", "Divendres", "Dissabte"];
-  const dos = n => String(n).padStart(2, "0");
-  const isoDe = d => d.getFullYear() + "-" + dos(d.getMonth() + 1) + "-" + dos(d.getDate());
-  const textAg = t => esc(String(t || "")).replace(/\*\*([\s\S]+?)\*\*/g, "<b>$1</b>").replace(/__([\s\S]+?)__/g, "<u>$1</u>")
-    .replace(/\*([^*]+?)\*/g, "<i>$1</i>").replace(/\n\s*\n/g, "<br><br>").replace(/\n/g, "<br>");
-  async function carregaActes() {
-    let ag = null;
-    for (const f of AG_FONTS) { try { ag = await obtenir(f + "?v=" + Date.now()); break; } catch (e) {} }
-    if (!ag) { if ($("actes").hidden) return; $("actesCos").innerHTML = '<p class="buit">Ara mateix no s\'ha pogut carregar l\'agenda.</p>'; return; }
-    const t0 = new Date(); t0.setHours(0, 0, 0, 0);
-    const fi = new Date(t0); fi.setDate(fi.getDate() + 7);
-    const vinents = (ag.actes || []).filter(a => a.data >= isoDe(t0))
-      .sort((a, b) => (a.data + (a.hora || "99")).localeCompare(b.data + (b.hora || "99")));
-    const actes = vinents.filter(a => a.data <= isoDe(fi) || a.data === (vinents[0] && vinents[0].data));
-    const grups = [];
-    actes.forEach(a => { let g = grups[grups.length - 1]; if (!g || g.data !== a.data) { g = { data: a.data, actes: [] }; grups.push(g); } g.actes.push(a); });
-    const pinta = (g, primer) => {
-      const d = new Date(g.data + "T00:00:00");
-      const dif = Math.round((d - t0) / 86400000);
-      const etq = dif === 0 ? '<span class="act-etq avui"><span class="act-boleta"></span>Avui</span>'
-        : dif === 1 ? '<span class="act-etq">Demà' + (primer ? " · pròxims actes" : "") + "</span>"
-        : primer ? '<span class="act-etq">Pròxims actes</span>' : "";
-      return '<div class="' + (dif === 0 ? "act-avui" : "") + '"><h3 class="act-data">' + DIES[d.getDay()] + " " + g.data.split("-").reverse().join(".") + " " + etq + '</h3><div class="act-llista">' +
-        g.actes.map(a => '<article class="act-acte"><div class="act-cap">' +
-          (a.hora ? '<span class="act-hora">🕒 ' + esc(a.hora) + "</span>" : "") +
-          (a.municipi ? '<span class="act-mun">📍 ' + esc(AG_NOMS[a.municipi] || a.municipi) + "</span>" : "") +
-          '</div><div class="act-text">' + textAg(a.text) + "</div></article>").join("") + "</div></div>";
-    };
-    const resta = grups.slice(1);
-    $("actesCos").innerHTML = !grups.length ? '<p class="buit">No hi ha cap acte previst.</p>' :
-      '<div class="act-dia">' + pinta(grups[0], true) + "</div>" +
-      (resta.length ? '<details class="act-setmana"><summary>Veure els actes de tota la setmana</summary><div class="act-dia">' + resta.map(g => pinta(g, false)).join("") + "</div></details>" : "");
-    let peu = '<a href="https://latdg.github.io/tauler/agenda/" target="_blank" rel="noopener">Editar l\'agenda</a>';
-    if (ag.actualitzat) { const g = new Date(ag.actualitzat); peu = "Actualitzat el " + dos(g.getDate()) + "." + dos(g.getMonth() + 1) + "." + g.getFullYear() + " a les " + dos(g.getHours()) + "." + dos(g.getMinutes()) + " h · " + peu; }
-    $("actesPeu").innerHTML = peu;
-    $("actes").hidden = false;
-  }
-  carregaActes();
-  setInterval(carregaActes, 30 * 60 * 1000);
-
   // ---------------- Genealogia ----------------
   const GED = "genealogia/arbre.ged";
   let genFet = false;
