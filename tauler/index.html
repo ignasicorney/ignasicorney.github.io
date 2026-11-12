@@ -2483,7 +2483,7 @@ a.tira-it:hover{color:var(--accent);text-decoration:underline}
 
   function grup(etiqueta, classe, items) {
     if (!items.length) return "";
-    return '<span class="tira-grup"><span class="tira-etq ' + classe + '">' + esc(etiqueta) + "</span>" +
+    return '<span class="tira-grup">' +
       items.map(it => {
         const cos = (it.mitja ? "<b>" + esc(it.mitja) + "</b>" : "") + esc(it.titol);
         return it.url ? '<a class="tira-it" href="' + esc(it.url) + '" target="_blank" rel="noopener">' + cos + "</a>" : '<span class="tira-it">' + cos + "</span>";
