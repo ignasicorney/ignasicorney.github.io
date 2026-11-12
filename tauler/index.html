@@ -349,6 +349,9 @@ dialog .check{display:flex;gap:8px;align-items:center;color:var(--text);font-siz
 .gen-fam>div{border:1px solid var(--linia);border-radius:10px;padding:10px;background:#fff}
 .gen-fam h4{margin:0 0 6px;font-size:.8rem;color:var(--suau);text-transform:uppercase;letter-spacing:.04em}
 .gen-fam .gen-p{margin-bottom:5px}
+@media print{body.gen-imprimeix>*:not(main),body.gen-imprimeix main>*:not(#genealogia),body.gen-imprimeix .gen-barra,body.gen-imprimeix #genCos>.font{display:none!important}
+body.gen-imprimeix{background:#fff}body.gen-imprimeix #genealogia{border:0;box-shadow:none}
+body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-width:0}}
 .gen-nota{border:1px solid var(--linia);border-radius:8px;padding:8px 10px;margin:6px 0;background:#fffdf8;white-space:pre-wrap;font-size:.9rem;overflow-wrap:anywhere}
 /* 12.11.2026: el temps, a dalt a la dreta de la capçalera */
 .cap-temps{display:flex;align-items:flex-start;justify-content:space-between;gap:8px 20px;flex-wrap:wrap}
@@ -2538,13 +2541,21 @@ dialog .check{display:flex;gap:8px;align-items:center;color:var(--text);font-siz
     const index = ids.map(k => [k, normal(GEN.P[k].n)]);
     $("genCos").innerHTML =
       '<div class="gen-barra"><input id="genCerca" type="search" placeholder="Cerca una persona (' + ids.length.toLocaleString("ca") + ' persones)…" autocomplete="off">' +
-      '<button type="button" id="genEnrere" disabled>◀ Enrere</button><button type="button" id="genArrel">🏠 Jo</button>' +
+      '<button type="button" id="genEnrere" disabled>◀ Enrere</button><button type="button" id="genArrel">🏠 Jo</button><button type="button" id="genPdf" title="Desa la fitxa i els avantpassats en PDF o imprimeix-los">🖨️ PDF</button>' +
       '<div class="gen-res" id="genRes" hidden></div></div><div id="genVista"></div>' +
       '<p class="font">Dades de FamilySearch (12.11.2026). Les persones vives hi surten com a «Privat». ' +
-      '<a href="genealogia/arbre-amb-fonts.ged" download>Baixa l\'arbre en GEDCOM, amb notes i fonts</a>.</p>';
+      '<a href="genealogia/arbre-amb-fonts.ged" download>Baixa l\'arbre en GEDCOM, amb notes i fonts</a> · ' +
+      '<a href="https://pewu.github.io/topola-viewer/#/view?url=' + encodeURIComponent(new URL("genealogia/arbre-topola.ged", location.href).href) + '&handleCors=false&indi=I1" target="_blank" rel="noopener">Obre\'l a Topola</a> (gràfic gran i exportació a PDF, PNG o SVG; amb tantes persones pot trigar uns minuts).</p>';
     $("genVista").addEventListener("click", e => { const b = e.target.closest(".gen-p[data-id]"); if (b) { genVes(b.dataset.id); $("genealogia").scrollIntoView({ behavior: "smooth", block: "start" }); } });
     $("genEnrere").addEventListener("click", () => { if (genHist.length) { genVes(genHist.pop(), true); $("genEnrere").disabled = !genHist.length; } });
     $("genArrel").addEventListener("click", () => genVes(GEN.arrel));
+    $("genPdf").addEventListener("click", () => {
+      document.body.classList.add("gen-imprimeix");
+      const treu = () => { document.body.classList.remove("gen-imprimeix"); window.removeEventListener("afterprint", treu); };
+      window.addEventListener("afterprint", treu);
+      window.print();
+      setTimeout(treu, 1000);
+    });
     $("genCerca").addEventListener("input", () => {
       const q = normal($("genCerca").value.trim());
       if (q.length < 2) { $("genRes").hidden = true; return; }
