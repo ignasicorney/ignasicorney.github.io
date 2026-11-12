@@ -2457,7 +2457,7 @@ dialog .check{display:flex;gap:8px;align-items:center;color:var(--text);font-siz
       return;
     }
     const urlGed = new URL(GED, location.href).href;
-    const visor = "https://pewu.github.io/topola-viewer/#/view?url=" + encodeURIComponent(urlGed);
+    const visor = "https://pewu.github.io/topola-viewer/#/view?url=" + encodeURIComponent(urlGed) + "&handleCors=false&indi=I1";
     $("genCos").innerHTML = '<iframe class="gen-marc" title="Arbre genealògic" src="' + esc(visor + "&embedded=true") + '" loading="lazy"></iframe>' +
       '<p class="font"><a href="' + esc(visor) + '" target="_blank" rel="noopener">Obre l\'arbre a pantalla completa</a> · Visor: Topola Genealogy Viewer.</p>';
   };
