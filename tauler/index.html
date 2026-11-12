@@ -315,7 +315,8 @@ dialog .check{display:flex;gap:8px;align-items:center;color:var(--text);font-siz
 .estat-sinc i{width:9px;height:9px;border-radius:50%;background:#bbb;display:inline-block}
 .estat-sinc.ok i{background:#3a9a3a}.estat-sinc.err i{background:#d0262b}.estat-sinc.desant i{background:#d1a000}
 /* Tira de titulars (12.11.2026) */
-.tira{display:flex;align-items:stretch;border:1px solid var(--linia);border-radius:10px;background:#fbfaf7;overflow:hidden;margin-bottom:12px;font-size:.92rem}
+.tira{display:flex;align-items:stretch;border:1px solid var(--linia);border-radius:10px;background:#fbfaf7;overflow:hidden;font-size:.92rem;min-width:0}
+.tira[hidden]{display:none}
 .tira-marc{flex:1 1 auto;min-width:0;overflow:hidden;position:relative}
 .tira-pista{display:inline-flex;white-space:nowrap;padding:7px 0;animation:tira-corre var(--tira-durada,120s) linear infinite}
 .tira:hover .tira-pista,.tira:focus-within .tira-pista{animation-play-state:paused}
@@ -354,10 +355,10 @@ a.tira-it:hover{color:var(--accent);text-decoration:underline}
 <main>
 
 
+  <div class="tira ample" id="tira" hidden aria-label="Titulars de La TdG i dels mitjans">
+    <div class="tira-marc"><div class="tira-pista" id="tiraPista"></div></div>
+  </div>
   <section id="temps" class="ample">
-    <div class="tira" id="tira" hidden aria-label="Titulars de La TdG i dels mitjans">
-      <div class="tira-marc"><div class="tira-pista" id="tiraPista"></div></div>
-    </div>
     <div class="temps-cap">
       <div id="tempsAra" class="temps-linia buit">Carregant el temps…</div>
       <button type="button" class="logo-boto gen-boto" id="genBoto" aria-expanded="false" aria-controls="genealogia" title="Obre la genealogia">🌳</button>
