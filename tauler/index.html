@@ -359,14 +359,28 @@ a.tira-it:hover{color:var(--accent);text-decoration:underline}
 .act-setmana{margin-top:10px}
 .act-setmana summary{cursor:pointer;color:var(--accent);font-weight:600;font-size:.92rem;padding:4px 0}
 .act-setmana[open] summary{margin-bottom:10px}
+/* 12.11.2026: el temps, a dalt a la dreta de la capçalera */
+.cap-temps{display:flex;align-items:flex-start;justify-content:space-between;gap:8px 20px;flex-wrap:wrap}
+.cap-esq{min-width:0;flex:1 1 260px}
+.temps-dalt{flex:0 1 auto;margin-top:6px;text-align:right}
+.temps-dalt .temps-cap,.temps-dalt .temps-linia,.temps-dalt .temps-dies{justify-content:flex-end}
+@media (max-width:600px){.temps-dalt{flex:1 1 100%;margin:0 0 12px;text-align:left}.temps-dalt .temps-cap,.temps-dalt .temps-linia,.temps-dalt .temps-dies{justify-content:flex-start}}
 </style>
 </head>
 <body>
-<header>
-  <div class="capcalera">
-    <h1>🧭 Bitàcola personal</h1>
+<header class="cap-temps">
+  <div class="cap-esq">
+    <div class="capcalera">
+      <h1>🧭 Bitàcola personal</h1>
+    </div>
+    <p class="sub" id="ara"></p>
   </div>
-  <p class="sub" id="ara"></p>
+  <div id="temps" class="temps-dalt">
+    <div class="temps-cap">
+      <div id="tempsAra" class="temps-linia buit">Carregant el temps…</div>
+    </div>
+    <div id="tempsDies" class="temps-dies"></div>
+  </div>
 </header>
 
 <main>
@@ -379,12 +393,6 @@ a.tira-it:hover{color:var(--accent);text-decoration:underline}
     <h2>📅 Agenda d'actes</h2>
     <div id="actesCos"><p class="buit">Carregant…</p></div>
     <p class="font" id="actesPeu"></p>
-  </section>
-  <section id="temps" class="ample">
-    <div class="temps-cap">
-      <div id="tempsAra" class="temps-linia buit">Carregant el temps…</div>
-    </div>
-    <div id="tempsDies" class="temps-dies"></div>
   </section>
 
 
