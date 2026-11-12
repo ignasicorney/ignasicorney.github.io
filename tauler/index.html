@@ -328,7 +328,8 @@ dialog .check{display:flex;gap:8px;align-items:center;color:var(--text);font-siz
 a.tira-it:hover{color:var(--accent);text-decoration:underline}
 .tira-it b{font-weight:700;margin-right:4px;color:#a81116}
 .tira-it b::after{content:" ·"}
-@media (prefers-reduced-motion:reduce){.tira-marc{overflow-x:auto}.tira-pista{animation:none}.tira-pista>.tira-copia{display:none!important}}
+.tira-titol{flex:0 0 auto;display:flex;align-items:center;padding:0 12px;background:#c8102e;color:#fff;font-size:.78rem;font-weight:800;letter-spacing:.05em;text-transform:uppercase;white-space:nowrap}
+.tira-pista{padding-left:12px}
 .tdg-accessos{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}
 .tdg-acces{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--linia);border-radius:10px;background:#fbfaf7;color:var(--text);text-decoration:none;font-size:.92rem;line-height:1.25}
 .tdg-acces:hover{border-color:var(--accent);color:var(--accent)}
@@ -355,7 +356,7 @@ a.tira-it:hover{color:var(--accent);text-decoration:underline}
 
 
   <div class="tira ample" id="tira" hidden aria-label="Titulars de La TdG i dels mitjans">
-    <div class="tira-marc"><div class="tira-pista" id="tiraPista"></div></div>
+    <div class="tira-titol">Últimes notícies</div><div class="tira-marc"><div class="tira-pista" id="tiraPista"></div></div>
   </div>
   <section id="temps" class="ample">
     <div class="temps-cap">
