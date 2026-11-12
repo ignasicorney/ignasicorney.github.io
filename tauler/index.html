@@ -352,6 +352,7 @@ dialog .check{display:flex;gap:8px;align-items:center;color:var(--text);font-siz
 @media print{body.gen-imprimeix>*:not(main),body.gen-imprimeix main>*:not(#genealogia),body.gen-imprimeix .gen-barra,body.gen-imprimeix #genCos>.font{display:none!important}
 body.gen-imprimeix{background:#fff}body.gen-imprimeix #genealogia{border:0;box-shadow:none}
 body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-width:0}}
+.enllac-boto{background:none;border:0;padding:0;font:inherit;color:var(--accent);text-decoration:underline;cursor:pointer}
 .gen-rel{margin:0 0 4px;padding:6px 10px;border-radius:8px;background:#fdf1ec;display:inline-block}
 .gen-nota{border:1px solid var(--linia);border-radius:8px;padding:8px 10px;margin:6px 0;background:#fffdf8;white-space:pre-wrap;font-size:.9rem;overflow-wrap:anywhere}
 /* 12.11.2026: el temps, a dalt a la dreta de la capçalera */
@@ -797,12 +798,14 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       if (Array.isArray(d.tasques)) r.tasques = d.tasques.filter(t => t && typeof t.text === "string");
       if (d.correu && Array.isArray(d.correu.comptes)) r.correu = { comptes: d.correu.comptes.filter(c => c && c.url) };
       if (d.qualificacions && Array.isArray(d.qualificacions.grups)) r.qualificacions = d.qualificacions;
+      if (d.genealogia && typeof d.genealogia === "object") r.genealogia = d.genealogia;   // dades de les persones vives (privades)
     }
     return r;
   }
   let clau = lsLlegeix("tauler.clau") || "";
   let dades = BUIDES();
   let sha = null, temporitzador = null, desant = false, pendent = false, obert = false;
+  let llegit = false;   // true quan les dades s'han llegit bé del magatzem privat
 
   function estatSinc(tipus, text) {
     const el = $("estatSinc");
@@ -827,6 +830,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       sha = d.sha || null;
       dades = normalitza(d.dades);
       lsEscriu("tauler.dades", JSON.stringify(dades));
+      llegit = true;
       estatSinc("ok", "Sincronitzat");
       if (dades.sembrat !== "ins-2026-2027") {
         SEMBRA_INS.forEach(x => {
@@ -896,6 +900,18 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     clearTimeout(temporitzador);
     temporitzador = setTimeout(desaRemot, 1200);
   }
+  // Genealogia: les dades de les persones vives es guarden al mateix magatzem privat que l'Institut
+  window.TaulerPrivat = {
+    async genealogia() {
+      if (!clau) return { estat: "clau" };
+      if (!llegit) { const r = await baixa(); if (r !== "ok") return { estat: r }; }
+      return { estat: "ok", dades: dades.genealogia || null };
+    },
+    desaGenealogia(g) {
+      if (!llegit) return false;          // mai no desa sense haver llegit abans les dades de debò
+      dades.genealogia = g; desa(); return true;
+    }
+  };
   function mostraInstitut(si) {
     obert = si;
     $("institutCos").hidden = !si;
@@ -2476,7 +2492,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
   });
   let GEN = null, genActual = null, genHist = [];
   const anyDe = d => { const m = String(d || "").match(/\d{3,4}(?!.*\d{3,4})/); return m ? m[0] : ""; };
-  const anys = p => { const b = anyDe(p.b && p.b[0]), d = anyDe(p.d && p.d[0]); return b || d ? (b || "?") + "–" + (d || "?") : ""; };
+  const anys = p => { const b = anyDe(p.b && p.b[0]), d = anyDe(p.d && p.d[0]); if (p.viu) return b ? "n. " + b : ""; return b || d ? (b || "?") + "–" + (d || "?") : ""; };
   const genBoto = (id, extra) => {
     if (!id || !GEN.P[id]) return '<span class="gen-p buida">·</span>';
     const p = GEN.P[id];
@@ -2555,6 +2571,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     if (p.b) h += "<dt>Naixement</dt><dd>" + esdev(p.b) + "</dd>";
     if (p.d) h += "<dt>Defunció</dt><dd>" + esdev(p.d) + "</dd>";
     if (p.o) h += "<dt>Ofici</dt><dd>" + esc(p.o) + "</dd>";
+    if (p.r) h += "<dt>Residència</dt><dd>" + esc(p.r) + "</dd>";
     if (p.fs) h += '<dt>Fonts</dt><dd><a href="https://www.familysearch.org/tree/person/details/' + encodeURIComponent(p.fs) + '" target="_blank" rel="noopener">Fitxa a FamilySearch (' + esc(p.fs) + ")</a></dd>";
     h += "</dl></div>";
     // Família
@@ -2581,6 +2598,69 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     genPinta(id);
     $("genEnrere").disabled = !genHist.length;
   }
+  // ---- Persones vives: s'importen del GEDCOM complet i es guarden només al magatzem privat ----
+  const MESOS = {};
+  ["jan january ene enero gen gener", "feb february febrero febrer", "mar march marzo marc març", "apr april abr abril", "may mayo mai maig", "jun june junio juny",
+   "jul july julio juliol", "aug august ago agosto agost", "sep sept september septiembre set setembre", "oct october octubre", "nov november noviembre novembre", "dec december dic diciembre des desembre"]
+    .forEach((l, i) => l.split(" ").forEach(n => { MESOS[n] = i + 1; }));
+  const sAcc = t => t.normalize("NFD").replace(/[̀-ͯ]/g, "");
+  const dos = n => String(n).padStart(2, "0");
+  function dataGed(txt) {
+    if (!txt) return "";
+    let t = txt.trim(), pref = "";
+    const P = [[/^(abt|about|ca|circa|cerca de|hacia|aproximadamente|aprox\.?|c\.)\s+/i, "c. "], [/^(bef|before|antes de|abans de)\s+/i, "abans de "], [/^(aft|after|después de|despues de|després de)\s+/i, "després de "]];
+    for (const [rx, r] of P) { const m = t.match(rx); if (m) { pref = r; t = t.slice(m[0].length); break; } }
+    let m = t.match(/^(\d{1,2})\/(\d{1,2})\/(\d{3,4})$/);
+    if (m) return pref + dos(m[1]) + "." + dos(m[2]) + "." + m[3];
+    let dia = null, mes = null, an = null;
+    sAcc(t.toLowerCase()).split(/[\s,]+/).filter(w => w && w !== "de" && w !== "del").forEach(w => {
+      w = w.replace(/\.$/, "");
+      if (/^\d{3,4}$/.test(w)) an = w; else if (/^\d{1,2}$/.test(w) && dia === null) dia = +w; else if (MESOS[w]) mes = MESOS[w];
+    });
+    if (!an) return pref + txt.trim();
+    return pref + (mes && dia ? dos(dia) + "." + dos(mes) + "." : mes ? dos(mes) + "." : "") + an;
+  }
+  const AUTO = new Set(["This extracted record was used to create this person in Family Tree.", "GEDCOM data", "MyTrees GEDCOM Match against FamilySearch", "ok", "."]);
+  // Llegeix un GEDCOM sencer i en treu només les persones vives (sense registre de defunció)
+  function vivesDelGed(text) {
+    const recs = text.replace(/\r/g, "").split(/\n(?=0 )/).map(r => r.split("\n").filter(Boolean));
+    const notes = {};
+    recs.forEach(r => { const m = (r[0] || "").match(/^0 (@[^@]+@) NOTE ?(.*)$/); if (!m) return;
+      let t = m[2]; r.slice(1).forEach(l => { if (l.slice(2, 6) === "CONT") t += "\n" + l.slice(7); else if (l.slice(2, 6) === "CONC") t += l.slice(7); }); notes[m[1]] = t.trim(); });
+    const esdev = (r, tag) => { const i = r.findIndex(l => l === "1 " + tag || l.startsWith("1 " + tag + " ")); if (i < 0) return null;
+      let d = "", p = ""; for (const l of r.slice(i + 1)) { if (/^[01] /.test(l)) break; if (l.startsWith("2 DATE ")) d = dataGed(l.slice(7)); else if (l.startsWith("2 PLAC ")) p = l.slice(7); }
+      return d || p ? [d, p] : null; };
+    const P = {}, F = {}, vius = new Set();
+    recs.forEach(r => {
+      const m = (r[0] || "").match(/^0 @([^@]+)@ INDI/); if (!m) return;
+      if (r.some(l => /^1 DEAT\b/.test(l))) return;
+      const id = m[1]; vius.add(id);
+      const nm = (r.find(l => l.startsWith("1 NAME ")) || "1 NAME ?").slice(7).split("/");
+      const o = { n: (nm.length > 1 ? (nm[0].trim() + " " + nm[1].trim()) : nm[0]).trim() || "?" };
+      const sx = (r.find(l => l.startsWith("1 SEX ")) || "").slice(6); if (sx === "M" || sx === "F") o.s = sx;
+      const b = esdev(r, "BIRT") || esdev(r, "CHR"); if (b) o.b = b;
+      const oc = r.find(l => l.startsWith("1 OCCU ")); if (oc) o.o = oc.slice(7);
+      const res = esdev(r, "RESI"); if (res && res[1]) o.r = res[1];
+      const fs = r.find(l => l.startsWith("1 _FSFTID ")); if (fs) o.fs = fs.slice(10).trim();
+      const nt = []; r.forEach(l => { const k = l.match(/^1 NOTE (@[^@]+@)$/); const t = k && notes[k[1]]; if (t && !AUTO.has(t) && !nt.includes(t)) nt.push(t); });
+      if (nt.length) o.nt = nt;
+      P[id] = o;
+    });
+    recs.forEach(r => {
+      const m = (r[0] || "").match(/^0 @([^@]+)@ FAM/); if (!m) return;
+      const sp = r.filter(l => /^1 (HUSB|WIFE) /.test(l)).map(l => l.split(" ")[2].replace(/@/g, ""));
+      if (!sp.some(x => vius.has(x))) return;
+      const mm = esdev(r, "MARR"); if (mm) F[m[1]] = { m: mm };
+    });
+    return { P, F, importat: new Date().toISOString().slice(0, 10) };
+  }
+  function fusionaVives(priv) {
+    if (!priv || !priv.P) return 0;
+    let n = 0;
+    Object.entries(priv.P).forEach(([id, o]) => { if (GEN.P[id]) { GEN.P[id] = Object.assign({}, GEN.P[id], o, { c: GEN.P[id].c, f: GEN.P[id].f, viu: true }); n++; } });
+    Object.entries(priv.F || {}).forEach(([id, o]) => { if (GEN.F[id]) GEN.F[id] = Object.assign({}, GEN.F[id], o); });
+    return n;
+  }
   const normal = t => String(t).toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
   window.obreGenealogia = async () => {
     if (genFet) return;
@@ -2595,18 +2675,37 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       $("genCos").innerHTML = '<p class="buit">No s\'ha pogut carregar l\'arbre. Torna-ho a provar d\'aquí a una estona.</p>';
       return;
     }
+    let priv = null, estatPriv = "clau";
+    if (window.TaulerPrivat) { try { const r = await window.TaulerPrivat.genealogia(); estatPriv = r.estat; priv = r.dades; } catch (e) { estatPriv = "xarxa"; } }
+    const nVives = fusionaVives(priv);
     const ids = Object.keys(GEN.P).filter(k => GEN.P[k].n !== "Privat");
     const index = ids.map(k => [k, normal(GEN.P[k].n)]);
     $("genCos").innerHTML =
       '<div class="gen-barra"><input id="genCerca" type="search" placeholder="Cerca una persona (' + ids.length.toLocaleString("ca") + ' persones)…" autocomplete="off">' +
       '<button type="button" id="genEnrere" disabled>◀ Enrere</button><button type="button" id="genArrel">🏠 Jo</button><button type="button" id="genPdf" title="Desa la fitxa i els avantpassats en PDF o imprimeix-los">🖨️ PDF</button>' +
       '<div class="gen-res" id="genRes" hidden></div></div><div id="genVista"></div>' +
-      '<p class="font">Dades de FamilySearch (12.11.2026). Les persones vives hi surten com a «Privat». ' +
+      '<p class="font">Dades de FamilySearch (12.11.2026). ' + (nVives ? "" : "Les persones vives hi surten com a «Privat» fins que no hi afegeixis les seves dades. ") +
+      (nVives ? "Les " + nVives + " persones vives surten amb les seves dades, que es guarden només al teu magatzem privat (importades " + (function (d) { return (/^(01|11)\./.test(d) ? "l'" : "el ") + d; })(String(priv.importat || "").split("-").reverse().join(".")) + "). " : "") +
+      (estatPriv === "ok" ? '<button type="button" id="genImporta" class="enllac-boto">' + (nVives ? "Actualitza les dades de les persones vives" : "🔐 Afegeix les dades de les persones vives") + '</button><input type="file" id="genFitxer" accept=".ged,.GED" hidden> · ' : "") +
       '<a href="genealogia/arbre-amb-fonts.ged" download>Baixa l\'arbre en GEDCOM, amb notes i fonts</a> · ' +
       '<a href="https://pewu.github.io/topola-viewer/#/view?url=' + encodeURIComponent(new URL("genealogia/arbre-topola.ged", location.href).href) + '&handleCors=false&indi=I1" target="_blank" rel="noopener">Obre\'l a Topola</a> (gràfic gran i exportació a PDF, PNG o SVG; amb tantes persones pot trigar uns minuts).</p>';
     $("genVista").addEventListener("click", e => { const b = e.target.closest(".gen-p[data-id]"); if (b) { genVes(b.dataset.id); $("genealogia").scrollIntoView({ behavior: "smooth", block: "start" }); } });
     $("genEnrere").addEventListener("click", () => { if (genHist.length) { genVes(genHist.pop(), true); $("genEnrere").disabled = !genHist.length; } });
     $("genArrel").addEventListener("click", () => genVes(GEN.arrel));
+    if ($("genImporta")) {
+      $("genImporta").addEventListener("click", () => $("genFitxer").click());
+      $("genFitxer").addEventListener("change", async () => {
+        const f = $("genFitxer").files[0]; if (!f) return;
+        $("genImporta").textContent = "Llegint " + f.name + "…";
+        try {
+          const nou = vivesDelGed(await f.text());
+          const quantes = Object.keys(nou.P).filter(id => GEN.P[id]).length;
+          if (!quantes) { $("genImporta").textContent = "Aquest fitxer no té cap persona viva d'aquest arbre. Tria l'arbre.ged complet."; return; }
+          if (!window.TaulerPrivat.desaGenealogia(nou)) { $("genImporta").textContent = "No s'ha pogut desar: torna-ho a provar quan hi hagi connexió."; return; }
+          fusionaVives(nou); genFet = false; genHist = []; window.obreGenealogia();
+        } catch (e) { $("genImporta").textContent = "No s'ha pogut llegir el fitxer."; }
+      });
+    }
     $("genPdf").addEventListener("click", () => {
       document.body.classList.add("gen-imprimeix");
       const treu = () => { document.body.classList.remove("gen-imprimeix"); window.removeEventListener("afterprint", treu); };
