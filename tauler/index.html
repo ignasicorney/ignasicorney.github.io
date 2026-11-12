@@ -2485,7 +2485,7 @@ a.tira-it:hover{color:var(--accent);text-decoration:underline}
     try { dies = (await obtenir(BASE + "dies.json")).slice().sort().reverse(); } catch (e) { return; }
     let tdg = [], premsa = { local: [], gen: [] };
     for (const d of dies.slice(0, 3)) {
-      if (!tdg.length) { try { const t = await obtenir(BASE + d + "/titulars.json"); tdg = (t.titulars || []).filter(Boolean).map(x => ({ titol: x, url: "" })); } catch (e) {} }
+      if (!tdg.length) { try { const t = await obtenir(BASE + d + "/titulars.json"); tdg = (t.titulars || []).filter(Boolean).map(x => ({ mitja: "La TdG", titol: x, url: "" })); } catch (e) {} }
       if (!premsa.local.length && !premsa.gen.length) { try { premsa = Object.assign({ local: [], gen: [] }, premsaDelResum(await obtenir(BASE + d + "/resum.html", true))); } catch (e) {} }
       if (tdg.length && (premsa.local.length || premsa.gen.length)) break;
     }
