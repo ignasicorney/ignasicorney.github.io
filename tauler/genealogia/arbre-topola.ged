@@ -17,16 +17,19 @@
 1 SEX M
 1 FAMS @F2112@
 1 FAMC @F1@
+1 _FSFTID G3TJ-CDQ
 0 @I2@ INDI
 1 NAME Privat
 1 SEX M
 1 FAMS @F1@
 1 FAMC @F3@
+1 _FSFTID G3TP-Z3K
 0 @I3@ INDI
 1 NAME Privat
 1 SEX F
 1 FAMS @F1@
 1 FAMC @F2@
+1 _FSFTID G3TP-QC6
 0 @I4@ INDI
 1 NAME Pilar /Gumbau Faixedas/
 1 NAME M. Pilar Germana Caterina /Gumbau Faixedas/
@@ -36955,6 +36958,7 @@
 1 SEX F
 1 FAMS @F1347@
 1 FAMC @F2@
+1 _FSFTID G3TP-XVX
 0 @I2437@ INDI
 1 NAME Margarida Eularia Rosa /Farriol/
 1 SEX F
@@ -40448,6 +40452,7 @@
 1 NAME Privat
 1 SEX M
 1 FAMC @F3@
+1 _FSFTID G3TP-DRF
 0 @I2635@ INDI
 1 NAME Margarida /Mauri/
 1 NAME Margarida /Maurina/
@@ -41398,6 +41403,7 @@
 1 SEX M
 1 FAMS @F1662@
 1 FAMC @F3@
+1 _FSFTID G3TP-FJC
 0 @I2695@ INDI
 1 NAME Jaume /Bohigas/
 1 SEX M
@@ -48314,6 +48320,7 @@
 1 SEX F
 1 FAMS @F2678@
 1 FAMC @F3@
+1 _FSFTID G3TP-WKW
 0 @I3099@ INDI
 1 NAME Catherina /Comadira del Bosch/
 1 NAME Catherina Moserrada /Comadira/
@@ -74078,6 +74085,7 @@
 1 SEX F
 1 FAMS @F2345@
 1 FAMC @F2@
+1 _FSFTID G3TP-ZYY
 0 @I4579@ INDI
 1 NAME Narcis /Guinart/
 2 NOTE @N8066@
@@ -94933,6 +94941,7 @@
 1 NAME Privat
 1 SEX F
 1 FAMS @F2112@
+1 _FSFTID PCT9-P9R
 0 @I5824@ INDI
 1 NAME Margarida /Cabanyes/
 1 SEX F
@@ -95973,6 +95982,7 @@
 1 NAME Privat
 1 SEX M
 1 FAMS @F2345@
+1 _FSFTID G3T5-PM1
 0 @I5902@ INDI
 1 NAME Theresa /Segura Bobe/
 1 SEX F
@@ -99198,6 +99208,7 @@
 1 NAME Privat
 1 SEX F
 1 FAMS @F1662@
+1 _FSFTID G3TP-F96
 0 @I6128@ INDI
 1 NAME Narcisa /Albert Bohigas/
 1 SEX F
@@ -106871,6 +106882,7 @@
 1 NAME Privat
 1 SEX M
 1 FAMS @F1347@
+1 _FSFTID G3T5-NX6
 0 @I6694@ INDI
 1 NAME Antoni /Carreras/
 1 SEX M
@@ -108189,6 +108201,7 @@
 1 NAME Privat
 1 SEX M
 1 FAMS @F2678@
+1 _FSFTID G3TP-8CR
 0 @I6783@ INDI
 1 NAME Josep /Busquets Candeler/
 1 NAME Jose Juan Cosme /Busquets/
