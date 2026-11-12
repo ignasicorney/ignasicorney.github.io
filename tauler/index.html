@@ -352,6 +352,7 @@ dialog .check{display:flex;gap:8px;align-items:center;color:var(--text);font-siz
 @media print{body.gen-imprimeix>*:not(main),body.gen-imprimeix main>*:not(#genealogia),body.gen-imprimeix .gen-barra,body.gen-imprimeix #genCos>.font{display:none!important}
 body.gen-imprimeix{background:#fff}body.gen-imprimeix #genealogia{border:0;box-shadow:none}
 body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-width:0}}
+.gen-rel{margin:0 0 4px;padding:6px 10px;border-radius:8px;background:#fdf1ec;display:inline-block}
 .gen-nota{border:1px solid var(--linia);border-radius:8px;padding:8px 10px;margin:6px 0;background:#fffdf8;white-space:pre-wrap;font-size:.9rem;overflow-wrap:anywhere}
 /* 12.11.2026: el temps, a dalt a la dreta de la capçalera */
 .cap-temps{display:flex;align-items:flex-start;justify-content:space-between;gap:8px 20px;flex-wrap:wrap}
@@ -2483,6 +2484,62 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
   };
   const pares = id => { const p = GEN.P[id]; const f = p && p.c && GEN.F[p.c]; return f ? [f.h, f.w] : [null, null]; };
   const esdev = e => e ? esc([e[0], e[1]].filter(Boolean).join(", ")) : "";
+  // ---- Parentiu respecte de mi (l'arrel de l'arbre) ----
+  let MEUS = null, PREV = null, PATERN = null;
+  function genPrepara() {
+    MEUS = new Map([[GEN.arrel, 0]]); PREV = new Map(); const cua = [GEN.arrel];
+    while (cua.length) { const x = cua.shift(); for (const p of pares(x)) if (p && !MEUS.has(p)) { MEUS.set(p, MEUS.get(x) + 1); PREV.set(p, x); cua.push(p); } }
+    PATERN = new Set(); const [pa] = pares(GEN.arrel);
+    if (pa) { PATERN.add(pa); const c2 = [pa]; while (c2.length) { const x = c2.shift(); for (const p of pares(x)) if (p && !PATERN.has(p)) { PATERN.add(p); c2.push(p); } } }
+  }
+  const fem = id => !!(GEN.P[id] && GEN.P[id].s === "F");
+  const ORD = ["", "", "germà", "segon", "tercer", "quart", "cinquè", "sisè", "setè", "vuitè", "novè", "desè"];
+  const ORDF = ["", "", "germana", "segona", "tercera", "quarta", "cinquena", "sisena", "setena", "vuitena", "novena", "desena"];
+  const AV = [null, ["pare", "mare"], ["avi", "àvia"], ["besavi", "besàvia"], ["rebesavi", "rebesàvia"]];
+  const DE = [null, ["fill", "filla"], ["nét", "néta"], ["besnét", "besnéta"], ["rebesnét", "rebesnéta"]];
+  // «el teu besavi», «la teva àvia», «el teu avantpassat de 7 generacions»
+  const elTeu = (n, f) => (f ? "la teva " : "el teu ") + (AV[n] ? AV[n][f ? 1 : 0] : (f ? "avantpassada directa" : "avantpassat directe") + " (" + n + " generacions enrere)");
+  const desc = (n, f) => DE[n] ? DE[n][f ? 1 : 0] : "descendent de " + n + " generacions";
+  const branca = c => PATERN.has(c) ? "per part de pare" : "per part de mare";
+  const majus = t => t.charAt(0).toUpperCase() + t.slice(1);
+  // ancestre comú més proper entre jo i t: {c, a: generacions des de mi, b: des de t}
+  function comu(t) {
+    const vist = new Map([[t, 0]]), cua = [t]; let m = null;
+    while (cua.length) {
+      const x = cua.shift(), dx = vist.get(x);
+      if (m && dx > m.a + m.b) break;
+      if (MEUS.has(x)) { const a = MEUS.get(x); if (!m || a + dx < m.a + m.b) m = { c: x, a, b: dx }; continue; }
+      for (const p of pares(x)) if (p && !vist.has(p)) { vist.set(p, dx + 1); cua.push(p); }
+    }
+    return m;
+  }
+  function parentiuSang(t) {
+    if (t === GEN.arrel) return { r: "Ets tu" };
+    if (MEUS.has(t)) return { r: majus(elTeu(MEUS.get(t), fem(t))), b: branca(t) };
+    const m = comu(t);
+    if (!m) return null;
+    const { c, a, b } = m, f = fem(t);
+    const fillMeu = PREV.get(c);                       // el meu avantpassat que és fill de l'ancestre comú
+    let r;
+    if (a === 1 && b === 1) r = f ? "Germana" : "Germà";
+    else if (b === 1) r = (f ? "Germana " : "Germà ") + (fem(fillMeu) ? "de " : "del ") + elTeu(a - 1, fem(fillMeu)).replace(/^el /, "") + " " + GEN.P[fillMeu].n;
+    else if (a === 1) r = f ? "Neboda" : "Nebot";
+    else if (a === b) r = a < ORD.length ? (f ? "Cosina " + ORDF[a] : "Cosí " + ORD[a]) : "Parent col·lateral";
+    else { const g = Math.min(a, b), d = Math.abs(a - b);
+      r = (g < ORD.length ? (f ? "Cosina " + ORDF[g] : "Cosí " + ORD[g]) : "Parent col·lateral") + ", " + (b > a ? d + " generaci" + (d === 1 ? "ó" : "ons") + " més avall" : d + " generaci" + (d === 1 ? "ó" : "ons") + " més amunt"); }
+    const x = "Ancestre comú: " + GEN.P[c].n + ", " + elTeu(a, fem(c)) + (b > 1 ? "; " + GEN.P[t].n.split(" ")[0] + " n'és " + desc(b, f) + (f ? "" : "") : "") + ".";
+    return { r, b: branca(c), x };
+  }
+  function parentiu(t) {
+    const s = parentiuSang(t);
+    if (s) return s;
+    for (const fid of (GEN.P[t].f || [])) {
+      const f = GEN.F[fid], cj = f && (f.h === t ? f.w : f.h);
+      const rs = cj && parentiuSang(cj);
+      if (rs) return { r: (fem(t) ? "Esposa " : "Espòs ") + (MEUS.has(cj) ? (fem(cj) ? "de " : "del ") + elTeu(MEUS.get(cj), fem(cj)).replace(/^el /, "") : "de " + GEN.P[cj].n.split(" ")[0] + " (" + rs.r.toLowerCase() + ")") + (MEUS.has(cj) ? " " + GEN.P[cj].n : ""), b: rs.b, x: "No és avantpassat teu: hi estàs emparentat per matrimoni." };
+    }
+    return { r: "Sense parentiu trobat a l'arbre" };
+  }
   function genPinta(id) {
     genActual = id;
     const p = GEN.P[id];
@@ -2493,7 +2550,8 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     let h = '<div class="gen-ped"><div class="gen-ped-g">' + cols.map((c, g) =>
       '<div class="gen-ped-c"><div class="gen-ped-t">' + titols[g] + "</div>" + c.map(x => genBoto(x)).join("") + "</div>").join("") + "</div></div>";
     // Fitxa
-    h += '<div class="gen-fitxa"><h3>' + esc(p.n) + "</h3><dl>";
+    const pr = parentiu(id);
+    h += '<div class="gen-fitxa"><h3>' + esc(p.n) + '</h3><p class="gen-rel">🧬 <b>' + esc(pr.r) + "</b>" + (pr.b ? " · " + esc(pr.b) : "") + "</p>" + (pr.x ? '<p class="font" style="margin:0 0 6px">' + esc(pr.x) + "</p>" : "") + "<dl>";
     if (p.b) h += "<dt>Naixement</dt><dd>" + esdev(p.b) + "</dd>";
     if (p.d) h += "<dt>Defunció</dt><dd>" + esdev(p.d) + "</dd>";
     if (p.o) h += "<dt>Ofici</dt><dd>" + esc(p.o) + "</dd>";
@@ -2565,6 +2623,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       $("genRes").hidden = false;
     });
     $("genRes").addEventListener("click", e => { const b = e.target.closest("button[data-id]"); if (b) { genVes(b.dataset.id); $("genRes").hidden = true; $("genCerca").value = ""; } });
+    genPrepara();
     genVes(GEN.arrel, true);
   };
 })();
