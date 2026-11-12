@@ -365,6 +365,11 @@ a.tira-it:hover{color:var(--accent);text-decoration:underline}
 .temps-dalt{flex:0 1 auto;margin-top:6px;text-align:right}
 .temps-dalt .temps-cap,.temps-dalt .temps-linia,.temps-dalt .temps-dies{justify-content:flex-end}
 @media (max-width:600px){.temps-dalt{flex:1 1 100%;margin:0 0 12px;text-align:left}.temps-dalt .temps-cap,.temps-dalt .temps-linia,.temps-dalt .temps-dies{justify-content:flex-start}}
+/* 12.11.2026: un sol bloc «Feina»: La TdG, i a sota la web, l'arbre i l'Institut */
+.feina-peu{display:flex;align-items:center;gap:10px 16px;flex-wrap:wrap;margin-top:12px;padding-top:12px;border-top:1px solid var(--linia)}
+.feina-peu .tdg-acces{flex:0 1 auto}
+.feina-botons{display:flex;align-items:center;gap:10px;margin-left:auto}
+.feina-botons .logo-boto,.feina-botons .gen-boto{margin-left:0}
 </style>
 </head>
 <body>
@@ -397,15 +402,8 @@ a.tira-it:hover{color:var(--accent);text-decoration:underline}
 
 
 
-  <section id="web" class="ample">
-    <h2 style="text-transform:none">Pàgina web</h2>
-    <div class="tdg-accessos">
-      <a class="tdg-acces" target="_blank" rel="noopener" href="/"><span class="tdg-ico">🌐</span><span>ignasicorney.github.io</span></a>
-    </div>
-  </section>
-
-  <section id="latdg" class="ample">
-    <h2 style="text-transform:none">La TdG</h2>
+  <section id="feina" class="ample">
+    <h2 style="text-transform:none">Feina</h2>
     <div class="tdg-accessos">
       <a class="tdg-acces" target="_blank" rel="noopener" href="https://latdg.github.io/redaccio/"><span class="tdg-ico">✍️</span><span>Redacció</span></a>
       <a class="tdg-acces" target="_blank" rel="noopener" href="https://latdg.github.io/tauler/"><span class="tdg-ico">➕</span><span>Ampliada</span></a>
@@ -413,11 +411,13 @@ a.tira-it:hover{color:var(--accent);text-decoration:underline}
       <a class="tdg-acces" target="_blank" rel="noopener" href="https://latdg.github.io/redaccio/tdt/"><span class="tdg-ico">📺</span><span>Sala de control audiovisual</span></a>
       <a class="tdg-acces" target="_blank" rel="noopener" href="https://latdg.github.io/tauler/fonoteca/"><span class="tdg-ico">🎙️</span><span>Fonoteca</span></a>
     </div>
-  </section>
-
-  <section id="feina" class="ample acces-bloc">
-    <h2 style="text-transform:none">Feina</h2>
-    <button type="button" class="logo-boto" id="instBoto" aria-expanded="false" aria-controls="institut" title="Obre l'Institut"><img src="logo-ins.png" alt="INS la Bisbal" class="logo-inst"></button>
+    <div class="feina-peu">
+      <a class="tdg-acces" target="_blank" rel="noopener" href="/"><span class="tdg-ico">🌐</span><span>ignasicorney.github.io</span></a>
+      <div class="feina-botons">
+        <button type="button" class="logo-boto gen-boto" id="genBoto" aria-expanded="false" aria-controls="genealogia" title="Obre la genealogia">🌳</button>
+        <button type="button" class="logo-boto" id="instBoto" aria-expanded="false" aria-controls="institut" title="Obre l'Institut"><img src="logo-ins.png" alt="INS la Bisbal" class="logo-inst"></button>
+      </div>
+    </div>
   </section>
   <section id="institut" class="ample" hidden>
     <div class="capinst">
@@ -505,10 +505,6 @@ a.tira-it:hover{color:var(--accent);text-decoration:underline}
     </div>
   </section>
 
-  <section id="genbloc" class="ample acces-bloc">
-    <h2 style="text-transform:none">Genealogia</h2>
-    <button type="button" class="logo-boto gen-boto" id="genBoto" aria-expanded="false" aria-controls="genealogia" title="Obre la genealogia">🌳</button>
-  </section>
   <section id="genealogia" class="ample" hidden>
     <h2>🌳 Arbre genealògic</h2>
     <div id="genCos"><p class="buit">Carregant l'arbre…</p></div>
