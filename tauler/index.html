@@ -329,6 +329,9 @@ a.tira-it:hover{color:var(--accent);text-decoration:underline}
 .tira-it b::after{content:" ·"}
 @media (prefers-reduced-motion:reduce){.tira-marc{overflow-x:auto}.tira-pista{animation:none}.tira-pista>.tira-copia{display:none!important}}
 /* Genealogia (12.11.2026) */
+.gen-boto{font-size:2.6rem;line-height:52px;height:64px;min-width:64px;margin-left:auto}
+.gen-boto+.logo-boto{margin-left:0}
+@media (max-width:600px){.gen-boto{font-size:2.1rem;line-height:42px;height:54px;min-width:54px}}
 .gen-marc{width:100%;height:78vh;min-height:420px;border:1px solid var(--linia);border-radius:10px;background:#fff;display:block}
 </style>
 </head>
@@ -357,6 +360,7 @@ a.tira-it:hover{color:var(--accent);text-decoration:underline}
     </div>
     <div class="temps-cap">
       <div id="tempsAra" class="temps-linia buit">Carregant el temps…</div>
+      <button type="button" class="logo-boto gen-boto" id="genBoto" aria-expanded="false" aria-controls="genealogia" title="Obre la genealogia">🌳</button>
       <button type="button" class="logo-boto" id="instBoto" aria-expanded="false" aria-controls="institut" title="Obre l'Institut"><img src="logo-ins.png" alt="INS la Bisbal" class="logo-inst"></button>
     </div>
     <div id="tempsDies" class="temps-dies"></div>
@@ -857,8 +861,6 @@ a.tira-it:hover{color:var(--accent);text-decoration:underline}
     $("institutCos").hidden = !si;
     $("institutClau").hidden = true;
     $("institut").hidden = !si;
-    $("genealogia").hidden = !si;
-    if (si && window.obreGenealogia) window.obreGenealogia();
     $("instBoto").setAttribute("aria-expanded", si ? "true" : "false");
     $("instBoto").title = si ? "Tanca l'Institut" : "Obre l'Institut";
     lsEscriu("tauler.obert", si ? "1" : null);   // queda obert en aquest aparell fins que es tanqui
@@ -2504,6 +2506,16 @@ a.tira-it:hover{color:var(--accent);text-decoration:underline}
   // ---------------- Genealogia ----------------
   const GED = "genealogia/arbre.ged";
   let genFet = false;
+  const teClau = () => { try { return !!localStorage.getItem("tauler.clau"); } catch (e) { return false; } };
+  $("genBoto").addEventListener("click", () => {
+    const obrir = $("genealogia").hidden;
+    $("genealogia").hidden = !obrir;
+    $("genBoto").setAttribute("aria-expanded", obrir ? "true" : "false");
+    $("genBoto").title = obrir ? "Tanca la genealogia" : "Obre la genealogia";
+    if (!obrir) return;
+    if (!teClau()) { $("genCos").innerHTML = '<p class="buit">Aquest apartat va amb la clau de La TdG. Obre primer l\'Institut amb el logo de l\'INS i escriu-la; després ja s\'obrirà sol.</p>'; return; }
+    window.obreGenealogia();
+  });
   window.obreGenealogia = async () => {
     if (genFet) return;
     genFet = true;
