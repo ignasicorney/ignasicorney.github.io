@@ -324,7 +324,32 @@ dialog .check{display:flex;gap:8px;align-items:center;color:var(--text);font-siz
 /* Genealogia (12.11.2026) */
 .gen-boto{font-size:2.6rem;line-height:52px;height:64px;min-width:64px;margin-left:auto}
 @media (max-width:600px){.gen-boto{font-size:2.1rem;line-height:42px;height:54px;min-width:54px}}
-.gen-marc{width:100%;height:78vh;min-height:420px;border:1px solid var(--linia);border-radius:10px;background:#fff;display:block}
+.gen-barra{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px;position:relative}
+.gen-barra input{flex:1 1 220px;min-width:0;padding:8px 10px;border:1px solid var(--linia);border-radius:8px;font:inherit;background:#fff}
+.gen-barra button{padding:8px 12px;border:1px solid var(--linia);border-radius:8px;background:#fbfaf7;font:inherit;cursor:pointer}
+.gen-barra button:hover{border-color:var(--accent);color:var(--accent)}
+.gen-res{position:absolute;left:0;right:0;top:100%;z-index:5;background:#fff;border:1px solid var(--linia);border-radius:8px;max-height:320px;overflow:auto;box-shadow:0 6px 18px rgba(0,0,0,.08)}
+.gen-res button{display:block;width:100%;text-align:left;border:0;border-bottom:1px solid var(--linia);border-radius:0;background:#fff;padding:8px 10px}
+.gen-res button:last-child{border-bottom:0}
+.gen-ped{overflow-x:auto;border:1px solid var(--linia);border-radius:10px;background:#fbfaf7;padding:10px;margin-bottom:12px}
+.gen-ped-g{display:grid;grid-template-columns:repeat(4,minmax(150px,1fr));gap:6px 10px;min-width:640px}
+.gen-ped-c{display:flex;flex-direction:column;justify-content:space-around;gap:6px}
+.gen-ped-t{font-size:.72rem;color:var(--suau);text-transform:uppercase;letter-spacing:.04em;margin-bottom:2px}
+.gen-p{display:block;width:100%;text-align:left;border:1px solid var(--linia);border-radius:8px;background:#fff;padding:6px 8px;font:inherit;font-size:.85rem;line-height:1.25;cursor:pointer;color:var(--text)}
+.gen-p:hover{border-color:var(--accent)}
+.gen-p.M{border-left:4px solid #5b8db8}.gen-p.F{border-left:4px solid #c27a92}
+.gen-p.actual{background:#fdf1ec;border-color:var(--accent)}
+.gen-p small{display:block;color:var(--suau);font-size:.75rem}
+.gen-p.buida{visibility:hidden}
+.gen-fitxa h3{margin:0 0 4px;font-size:1.25rem}
+.gen-fitxa dl{display:grid;grid-template-columns:max-content 1fr;gap:4px 12px;margin:8px 0}
+.gen-fitxa dt{color:var(--suau)}
+.gen-fitxa dd{margin:0}
+.gen-fam{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px;margin:12px 0}
+.gen-fam>div{border:1px solid var(--linia);border-radius:10px;padding:10px;background:#fff}
+.gen-fam h4{margin:0 0 6px;font-size:.8rem;color:var(--suau);text-transform:uppercase;letter-spacing:.04em}
+.gen-fam .gen-p{margin-bottom:5px}
+.gen-nota{border:1px solid var(--linia);border-radius:8px;padding:8px 10px;margin:6px 0;background:#fffdf8;white-space:pre-wrap;font-size:.9rem;overflow-wrap:anywhere}
 /* 12.11.2026: el temps, a dalt a la dreta de la capçalera */
 .cap-temps{display:flex;align-items:flex-start;justify-content:space-between;gap:8px 20px;flex-wrap:wrap}
 .cap-esq{min-width:0;flex:1 1 260px}
@@ -2428,13 +2453,12 @@ dialog .check{display:flex;gap:8px;align-items:center;color:var(--text);font-siz
 <script src="dates-ca.js?v=3"></script>
 <script>
 // =============================================================================
-// Genealogia (12.11.2026): l'arbre familiar amb el Topola Viewer, dins del candau.
+// Genealogia (12.11.2026): l'arbre familiar (visor propi sobre genealogia/arbre.json), dins del candau.
 // =============================================================================
 (() => {
   const $ = id => document.getElementById(id);
   const esc = t => String(t ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   // ---------------- Genealogia ----------------
-  const GED = "genealogia/arbre.ged";
   let genFet = false;
   const teClau = () => { try { return !!localStorage.getItem("tauler.clau"); } catch (e) { return false; } };
   $("genBoto").addEventListener("click", () => {
@@ -2446,20 +2470,91 @@ dialog .check{display:flex;gap:8px;align-items:center;color:var(--text);font-siz
     if (!teClau()) { $("genCos").innerHTML = '<p class="buit">Aquest apartat va amb la clau de La TdG. Obre primer l\'Institut amb el logo de l\'INS i escriu-la; després ja s\'obrirà sol.</p>'; return; }
     window.obreGenealogia();
   });
+  let GEN = null, genActual = null, genHist = [];
+  const anyDe = d => { const m = String(d || "").match(/\d{3,4}(?!.*\d{3,4})/); return m ? m[0] : ""; };
+  const anys = p => { const b = anyDe(p.b && p.b[0]), d = anyDe(p.d && p.d[0]); return b || d ? (b || "?") + "–" + (d || "?") : ""; };
+  const genBoto = (id, extra) => {
+    if (!id || !GEN.P[id]) return '<span class="gen-p buida">·</span>';
+    const p = GEN.P[id];
+    return '<button type="button" class="gen-p ' + (p.s || "") + (id === genActual ? " actual" : "") + '" data-id="' + esc(id) + '">' + esc(p.n) + (extra ? " " + extra : "") + "<small>" + esc(anys(p)) + "</small></button>";
+  };
+  const pares = id => { const p = GEN.P[id]; const f = p && p.c && GEN.F[p.c]; return f ? [f.h, f.w] : [null, null]; };
+  const esdev = e => e ? esc([e[0], e[1]].filter(Boolean).join(", ")) : "";
+  function genPinta(id) {
+    genActual = id;
+    const p = GEN.P[id];
+    // Avantpassats: 4 columnes (persona, pares, avis, besavis)
+    const cols = [[id]];
+    for (let g = 1; g < 4; g++) cols.push(cols[g - 1].flatMap(x => x ? pares(x) : [null, null]));
+    const titols = ["Persona", "Pares", "Avis", "Besavis"];
+    let h = '<div class="gen-ped"><div class="gen-ped-g">' + cols.map((c, g) =>
+      '<div class="gen-ped-c"><div class="gen-ped-t">' + titols[g] + "</div>" + c.map(x => genBoto(x)).join("") + "</div>").join("") + "</div></div>";
+    // Fitxa
+    h += '<div class="gen-fitxa"><h3>' + esc(p.n) + "</h3><dl>";
+    if (p.b) h += "<dt>Naixement</dt><dd>" + esdev(p.b) + "</dd>";
+    if (p.d) h += "<dt>Defunció</dt><dd>" + esdev(p.d) + "</dd>";
+    if (p.o) h += "<dt>Ofici</dt><dd>" + esc(p.o) + "</dd>";
+    if (p.fs) h += '<dt>Fonts</dt><dd><a href="https://www.familysearch.org/tree/person/details/' + encodeURIComponent(p.fs) + '" target="_blank" rel="noopener">Fitxa a FamilySearch (' + esc(p.fs) + ")</a></dd>";
+    h += "</dl></div>";
+    // Família
+    h += '<div class="gen-fam">';
+    const [pa, ma] = pares(id);
+    if (pa || ma) h += "<div><h4>Pares</h4>" + [pa, ma].filter(Boolean).map(x => genBoto(x)).join("") + "</div>";
+    const f0 = p.c && GEN.F[p.c];
+    const germans = f0 && f0.ch ? f0.ch.filter(x => x !== id) : [];
+    if (germans.length) h += "<div><h4>Germans (" + germans.length + ")</h4>" + germans.map(x => genBoto(x)).join("") + "</div>";
+    (p.f || []).forEach(fid => {
+      const f = GEN.F[fid]; if (!f) return;
+      const conj = f.h === id ? f.w : f.h;
+      h += "<div><h4>" + (conj ? "Amb" : "Família") + "</h4>" + (conj ? genBoto(conj) : "") +
+        (f.m ? '<p class="font" style="margin:0 0 6px">Casament: ' + esdev(f.m) + "</p>" : "") +
+        (f.ch && f.ch.length ? '<div class="gen-ped-t" style="margin-top:6px">Fills (' + f.ch.length + ")</div>" + f.ch.map(x => genBoto(x)).join("") : "") + "</div>";
+    });
+    h += "</div>";
+    if (p.nt && p.nt.length) h += "<h4 style=\"margin:12px 0 4px\">Notes</h4>" + p.nt.map(n => '<div class="gen-nota">' + esc(n) + "</div>").join("");
+    $("genVista").innerHTML = h;
+  }
+  function genVes(id, sensHist) {
+    if (!GEN.P[id]) return;
+    if (!sensHist && genActual && genActual !== id) genHist.push(genActual);
+    genPinta(id);
+    $("genEnrere").disabled = !genHist.length;
+  }
+  const normal = t => String(t).toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
   window.obreGenealogia = async () => {
     if (genFet) return;
     genFet = true;
-    let hiEs = false;
-    try { const r = await fetch(GED, { method: "HEAD", cache: "no-cache" }); hiEs = r.ok; } catch (e) {}
-    if (!hiEs) {
+    $("genCos").innerHTML = '<p class="buit">Carregant l\'arbre…</p>';
+    try {
+      const r = await fetch("genealogia/arbre.json", { cache: "no-cache" });
+      if (!r.ok) throw new Error(r.status);
+      GEN = await r.json();
+    } catch (e) {
       genFet = false;
-      $("genCos").innerHTML = '<p class="buit">Encara no hi ha l\'arbre. Quan hi hagi el fitxer de FamilySearch (només amb les persones difuntes), es veurà aquí.</p>';
+      $("genCos").innerHTML = '<p class="buit">No s\'ha pogut carregar l\'arbre. Torna-ho a provar d\'aquí a una estona.</p>';
       return;
     }
-    const urlGed = new URL(GED, location.href).href;
-    const visor = "https://pewu.github.io/topola-viewer/#/view?url=" + encodeURIComponent(urlGed) + "&handleCors=false&indi=I1";
-    $("genCos").innerHTML = '<iframe class="gen-marc" title="Arbre genealògic" src="' + esc(visor + "&embedded=true") + '" loading="lazy"></iframe>' +
-      '<p class="font"><a href="' + esc(visor) + '" target="_blank" rel="noopener">Obre l\'arbre a pantalla completa</a> · Visor: Topola Genealogy Viewer.</p>';
+    const ids = Object.keys(GEN.P).filter(k => GEN.P[k].n !== "Privat");
+    const index = ids.map(k => [k, normal(GEN.P[k].n)]);
+    $("genCos").innerHTML =
+      '<div class="gen-barra"><input id="genCerca" type="search" placeholder="Cerca una persona (' + ids.length.toLocaleString("ca") + ' persones)…" autocomplete="off">' +
+      '<button type="button" id="genEnrere" disabled>◀ Enrere</button><button type="button" id="genArrel">🏠 Jo</button>' +
+      '<div class="gen-res" id="genRes" hidden></div></div><div id="genVista"></div>' +
+      '<p class="font">Dades de FamilySearch (12.11.2026). Les persones vives hi surten com a «Privat». ' +
+      '<a href="genealogia/arbre-amb-fonts.ged" download>Baixa l\'arbre en GEDCOM, amb notes i fonts</a>.</p>';
+    $("genVista").addEventListener("click", e => { const b = e.target.closest(".gen-p[data-id]"); if (b) { genVes(b.dataset.id); $("genealogia").scrollIntoView({ behavior: "smooth", block: "start" }); } });
+    $("genEnrere").addEventListener("click", () => { if (genHist.length) { genVes(genHist.pop(), true); $("genEnrere").disabled = !genHist.length; } });
+    $("genArrel").addEventListener("click", () => genVes(GEN.arrel));
+    $("genCerca").addEventListener("input", () => {
+      const q = normal($("genCerca").value.trim());
+      if (q.length < 2) { $("genRes").hidden = true; return; }
+      const parts = q.split(/\s+/);
+      const res = index.filter(([, n]) => parts.every(w => n.includes(w))).slice(0, 40);
+      $("genRes").innerHTML = res.length ? res.map(([k]) => '<button type="button" data-id="' + esc(k) + '">' + esc(GEN.P[k].n) + ' <span class="font" style="margin:0">' + esc(anys(GEN.P[k])) + "</span></button>").join("") : '<p class="buit" style="margin:8px 10px">No hi ha cap persona amb aquest nom.</p>';
+      $("genRes").hidden = false;
+    });
+    $("genRes").addEventListener("click", e => { const b = e.target.closest("button[data-id]"); if (b) { genVes(b.dataset.id); $("genRes").hidden = true; $("genCerca").value = ""; } });
+    genVes(GEN.arrel, true);
   };
 })();
 </script>
