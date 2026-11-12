@@ -366,10 +366,15 @@ a.tira-it:hover{color:var(--accent);text-decoration:underline}
 .temps-dalt .temps-cap,.temps-dalt .temps-linia,.temps-dalt .temps-dies{justify-content:flex-end}
 @media (max-width:600px){.temps-dalt{flex:1 1 100%;margin:0 0 12px;text-align:left}.temps-dalt .temps-cap,.temps-dalt .temps-linia,.temps-dalt .temps-dies{justify-content:flex-start}}
 /* 12.11.2026: un sol bloc «Feina»: La TdG, i a sota la web, l'arbre i l'Institut */
-.feina-peu{display:flex;align-items:center;gap:10px 16px;flex-wrap:wrap;margin-top:12px;padding-top:12px;border-top:1px solid var(--linia)}
-.feina-peu .tdg-acces{flex:0 1 auto}
-.feina-botons{display:flex;align-items:center;gap:10px;margin-left:auto}
-.feina-botons .logo-boto,.feina-botons .gen-boto{margin-left:0}
+#feina .tdg-accessos{grid-template-columns:repeat(5,minmax(0,1fr))}
+#feina .tdg-acces{min-height:60px;box-sizing:border-box}
+@media (max-width:860px){#feina .tdg-accessos{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (max-width:600px){#feina .tdg-accessos{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.feina-peu{margin-top:12px;padding-top:12px;border-top:1px solid var(--linia)}
+.feina-obre{font:inherit;font-size:.92rem;text-align:left;cursor:pointer;width:100%}
+.feina-obre[aria-expanded="true"]{border-color:var(--accent);color:var(--accent)}
+.feina-obre:disabled{opacity:.6;cursor:wait}
+.feina-logo{height:1.9rem;width:auto;flex:none;display:block}
 </style>
 </head>
 <body>
@@ -411,12 +416,10 @@ a.tira-it:hover{color:var(--accent);text-decoration:underline}
       <a class="tdg-acces" target="_blank" rel="noopener" href="https://latdg.github.io/redaccio/tdt/"><span class="tdg-ico">📺</span><span>Sala de control audiovisual</span></a>
       <a class="tdg-acces" target="_blank" rel="noopener" href="https://latdg.github.io/tauler/fonoteca/"><span class="tdg-ico">🎙️</span><span>Fonoteca</span></a>
     </div>
-    <div class="feina-peu">
-      <a class="tdg-acces" target="_blank" rel="noopener" href="/"><span class="tdg-ico">🌐</span><span>ignasicorney.github.io</span></a>
-      <div class="feina-botons">
-        <button type="button" class="logo-boto gen-boto" id="genBoto" aria-expanded="false" aria-controls="genealogia" title="Obre la genealogia">🌳</button>
-        <button type="button" class="logo-boto" id="instBoto" aria-expanded="false" aria-controls="institut" title="Obre l'Institut"><img src="logo-ins.png" alt="INS la Bisbal" class="logo-inst"></button>
-      </div>
+    <div class="tdg-accessos feina-peu">
+      <a class="tdg-acces" target="_blank" rel="noopener" href="/"><span class="tdg-ico">🌐</span><span>Pàgina web</span></a>
+      <button type="button" class="tdg-acces feina-obre" id="genBoto" aria-expanded="false" aria-controls="genealogia" title="Obre la genealogia"><span class="tdg-ico">🌳</span><span>Genealogia</span></button>
+      <button type="button" class="tdg-acces feina-obre" id="instBoto" aria-expanded="false" aria-controls="institut" title="Obre l'Institut"><img src="logo-ins.png" alt="" class="feina-logo"><span>Institut</span></button>
     </div>
   </section>
   <section id="institut" class="ample" hidden>
