@@ -2490,7 +2490,7 @@ a.tira-it:hover{color:var(--accent);text-decoration:underline}
       if (tdg.length && (premsa.local.length || premsa.gen.length)) break;
     }
     premsa.gen = premsa.gen.slice(0, 10).map(x => Object.assign({}, x, { mitja: nomMitja(x.mitja) }));
-    const h = grup("La TdG", "", tdg) + grup("Mitjans locals", "loc", premsa.local) + grup("Mitjans generalistes", "gen", premsa.gen);
+    const h = grup("La TdG", "", tdg) + grup("Mitjans", "loc", premsa.local.concat(premsa.gen));
     if (!h) { $("tira").hidden = true; return; }
     // Dues còpies seguides perquè la tira giri sense salts
     $("tiraPista").innerHTML = '<span class="tira-copia-1" style="display:inline-flex">' + h + '</span><span class="tira-copia" aria-hidden="true" style="display:inline-flex">' + h + "</span>";
