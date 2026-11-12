@@ -314,6 +314,22 @@ dialog .check{display:flex;gap:8px;align-items:center;color:var(--text);font-siz
 .estat-sinc{display:inline-flex;align-items:center;gap:6px;font-size:.85rem;color:var(--suau)}
 .estat-sinc i{width:9px;height:9px;border-radius:50%;background:#bbb;display:inline-block}
 .estat-sinc.ok i{background:#3a9a3a}.estat-sinc.err i{background:#d0262b}.estat-sinc.desant i{background:#d1a000}
+/* Tira de titulars (12.11.2026) */
+.tira{display:flex;align-items:stretch;border:1px solid var(--linia);border-radius:10px;background:#fbfaf7;overflow:hidden;margin-bottom:12px;font-size:.92rem}
+.tira-marc{flex:1 1 auto;min-width:0;overflow:hidden;position:relative}
+.tira-pista{display:inline-flex;white-space:nowrap;padding:7px 0;animation:tira-corre var(--tira-durada,120s) linear infinite}
+.tira:hover .tira-pista,.tira:focus-within .tira-pista{animation-play-state:paused}
+@keyframes tira-corre{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+.tira-grup{display:inline-flex;align-items:center;gap:0;padding-right:28px}
+.tira-etq{display:inline-block;padding:1px 9px;margin-right:10px;border-radius:999px;background:var(--accent);color:#fff;font-size:.75rem;font-weight:700;letter-spacing:.03em;text-transform:uppercase}
+.tira-etq.loc{background:#2f6f8f}.tira-etq.gen{background:#5d5d58}
+.tira-it{margin-right:22px;color:var(--text);text-decoration:none}
+a.tira-it:hover{color:var(--accent);text-decoration:underline}
+.tira-it b{font-weight:700;margin-right:4px}
+.tira-it b::after{content:" ·"}
+@media (prefers-reduced-motion:reduce){.tira-marc{overflow-x:auto}.tira-pista{animation:none}.tira-pista>.tira-copia{display:none!important}}
+/* Genealogia (12.11.2026) */
+.gen-marc{width:100%;height:78vh;min-height:420px;border:1px solid var(--linia);border-radius:10px;background:#fff;display:block}
 </style>
 </head>
 <body>
@@ -336,6 +352,9 @@ dialog .check{display:flex;gap:8px;align-items:center;color:var(--text);font-siz
 
 
   <section id="temps" class="ample">
+    <div class="tira" id="tira" hidden aria-label="Titulars de La TdG i dels mitjans">
+      <div class="tira-marc"><div class="tira-pista" id="tiraPista"></div></div>
+    </div>
     <div class="temps-cap">
       <div id="tempsAra" class="temps-linia buit">Carregant el temps…</div>
       <button type="button" class="logo-boto" id="instBoto" aria-expanded="false" aria-controls="institut" title="Obre l'Institut"><img src="logo-ins.png" alt="INS la Bisbal" class="logo-inst"></button>
@@ -429,6 +448,11 @@ dialog .check{display:flex;gap:8px;align-items:center;color:var(--text);font-siz
   </div>
       <p class="font"><button type="button" class="boto clar" id="sincDesconnecta">Oblida la clau en aquest aparell</button></p>
     </div>
+  </section>
+
+  <section id="genealogia" class="ample" hidden>
+    <h2>🌳 Genealogia</h2>
+    <div id="genCos"><p class="buit">Carregant l'arbre…</p></div>
   </section>
 
 
@@ -833,6 +857,8 @@ dialog .check{display:flex;gap:8px;align-items:center;color:var(--text);font-siz
     $("institutCos").hidden = !si;
     $("institutClau").hidden = true;
     $("institut").hidden = !si;
+    $("genealogia").hidden = !si;
+    if (si && window.obreGenealogia) window.obreGenealogia();
     $("instBoto").setAttribute("aria-expanded", si ? "true" : "false");
     $("instBoto").title = si ? "Tanca l'Institut" : "Obre l'Institut";
     lsEscriu("tauler.obert", si ? "1" : null);   // queda obert en aquest aparell fins que es tanqui
@@ -2387,5 +2413,113 @@ dialog .check{display:flex;gap:8px;align-items:center;color:var(--text);font-siz
 })();
 </script>
 <script src="dates-ca.js?v=3"></script>
+<script>
+// =============================================================================
+// Tira de titulars (12.11.2026): els titulars de La TdG (els de la tele) i la
+// premsa local i generalista del darrer resum de La TdG redacció.
+// Genealogia (12.11.2026): l'arbre familiar amb el Topola Viewer, dins del candau.
+// =============================================================================
+(() => {
+  const $ = id => document.getElementById(id);
+  const esc = t => String(t ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const BASE = "https://latdg.github.io/redaccio/dades/";
+  const NOMS_GEN = [
+    [/vilaweb/, "VilaWeb"], [/naciodigital/, "Nació Digital"], [/^ara\.cat$/, "Ara"], [/elperiodico/, "El Periódico"],
+    [/lavanguardia/, "La Vanguardia"], [/elpais/, "El País"], [/elnacional/, "El Nacional"], [/rac1/, "RAC1"],
+    [/elmon/, "El Món"], [/cadenaser/, "Cadena SER"], [/3cat|ccma/, "3Cat"], [/europapress/, "Europa Press"],
+    [/elpuntavui/, "El Punt Avui"], [/rtve/, "RTVE"], [/catradio/, "Catalunya Ràdio"], [/elmundo/, "El Mundo"],
+    [/eldiario/, "elDiario.es"], [/acn\.cat/, "ACN"], [/msn\.com/, "MSN"], [/diaridegirona/, "Diari de Girona"]
+  ];
+  const nomMitja = n => { const t = String(n).toLowerCase(); const m = NOMS_GEN.find(([rx]) => rx.test(t)); return m ? m[1] : n; };
+  const obtenir = async (url, text) => { const r = await fetch(url, { cache: "no-cache" }); if (!r.ok) throw new Error(r.status); return text ? r.text() : r.json(); };
+
+  // Treu dels blocs PREMSA LOCAL i PREMSA GENERALISTA les notícies: [{mitja, titol, url}]
+  function premsaDelResum(html) {
+    const doc = new DOMParser().parseFromString(html, "text/html");
+    const RX = /^\s*((?:\d️?⃣)+)\s*(.+)$/s;
+    const blocs = {}; let actual = null;
+    Array.from(doc.body.childNodes).forEach(node => {
+      const text = (node.textContent || "").trim();
+      if (node.nodeType === 1 && node.tagName === "DIV" && text.length < 200) {
+        const m = text.match(RX);
+        if (m) { const t = m[2].trim().toUpperCase(); actual = /^PREMSA LOCAL/.test(t) ? "local" : /^PREMSA GENERALISTA/.test(t) ? "gen" : null; if (actual) blocs[actual] = ""; return; }
+      }
+      if (!actual) return;
+      if (node.nodeType === 1 && node.tagName === "BR") blocs[actual] += "\n";
+      else if (node.nodeType === 1) blocs[actual] += (node.innerHTML || "").replace(/<br\s*\/?>/gi, "\n").replace(/<[^>]+>/g, "");
+      else blocs[actual] += node.textContent || "";
+    });
+    const fora = {};
+    Object.entries(blocs).forEach(([clau, txt]) => {
+      const llista = []; let mitja = "";
+      const linies = txt.split("\n").map(x => x.trim()).filter(Boolean);
+      linies.forEach((l, i) => {
+        const m = l.match(/^▶\s*(.+?):\s*$/);
+        if (m) { mitja = m[1].trim(); return; }
+        const n = l.match(/^•\s*(?:\d{2}\.\d{2}\.\d{4}\s*[—–-]\s*)?(.+)$/);
+        if (n && mitja && !/^No s.han trobat/i.test(n[1])) {
+          const seg = linies[i + 1] || "";
+          llista.push({ mitja, titol: n[1].trim(), url: /^https?:\/\//.test(seg) ? seg : "" });
+        }
+      });
+      const vist = new Set();
+      fora[clau] = llista.filter(x => { const k = x.titol.toLowerCase(); if (vist.has(k)) return false; vist.add(k); return true; });
+    });
+    return fora;
+  }
+
+  function grup(etiqueta, classe, items) {
+    if (!items.length) return "";
+    return '<span class="tira-grup"><span class="tira-etq ' + classe + '">' + esc(etiqueta) + "</span>" +
+      items.map(it => {
+        const cos = (it.mitja ? "<b>" + esc(it.mitja) + "</b>" : "") + esc(it.titol);
+        return it.url ? '<a class="tira-it" href="' + esc(it.url) + '" target="_blank" rel="noopener">' + cos + "</a>" : '<span class="tira-it">' + cos + "</span>";
+      }).join("") + "</span>";
+  }
+
+  async function carregaTira() {
+    let dies = [];
+    try { dies = (await obtenir(BASE + "dies.json")).slice().sort().reverse(); } catch (e) { return; }
+    let tdg = [], premsa = { local: [], gen: [] };
+    for (const d of dies.slice(0, 3)) {
+      if (!tdg.length) { try { const t = await obtenir(BASE + d + "/titulars.json"); tdg = (t.titulars || []).filter(Boolean).map(x => ({ titol: x, url: "" })); } catch (e) {} }
+      if (!premsa.local.length && !premsa.gen.length) { try { premsa = Object.assign({ local: [], gen: [] }, premsaDelResum(await obtenir(BASE + d + "/resum.html", true))); } catch (e) {} }
+      if (tdg.length && (premsa.local.length || premsa.gen.length)) break;
+    }
+    premsa.gen = premsa.gen.slice(0, 10).map(x => Object.assign({}, x, { mitja: nomMitja(x.mitja) }));
+    const h = grup("La TdG", "", tdg) + grup("Mitjans locals", "loc", premsa.local) + grup("Mitjans generalistes", "gen", premsa.gen);
+    if (!h) { $("tira").hidden = true; return; }
+    // Dues còpies seguides perquè la tira giri sense salts
+    $("tiraPista").innerHTML = '<span class="tira-copia-1" style="display:inline-flex">' + h + '</span><span class="tira-copia" aria-hidden="true" style="display:inline-flex">' + h + "</span>";
+    $("tiraPista").querySelectorAll(".tira-copia a").forEach(a => a.tabIndex = -1);
+    $("tira").hidden = false;
+    requestAnimationFrame(() => {
+      const ample = $("tiraPista").scrollWidth / 2;
+      $("tiraPista").style.setProperty("--tira-durada", Math.max(30, Math.round(ample / 60)) + "s");   // uns 60 px per segon
+    });
+  }
+  carregaTira();
+  setInterval(carregaTira, 30 * 60 * 1000);
+
+  // ---------------- Genealogia ----------------
+  const GED = "genealogia/arbre.ged";
+  let genFet = false;
+  window.obreGenealogia = async () => {
+    if (genFet) return;
+    genFet = true;
+    let hiEs = false;
+    try { const r = await fetch(GED, { method: "HEAD", cache: "no-cache" }); hiEs = r.ok; } catch (e) {}
+    if (!hiEs) {
+      genFet = false;
+      $("genCos").innerHTML = '<p class="buit">Encara no hi ha l\'arbre. Quan hi hagi el fitxer de FamilySearch (només amb les persones difuntes), es veurà aquí.</p>';
+      return;
+    }
+    const urlGed = new URL(GED, location.href).href;
+    const visor = "https://pewu.github.io/topola-viewer/#/view?url=" + encodeURIComponent(urlGed);
+    $("genCos").innerHTML = '<iframe class="gen-marc" title="Arbre genealògic" src="' + esc(visor + "&embedded=true") + '" loading="lazy"></iframe>' +
+      '<p class="font"><a href="' + esc(visor) + '" target="_blank" rel="noopener">Obre l\'arbre a pantalla completa</a> · Visor: Topola Genealogy Viewer.</p>';
+  };
+})();
+</script>
 </body>
 </html>
