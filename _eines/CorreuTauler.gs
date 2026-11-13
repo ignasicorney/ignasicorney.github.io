@@ -318,7 +318,8 @@ function doPost(e) {
         try { d = JSON.parse(r.getContentText()); } catch (e) {}
         if (r.getResponseCode() !== 200) {
           const msg = (d.error && d.error.message) || ("error " + r.getResponseCode());
-          if (/public|private|not found|unavailable|permission/i.test(msg)) throw new Error("La IA no ha pogut obrir el vídeo: ha de ser públic a YouTube (els ocults o privats no hi van). També pots enganxar-ne la transcripció.");
+          if (/api key|api_key/i.test(msg)) throw new Error("La clau GEMINI_KEY no és vàlida; revisa-la a les propietats de l'script.");
+          if (/youtube|video|file/i.test(msg)) throw new Error("La IA no ha pogut obrir el vídeo: ha de ser públic a YouTube (els ocults o privats no hi van). També pots enganxar-ne la transcripció.");
           throw new Error("Gemini: " + msg);
         }
         const parts = (((d.candidates || [])[0] || {}).content || {}).parts || [];
