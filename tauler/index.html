@@ -3057,14 +3057,18 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
   function cbFoscos(im) {
     const { w, h, g } = im, r = Math.max(15, Math.round(Math.max(w, h) * .04)), S = new Float64Array((w + 1) * (h + 1));
     for (let y = 0; y < h; y++) { let s = 0; for (let x = 0; x < w; x++) { s += g[y * w + x]; S[(y + 1) * (w + 1) + x + 1] = S[y * (w + 1) + x + 1] + s; } }
-    const d = new Uint8Array(w * h), fc = new Float32Array(w * h);
+    const d = new Uint8Array(w * h), fc = new Float32Array(w * h), mk = new Uint8Array(w * h);
+    // Blanc del paper (el full ocupa la major part de la foto): evita que el fons fosc de la taula enganyi les cantonades
+    const mostra = []; for (let i = 0; i < w * h; i += 97) mostra.push(g[i]); mostra.sort((a, b) => a - b);
+    const paper = mostra[Math.floor(mostra.length * .75)];
     for (let y = 0; y < h; y++) { const y0 = Math.max(0, y - r), y1 = Math.min(h, y + r + 1); for (let x = 0; x < w; x++) {
       const x0 = Math.max(0, x - r), x1 = Math.min(w, x + r + 1), m = (S[y1 * (w + 1) + x1] - S[y0 * (w + 1) + x1] - S[y1 * (w + 1) + x0] + S[y0 * (w + 1) + x0]) / ((x1 - x0) * (y1 - y0));
       const v = g[y * w + x];
       d[y * w + x] = v < m * .72 && v < 170 ? 1 : 0;
+      mk[y * w + x] = v < Math.max(m, paper * .85) * .84 && v < 180 ? 1 : 0;   // més tolerant: els quadrats de referència sovint s'imprimeixen grisos
       fc[y * w + x] = Math.max(0, 1 - v / (m + 1));   // foscor contínua: per trobar les vores fines de les caselles
     } }
-    d.fc = fc;
+    d.fc = fc; d.mk = mk;
     return d;
   }
   // Taques fosques grosses i quadrades: candidates a quadrats de referència
@@ -3077,7 +3081,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
         if (x > 0 && d[i - 1] && !vist[i - 1]) { vist[i - 1] = 1; pila[p++] = i - 1; } if (x < w - 1 && d[i + 1] && !vist[i + 1]) { vist[i + 1] = 1; pila[p++] = i + 1; }
         if (y > 0 && d[i - w] && !vist[i - w]) { vist[i - w] = 1; pila[p++] = i - w; } if (y < h - 1 && d[i + w] && !vist[i + w]) { vist[i + w] = 1; pila[p++] = i + w; } }
       const bw = x1 - x0 + 1, bh = y1 - y0 + 1;
-      if (bw < mida * .012 || bh < mida * .012 || bw > mida * .12 || bh > mida * .12) continue;
+      if (bw < mida * .008 || bh < mida * .008 || bw > mida * .045 || bh > mida * .045) continue;
       if (bw / bh < .5 || bw / bh > 2 || n / (bw * bh) < .45) continue;
       const cx = sx / n, cy = sy / n, ci = Math.round(cy) * w + Math.round(cx);
       res.push({ x: cx, y: cy, n: n, forat: !d[ci] });
@@ -3116,7 +3120,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
   }
   // Situa el full a la foto: retorna la transformació (coordenades del full → píxels) i les caselles de cada ítem tancat
   function cbSitua(im, d, p) {
-    const t = cbTaques(d, im.w, im.h).sort((a, b) => b.n - a.n).slice(0, 14), it = cbItems(p), ful = p.full;
+    const t = cbTaques(d.mk, im.w, im.h).sort((a, b) => b.n - a.n).slice(0, 24), it = cbItems(p), ful = p.full;
     if (ful.model === "oficial") {
       // Tres quadrats negres (dalt esquerra, dalt dreta, baix dreta): el triangle rectangle més gran amb les proporcions del full
       const [A, B, C] = ful.mk, dAB = Math.hypot(B[0] - A[0], B[1] - A[1]), dBC = Math.hypot(C[0] - B[0], C[1] - B[1]), rt = dAB / dBC;
@@ -3173,36 +3177,61 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
         const v = caixes[i].reduce((s, [cx, cy, m]) => s + vora(T, cx + ox, cy + oy, m), 0);
         if (v > mv) { mv = v; dx = ox; dy = oy; } }
       return [dx, dy]; };
-    // Ajust global: amb la posició trobada de totes les files es recalcula la transformació (descartant les que no lliguen)
-    const files = caixes.map((c, i) => c ? i : -1).filter(i => i >= 0);
-    // (cada casella hi aporta un punt; si l'ajust no millora, es manté la transformació inicial)
-    let parells = [];
-    files.forEach(i => { const [dx, dy] = ajusta(T, i, caixes[i][0][2] * .9); caixes[i].forEach(([cx, cy, m]) => parells.push({ s: [cx + m / 2, cy + m / 2], d: T(cx + dx + m / 2, cy + dy + m / 2) })); });
-    const T0 = T, errDe = H => parells.map(x => { const [u, v] = H(x.s[0], x.s[1]); return Math.hypot(u - x.d[0], v - x.d[1]); });
-    const mediana = e => e.slice().sort((a, b) => a - b)[Math.floor(e.length / 2)];
-    let tots = parells.slice(), medT = mediana(errDe(T0));
-    for (let k = 0; k < 4 && parells.length >= 12; k++) {
-      const H = cbHomografiaN(parells.map(x => x.s), parells.map(x => x.d));
-      const eT = tots.map(x => { const [u, v] = H(x.s[0], x.s[1]); return Math.hypot(u - x.d[0], v - x.d[1]); }), med = mediana(eT);
-      if (!isFinite(med) || med > medT) break;
-      T = H; medT = med;
-      const lim = Math.max(med * 2.5, 2), bons = tots.filter((x, j) => eT[j] <= lim);
-      if (bons.length === parells.length) break;
-      parells = bons;
+    // Ajust global amb les caselles mateixes: es busquen a la foto tots els quadradets impresos (contorns de la mida
+    // d'una casella), es mira quin desplaçament fa coincidir més caselles amb el model del full i, amb totes les parelles
+    // trobades, es calcula la transformació definitiva. Així s'absorbeixen la perspectiva, el full corbat i les
+    // diferències d'escala de la impressora.
+    {
+      const T0 = T, [ax, ay] = T0(0, 0), [bx, by] = T0(caixes.find(c => c)[0][2], 0), mpx = Math.hypot(bx - ax, by - ay);
+      const lin = new Uint8Array(im.w * im.h); for (let k = 0; k < lin.length; k++) lin[k] = fc[k] > .16 ? 1 : 0;
+      // Contorns quadrats de la mida d'una casella
+      const vist = new Uint8Array(im.w * im.h), pila = new Int32Array(im.w * im.h), det = [];
+      for (let i0 = 0; i0 < lin.length; i0++) {
+        if (!lin[i0] || vist[i0]) continue;
+        let p = 0, x0 = 1e9, x1 = -1, y0 = 1e9, y1 = -1, n = 0; pila[p++] = i0; vist[i0] = 1;
+        while (p) { const i = pila[--p], x = i % im.w, y = (i - x) / im.w; n++; if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y;
+          if (x1 - x0 > mpx * 3 || y1 - y0 > mpx * 3) { /* massa gran: es continua per marcar-ho tot com a vist */ }
+          for (const j of [i - 1, i + 1, i - im.w, i + im.w]) if (j >= 0 && j < lin.length && lin[j] && !vist[j] && Math.abs((j % im.w) - x) <= 1) { vist[j] = 1; pila[p++] = j; } }
+        const w = x1 - x0 + 1, h = y1 - y0 + 1;
+        if (w < mpx * .7 || h < mpx * .7 || w > mpx * 1.45 || h > mpx * 1.45 || w / h < .75 || w / h > 1.33) continue;
+        det.push([(x0 + x1) / 2, (y0 + y1) / 2]);
+      }
+      const model = []; caixes.forEach(c => c && c.forEach(([cx, cy, m]) => model.push([cx + m / 2, cy + m / 2])));
+      if (det.length >= 12) {
+        // Vot del desplaçament més repetit (en quarts de casella)
+        const q = mpx / 4, vots = new Map();
+        const pred = model.map(([x, y]) => T0(x, y));
+        det.forEach(([u, v]) => pred.forEach(([a, b]) => { const dx = u - a, dy = v - b; if (Math.abs(dx) > mpx * 3 || Math.abs(dy) > mpx * 3) return;
+          const k = Math.round(dx / q) + "," + Math.round(dy / q); vots.set(k, (vots.get(k) || 0) + 1); }));
+        let millor = null, mv = 0;
+        vots.forEach((v, k) => { const [i, j] = k.split(",").map(Number); let s = 0; for (let a = -1; a <= 1; a++) for (let b = -1; b <= 1; b++) s += vots.get((i + a) + "," + (j + b)) || 0; if (s > mv) { mv = s; millor = [i * q, j * q]; } });
+        // Aparellament i transformació, refinats dues vegades
+        let H = (x, y) => { const [u, v] = T0(x, y); return [u + millor[0], v + millor[1]]; };
+        for (const radi of [.5, .35, .3]) {
+          const s = [], dd = [];
+          model.forEach(([x, y]) => { const [u, v] = H(x, y); let bo = null, bd = mpx * radi; det.forEach(([a, b]) => { const e = Math.hypot(a - u, b - v); if (e < bd) { bd = e; bo = [a, b]; } }); if (bo) { s.push([x, y]); dd.push(bo); } });
+          if (s.length < Math.max(12, model.length * .3)) break;
+          H = cbHomografiaN(s, dd);
+        }
+        const [u, v] = H(0, 0);
+        if (isFinite(u) && isFinite(v)) T = H;
+      }
     }
-    if (T !== T0) { const [u, v] = T(0, 0), [u0, v0] = T0(0, 0); if (!isFinite(u) || Math.hypot(u - u0, v - v0) > Math.max(im.w, im.h) * .05) T = T0; }
     // Proporció de tinta dins d'una casella (en deixa fora la vora impresa)
     const tinta = (x, y, mida) => { let f = 0, n = 0; const a = .2 * mida, l = mida - 2 * a;
       for (let i = 0; i <= 10; i++) for (let j = 0; j <= 10; j++) { const k = lloc(T, x + a + l * i / 10, y + a + l * j / 10); if (k < 0) continue; n++; f += d[k]; }
       return n ? f / n : 0; };
     const it = cbItems(p);
+    const fs = it.map((x, i) => { if (!caixes[i]) return null; const [dx, dy] = ajusta(T, i, caixes[i][0][2] * .3); return caixes[i].map(([cx, cy, m]) => tinta(cx + dx, cy + dy, m)); });
+    // Nivell de les caselles buides d'aquesta foto (la majoria ho són): les decisions es prenen respecte d'aquest nivell
+    const totes = fs.filter(f => f).flat().sort((a, b) => a - b), base = totes[Math.floor(totes.length / 2)] || 0;
     const resp = it.map((x, i) => {
-      if (!caixes[i]) return null;
-      const [dx, dy] = ajusta(T, i, caixes[i][0][2] * .3);
-      const op = cbOpcions(x), f = caixes[i].map(([cx, cy, m]) => tinta(cx + dx, cy + dy, m));
-      const marc = op.filter((l, k) => f[k] >= .06 && f[k] < .72);
-      if (marc.length === 1) return { v: marc[0], dubte: f[op.indexOf(marc[0])] < .1 || f.some(v => v >= .72) };
-      if (!marc.length) return { v: "", dubte: f.some(v => v >= .03) };
+      const f = fs[i]; if (!f) return null;
+      const op = cbOpcions(x), anul = f.some(v => v >= .71);   // casella ombrejada sencera = resposta anul·lada
+      const ord = f.map((v, k) => [v, k]).filter(([v]) => v < .71).sort((a, b) => b[0] - a[0]);
+      const b1 = ord[0] ? ord[0][0] - base : 0, b2 = ord[1] ? ord[1][0] - base : 0;
+      if (ord[0] && b1 >= .035 && b1 >= 2.5 * Math.max(0, b2) + .02) return { v: op[ord[0][1]], dubte: b1 < .1 || anul || b2 > .05 };
+      if (b1 < .08) return { v: "", dubte: b1 >= .03 || anul };
       return { v: "", dubte: true };
     });
     let codi = null;
