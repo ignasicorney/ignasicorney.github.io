@@ -3442,7 +3442,11 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
         c.cols[p.id] = c.cols[p.id] || {};
         const cols = c.cols[p.id][g.nom] = c.cols[p.id][g.nom] || {};
         if (k === "f") { cols.f = s.value; delete cols.cl; delete cols.ee; } else { cols.f = cols.f || (g.fulls[0] || {}).nom; cols[k] = s.value; }
-        desa(); pintaCB();
+        // Les notes que ja estaven corregides van soles a la columna que s'acaba de triar
+        let n = 0; const rs = (c.res[p.id] && c.res[p.id][g.nom]) || {};
+        if (k !== "f" && s.value) Object.keys(rs).forEach(a => { if (!cbDesaNotes(p, g.nom, a)) n++; });
+        cbMsg = n ? "✓ Notes de " + n + " alumne" + (n === 1 ? "" : "s") + " posades a la columna " + esc(s.value) + "." : "";
+        desa(); pintaCB(); if (n) pintaAlumnes();
       }
     });
     $("asCos").addEventListener("click", ev => {
