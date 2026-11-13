@@ -2656,8 +2656,10 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     let alumnes, valorDe, ambFeina = [];
     if (e.form) {
       const ids = Array.isArray(e.forms) && e.forms.length ? e.forms : [e.form];   // 13.11.2026: diversos nivells del mateix vídeo
-      const [al, ...rss] = await Promise.all([cridaIns({ accio: "classroom-alumnes", curs: e.curs })].concat(ids.map(id => cridaIns({ accio: "formulari-respostes", id: id }))));
+      const [al, ...rss] = await Promise.all([cridaIns({ accio: "classroom-alumnes", curs: e.curs })].concat(ids.map(id => cridaIns(Object.assign({ accio: "formulari-respostes", id: id }, e.items ? { items: e.items } : {})))));
       alumnes = al.alumnes;
+      // Si l'script del compte d'ieslabisbal.cat és antic, no filtra les preguntes: millor no escriure una nota equivocada
+      if (e.items && rss.some(rs => !rs.filtrat)) throw new Error("Cal posar al dia l'script del correu del compte d'ieslabisbal.cat (bloc «formulari-respostes» de _eines/CorreuTauler.gs) i fer-ne una implementació nova. No s'ha canviat res.");
       const nota = {}, ha = {};
       rss.forEach(rs => rs.respostes.forEach(r => { ha[r.email] = true; if (!rs.max) return; const n = Math.round(r.punts / rs.max * 1000) / 100; if (nota[r.email] == null || n > nota[r.email]) nota[r.email] = n; }));
       valorDe = a => e.mode === "nota" ? (nota[a.email] == null ? null : nota[a.email]) : (ha[a.email] ? 1 : 0);
@@ -2760,8 +2762,9 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
         tasques = (await cridaIns({ accio: "classroom-tasques", curs: curs })).tasques;
         const fs = dades.formularis || [], c = cols.find(x => x.nom === $("clsCol").value), ant = c && c.classroom;
         sel.innerHTML = '<optgroup label="Tasques del Classroom">' + tasques.map(t => '<option value="t:' + t.id + '"' + (ant && ant.tasca === t.id ? " selected" : "") + ">" + esc(t.titol) + (t.data ? " · " + dma(t.data) : "") + "</option>").join("") + "</optgroup>" +
-          (fs.length ? '<optgroup label="Formularis creats des del tauler">' + fs.map(x => '<option value="f:' + x.id + '"' + (ant && ant.form === x.id ? " selected" : "") + ">" + esc(x.titol) + " · " + dma(x.data) + "</option>").join("") + "</optgroup>" : "");
-        if (!tasques.length && !fs.length) sel.innerHTML = '<option value="">Aquesta classe no té cap tasca</option>';
+          (fs.length ? '<optgroup label="Formularis creats des del tauler">' + fs.map(x => '<option value="f:' + x.id + '"' + (ant && ant.form === x.id && !ant.items ? " selected" : "") + ">" + esc(x.titol) + " · " + dma(x.data) + "</option>").join("") + "</optgroup>" : "") +
+          '<optgroup label="Competències bàsiques (comprensió lectora)">' + PROVES_CB.map((x, i) => x.id ? '<option value="c:' + i + '"' + (ant && ant.form === x.id && ant.items ? " selected" : "") + ">CB " + esc(x.curs) + " · " + esc(x.materia) + " · comprensió lectora</option>" : "").join("") + "</optgroup>";
+        if (!tasques.length && !fs.length && !PROVES_CB.some(x => x.id)) sel.innerHTML = '<option value="">Aquesta classe no té cap tasca</option>';
         carregaEstat();
       } catch (e) { sel.innerHTML = '<option value="">—</option>'; avis(e.message); }
     }
@@ -2776,7 +2779,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       box.hidden = false;
     }
     // El formulari de l'opció triada: un del tauler (per id) o el qüestionari adjunt a una tasca del Classroom (per url)
-    const formTriat = () => { const t = $("clsTasca").value; if (t.charAt(0) === "f") return { id: t.slice(2) }; const x = tasques.find(y => "t:" + y.id === t); return x && x.form ? { url: x.form } : null; };
+    const formTriat = () => { const t = $("clsTasca").value; if (t.charAt(0) === "f") return { id: t.slice(2) }; if (t.charAt(0) === "c") { const p = PROVES_CB[Number(t.slice(2))]; return p && p.id ? { id: p.id } : null; } const x = tasques.find(y => "t:" + y.id === t); return x && x.form ? { url: x.form } : null; };
     async function carregaEstat() {
       const t = $("clsTasca").value, box = $("clsTanca"), fm = formTriat();
       if (!t) { box.hidden = true; return; }
@@ -2804,9 +2807,10 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       const curs = $("clsCurs").value, t = $("clsTasca").value, col = cols.find(x => x.nom === $("clsCol").value);
       if (!curs || !t || !col) { avis("Tria la classe, la tasca o el formulari i la columna."); return; }
       const e = { curs: curs, mode: $("clsMode").value, titol: $("clsTasca").selectedOptions[0].textContent };
-      if (t.charAt(0) === "f") e.form = t.slice(2); else { e.tasca = t.slice(2); e.max = (tasques.find(x => x.id === e.tasca) || {}).max || 0; }
+      if (t.charAt(0) === "c") { const p = PROVES_CB[Number(t.slice(2))]; e.form = p.id; e.items = p.cl; e.mode = "nota"; $("clsMode").value = "nota"; }
+      else if (t.charAt(0) === "f") e.form = t.slice(2); else { e.tasca = t.slice(2); e.max = (tasques.find(x => x.id === e.tasca) || {}).max || 0; }
       if (e.mode === "nota" && e.tasca && !e.max) { avis("Aquesta tasca del Classroom no té puntuació; tria «Lliurat (1) o no (0)»."); return; }
-      if (f.files.some(r => !esBuit(r.v[col.nom])) && !(col.classroom && (col.classroom.tasca === e.tasca && col.classroom.form === e.form)) && !confirm("La columna " + col.nom + " ja té valors. Vols substituir-los pels del Classroom?")) return;
+      if (f.files.some(r => !esBuit(r.v[col.nom])) && !(col.classroom && (col.classroom.tasca === e.tasca && col.classroom.form === e.form && !col.classroom.items === !e.items)) && !confirm("La columna " + col.nom + " ja té valors. Vols substituir-los pels del Classroom?")) return;
       avis(""); b.disabled = true; b.textContent = e.tasca && e.mode !== "nota" ? "Revisant els documents…" : "Llegint del Classroom…";
       try { const r = await ompleColumna(g, f, col, e); $("clsRes").textContent = "✓ " + resumCls(col, r); $("clsRes").hidden = false; clsMsg = null; pintaAlumnes(); }
       catch (err) { avis(err.message); }
@@ -2945,6 +2949,9 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       alumnat: "https://docs.google.com/forms/d/e/1FAIpQLSfXeDwaBCs6Q_PEuRQLhAzdY3xeLpVX7JNekq4ih6Xy-4VjMQ/viewform",
       edicio: "https://docs.google.com/forms/d/1XtfV9b5OAuZ5cgM5A8khNgUsr3Z5oAIKtg9skZGQuZk/edit",
       respostes: "https://docs.google.com/spreadsheets/d/1OzHfK3jLA_Cmnyy-cNIs_PLuq61wv4s2bzi_PyvlYsY/edit",
+      id: "1XtfV9b5OAuZ5cgM5A8khNgUsr3Z5oAIKtg9skZGQuZk",
+      // Preguntes que compten a la comprensió lectora (25 punts): la nota de la columna surt només d'aquestes
+      cl: ["1", "3", "4.1", "4.2", "4.3", "4.4", "5", "7", "9", "10", "11", "12", "14.1", "14.2", "14.3", "14.4", "15", "17", "19", "21", "22", "23", "24", "25", "26"],
       quadern: "https://ape.gencat.cat/content/dam/avaluacioeducativa/avaluacio-educativa/avaluacions/final-etapa/quart-eso/2024-2025/castella/prova-castella-a4s2025.pdf",
       criteris: "https://ape.gencat.cat/content/dam/avaluacioeducativa/avaluacio-educativa/avaluacions/final-etapa/quart-eso/2024-2025/catala/criteris-correccio-llengues-a4s2025.pdf" }
   ];
