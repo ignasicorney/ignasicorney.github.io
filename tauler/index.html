@@ -3282,7 +3282,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       if (x.d === "CL") { cl += ok; ncl += x.max; } else { ll += ok; nll += x.max; } });
     const rd = cbRedaccio(red);
     cl = arr(cl); ll = arr(ll);
-    return { cl, ncl, ll, nll, rd, notaCL: arr(cl / ncl * 10), notaEE: rd == null ? null : arr((ll + rd) / (nll + 25) * 10) };
+    return { cl, ncl, ll, nll, rd, notaCL: arr(cl / ncl * 10), notaEE: rd == null ? (nll ? arr(ll / nll * 10) : null) : arr((ll + rd) / (nll + 25) * 10) };   // sense redacció: només les preguntes de llengua
   }
   const cbNum = v => v == null ? "—" : String(v).replace(".", ",");
   const cbPts = (a, b) => cbNum(a) + "/" + b;
@@ -3365,7 +3365,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
         "<p style=\"margin:0\"><b>CL</b> " + cbPts(pt.cl, pt.ncl) + " → " + cbNum(pt.notaCL) + " · <b>Llengua</b> " + cbPts(pt.ll, pt.nll) + "</p>" +
         '<h3 style="margin:4px 0 0;font-size:.95rem">Redacció</h3><div class="fila"><label>Paraules<select data-red="fr">' + CB_FRANGES.map(([v, t]) => '<option value="' + v + '"' + (r.red.fr === v ? " selected" : "") + ">" + t + "</option>").join("") + "</select></label></div>" +
         (r.red.fr && r.red.fr !== "0" ? '<div class="fila">' + CB_APARTATS.map(([k, t]) => "<label>" + t + '<select data-red="' + k + '">' + (k === "P" ? [0, 1] : [0, 1, 2, 3, 4]).map(n => "<option" + (Number(r.red[k] || 0) === n ? " selected" : "") + ">" + n + "</option>").join("") + "</select></label>").join("") + "</div>" : "") +
-        "<p style=\"margin:0\"><b>Redacció</b> " + (pt.rd == null ? "—" : pt.rd + "/25") + " · <b>EE</b> " + cbNum(pt.notaEE) + (pt.rd == null ? " (falta la redacció; la columna EE no es toca)" : "") + "</p>" +
+        "<p style=\"margin:0\"><b>Redacció</b> " + (pt.rd == null ? "—" : pt.rd + "/25") + " · <b>EE</b> " + cbNum(pt.notaEE) + (pt.rd == null ? " (només les " + pt.nll + " preguntes de llengua; quan puntuïs la redacció, s'hi afegirà)" : " (preguntes de llengua + redacció)") + "</p>" +
         '<div class="botons"><button type="button" class="boto clar" data-f="tanca">Tanca</button><button type="button" class="boto" data-f="desa">Desa i posa les notes</button></div></form>';
     };
     pinta();
