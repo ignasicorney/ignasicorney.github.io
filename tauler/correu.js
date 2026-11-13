@@ -189,10 +189,34 @@
       } catch (e) { v.err = e.message; }
       if (visor === v) pinta();
     }
+    // 13.11.2026: imprimeix el document obert al visor (PDF, Word, full de càlcul, text, imatge o HTML)
+    function imprimeixVisor() {
+      const v = visor; if (!v || !v.url) return;
+      const fr = document.createElement("iframe");
+      fr.setAttribute("aria-hidden", "true");
+      fr.style.cssText = "position:fixed;right:0;bottom:0;width:0;height:0;border:0;visibility:hidden";
+      const treu = () => setTimeout(() => fr.remove(), 1000);
+      fr.onload = () => {
+        try { const w = fr.contentWindow; w.addEventListener("afterprint", treu); w.focus(); w.print(); setTimeout(treu, 60000); }
+        catch (e) { fr.remove(); window.open(v.url, "_blank", "noopener"); }
+      };
+      if (v.classe === "pdf") fr.src = v.url;
+      else {
+        let cos;
+        if (v.classe === "html") { fr.setAttribute("sandbox", "allow-same-origin allow-modals"); cos = null; }
+        else if (v.classe === "imatge") cos = '<img src="' + v.url + '" alt="">';
+        else cos = v.contingut || "";
+        fr.srcdoc = cos == null ? v.srcdoc : '<!doctype html><html lang="ca"><head><meta charset="utf-8"><title>' + esc(v.nom.replace(/\.[^.]+$/, "")) + '</title><style>' +
+          'body{font-family:Georgia,"Times New Roman",serif;font-size:12pt;line-height:1.45;color:#000;margin:0}img{max-width:100%;height:auto}' +
+          'pre{white-space:pre-wrap;word-break:break-word;font-family:inherit;margin:0}table{border-collapse:collapse;font-size:10pt;margin-bottom:12px}' +
+          'td,th{border:1px solid #999;padding:2px 6px;vertical-align:top}h4{margin:10px 0 4px}@page{margin:2cm}</style></head><body>' + cos + "</body></html>";
+      }
+      document.body.appendChild(fr);
+    }
     function pintaVisor() {
       const v = visor;
       let h = '<div class="cr-visor"><div class="vc"><b>' + esc(v.nom) + "</b>";
-      if (v.url) h += '<a class="boto clar" href="' + v.url + '" download="' + esc(v.nom) + '">⬇ Baixa</a>' + (/^(pdf|imatge|text|audio|video)$/.test(v.classe) ? '<a class="boto clar" href="' + v.url + '" target="_blank" rel="noopener">Obre en una pestanya ↗</a>' : "");
+      if (v.url) h += '<a class="boto clar" href="' + v.url + '" download="' + esc(v.nom) + '">⬇ Baixa</a>' + (/^(pdf|docx|full|text|html|imatge)$/.test(v.classe) && (v.classe === "pdf" || v.classe === "imatge" || v.contingut != null || v.srcdoc != null) ? '<button type="button" class="boto clar" data-cr="imprimeix">🖨 Imprimeix</button>' : "") + (/^(pdf|imatge|text|audio|video)$/.test(v.classe) ? '<a class="boto clar" href="' + v.url + '" target="_blank" rel="noopener">Obre en una pestanya ↗</a>' : "");
       h += '<button type="button" class="boto clar" data-cr="tancavisor" style="margin-left:auto">✕ Tanca</button></div>';
       if (v.err) h += '<p class="cr-avis err">' + esc(v.err) + (v.url ? " Pots baixar-lo i obrir-lo amb el programa que toqui." : "") + "</p>";
       else if (!v.url) h += '<p class="cr-buit">Obrint «' + esc(v.nom) + "»…</p>";
@@ -336,6 +360,7 @@
         } catch (e) { diu(/desconeguda/i.test(e.message) ? "Per poder desfer cal actualitzar l'Apps Script del compte (CorreuTauler.gs)." : e.message, true, /desconeguda/i.test(e.message) ? null : d); }
       }
       else if (a === "tancavisor") { visor = null; pinta(); }
+      else if (a === "imprimeix") imprimeixVisor();
       else if (a === "nou") { redacta = { a: "", cc: "", cco: "", assumpte: "", cos: sigCos(comptes()[Math.max(compte, 0)]) }; configura = false; pinta(); }
       else if ((a === "respon" || a === "respontots") && fil) {
         const darrer = fil.missatges[fil.missatges.length - 1];
