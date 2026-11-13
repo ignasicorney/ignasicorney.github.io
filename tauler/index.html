@@ -188,6 +188,29 @@ ul.tasques button{background:none;border:0;color:var(--suau);padding:0 2px}
 .rub-bloc>summary{cursor:pointer}
 .rub-form{min-width:min(720px,calc(100vw - 24px))}
 dialog#dlgRub{width:min(760px,calc(100vw - 24px))}
+/* Faltes de deures */
+.taula th.deu,.taula td.deu{text-align:center;background:#fbf3ee}
+.taula td.deu{cursor:pointer;font-weight:700;color:#8a3b12}
+.taula td.deu.zero{color:var(--suau);font-weight:400}
+.taula td.deu:hover{outline:1px solid var(--accent);outline-offset:-1px}
+.taula td.deu.avui{background:#f6c9a8}
+.taula.passa td.deu{background:#fde6d4}
+.boto.actiu{background:var(--accent);color:#fff}
+.deu-trims{display:flex;gap:8px;flex-wrap:wrap}
+.deu-trims span{border:1px solid var(--linia);border-radius:8px;padding:4px 10px;font-size:.9rem}
+.deu-trims b{font-size:1.1rem}
+.deu-dates{list-style:none;margin:0;padding:0;max-height:40vh;overflow:auto}
+.deu-dates li{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:4px 0;border-bottom:1px solid var(--linia)}
+.deu-dates h4{margin:8px 0 2px;font-size:.85rem;color:var(--suau)}
+/* Dreceres de consulta */
+.cons-form{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.cons-form input{flex:1 1 220px;font-size:1rem}
+.cons-llista{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.cons-b{display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--linia);border-radius:10px;background:var(--targeta);cursor:pointer;font:inherit;text-align:left;color:inherit}
+.cons-b:hover{border-color:var(--accent)}
+.cons-b img{width:28px;height:28px;flex:none;border-radius:6px;object-fit:contain}
+.cons-b .ini{width:28px;height:28px;flex:none;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;font-weight:700;font-size:.75rem;color:#fff}
+.cons-b small{display:block;color:var(--suau);font-size:.75rem}
 .rub-taula{border-collapse:collapse;width:100%;font-size:.88rem}
 .rub-taula th,.rub-taula td{border-bottom:1px solid var(--linia);padding:6px;text-align:center}
 .rub-taula th:first-child,.rub-taula td:first-child{text-align:left}
@@ -487,6 +510,15 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
   <div class="bloc" id="notes">
     <h3 class="bt">📝 Notes de feina</h3>
     <textarea id="notesText" placeholder="Escriu aquí el que vulguis recordar…"></textarea>
+  </div>
+  <div class="bloc" id="consulta">
+    <h3 class="bt">📖 Consulta</h3>
+    <form class="cons-form" id="consForm">
+      <input type="search" id="consText" placeholder="Paraula o expressió…" autocomplete="off" aria-label="Paraula per consultar">
+      <button type="submit" class="boto">Cerca al DIEC2</button>
+    </form>
+    <div class="cons-llista" id="consLlista"></div>
+    <p class="font">Escriu la paraula i tria on la vols buscar: s'obre en una pestanya nova. Amb Intro es busca al DIEC2.</p>
   </div>
       <p class="font"><button type="button" class="boto clar" id="sincDesconnecta">Oblida la clau en aquest aparell</button></p>
     </div>
@@ -1687,7 +1719,47 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
   };
 
   // ---- Interfície ----
-  let qGrup = 0, qFull = 0, qFormules = false;
+  let qGrup = 0, qFull = 0, qFormules = false, qDeures = false;
+  // Faltes de deures: g.deures = { "Nom de l'alumne": ["2026-11-13", …] }, per grup (valen per a tots els fulls)
+  const TRIMESTRES = [
+    { nom: "1r", de: INICI_CURS, fins: "2026-12-04" },      // fi del 1r trimestre
+    { nom: "2n", de: "2026-12-05", fins: "2027-03-12" },    // fi de classes del 2n trimestre
+    { nom: "3r", de: "2027-03-13", fins: FI_CURS }
+  ];
+  const trimDe = iso => TRIMESTRES.find(t => iso >= t.de && iso <= t.fins) || (iso < TRIMESTRES[0].de ? TRIMESTRES[0] : TRIMESTRES[2]);
+  // Si el full és d'un trimestre («1R TRIM», «2n trimestre»…), compta el d'aquell trimestre; si no, el d'avui
+  const trimDeures = f => { const m = f && String(f.nom).match(/([123])\s*(r|n|er|º|a)?\s*trim/i); return m ? TRIMESTRES[Number(m[1]) - 1] : trimDe(avuiISO()); };
+  const deuresDe = (g, nom) => (g.deures && Array.isArray(g.deures[nom]) ? g.deures[nom] : []);
+  function posaDeures(g, nom, llista) {
+    g.deures = g.deures || {};
+    if (llista.length) g.deures[nom] = llista.slice().sort(); else delete g.deures[nom];
+  }
+  function obreDeures(g, nom) {
+    let dlg = $("dlgDeu");
+    if (!dlg) { dlg = document.createElement("dialog"); dlg.id = "dlgDeu"; document.body.appendChild(dlg); }
+    const nomMostra = nom.replace(/\s+DIS$/i, "");
+    let dia = avuiISO();
+    const pinta = () => {
+      const ds = deuresDe(g, nom);
+      dlg.innerHTML = '<form method="dialog"><h2>📕 Faltes de deures</h2><p style="margin:0"><b>' + esc(nomMostra) + "</b> · " + esc(nomGrup(g.nom)) + "</p>" +
+        '<div class="deu-trims">' + TRIMESTRES.map(t => { const n = ds.filter(d => d >= t.de && d <= t.fins).length; return "<span>" + t.nom + " trimestre: <b>" + n + "</b></span>"; }).join("") + "</div>" +
+        '<div class="fila"><label>Dia<input type="date" id="deuDia" value="' + dia + '"></label></div>' +
+        '<div class="botons" style="justify-content:flex-start;margin-top:0"><button type="button" class="boto" data-deu2="afegeix">+ Afegeix la falta</button></div>' +
+        (ds.length ? TRIMESTRES.map(t => { const l = ds.filter(d => d >= t.de && d <= t.fins); return l.length ? "<h4>" + t.nom + " trimestre</h4><ul class=\"deu-dates\">" + l.map(d => "<li><span>" + majus(NOMS_DIA[dsem(d)]) + " " + dma(d) + '</span><button type="button" class="boto perill" data-deu2="treu" data-d="' + d + '" title="Treu aquesta falta">✕</button></li>').join("") + "</ul>" : ""; }).join("") : '<p class="buit" style="margin:0">Cap falta de deures apuntada.</p>') +
+        '<div class="botons"><button type="button" class="boto clar" data-deu2="tanca">Fet</button></div></form>';
+    };
+    pinta();
+    dlg.onchange = ev => { if (ev.target.id === "deuDia" && esISO(ev.target.value)) dia = ev.target.value; };
+    dlg.onclick = ev => {
+      const b = ev.target.closest("[data-deu2]"); if (!b) return;
+      const ds = deuresDe(g, nom).slice();
+      if (b.dataset.deu2 === "tanca") { dlg.close(); return; }
+      if (b.dataset.deu2 === "afegeix") { const v = ($("deuDia") || {}).value; if (esISO(v)) dia = v; ds.push(dia); }
+      else if (b.dataset.deu2 === "treu") { const i = ds.indexOf(b.dataset.d); if (i >= 0) ds.splice(i, 1); }
+      posaDeures(g, nom, ds); desa(); pinta(); pintaAlumnes();
+    };
+    dlg.showModal();
+  }
   const Q = () => { if (!dades.qualificacions || !Array.isArray(dades.qualificacions.grups)) dades.qualificacions = { grups: [] }; return dades.qualificacions; };
   // Faltes d'ortografia als exàmens: es resta «pes» per falta fins a «max»; a l'alumnat DIS, el descompte es divideix entre «dis»
   const paramFaltes = () => { const q = Q(); q.faltes = Object.assign({ pes: 0.1, max: 2, dis: 3 }, q.faltes || {}); return q.faltes; };
@@ -1734,7 +1806,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       '<select id="alumFull" aria-label="Full">' + g.fulls.map((x, i) => '<option value="' + i + '"' + (x === f ? " selected" : "") + ">" + esc(x.nom) + "</option>").join("") + "</select>" +
       '<input type="search" id="alumCerca" placeholder="Cerca alumne…" value="' + esc(cerca) + '" style="flex:1 1 140px"></div>' +
       '<div class="alum-eines"><button type="button" class="boto clar" data-q="formules">⚙️ ' + (qFormules ? "Amaga les fórmules" : "Columnes i fórmules") + "</button>" +
-      '<button type="button" class="boto clar" data-q="alumne">+ Alumne</button><button type="button" class="boto clar" data-q="banc">📋 ' + (rubObert ? "Amaga les rúbriques" : "Rúbriques") + "</button>" + importa + "</div>" + (rubObert ? htmlBanc() : "");
+      '<button type="button" class="boto clar' + (qDeures ? " actiu" : "") + '" data-q="passadeures" title="Mode ràpid: cada toc a la columna de deures posa o treu la falta d\'avui">📕 ' + (qDeures ? "Prou deures" : "Passa deures") + '</button><button type="button" class="boto clar" data-q="alumne">+ Alumne</button><button type="button" class="boto clar" data-q="banc">📋 ' + (rubObert ? "Amaga les rúbriques" : "Rúbriques") + "</button>" + importa + "</div>" + (rubObert ? htmlBanc() : "");
     if (f && qFormules) {
       h += '<div class="formules"><p class="font" style="margin:0 0 8px">Fórmules com a l\'Excel. <b>{EX1}</b> és una columna d\'aquest full i <b>{1R TRIM|NOTA FINAL TRIM}</b> una columna d\'un altre full. Funcions: SUM, AVERAGE, MIN, MAX, IF, ROUND… Els buits compten com a 0 a les operacions i AVERAGE se\'ls salta. <b>MITJANAFETS({DIC1};{DIC2})</b> fa la mitjana de les proves fetes: si a una nota hi escrius <b>EX</b> (o x, o -), no compta; un buit compta com a 0.</p>' +
         (pf => '<p class="font fparam" style="margin:0 0 8px"><b>Faltes d\'ortografia</b> (columnes amb «Faltes» marcat): es resten <input type="text" id="fPes" inputmode="decimal" value="' + String(pf.pes).replace(".", ",") + '"> punts per falta, fins a un màxim de <input type="text" id="fMax" inputmode="decimal" value="' + String(pf.max).replace(".", ",") + '"> punts; a l\'alumnat DIS, el descompte es divideix entre <input type="text" id="fDis" inputmode="decimal" value="' + String(pf.dis).replace(".", ",") + '">. Les fórmules fan servir la nota final, ja descomptada.</p>')(paramFaltes()) +
@@ -1753,8 +1825,9 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     if (f) {
       const tcol = {}; f.columnes.forEach(c => { tcol[c.nom] = tipusColor(f, c, valor); });
       const ombra = (c, v) => { if (!tcol[c.nom]) return ""; if (esExempt(v)) return " n-ex"; const n = numOpcional(v); if (n === null) return ""; if (tcol[c.nom] === "sobre") return " n-sobre"; return tcol[c.nom] === "form" ? (n === 0 ? " f-0" : " f-1") : " " + colorNota(n); };
-      h += '<div class="taula"><table><thead><tr><th>Alumne</th>' + f.columnes.map(c => "<th" + (c.tipus === "calc" ? ' class="calc" title="' + esc(c.formula) + '"' : "") + ">" + esc(c.nom) + (desquadres[c.nom] ? " ⚠️" : "") + "</th>").join("") + "</tr></thead><tbody>" +
-        (files.map(r => { const psi = (g.psi || []).includes(r.nom), dis = /\sDIS$/i.test(r.nom); return '<tr><td class="nomal' + (psi ? " psi" : "") + '" data-alumne="' + esc(r.nom) + '" title="' + (psi ? "PSI" : "") + (psi && dis ? " · " : "") + (dis ? "Dislèxia" : "") + '">' + esc(dis ? r.nom.replace(/\s+DIS$/i, "") : r.nom) + (psi ? ' <span class="marca-al psi">PSI</span>' : "") + (dis ? ' <span class="marca-al">DIS</span>' : "") + "</td>" + f.columnes.map(c => {
+      const tD = trimDeures(f), dAvui = avuiISO();
+      h += '<div class="taula' + (qDeures ? " passa" : "") + '"><table><thead><tr><th>Alumne</th><th class="deu" title="Faltes de deures del ' + tD.nom + ' trimestre. Toca la xifra per afegir-ne o treure\'n.">📕 Deures ' + tD.nom + "</th>" + f.columnes.map(c => "<th" + (c.tipus === "calc" ? ' class="calc" title="' + esc(c.formula) + '"' : "") + ">" + esc(c.nom) + (desquadres[c.nom] ? " ⚠️" : "") + "</th>").join("") + "</tr></thead><tbody>" +
+        (files.map(r => { const psi = (g.psi || []).includes(r.nom), dis = /\sDIS$/i.test(r.nom); return '<tr><td class="nomal' + (psi ? " psi" : "") + '" data-alumne="' + esc(r.nom) + '" title="' + (psi ? "PSI" : "") + (psi && dis ? " · " : "") + (dis ? "Dislèxia" : "") + '">' + esc(dis ? r.nom.replace(/\s+DIS$/i, "") : r.nom) + (psi ? ' <span class="marca-al psi">PSI</span>' : "") + (dis ? ' <span class="marca-al">DIS</span>' : "") + "</td>" + (() => { const ds = deuresDe(g, r.nom), n = ds.filter(d => d >= tD.de && d <= tD.fins).length, av = ds.includes(dAvui); return '<td class="deu' + (n ? "" : " zero") + (av ? " avui" : "") + '" data-deu="' + esc(r.nom) + '" title="' + n + " falt" + (n === 1 ? "a" : "es") + " de deures al " + tD.nom + " trimestre" + (av ? " (una d'avui)" : "") + '">' + (n || "–") + "</td>"; })() + f.columnes.map(c => {
           const v = valor(f, r, c), txt = mostraValor(v);
           if (c.tipus === "calc") {
             const n = numOpcional(v), ok = coincideix(v, r.o && r.o[c.nom]);
@@ -1765,8 +1838,8 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
           const df = typeof r.v[c.nom] === "number" ? descompteFaltes(r, c) : null;
           if (df) return '<td class="ed ambf' + (/NOTA|GLOBAL|FINAL/i.test(c.nom) ? (v < 5 ? " susp" : " apro") : "") + ombra(c, v) + '" data-alumne="' + esc(r.nom) + '" data-c="' + esc(c.nom) + '" title="Nota de l\'examen ' + num2(r.v[c.nom]) + ' · ' + df.faltes + ' falt' + (df.faltes === 1 ? "a" : "es") + ' · −' + num2(df.resta) + '"><span class="nf-ini">' + num2(r.v[c.nom]) + " · −" + num2(df.resta) + " (" + df.faltes + " f.)</span><span class=\"nf-fin\">" + num2(v) + "</span></td>";
           return '<td class="ed' + (c.tipus === "text" ? " txt" : "") + (esExempt(v) ? " exempt" : "") + ombra(c, v) + '" data-alumne="' + esc(r.nom) + '" data-c="' + esc(c.nom) + '" title="' + esc(txt) + '">' + esc(txt) + "</td>";
-        }).join("") + "</tr>"; }).join("") || '<tr><td colspan="' + (f.columnes.length + 1) + '" class="buit">Cap alumne no coincideix.</td></tr>') +
-        "</tbody></table></div><p class=\"font\">" + files.length + " alumnes · toca una nota per canviar-la; toca el nom per canviar-lo o esborrar l'alumne.</p>";
+        }).join("") + "</tr>"; }).join("") || '<tr><td colspan="' + (f.columnes.length + 2) + '" class="buit">Cap alumne no coincideix.</td></tr>') +
+        "</tbody></table></div><p class=\"font\">" + files.length + " alumnes · toca una nota per canviar-la; toca el nom per canviar-lo o esborrar l'alumne; toca «📕 Deures» per apuntar faltes de deures" + (qDeures ? " (mode ràpid: cada toc posa o treu la falta d'avui)" : "") + ".</p>";
     }
     cos.innerHTML = h;
     if (typeof pintaAssistent === "function" && $("asCos") && !$("asCos").contains(document.activeElement) && !asOcupat && !asResultat) pintaAssistent();
@@ -1882,6 +1955,17 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     const b = ev.target.closest("[data-grup]");
     if (b) { qGrup = Number(b.dataset.grup); qFull = 0; pintaAlumnes(); return; }
     const bb = ev.target.closest("[data-rb2]"); if (bb) { accioBanc(bb); return; }
+    const tdD = ev.target.closest("td.deu");
+    if (tdD) {
+      const gD = grupActual(); if (!gD) return;
+      const nomD = tdD.dataset.deu;
+      if (qDeures) {   // mode ràpid: posa o treu la falta d'avui
+        const ds = deuresDe(gD, nomD).slice(), av = avuiISO(), i = ds.indexOf(av);
+        if (i >= 0) ds.splice(i, 1); else ds.push(av);
+        posaDeures(gD, nomD, ds); desa(); pintaAlumnes();
+      } else obreDeures(gD, nomD);
+      return;
+    }
     const td = ev.target.closest("td.ed");
     if (td) {
       const g0 = grupActual(), f0 = fullActual(g0), c0 = f0 && f0.columnes.find(c => c.nom === td.dataset.c);
@@ -1896,10 +1980,11 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       if (nou === null) return;
       g.psi = g.psi || [];
       if (!nou.trim()) {
-        if (confirm("Vols esborrar «" + vell + "» i totes les seves notes del grup " + g.nom + "?")) { g.fulls.forEach(fu => { fu.files = fu.files.filter(r => r.nom !== vell); }); g.psi = g.psi.filter(n => n !== vell); }
+        if (confirm("Vols esborrar «" + vell + "» i totes les seves notes del grup " + g.nom + "?")) { g.fulls.forEach(fu => { fu.files = fu.files.filter(r => r.nom !== vell); }); g.psi = g.psi.filter(n => n !== vell); if (g.deures) delete g.deures[vell]; }
       } else {
         const net = nou.trim().replace(/\s+dis$/i, " DIS");
         g.fulls.forEach(fu => fu.files.forEach(r => { if (r.nom === vell) r.nom = net; }));
+        if (g.deures && g.deures[vell] && net !== vell) { posaDeures(g, net, deuresDe(g, net).concat(g.deures[vell])); delete g.deures[vell]; }
         const teniaPsi = g.psi.includes(vell);
         const psi = confirm("«" + net + "» té un PSI (nom en vermell)?\n\nD'acord = sí · Cancel·la = no" + (teniaPsi ? "\n(Ara en té.)" : ""));
         g.psi = g.psi.filter(n => n !== vell && n !== net);
@@ -1911,6 +1996,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     if (q.dataset.q === "drive") { importaDeDrive(q); return; }
     if (!f) return;
     if (q.dataset.q === "formules") { qFormules = !qFormules; pintaAlumnes(); }
+    else if (q.dataset.q === "passadeures") { qDeures = !qDeures; pintaAlumnes(); }
     else if (q.dataset.q === "banc") { rubObert = !rubObert; pintaAlumnes(); }
     else if (q.dataset.q === "alumne") {
       const nom = (prompt("Nom de l'alumne nou (Cognoms , Nom):") || "").trim();
@@ -2393,6 +2479,27 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
 
   // ================= Notes =================
   $("notesText").addEventListener("input", () => { dades.notes = $("notesText").value; desa(); });
+
+  // ================= Dreceres de consulta =================
+  // Cada obra s'obre en una pestanya nova amb la paraula ja buscada (cap d'aquestes obres té una API oberta)
+  const CONSULTA = [
+    { nom: "DIEC2", desc: "Diccionari de l'IEC", domini: "dlc.iec.cat", color: "#1f3a68", url: p => "https://dlc.iec.cat/Results?DecEntradaText=" + p },
+    { nom: "Optimot", desc: "Consultes lingüístiques", domini: "aplicacions.llengua.gencat.cat", color: "#c0001a", url: p => "https://aplicacions.llengua.gencat.cat/llc/AppJava/index.html?action=Principal&method=cerca_generica&tipusCerca=cerca.tot&input_cercar=" + p },
+    { nom: "Termcat", desc: "Cercaterm", domini: "www.termcat.cat", color: "#e2001a", url: p => "https://www.termcat.cat/ca/cercaterm/" + p + "?type=basic" },
+    { nom: "DLE", desc: "Diccionario de la RAE", domini: "dle.rae.es", color: "#7a1f2b", url: p => "https://dle.rae.es/" + p },
+    { nom: "Fundéu", desc: "Dudas del español", domini: "www.fundeu.es", color: "#0066a1", url: p => "https://www.fundeu.es/?s=" + p },
+    { nom: "Sinònims", desc: "Diccionari de Softcatalà", domini: "www.softcatala.org", color: "#d4232a", url: p => "https://www.softcatala.org/diccionari-de-sinonims/paraula/" + p + "/" }
+  ];
+  $("consLlista").innerHTML = CONSULTA.map((o, i) => '<button type="button" class="cons-b" data-cons="' + i + '" title="Busca la paraula a ' + esc(o.nom) + '"><img src="https://www.google.com/s2/favicons?domain=' + o.domini + '&sz=64" alt="" loading="lazy" data-ini="' + esc(o.nom.charAt(0)) + '" data-color="' + o.color + '"><span><b>' + esc(o.nom) + "</b><small>" + esc(o.desc) + "</small></span></button>").join("");
+  // Si el logo no es pot carregar, hi posa la inicial amb el color de l'obra
+  $("consLlista").querySelectorAll("img").forEach(im => im.addEventListener("error", () => { const s = document.createElement("span"); s.className = "ini"; s.style.background = im.dataset.color; s.textContent = im.dataset.ini; im.replaceWith(s); }, { once: true }));
+  function consulta(i) {
+    const t = $("consText").value.trim();
+    if (!t) { $("consText").focus(); return; }
+    window.open(CONSULTA[i].url(encodeURIComponent(t)), "_blank", "noopener");
+  }
+  $("consLlista").addEventListener("click", ev => { const b = ev.target.closest("[data-cons]"); if (b) consulta(Number(b.dataset.cons)); });
+  $("consForm").addEventListener("submit", ev => { ev.preventDefault(); consulta(0); });
 
   // ================= Temps =================
   const CODIS = {
