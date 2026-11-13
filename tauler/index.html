@@ -3318,7 +3318,8 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     const opc = v => '<option value="">—</option>' + notes.map(x => "<option" + (x.nom === v ? " selected" : "") + ">" + esc(x.nom) + "</option>").join("");
     h += '<div class="fila-as"><label>Full<select data-cb="f">' + g.fulls.map(x => "<option" + (x === f ? " selected" : "") + ">" + esc(x.nom) + "</option>").join("") + "</select></label>" +
       '<label>Columna CL (comprensió lectora)<select data-cb="cl">' + opc(cols.cl) + "</select></label>" +
-      '<label>Columna EE (expressió escrita)<select data-cb="ee">' + opc(cols.ee) + "</select></label></div>" +
+      '<label>Columna EE (expressió escrita)<select data-cb="ee">' + opc(cols.ee) + "</select></label>" +
+      '<button type="button" class="boto clar" data-cb="reposa" style="align-self:end" title="Torna a escriure a les columnes les notes de tots els alumnes ja corregits">↻ Posa totes les notes</button></div>' +
       (propi ? '<div class="alum-eines"><label class="boto" style="display:inline-block">📷 Fotografia fulls<input type="file" id="cbFoto" accept="image/*" capture="environment" multiple hidden></label>' +
         '<span class="font">Pots triar diverses fotos alhora: cada full es reconeix pel codi i la nota va sola a la fila de l\'alumne.</span></div>'
         : '<p class="font" style="margin:4px 0">Full de respostes oficial: toca ✏️ al costat de l\'alumne i fotografia-hi el seu full.</p>') +
@@ -3457,6 +3458,12 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       if (b.dataset.cb === "impgrup") cbImprimeix(p, g);
       else if (b.dataset.cb === "impbuit") cbImprimeix(p, null);
       else if (b.dataset.cb === "obre") cbFitxa(p, g, b.dataset.a);
+      else if (b.dataset.cb === "reposa") {
+        const c = CB(), rs = (c.res[p.id] && c.res[p.id][g.nom]) || {}; let n = 0; const errs = [];
+        Object.keys(rs).forEach(a => { const e = cbDesaNotes(p, g.nom, a); if (e) errs.push(cbNet(a) + ": " + e.toLowerCase()); else n++; });
+        cbMsg = (n ? "✓ Notes de " + n + " alumne" + (n === 1 ? "" : "s") + " posades a les columnes." : "No hi ha cap alumne corregit d'aquest grup.") + (errs.length ? " ⚠️ " + esc(errs.join(" · ")) : "");
+        desa(); pintaCB(); pintaAlumnes();
+      }
     });
   }
   // ================= Dreceres de consulta =================
