@@ -856,7 +856,15 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       if (d.agenda && typeof d.agenda === "object") r.agenda = d.agenda;
       if (Array.isArray(d.tasques)) r.tasques = d.tasques.filter(t => t && typeof t.text === "string");
       if (d.correu && Array.isArray(d.correu.comptes)) r.correu = { comptes: d.correu.comptes.filter(c => c && c.url) };
-      if (d.qualificacions && Array.isArray(d.qualificacions.grups)) r.qualificacions = d.qualificacions;
+      if (d.qualificacions && Array.isArray(d.qualificacions.grups)) {
+        r.qualificacions = d.qualificacions;
+        // Els fulls de trimestre sempre amb el nom sencer: «1R TRIM» → «1r TRIMESTRE», «2N TRIM» → «2n TRIMESTRE»…
+        r.qualificacions.grups.forEach(g => (g.fulls || []).forEach(f => {
+          const m = String(f.nom || "").trim().match(/^([123])\s*(r|n|er)?\.?\s*trim(estre)?\.?$/i);
+          if (m) f.nom = ["1r", "2n", "3r"][Number(m[1]) - 1] + " TRIMESTRE";
+          (f.columnes || []).forEach(c => { if (c.formula) c.formula = String(c.formula).replace(/\{\s*([123])\s*(r|n|er)?\.?\s*trim(estre)?\.?\s*\|/gi, (t, n) => "{" + ["1r", "2n", "3r"][Number(n) - 1] + " TRIMESTRE|"); });
+        }));
+      }
       if (d.genealogia && typeof d.genealogia === "object") r.genealogia = d.genealogia;
       if (Array.isArray(d.formularis)) r.formularis = d.formularis;   // qüestionaris en línia creats des de l'Assistent   // dades de les persones vives (privades)
     }
