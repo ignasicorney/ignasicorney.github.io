@@ -1821,7 +1821,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       '<select id="alumFull" aria-label="Full">' + g.fulls.map((x, i) => '<option value="' + i + '"' + (x === f ? " selected" : "") + ">" + esc(x.nom) + "</option>").join("") + "</select>" +
       '<input type="search" id="alumCerca" placeholder="Cerca alumne…" value="' + esc(cerca) + '" style="flex:1 1 140px"></div>' +
       '<div class="alum-eines"><button type="button" class="boto clar" data-q="formules">⚙️ ' + (qFormules ? "Amaga les fórmules" : "Columnes i fórmules") + "</button>" +
-      (compteIns() ? '<button type="button" class="boto clar" data-q="classroom" title="Omple una columna amb els lliuraments o les notes d\'una tasca del Classroom o d\'un formulari"><img src="https://www.gstatic.com/classroom/logo_square_rounded.svg" alt="" class="ico-cls"> Classroom</button>' + (f && f.columnes.some(c => c.classroom) ? '<button type="button" class="boto clar" data-q="clsact" title="Torna a llegir del Classroom totes les columnes enllaçades d\'aquest full">🔄 Actualitza del Classroom</button>' : "") : "") +
+      ('<button type="button" class="boto clar" data-q="classroom" title="Omple una columna amb els lliuraments o les notes d\'una tasca del Classroom o d\'un formulari"><img src="https://www.gstatic.com/classroom/logo_square_rounded.svg" alt="" class="ico-cls"> Classroom</button>' + (f && f.columnes.some(c => c.classroom) ? '<button type="button" class="boto clar" data-q="clsact" title="Torna a llegir del Classroom totes les columnes enllaçades d\'aquest full">🔄 Actualitza del Classroom</button>' : "")) +
       '<button type="button" class="boto clar' + (qDeures ? " actiu" : "") + '" data-q="passadeures" title="Mode ràpid: cada toc a la columna de deures posa o treu la falta d\'avui">📕 ' + (qDeures ? "Prou deures" : "Passa deures") + '</button><button type="button" class="boto clar" data-q="alumne">+ Alumne</button><button type="button" class="boto clar" data-q="banc">📋 ' + (rubObert ? "Amaga les rúbriques" : "Rúbriques") + "</button>" + importa + "</div>" + (clsMsg ? '<p class="cls-msg ' + (clsMsg.err ? "avis" : "font") + '">' + esc(clsMsg.t) + "</p>" : "") + (rubObert ? htmlBanc() : "");
     if (f && qFormules) {
       h += '<div class="formules"><p class="font" style="margin:0 0 8px">Fórmules com a l\'Excel. <b>{EX1}</b> és una columna d\'aquest full i <b>{1R TRIM|NOTA FINAL TRIM}</b> una columna d\'un altre full. Funcions: SUM, AVERAGE, MIN, MAX, IF, ROUND… Els buits compten com a 0 a les operacions i AVERAGE se\'ls salta. <b>MITJANAFETS({DIC1};{DIC2})</b> fa la mitjana de les proves fetes: si a una nota hi escrius <b>EX</b> (o x, o -), no compta; un buit compta com a 0.</p>' +
@@ -2505,18 +2505,19 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
   // El compte es reconeix pel nom o, si no el porta, per l'adreça que diu el seu script (es demana una vegada i es recorda)
   var correusComptes = {}; try { correusComptes = JSON.parse(lsLlegeix("tauler.correusComptes") || "{}") || {}; } catch (e) {}
   function compteIns() { const l = (dades.correu && dades.correu.comptes) || []; return l.find(c => c && c.url && (/ieslabisbal/i.test(c.nom || "") || /@ieslabisbal\.cat$/i.test((correusComptes || {})[c.url] || ""))) || null; }
-  var detectantIns = false;
-  async function detectaIns() {
-    if (!correusComptes || detectantIns || compteIns() || !clau) return;
-    const l = ((dades.correu && dades.correu.comptes) || []).filter(c => c && c.url && !correusComptes[c.url]);
+  var detectantIns = false, errorsComptes = {};
+  async function detectaIns(forca) {
+    if (!correusComptes || (detectantIns && !forca) || compteIns() || !clau) return;
+    const l = ((dades.correu && dades.correu.comptes) || []).filter(c => c && c.url && (forca || !correusComptes[c.url]));
     if (!l.length) return;
     detectantIns = true;
     await Promise.all(l.map(async c => {
       try {
         const r = await fetch(c.url, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ pin: clau, accio: "compte" }) });
         const d = await r.json();
-        if (d && d.ok && d.correu) correusComptes[c.url] = String(d.correu).toLowerCase();
-      } catch (e) {}
+        if (d && d.ok && d.correu) { correusComptes[c.url] = String(d.correu).toLowerCase(); delete errorsComptes[c.url]; }
+        else errorsComptes[c.url] = d && d.clau ? "la clau de La TdG no coincideix amb la propietat PIN del seu script" : (d && d.error) || "no respon bé";
+      } catch (e) { errorsComptes[c.url] = "no respon (revisa que l'adreça /exec sigui la de la implementació actual)"; }
     }));
     lsEscriu("tauler.correusComptes", JSON.stringify(correusComptes));
     detectantIns = false;
@@ -2586,8 +2587,23 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     clsMsg = { t: msg.join(" "), err: err };
     pintaAlumnes();
   }
-  function obreClassroom(g, f) {
+  async function obreClassroom(g, f) {
     if (!f) return;
+    if (!compteIns()) {   // diagnòstic: quins comptes hi ha al correu i què diuen
+      await detectaIns(true);
+      if (!compteIns()) {
+        let dlg0 = $("dlgCls");
+        if (!dlg0) { dlg0 = document.createElement("dialog"); dlg0.id = "dlgCls"; document.body.appendChild(dlg0); }
+        const l = (dades.correu && dades.correu.comptes) || [];
+        dlg0.innerHTML = '<form method="dialog"><h2><img src="https://www.gstatic.com/classroom/logo_square_rounded.svg" alt="" class="ico-cls gran"> Classroom</h2>' +
+          "<p style=\"margin:0\">No trobo el compte <b>icorney@ieslabisbal.cat</b> entre els comptes del correu de la Bitàcola.</p>" +
+          (l.length ? '<ul style="margin:0;padding-left:1.2em">' + l.map(c => "<li><b>" + esc(c.nom || "(sense nom)") + "</b>: " + esc(correusComptes[c.url] || errorsComptes[c.url] || "sense resposta") + "</li>").join("") + "</ul>" : '<p class="font" style="margin:0">Ara mateix no hi ha cap compte connectat.</p>') +
+          '<p class="font" style="margin:0">Ves a 📬 Correu &gt; ⚙️ i afegeix-hi el compte d\'ieslabisbal.cat amb l\'adreça /exec del seu script (Implementa &gt; Gestiona les implementacions &gt; URL de l\'aplicació web).</p>' +
+          '<div class="botons"><button type="button" class="boto" onclick="this.closest(\'dialog\').close()">D\'acord</button></div></form>';
+        dlg0.showModal();
+        return;
+      }
+    }
     let dlg = $("dlgCls");
     if (!dlg) { dlg = document.createElement("dialog"); dlg.id = "dlgCls"; document.body.appendChild(dlg); }
     const cols = f.columnes.filter(c => c.tipus === "nota");
