@@ -49,7 +49,7 @@
 //                                                       si hi ha escrit alguna cosa: feina = { escrit, paraules }
 //   { accio: "classroom-alumnes", curs }              → { alumnes: [{ email, nom, cognoms }] }
 //   { accio: "formulari-crea", titol, text, preguntes } → { id, url, edita }: qüestionari autocorregible
-//   { accio: "formulari-respostes", id, items }       → { max, respostes: [{ email, punts, data }] } («items» opcional: només aquelles preguntes)
+//   { accio: "formulari-respostes", id }              → { max, respostes: [{ email, punts, data }] }
 //   { accio: "classroom-publica", curs, titol, descripcio, url, data, esborrany }
 //                                                     → { id, enllac }: tasca nova amb el formulari enllaçat
 //   { accio: "formulari-tanca", id, quan }            → tanca les respostes ara (sense «quan») o a l'hora «quan» (ISO)
@@ -330,27 +330,18 @@ function doPost(e) {
 
       case "formulari-respostes": {
         const form = FormApp.openById(String(cos.id));
-        // 13.11.2026: amb «items» (números de pregunta, p. ex. ["1", "4.1"]) només compten aquelles preguntes
-        // (competències bàsiques: la comprensió lectora sense les preguntes de llengua)
-        const filtre = Array.isArray(cos.items) && cos.items.length ? cos.items.map(String) : null;
-        const compta = function (it) {
-          if (!filtre) return true;
-          const m = String(it.getTitle() || "").match(/^\s*(\d+(?:\.\d+)?)/);
-          return !!m && filtre.indexOf(m[1]) >= 0;
-        };
         let max = 0;
         form.getItems().forEach(function (it) {
-          if (!compta(it)) return;
           const t = it.getType();
           if (t === FormApp.ItemType.MULTIPLE_CHOICE) max += it.asMultipleChoiceItem().getPoints();
           else if (t === FormApp.ItemType.CHECKBOX) max += it.asCheckboxItem().getPoints();
         });
         const respostes = form.getResponses().map(function (r) {
           let punts = 0;
-          r.getGradableItemResponses().forEach(function (ir) { if (compta(ir.getItem())) punts += Number(ir.getScore()) || 0; });
+          r.getGradableItemResponses().forEach(function (ir) { punts += Number(ir.getScore()) || 0; });
           return { email: String(r.getRespondentEmail() || "").toLowerCase(), punts: punts, data: r.getTimestamp().toISOString() };
         });
-        return json_({ ok: true, max: max, respostes: respostes, filtrat: !!filtre });
+        return json_({ ok: true, max: max, respostes: respostes });
       }
     }
     return json_({ ok: false, error: "Acció desconeguda" });
