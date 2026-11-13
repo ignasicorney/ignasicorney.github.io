@@ -209,6 +209,7 @@ dialog#dlgRub{width:min(760px,calc(100vw - 24px))}
 .cons-b{display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--linia);border-radius:10px;background:var(--targeta);cursor:pointer;font:inherit;text-align:left;color:inherit}
 .cons-b:hover{border-color:var(--accent)}
 .cons-b img{width:28px;height:28px;flex:none;border-radius:6px;object-fit:contain}
+.cons-b img.retall{object-fit:cover;object-position:left center}
 .cons-b .ini{width:28px;height:28px;flex:none;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;font-weight:700;font-size:.75rem;color:#fff}
 .cons-b small{display:block;color:var(--suau);font-size:.75rem}
 .rub-taula{border-collapse:collapse;width:100%;font-size:.88rem}
@@ -2482,14 +2483,14 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
   // ================= Dreceres de consulta =================
   // Cada obra s'obre en una pestanya nova amb la paraula ja buscada (cap d'aquestes obres té una API oberta)
   const CONSULTA = [
-    { nom: "DIEC2", desc: "Diccionari de l'IEC", domini: "dlc.iec.cat", color: "#1f3a68", url: p => "https://dlc.iec.cat/Results?DecEntradaText=" + p },
-    { nom: "Optimot", desc: "Consultes lingüístiques", domini: "aplicacions.llengua.gencat.cat", color: "#c0001a", url: p => "https://aplicacions.llengua.gencat.cat/llc/AppJava/index.html?action=Principal&method=cerca_generica&tipusCerca=cerca.tot&input_cercar=" + p },
+    { nom: "DIEC2", desc: "Diccionari de l'IEC", domini: "dlc.iec.cat", logo: "https://dlc.iec.cat/img/LOGO_IEC2.png", color: "#1f3a68", url: p => "https://dlc.iec.cat/Results?DecEntradaText=" + p },
+    { nom: "Optimot", desc: "Consultes lingüístiques", domini: "aplicacions.llengua.gencat.cat", logo: "https://aplicacions.llengua.gencat.cat/llc/img/logo_optimot.png", retall: true, color: "#c0001a", url: p => "https://aplicacions.llengua.gencat.cat/llc/AppJava/index.html?action=Principal&method=cerca_generica&tipusCerca=cerca.tot&input_cercar=" + p },
     { nom: "Termcat", desc: "Cercaterm", domini: "www.termcat.cat", color: "#e2001a", url: p => "https://www.termcat.cat/ca/cercaterm/" + p + "?type=basic" },
     { nom: "DLE", desc: "Diccionario de la RAE", domini: "dle.rae.es", color: "#7a1f2b", url: p => "https://dle.rae.es/" + p },
     { nom: "Fundéu", desc: "Dudas del español", domini: "www.fundeu.es", color: "#0066a1", url: p => "https://www.fundeu.es/?s=" + p },
     { nom: "Sinònims", desc: "Diccionari de Softcatalà", domini: "www.softcatala.org", color: "#d4232a", url: p => "https://www.softcatala.org/diccionari-de-sinonims/paraula/" + p + "/" }
   ];
-  $("consLlista").innerHTML = CONSULTA.map((o, i) => '<button type="button" class="cons-b" data-cons="' + i + '" title="Busca la paraula a ' + esc(o.nom) + '"><img src="https://www.google.com/s2/favicons?domain=' + o.domini + '&sz=64" alt="" loading="lazy" data-ini="' + esc(o.nom.charAt(0)) + '" data-color="' + o.color + '"><span><b>' + esc(o.nom) + "</b><small>" + esc(o.desc) + "</small></span></button>").join("");
+  $("consLlista").innerHTML = CONSULTA.map((o, i) => '<button type="button" class="cons-b" data-cons="' + i + '" title="Busca la paraula a ' + esc(o.nom) + '"><img src="' + (o.logo || "https://www.google.com/s2/favicons?domain=" + o.domini + "&sz=64") + '"' + (o.retall ? ' class="retall"' : "") + ' alt="" loading="lazy" data-ini="' + esc(o.nom.charAt(0)) + '" data-color="' + o.color + '"><span><b>' + esc(o.nom) + "</b><small>" + esc(o.desc) + "</small></span></button>").join("");
   // Si el logo no es pot carregar, hi posa la inicial amb el color de l'obra
   $("consLlista").querySelectorAll("img").forEach(im => im.addEventListener("error", () => { const s = document.createElement("span"); s.className = "ini"; s.style.background = im.dataset.color; s.textContent = im.dataset.ini; im.replaceWith(s); }, { once: true }));
   function consulta(i) {
