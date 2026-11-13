@@ -217,6 +217,11 @@ dialog#dlgRub{width:min(760px,calc(100vw - 24px))}
 .qr-bloc .qr svg{width:100%;height:auto;display:block}
 .qr-bloc a{word-break:break-all}
 .cls-msg{font-size:.85rem;margin:-4px 0 10px}
+.imp{position:relative;display:inline-block}
+.imp>summary{list-style:none;cursor:pointer}
+.imp>summary::-webkit-details-marker{display:none}
+.imp-ops{position:absolute;z-index:5;top:calc(100% + 4px);left:0;display:grid;gap:6px;padding:8px;background:var(--targeta,#fff);border:1px solid var(--linia);border-radius:10px;box-shadow:0 6px 20px rgba(0,0,0,.12);white-space:nowrap}
+.imp-ops .boto{display:block;text-align:left}
 .ico-cls{width:18px;height:18px;vertical-align:-3px}
 .ico-cls.gran{width:26px;height:26px;vertical-align:-5px}
 .cons-b .ini{width:28px;height:28px;flex:none;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;font-weight:700;font-size:.75rem;color:#fff}
@@ -1806,9 +1811,13 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     { const q = Q(), act = q.grups[qGrup]; q.grups.sort(ordenaGrups); if (act) qGrup = q.grups.indexOf(act); }
     const cos = $("alumCos"), g = grupActual(), f = fullActual(g);
     detectaIns();
-    const importa = (compteDrive() ? '<button type="button" class="boto clar" data-q="drive">⬇️ Importa de Drive</button>' : "") + '<label class="boto clar" style="display:inline-block">⬆️ Importa Excel<input type="file" id="alumFitxer" accept=".xlsx,.xls,.zip" multiple hidden></label>';
+    // Un sol botó «Importa»: del Drive de l'XTEC (si el compte hi és) o d'un fitxer Excel de l'ordinador
+    const fitxer = '<input type="file" id="alumFitxer" accept=".xlsx,.xls,.zip" multiple hidden>';
+    const importa = compteDrive()
+      ? '<details class="imp"><summary class="boto clar">⬇️ Importa</summary><div class="imp-ops"><button type="button" class="boto clar" data-q="drive">Del Drive de l\'XTEC</button><label class="boto clar">D\'un fitxer Excel' + fitxer + "</label></div></details>"
+      : '<label class="boto clar" style="display:inline-block">⬇️ Importa' + fitxer + "</label>";
     if (!g) {
-      cos.innerHTML = '<p class="buit">Encara no hi ha cap grup. ' + (compteDrive() ? "Prem «Importa de Drive» per copiar els fulls de notes de la carpeta de l'XTEC (alumnes, notes i fórmules), o puja'ls a mà." : "Quan el correu de l'XTEC estigui connectat (📬 Correu > ⚙️), es podran copiar directament de la carpeta de Drive. Mentrestant, pots pujar els fulls .xlsx (o la carpeta baixada en .zip).") + "</p>" + importa;
+      cos.innerHTML = '<p class="buit">Encara no hi ha cap grup. ' + (compteDrive() ? "Prem «Importa» per copiar els fulls de notes de la carpeta de l'XTEC (alumnes, notes i fórmules), o puja'ls a mà." : "Quan el correu de l'XTEC estigui connectat (📬 Correu > ⚙️), es podran copiar directament de la carpeta de Drive. Mentrestant, pots pujar els fulls .xlsx (o la carpeta baixada en .zip).") + "</p>" + importa;
       return;
     }
     const valor = calculadora(g);
