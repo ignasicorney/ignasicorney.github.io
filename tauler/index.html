@@ -2829,7 +2829,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
   // ================= Comprensió audiovisual (vídeo) =================
   async function preparaVideo(transcripcio) {
     const fet = html => { asOcupat = false; asResultat = html; pintaAssistent(); };
-    const v = idYoutube(asVid.url), i = segons(asVid.i), f = segons(asVid.f), n = Math.max(3, Math.min(15, parseInt(asVid.n, 10) || 8));
+    const v = idYoutube(asVid.url), i = segons(asVid.i), f = segons(asVid.f), n = Math.max(3, Math.min(20, parseInt(asVid.n, 10) || 8));
     if (!v) return fet('<p class="avis">Enganxa l\'enllaç d\'un vídeo de YouTube.</p>');
     if (i == null || f == null) return fet('<p class="avis">Escriu l\'inici i el final del fragment en minuts i segons (p. ex. 2:15 i 6:45).</p>');
     if (f - i < VID_MIN || f - i > VID_MAX) return fet('<p class="avis">El fragment ha de durar entre 4 i 5 minuts; ara en fa ' + (f > i ? mmss(f - i) : "0:00") + ".</p>");
