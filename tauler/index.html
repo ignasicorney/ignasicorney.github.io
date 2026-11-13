@@ -207,8 +207,11 @@ dialog#dlgRub{width:min(760px,calc(100vw - 24px))}
 .cb-taula th,.cb-taula td{border-bottom:1px solid var(--linia);padding:4px 6px;text-align:left}
 .cb-taula tr.cb-buit td{color:var(--suau)}
 .cb-taula tr.cb-dubte td:first-child{background:#fff4c2}
-.cb-resp{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:4px}
-.cb-it select{padding:2px 4px;min-width:3.4em;font-size:1rem}
+.cb-resp{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:4px}
+.cb-it{flex-wrap:wrap}
+.cb-ops{display:flex;gap:3px}
+.cb-ops button{min-width:2.2em;padding:5px 0;border:1px solid var(--linia);border-radius:6px;background:var(--targeta);font:inherit;font-weight:600;color:inherit;cursor:pointer}
+.cb-ops button[aria-pressed=true]{background:#2b2b2b;color:#fff;border-color:#2b2b2b}
 .cb-it{display:flex!important;align-items:center;gap:4px;padding:2px 4px;border-radius:6px;border:2px solid transparent;color:var(--text)!important;font-size:.85rem!important}
 .cb-it span{min-width:2.4em;font-weight:700}
 .cb-it.be{background:#dff3df}.cb-it.malament{background:#f8d9d9}.cb-it.buida{background:#eee}.cb-it.dubte{border-color:#e0b000}
@@ -3040,19 +3043,21 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
   }
 
   // ---------- Lectura de la foto ----------
-  const cbImatge = file => new Promise((ok, ko) => {
+  const cbCarrega = file => new Promise((ok, ko) => {
     const u = URL.createObjectURL(file), img = new Image();
-    img.onload = () => {
-      const k = Math.min(1, 1600 / Math.max(img.naturalWidth, img.naturalHeight)), w = Math.round(img.naturalWidth * k), h = Math.round(img.naturalHeight * k);
-      const c = document.createElement("canvas"); c.width = w; c.height = h;
-      const cx = c.getContext("2d"); cx.drawImage(img, 0, 0, w, h); URL.revokeObjectURL(u);
-      const px = cx.getImageData(0, 0, w, h).data, g = new Float32Array(w * h);
-      for (let i = 0; i < w * h; i++) g[i] = .299 * px[i * 4] + .587 * px[i * 4 + 1] + .114 * px[i * 4 + 2];
-      ok({ w, h, g });
-    };
+    img.onload = () => { URL.revokeObjectURL(u); ok(img); };
     img.onerror = () => { URL.revokeObjectURL(u); ko(new Error("No s'ha pogut obrir la foto.")); };
     img.src = u;
   });
+  // Passa un tros de la foto (rect en píxels originals) a grisos, amb el costat llarg de «max» píxels
+  function cbRaster(img, rect, max) {
+    const [x0, y0, x1, y1] = rect, k = max / Math.max(x1 - x0, y1 - y0), w = Math.round((x1 - x0) * k), h = Math.round((y1 - y0) * k);
+    const c = document.createElement("canvas"); c.width = w; c.height = h;
+    const cx = c.getContext("2d"); cx.fillStyle = "#fff"; cx.fillRect(0, 0, w, h); cx.drawImage(img, x0, y0, x1 - x0, y1 - y0, 0, 0, w, h);
+    const px = cx.getImageData(0, 0, w, h).data, g = new Float32Array(w * h);
+    for (let i = 0; i < w * h; i++) g[i] = .299 * px[i * 4] + .587 * px[i * 4 + 1] + .114 * px[i * 4 + 2];
+    return { w, h, g, rect, k };
+  }
   // Píxels foscos respecte de la claror del voltant (aguanta ombres i llum desigual)
   function cbFoscos(im) {
     const { w, h, g } = im, r = Math.max(15, Math.round(Math.max(w, h) * .04)), S = new Float64Array((w + 1) * (h + 1));
@@ -3060,7 +3065,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     const d = new Uint8Array(w * h), fc = new Float32Array(w * h), mk = new Uint8Array(w * h);
     // Blanc del paper (el full ocupa la major part de la foto): evita que el fons fosc de la taula enganyi les cantonades
     const mostra = []; for (let i = 0; i < w * h; i += 97) mostra.push(g[i]); mostra.sort((a, b) => a - b);
-    const paper = mostra[Math.floor(mostra.length * .75)];
+    const paper = mostra[Math.floor(mostra.length * .92)];
     for (let y = 0; y < h; y++) { const y0 = Math.max(0, y - r), y1 = Math.min(h, y + r + 1); for (let x = 0; x < w; x++) {
       const x0 = Math.max(0, x - r), x1 = Math.min(w, x + r + 1), m = (S[y1 * (w + 1) + x1] - S[y0 * (w + 1) + x1] - S[y1 * (w + 1) + x0] + S[y0 * (w + 1) + x0]) / ((x1 - x0) * (y1 - y0));
       const v = g[y * w + x];
@@ -3081,7 +3086,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
         if (x > 0 && d[i - 1] && !vist[i - 1]) { vist[i - 1] = 1; pila[p++] = i - 1; } if (x < w - 1 && d[i + 1] && !vist[i + 1]) { vist[i + 1] = 1; pila[p++] = i + 1; }
         if (y > 0 && d[i - w] && !vist[i - w]) { vist[i - w] = 1; pila[p++] = i - w; } if (y < h - 1 && d[i + w] && !vist[i + w]) { vist[i + w] = 1; pila[p++] = i + w; } }
       const bw = x1 - x0 + 1, bh = y1 - y0 + 1;
-      if (bw < mida * .008 || bh < mida * .008 || bw > mida * .045 || bh > mida * .045) continue;
+      if (bw < mida * .005 || bh < mida * .005 || bw > mida * .045 || bh > mida * .045) continue;
       if (bw / bh < .5 || bw / bh > 2 || n / (bw * bh) < .45) continue;
       const cx = sx / n, cy = sy / n, ci = Math.round(cy) * w + Math.round(cx);
       res.push({ x: cx, y: cy, n: n, forat: !d[ci] });
@@ -3120,11 +3125,11 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
   }
   // Situa el full a la foto: retorna la transformació (coordenades del full → píxels) i les caselles de cada ítem tancat
   function cbSitua(im, d, p) {
-    const t = cbTaques(d.mk, im.w, im.h).sort((a, b) => b.n - a.n).slice(0, 24), it = cbItems(p), ful = p.full;
+    const t = cbTaques(d.mk, im.w, im.h).sort((a, b) => b.n - a.n).slice(0, p.full.model === "oficial" ? 24 : 12), it = cbItems(p), ful = p.full;
     if (ful.model === "oficial") {
       // Tres quadrats negres (dalt esquerra, dalt dreta, baix dreta): el triangle rectangle més gran amb les proporcions del full
       const [A, B, C] = ful.mk, dAB = Math.hypot(B[0] - A[0], B[1] - A[1]), dBC = Math.hypot(C[0] - B[0], C[1] - B[1]), rt = dAB / dBC;
-      let millor = null, mp = 0;
+      let millor = null, mp = 0; const cands = [];
       for (let a = 0; a < t.length; a++) for (let b = 0; b < t.length; b++) for (let c = 0; c < t.length; c++) {
         if (a === b || b === c || a === c) continue;
         const P = t[a], Q = t[b], R = t[c], l1 = Math.hypot(Q.x - P.x, Q.y - P.y), l2 = Math.hypot(R.x - Q.x, R.y - Q.y);
@@ -3133,12 +3138,14 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
         if (Math.abs(cs) > .2) continue;
         // P → Q → R ha de girar en el sentit de les agulles del rellotge (dalt esq. → dalt dreta → baix dreta)
         if ((Q.x - P.x) * (R.y - Q.y) - (Q.y - P.y) * (R.x - Q.x) <= 0) continue;
-        const ar = l1 * l2; if (ar > mp) { mp = ar; millor = [P, Q, R]; }
+        const ar = l1 * l2; cands.push([ar, [P, Q, R]]); if (ar > mp) { mp = ar; millor = [P, Q, R]; }
       }
-      if (!millor || mp < im.w * im.h * .15) throw new Error("No trobo els tres quadrats negres de les cantonades del full. Fes la foto amb tot el full dins de la imatge, des de dalt i amb bona llum.");
-      const T = cbAfi(ful.mk, millor.map(x => [x.x, x.y]));
+      if (!millor || mp < im.w * im.h * .06) throw new Error("No trobo els tres quadrats negres de les cantonades del full. Fes la foto amb tot el full dins de la imatge, des de dalt i amb bona llum.");
       const caixes = it.map(x => { if (x.t === "oberta") return null; const c = ful.col2.includes(x.n) ? 1 : 0; return cbOpcions(x).map((l, k) => [ful.x[c][k], ful.y[x.n], ful.b]); });
-      return { T, caixes, escala: ful.b };
+      // Altres triangles plausibles (una ombra o una taca a la cantonada buida): es decideix després, amb les caselles
+      const T = cbAfi(ful.mk, millor.map(x => [x.x, x.y]));
+      const alts = [T].concat(cands.filter(c => c[0] >= mp * .6 && c[1] !== millor).sort((a, b) => b[0] - a[0]).slice(0, 6).map(([, tri]) => cbAfi(ful.mk, tri.map(x => [x.x, x.y]))));
+      return { T, caixes, alts };
     }
     // Full propi: quatre quadrats, el de dalt a l'esquerra amb un forat blanc
     let millor = null, mp = -1;
@@ -3157,10 +3164,24 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     const T = cbHomografia([[m, m], [W - m, m], [W - m, H - m], [m, H - m]], q.map(x => [x.x, x.y]));
     const tancats = it.filter(x => x.t !== "oberta");
     const caixes = it.map(x => { if (x.t === "oberta") return null; const i = tancats.indexOf(x); return cbOpcions(x).map((l, k) => { const c = cbCaixa(i, k, tancats.length); return [c.x, c.y, CBG.B - .7]; }); });
-    return { T, caixes, propi: true };
+    return { T, caixes, propi: true, alts: [T] };
   }
   async function cbLlegeix(file, p) {
-    const im = await cbImatge(file), d = cbFoscos(im), sit = cbSitua(im, d, p), { caixes, propi } = sit, fc = d.fc;
+    // 1) Foto sencera reduïda: es localitza el full. 2) Es retalla el full i es torna a llegir amb més detall
+    //    (el full sovint ocupa només una part de la foto i les caselles hi queden massa petites)
+    const img = await cbCarrega(file), NW = img.naturalWidth, NH = img.naturalHeight;
+    let im = cbRaster(img, [0, 0, NW, NH], Math.min(1600, Math.max(NW, NH))), d = cbFoscos(im), sit = cbSitua(im, d, p);
+    {
+      const cant = p.full.model === "oficial" ? [[0, 0], [595.3, 0], [595.3, 841.9], [0, 841.9]] : [[0, 0], [CBG.W, 0], [CBG.W, CBG.H], [0, CBG.H]];
+      const q = cant.map(([x, y]) => { const [u, v] = sit.T(x, y); return [u / im.k + im.rect[0], v / im.k + im.rect[1]]; });
+      const xs = q.map(c => c[0]), ys = q.map(c => c[1]), mg = .04 * Math.max(Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys));
+      const r = [Math.max(0, Math.min(...xs) - mg), Math.max(0, Math.min(...ys) - mg), Math.min(NW, Math.max(...xs) + mg), Math.min(NH, Math.max(...ys) + mg)];
+      if (r[2] - r[0] > 50 && r[3] - r[1] > 50) {
+        try { const im2 = cbRaster(img, r, Math.min(2000, Math.max(r[2] - r[0], r[3] - r[1]))), d2 = cbFoscos(im2), s2 = cbSitua(im2, d2, p); im = im2; d = d2; sit = s2; }
+        catch (e) { /* si el retall falla, es continua amb la foto sencera */ }
+      }
+    }
+    const { caixes, propi } = sit, fc = d.fc;
     let T = sit.T;
     const lloc = (T, x, y) => { const [u, v] = T(x, y), xi = Math.round(u), yi = Math.round(v); return xi < 0 || yi < 0 || xi >= im.w || yi >= im.h ? -1 : yi * im.w + xi; };
     // Vora impresa de la casella (foscor contínua al llarg dels quatre costats)
@@ -3182,7 +3203,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     // trobades, es calcula la transformació definitiva. Així s'absorbeixen la perspectiva, el full corbat i les
     // diferències d'escala de la impressora.
     {
-      const T0 = T, [ax, ay] = T0(0, 0), [bx, by] = T0(caixes.find(c => c)[0][2], 0), mpx = Math.hypot(bx - ax, by - ay);
+      let T0 = T; const [ax, ay] = T0(0, 0), [bx, by] = T0(caixes.find(c => c)[0][2], 0), mpx = Math.hypot(bx - ax, by - ay);
       const lin = new Uint8Array(im.w * im.h); for (let k = 0; k < lin.length; k++) lin[k] = fc[k] > .16 ? 1 : 0;
       // Contorns quadrats de la mida d'una casella
       const vist = new Uint8Array(im.w * im.h), pila = new Int32Array(im.w * im.h), det = [];
@@ -3197,14 +3218,18 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
         det.push([(x0 + x1) / 2, (y0 + y1) / 2]);
       }
       const model = []; caixes.forEach(c => c && c.forEach(([cx, cy, m]) => model.push([cx + m / 2, cy + m / 2])));
-      if (det.length >= 12) {
-        // Vot del desplaçament més repetit (en quarts de casella)
-        const q = mpx / 4, vots = new Map();
-        const pred = model.map(([x, y]) => T0(x, y));
-        det.forEach(([u, v]) => pred.forEach(([a, b]) => { const dx = u - a, dy = v - b; if (Math.abs(dx) > mpx * 3 || Math.abs(dy) > mpx * 3) return;
-          const k = Math.round(dx / q) + "," + Math.round(dy / q); vots.set(k, (vots.get(k) || 0) + 1); }));
-        let millor = null, mv = 0;
-        vots.forEach((v, k) => { const [i, j] = k.split(",").map(Number); let s = 0; for (let a = -1; a <= 1; a++) for (let b = -1; b <= 1; b++) s += vots.get((i + a) + "," + (j + b)) || 0; if (s > mv) { mv = s; millor = [i * q, j * q]; } });
+      if (!propi && det.length >= 12) {   // el full propi ja queda ben situat amb els quatre quadrats
+        // Vot del desplaçament més repetit (en quarts de casella). Si hi ha diverses maneres possibles de situar el full,
+        // guanya la que fa coincidir més caselles
+        const q = mpx / 4;
+        const vota = Tc => { const vots = new Map(), pred = model.map(([x, y]) => Tc(x, y));
+          det.forEach(([u, v]) => pred.forEach(([a, b]) => { const dx = u - a, dy = v - b; if (Math.abs(dx) > mpx * 3 || Math.abs(dy) > mpx * 3) return;
+            const k = Math.round(dx / q) + "," + Math.round(dy / q); vots.set(k, (vots.get(k) || 0) + 1); }));
+          let mb = null, mv = 0;
+          vots.forEach((v, k) => { const [i, j] = k.split(",").map(Number); let s = 0; for (let a = -1; a <= 1; a++) for (let b = -1; b <= 1; b++) s += vots.get((i + a) + "," + (j + b)) || 0; if (s > mv) { mv = s; mb = [i * q, j * q]; } });
+          return { mv, mb }; };
+        let millor = null, mvv = -1;
+        (sit.alts || [T0]).forEach(Tc => { const r = vota(Tc); if (r.mv > mvv) { mvv = r.mv; millor = r.mb; T0 = Tc; } });
         // Aparellament i transformació, refinats dues vegades
         let H = (x, y) => { const [u, v] = T0(x, y); return [u + millor[0], v + millor[1]]; };
         for (const radi of [.5, .35, .3]) {
@@ -3318,7 +3343,8 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     let dlg = $("dlgCB"); if (!dlg) { dlg = document.createElement("dialog"); dlg.id = "dlgCB"; document.body.appendChild(dlg); }
     const tancats = it.map((x, i) => i).filter(i => it[i].t !== "oberta");
     const pinta = () => {
-      const pt = cbPuntua(p, r.r, r.red);
+      const pt = cbPuntua(p, r.r, r.red), st = dlg.scrollTop;
+      setTimeout(() => { dlg.scrollTop = st; }, 0);
       dlg.innerHTML = '<form method="dialog"><h2>' + esc(cbNet(a)) + '</h2><p class="font" style="margin:0">' + esc(p.titol) + " · " + esc(nomGrup(g.nom)) + "</p>" +
         '<div class="alum-eines"><label class="boto" style="display:inline-block">📷 ' + (foto ? "Torna a fotografiar" : "Fotografia el full") + '<input type="file" id="cbFotoA" accept="image/*" capture="environment" hidden></label>' +
         (llegint ? '<span class="font">Llegint el full…</span>' : "") + "</div>" + (avis ? '<p class="avis">' + esc(avis) + "</p>" : "") +
@@ -3327,7 +3353,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
         '<div class="cb-resp">' + it.map((x, i) => {
           if (x.t === "oberta") return "";
           const v = r.r[i], cls = !v ? "buida" : v === x.k ? "be" : "malament";
-          return '<label class="cb-it ' + cls + (r.dubtes.includes(i) ? " dubte" : "") + '"><span>' + esc(x.n) + (x.d === "LL" ? "ᴸ" : "") + '</span><select data-i="' + i + '"><option value="">·</option>' + cbOpcions(x).map(l => "<option" + (l === v ? " selected" : "") + ">" + l + "</option>").join("") + "</select></label>";
+          return '<div class="cb-it ' + cls + (r.dubtes.includes(i) ? " dubte" : "") + '"><span>' + esc(x.n) + (x.d === "LL" ? "ᴸ" : "") + '</span><span class="cb-ops">' + cbOpcions(x).map(l => '<button type="button" data-i="' + i + '" data-v="' + l + '" aria-pressed="' + (l === v) + '">' + l + "</button>").join("") + "</span></div>";
         }).join("") + "</div>" +
         '<p class="font" style="margin:0">Verd: correcta · vermell: errada · gris: en blanc · requadre groc: comprova-la al full. ᴸ: pregunta de llengua (compta a l\'EE).</p>' +
         it.map((x, i) => {
@@ -3366,6 +3392,8 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       }
     };
     dlg.onclick = ev => {
+      const bv = ev.target.closest("[data-v]");
+      if (bv) { const i = Number(bv.dataset.i); r.r[i] = r.r[i] === bv.dataset.v ? "" : bv.dataset.v; r.dubtes = r.dubtes.filter(x => x !== i); pinta(); return; }
       const b = ev.target.closest("[data-f]"); if (!b) return;
       if (b.dataset.f === "tanca") { if (foto) URL.revokeObjectURL(foto); dlg.close(); return; }
       const red = r.red && r.red.fr ? r.red : null;
