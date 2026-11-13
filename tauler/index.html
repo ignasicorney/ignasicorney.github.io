@@ -3426,7 +3426,8 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       const b = ev.target.closest("[data-f]"); if (!b) return;
       if (b.dataset.f === "tanca") { if (foto) URL.revokeObjectURL(foto); dlg.close(); return; }
       const red = r.red && CB_APARTATS.some(([k]) => r.red[k] !== "" && r.red[k] != null) ? r.red : null;
-      c.res[p.id][g.nom][a] = { r: r.r, dubtes: r.dubtes, red: red, d: new Date().toISOString() };
+      // En desar des de la fitxa, el professor ja ha revisat les caselles dubtoses: l'avís desapareix
+      c.res[p.id][g.nom][a] = { r: r.r, dubtes: [], red: red, d: new Date().toISOString() };
       const err = cbDesaNotes(p, g.nom, a);
       desa(); if (foto) URL.revokeObjectURL(foto); dlg.close();
       cbMsg = err ? "⚠️ " + esc(cbNet(a)) + ": desat, però " + esc(err.toLowerCase()) + ". Tria les columnes CL i EE i torna a desar." : "✓ Notes de " + esc(cbNet(a)) + " posades.";
