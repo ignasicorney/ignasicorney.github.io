@@ -3265,16 +3265,15 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
   }
 
   // ---------- Puntuació ----------
-  const CB_FRANGES = [["", "Sense corregir"], ["125", "125 paraules o més"], ["110", "Entre 110 i 124"], ["90", "Entre 90 i 109"], ["0", "Menys de 90 (0 punts)"]];
-  const CB_APARTATS = [["A", "Adequació"], ["R", "Coherència"], ["S", "Cohesió"], ["L", "Lèxic"], ["O", "Ortografia"], ["M", "Morfosintaxi"], ["P", "Presentació"]];
-  function cbRedaccio(r) {
-    if (!r || !r.fr) return null;
-    if (r.fr === "0") return 0;
-    let s = 0;
-    CB_APARTATS.forEach(([k]) => { let v = Number(r[k]) || 0; if (k === "P") v = Math.min(v, 1); else if (r.fr === "90" || (r.fr === "110" && k === "A")) v = Math.min(v, 2); else v = Math.min(v, 4); s += v; });
-    return s;
-  }
   const arr = v => Math.round(v * 100) / 100;
+  // Redacció amb la graella del professor (sobre 10): adequació, coherència i cohesió (0-3) i ortografia (0-1).
+  // A l'EE pesa com a la prova oficial: la redacció hi val 25 punts i les preguntes de llengua, la resta.
+  const CB_APARTATS = [["A", "Adequació", 3], ["R", "Coherència", 3], ["S", "Cohesió", 3], ["O", "Ortografia", 1]];
+  const CB_RED_MAX = 10, CB_RED_PES = 25;
+  function cbRedaccio(r) {
+    if (!r || CB_APARTATS.some(([k]) => r[k] === "" || r[k] == null)) return null;   // fins que no hi ha els quatre apartats, no compta
+    return arr(CB_APARTATS.reduce((s, [k, , mx]) => s + Math.min(mx, Number(String(r[k]).replace(",", ".")) || 0), 0));
+  }
   function cbPuntua(p, resp, red) {
     const it = cbItems(p); let cl = 0, ncl = 0, ll = 0, nll = 0;
     it.forEach((x, i) => { if (x.t === "oberta" && (resp[i] === "" || resp[i] == null)) return;   // pregunta oberta sense corregir: no compta
@@ -3282,7 +3281,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       if (x.d === "CL") { cl += ok; ncl += x.max; } else { ll += ok; nll += x.max; } });
     const rd = cbRedaccio(red);
     cl = arr(cl); ll = arr(ll);
-    return { cl, ncl, ll, nll, rd, notaCL: arr(cl / ncl * 10), notaEE: rd == null ? (nll ? arr(ll / nll * 10) : null) : arr((ll + rd) / (nll + 25) * 10) };   // sense redacció: només les preguntes de llengua
+    return { cl, ncl, ll, nll, rd, notaCL: arr(cl / ncl * 10), notaEE: rd == null ? (nll ? arr(ll / nll * 10) : null) : arr((ll + rd / CB_RED_MAX * CB_RED_PES) / (nll + CB_RED_PES) * 10) };   // sense redacció: només les preguntes de llengua
   }
   const cbNum = v => v == null ? "—" : String(v).replace(".", ",");
   const cbPts = (a, b) => cbNum(a) + "/" + b;
@@ -3330,7 +3329,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
         const r = rs[a], bt = '<td><button type="button" class="boto clar" data-cb="obre" data-a="' + esc(a) + '" aria-label="Fitxa de ' + esc(cbNet(a)) + '">' + (propi ? "✏️" : "📷 ✏️") + "</button></td>";
         if (!r) return '<tr class="cb-buit"><td>' + esc(cbNet(a)) + '</td><td colspan="4">—</td>' + bt + "</tr>";
         const pt = cbPuntua(p, r.r, r.red), dub = r.dubtes && r.dubtes.length;
-        return "<tr" + (dub ? ' class="cb-dubte"' : "") + "><td>" + esc(cbNet(a)) + (dub ? ' <span title="Caselles per revisar">⚠️</span>' : "") + "</td><td>" + cbPts(pt.cl, pt.ncl) + " · <b>" + cbNum(pt.notaCL) + "</b></td><td>" + cbPts(pt.ll, pt.nll) + "</td><td>" + (pt.rd == null ? "—" : pt.rd + "/25") + "</td><td><b>" + cbNum(pt.notaEE) + "</b></td>" + bt + "</tr>";
+        return "<tr" + (dub ? ' class="cb-dubte"' : "") + "><td>" + esc(cbNet(a)) + (dub ? ' <span title="Caselles per revisar">⚠️</span>' : "") + "</td><td>" + cbPts(pt.cl, pt.ncl) + " · <b>" + cbNum(pt.notaCL) + "</b></td><td>" + cbPts(pt.ll, pt.nll) + "</td><td>" + (pt.rd == null ? "—" : cbNum(pt.rd) + "/" + CB_RED_MAX) + "</td><td><b>" + cbNum(pt.notaEE) + "</b></td>" + bt + "</tr>";
       }).join("") + "</tbody></table>";
     cos.innerHTML = h;
   }
@@ -3338,7 +3337,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
   function cbFitxa(p, g, a) {
     const c = CB(); c.res[p.id] = c.res[p.id] || {}; c.res[p.id][g.nom] = c.res[p.id][g.nom] || {};
     const it = cbItems(p), r0 = c.res[p.id][g.nom][a] || { r: it.map(() => ""), dubtes: [], red: null };
-    const r = JSON.parse(JSON.stringify(r0)); r.red = r.red || { fr: "" }; r.dubtes = r.dubtes || [];
+    const r = JSON.parse(JSON.stringify(r0)); r.red = r.red || {}; r.dubtes = r.dubtes || [];
     let foto = "", llegint = false, avis = "";
     let dlg = $("dlgCB"); if (!dlg) { dlg = document.createElement("dialog"); dlg.id = "dlgCB"; document.body.appendChild(dlg); }
     const tancats = it.map((x, i) => i).filter(i => it[i].t !== "oberta");
@@ -3363,9 +3362,10 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
             '<select data-i="' + i + '"><option value="">Sense corregir</option>' + vs.map(v => '<option value="' + v + '"' + (r.r[i] !== "" && r.r[i] != null && Number(r.r[i]) === v ? " selected" : "") + ">" + cbNum(v) + "</option>").join("") + "</select></label>";
         }).join("") +
         "<p style=\"margin:0\"><b>CL</b> " + cbPts(pt.cl, pt.ncl) + " → " + cbNum(pt.notaCL) + " · <b>Llengua</b> " + cbPts(pt.ll, pt.nll) + "</p>" +
-        '<h3 style="margin:4px 0 0;font-size:.95rem">Redacció</h3><div class="fila"><label>Paraules<select data-red="fr">' + CB_FRANGES.map(([v, t]) => '<option value="' + v + '"' + (r.red.fr === v ? " selected" : "") + ">" + t + "</option>").join("") + "</select></label></div>" +
-        (r.red.fr && r.red.fr !== "0" ? '<div class="fila">' + CB_APARTATS.map(([k, t]) => "<label>" + t + '<select data-red="' + k + '">' + (k === "P" ? [0, 1] : [0, 1, 2, 3, 4]).map(n => "<option" + (Number(r.red[k] || 0) === n ? " selected" : "") + ">" + n + "</option>").join("") + "</select></label>").join("") + "</div>" : "") +
-        "<p style=\"margin:0\"><b>Redacció</b> " + (pt.rd == null ? "—" : pt.rd + "/25") + " · <b>EE</b> " + cbNum(pt.notaEE) + (pt.rd == null ? " (només les " + pt.nll + " preguntes de llengua; quan puntuïs la redacció, s'hi afegirà)" : " (preguntes de llengua + redacció)") + "</p>" +
+        '<h3 style="margin:4px 0 0;font-size:.95rem">Redacció (sobre ' + CB_RED_MAX + ')</h3><div class="fila">' + CB_APARTATS.map(([k, t, mx]) => {
+          const vs = []; for (let v = 0; v <= mx + 1e-9; v += .5) vs.push(v);
+          return "<label>" + t + " (0-" + mx + ')<select data-red="' + k + '"><option value="">—</option>' + vs.map(v => '<option value="' + v + '"' + (r.red[k] !== "" && r.red[k] != null && Number(r.red[k]) === v ? " selected" : "") + ">" + cbNum(v) + "</option>").join("") + "</select></label>"; }).join("") + "</div>" +
+        "<p style=\"margin:0\"><b>Redacció</b> " + (pt.rd == null ? "—" : cbNum(pt.rd) + "/" + CB_RED_MAX) + " · <b>EE</b> " + cbNum(pt.notaEE) + (pt.rd == null ? " (només les " + pt.nll + " preguntes de llengua; quan puntuïs la redacció, s'hi afegirà)" : " (preguntes de llengua + redacció)") + "</p>" +
         '<div class="botons"><button type="button" class="boto clar" data-f="tanca">Tanca</button><button type="button" class="boto" data-f="desa">Desa i posa les notes</button></div></form>';
     };
     pinta();
@@ -3396,7 +3396,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       if (bv) { const i = Number(bv.dataset.i); r.r[i] = r.r[i] === bv.dataset.v ? "" : bv.dataset.v; r.dubtes = r.dubtes.filter(x => x !== i); pinta(); return; }
       const b = ev.target.closest("[data-f]"); if (!b) return;
       if (b.dataset.f === "tanca") { if (foto) URL.revokeObjectURL(foto); dlg.close(); return; }
-      const red = r.red && r.red.fr ? r.red : null;
+      const red = r.red && CB_APARTATS.some(([k]) => r.red[k] !== "" && r.red[k] != null) ? r.red : null;
       c.res[p.id][g.nom][a] = { r: r.r, dubtes: r.dubtes, red: red, d: new Date().toISOString() };
       const err = cbDesaNotes(p, g.nom, a);
       desa(); if (foto) URL.revokeObjectURL(foto); dlg.close();
