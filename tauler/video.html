@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow, noarchive">
+<title>Fragment de vídeo</title>
+<style>
+  body { margin: 0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; background: #f4f4f1; color: #1f2a30; }
+  main { max-width: 900px; margin: 0 auto; padding: 20px 16px 32px; }
+  .cap { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; }
+  .cap img { height: 48px; }
+  h1 { font-size: 1.25rem; margin: 0; }
+  .franja { color: #5b6b73; margin: 4px 0 0; font-size: .95rem; }
+  .video { position: relative; padding-top: 56.25%; background: #000; border-radius: 10px; overflow: hidden; }
+  .video iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+  .ajuda { margin-top: 14px; font-size: .95rem; line-height: 1.5; }
+  button { margin-top: 12px; font: inherit; padding: 8px 14px; border-radius: 8px; border: 1px solid #0f5e66; background: #0f5e66; color: #fff; cursor: pointer; }
+  .error { background: #fde8e8; color: #8a1c1c; padding: 12px; border-radius: 8px; }
+</style>
+</head>
+<body>
+<main>
+  <div class="cap"><img src="logo-ins.png" alt="INS la Bisbal"><div><h1 id="titol">Fragment de vídeo</h1><p class="franja" id="franja"></p></div></div>
+  <div id="cos"></div>
+</main>
+<script>
+  (function () {
+    const p = new URLSearchParams(location.search);
+    const v = (p.get("v") || "").match(/^[\w-]{11}$/) ? p.get("v") : "";
+    const i = Math.max(0, parseInt(p.get("i"), 10) || 0), f = parseInt(p.get("f"), 10) || 0;
+    const t = p.get("t") || "";
+    const mmss = s => Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0");
+    const cos = document.getElementById("cos");
+    if (t) { document.getElementById("titol").textContent = t; document.title = t; }
+    if (!v || !(f > i)) { cos.innerHTML = '<p class="error">Aquest enllaç no és correcte. Demana\'l de nou al professor.</p>'; return; }
+    document.getElementById("franja").textContent = "Fragment del " + mmss(i) + " al " + mmss(f) + " (" + mmss(f - i) + ")";
+    const src = () => "https://www.youtube-nocookie.com/embed/" + v + "?start=" + i + "&end=" + f + "&rel=0&modestbranding=1&playsinline=1";
+    cos.innerHTML = '<div class="video"><iframe id="yt" src="' + src() + '" title="Vídeo" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe></div>' +
+      '<button type="button" id="reinicia">↺ Torna a començar el fragment</button>' +
+      '<p class="ajuda">Mira el fragment amb atenció (el pots tornar a veure tantes vegades com vulguis) i després respon el qüestionari.</p>';
+    document.getElementById("reinicia").addEventListener("click", () => { document.getElementById("yt").src = src() + "&autoplay=1"; });
+  })();
+</script>
+</body>
+</html>

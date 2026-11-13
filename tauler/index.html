@@ -529,6 +529,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     <div class="vistes" role="group" aria-label="Eina" id="asEines" style="flex-wrap:wrap;margin-bottom:10px">
       <button type="button" data-as="corregir">✍️ Corregir</button>
       <button type="button" data-as="activitats">📚 Activitats</button>
+      <button type="button" data-as="video">🎬 Vídeo</button>
       <button type="button" data-as="adaptar">🧩 Adaptar</button>
       <button type="button" data-as="rubrica">📋 Rúbrica</button>
       <button type="button" data-as="butlleti">💬 Butlletí</button>
@@ -1422,6 +1423,13 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       '<label>Columna<select data-as="c"><option value="">—</option>' + f.columnes.filter(c => c.tipus !== "calc").map(c => '<option value="' + esc(c.nom) + '"' + (prefix.c === c.nom ? " selected" : "") + ">" + esc(c.nom) + "</option>").join("") + "</select></label></div>";
   }
   let asSel = { g: 0, f: 0, a: "", c: "" };
+  // Comprensió audiovisual (13.11.2026): fragments de 4 a 5 minuts d'un vídeo de YouTube
+  let asVid = { url: "", i: "", f: "", curs: "1r d'ESO", lleng: "castellà", n: "8", dis: false, ind: "" };
+  const VID_MIN = 240, VID_MAX = 300;
+  const idYoutube = u => { const m = String(u || "").match(/(?:youtu\.be\/|[?&]v=|\/(?:embed|shorts|live)\/)([\w-]{11})/); return m ? m[1] : ""; };
+  const tYoutube = u => { const m = String(u || "").match(/[?&](?:t|start)=(?:(\d+)h)?(?:(\d+)m)?(\d+)s?\b/); return m ? (Number(m[1] || 0) * 3600 + Number(m[2] || 0) * 60 + Number(m[3])) : null; };
+  const segons = t => { const x = String(t || "").trim().replace(/[.,']/g, ":"); if (!x) return null; if (/^\d+$/.test(x)) return Number(x); const m = x.match(/^(?:(\d+):)?(\d{1,2}):(\d{2})$/); return m ? Number(m[1] || 0) * 3600 + Number(m[2]) * 60 + Number(m[3]) : null; };
+  const mmss = s => (s >= 3600 ? Math.floor(s / 3600) + ":" + String(Math.floor(s % 3600 / 60)).padStart(2, "0") : Math.floor(s / 60)) + ":" + String(s % 60).padStart(2, "0");
   function pintaAssistent() {
     const cos = $("asCos"); if (!cos) return;
     const textAbans = $("asText") ? $("asText").value : "";
@@ -1441,6 +1449,16 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
         '<textarea id="asText" placeholder="Tema, objectius o text de partida (pots enganxar-hi un text)…" rows="6"></textarea>' +
         '<label class="font"><input type="checkbox" id="asDisAct"> Afegeix també una versió adaptada DIS/PSI</label>' +
         '<div class="alum-eines"><button type="button" class="boto" data-asb="activitat">📚 Genera l\'activitat</button></div>';
+    } else if (asEina === "video") {
+      const vo = (llista, v) => llista.map(o => "<option" + (o === v ? " selected" : "") + ">" + o + "</option>").join("");
+      h = '<p class="font">Comprensió audiovisual: un fragment de 4 a 5 minuts d\'un vídeo de YouTube, amb preguntes tancades en tres nivells (i, si vols, la versió DIS/PSI). Se\'n fa un qüestionari que es corregeix sol, es publica al Classroom i la nota va a la columna EO1.</p>' +
+        '<div class="fila-as"><label style="flex:1 1 100%">Enllaç de YouTube<input type="url" id="vUrl" value="' + esc(asVid.url) + '" placeholder="https://www.youtube.com/watch?v=…"></label></div>' +
+        '<div class="fila-as"><label>Inici (m:ss)<input type="text" id="vIni" value="' + esc(asVid.i) + '" placeholder="0:00" style="width:5em"></label><label>Final (m:ss)<input type="text" id="vFi" value="' + esc(asVid.f) + '" placeholder="4:30" style="width:5em"></label><span class="font" id="vDur" style="align-self:end"></span></div>' +
+        '<div class="fila-as"><label>Curs<select id="asCurs">' + vo(["1r d'ESO", "2n d'ESO", "3r d'ESO", "4t d'ESO", "1r de batxillerat", "2n de batxillerat"], asVid.curs) + '</select></label><label>Llengua<select id="asLleng">' + vo(["castellà", "català"], asVid.lleng) + '</select></label><label>Preguntes per nivell<input type="text" id="asN" value="' + esc(asVid.n) + '" inputmode="numeric" style="width:4em"></label></div>' +
+        '<label class="font"><input type="checkbox" id="asDisAct"' + (asVid.dis ? " checked" : "") + '> Afegeix també una versió adaptada DIS/PSI</label>' +
+        '<input type="text" id="vInd" value="' + esc(asVid.ind) + '" placeholder="Indicacions (opcional): què vols treballar, vocabulari, tipus de preguntes…">' +
+        '<textarea id="asText" placeholder="Transcripció del fragment (opcional). Si la deixes buida, la IA mira el vídeo directament (ha de ser públic a YouTube)." rows="4"></textarea>' +
+        '<div class="alum-eines"><button type="button" class="boto" data-asb="video">🎬 Prepara les preguntes</button></div>';
     } else if (asEina === "adaptar") {
       h = '<p class="font">Enganxa un text o uns enunciats i en tens la versió per a alumnat amb dislèxia (DIS) o amb pla de suport (PSI).</p>' +
         '<div class="fila-as"><label>Adaptació<select id="asAdap"><option value="DIS">DIS (dislèxia)</option><option value="PSI">PSI (simplificada, amb glossari)</option><option value="totes">Totes dues</option></select></label></div>' +
@@ -1463,6 +1481,16 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     h += '<div id="asSortida">' + (asOcupat ? '<p class="cr-buit">Treballant… pot trigar uns segons.</p>' : asResultat) + "</div>";
     cos.innerHTML = h;
     if ($("asText") && textAbans) $("asText").value = textAbans;
+    if (asEina === "video") {
+      const dur = () => {
+        const u = $("vUrl").value, t0 = tYoutube(u);
+        if (t0 != null && !$("vIni").value.trim()) $("vIni").value = mmss(t0);
+        const i = segons($("vIni").value), f = segons($("vFi").value), el = $("vDur");
+        if (i == null || f == null) { el.textContent = ""; return; }
+        const d = f - i; el.textContent = d > 0 ? "Durada: " + mmss(d) + (d < VID_MIN || d > VID_MAX ? " ⚠️ ha de ser d'entre 4 i 5 minuts" : " ✓") : "⚠️ el final ha de ser després de l'inici";
+      };
+      ["vUrl", "vIni", "vFi"].forEach(id => $(id).addEventListener("input", dur)); dur();
+    }
   }
   function errorsHTML(errs) {
     if (!errs.length) return '<p class="font">El corrector no hi ha trobat cap falta.</p>';
@@ -1473,6 +1501,10 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     const fet = html => { asOcupat = false; asResultat = html; pintaAssistent(); };
     const err = e => fet('<p class="avis">' + esc(e.message) + "</p>");
     if (a === "qr") { creaQuestionari(b); return; }
+    if (a === "video") {
+      asVid = { url: $("vUrl").value.trim(), i: $("vIni").value.trim(), f: $("vFi").value.trim(), curs: $("asCurs").value, lleng: $("asLleng").value, n: $("asN").value.trim(), dis: $("asDisAct").checked, ind: $("vInd").value.trim() };
+      preparaVideo(txt); return;
+    }
     if (a === "clspub") { publicaClassroom(b); return; }
     if (a === "qrimp") { const q = asDades && asDades.qr; if (q) imprimeix(q.titol, '<div style="text-align:center"><h3>' + esc(q.titol) + '</h3><p>Escaneja el codi amb el mòbil i entra amb el compte de l\'institut.</p><div style="width:110mm;margin:8mm auto">' + q.svg + '</div><p style="font-size:16px">' + esc(q.url) + "</p></div>", false); return; }
     if (a === "copia") { navigator.clipboard && navigator.clipboard.writeText(asDades && asDades.text || ""); b.textContent = "Copiat ✓"; return; }
@@ -2612,10 +2644,12 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
   async function ompleColumna(g, f, col, e) {
     let alumnes, valorDe, ambFeina = [];
     if (e.form) {
-      const [al, rs] = await Promise.all([cridaIns({ accio: "classroom-alumnes", curs: e.curs }), cridaIns({ accio: "formulari-respostes", id: e.form })]);
+      const ids = Array.isArray(e.forms) && e.forms.length ? e.forms : [e.form];   // 13.11.2026: diversos nivells del mateix vídeo
+      const [al, ...rss] = await Promise.all([cridaIns({ accio: "classroom-alumnes", curs: e.curs })].concat(ids.map(id => cridaIns({ accio: "formulari-respostes", id: id }))));
       alumnes = al.alumnes;
-      const punts = {}; rs.respostes.forEach(r => { if (punts[r.email] == null || r.punts > punts[r.email]) punts[r.email] = r.punts; });
-      valorDe = a => e.mode === "nota" ? (punts[a.email] == null ? null : (rs.max ? Math.round(punts[a.email] / rs.max * 1000) / 100 : null)) : (punts[a.email] == null ? 0 : 1);
+      const nota = {}, ha = {};
+      rss.forEach(rs => rs.respostes.forEach(r => { ha[r.email] = true; if (!rs.max) return; const n = Math.round(r.punts / rs.max * 1000) / 100; if (nota[r.email] == null || n > nota[r.email]) nota[r.email] = n; }));
+      valorDe = a => e.mode === "nota" ? (nota[a.email] == null ? null : nota[a.email]) : (ha[a.email] ? 1 : 0);
     } else {
       const d = await cridaIns({ accio: "classroom-lliuraments", curs: e.curs, tasca: e.tasca, revisa: e.mode !== "nota" });
       alumnes = d.alumnes;
@@ -2776,6 +2810,69 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       if (auto) carregaTasques();
     }).catch(e => { $("clsCurs").innerHTML = '<option value="">—</option>'; avis(e.message); });
   }
+  // ================= Comprensió audiovisual (vídeo) =================
+  async function preparaVideo(transcripcio) {
+    const fet = html => { asOcupat = false; asResultat = html; pintaAssistent(); };
+    const v = idYoutube(asVid.url), i = segons(asVid.i), f = segons(asVid.f), n = Math.max(3, Math.min(15, parseInt(asVid.n, 10) || 8));
+    if (!v) return fet('<p class="avis">Enganxa l\'enllaç d\'un vídeo de YouTube.</p>');
+    if (i == null || f == null) return fet('<p class="avis">Escriu l\'inici i el final del fragment en minuts i segons (p. ex. 2:15 i 6:45).</p>');
+    if (f - i < VID_MIN || f - i > VID_MAX) return fet('<p class="avis">El fragment ha de durar entre 4 i 5 minuts; ara en fa ' + (f > i ? mmss(f - i) : "0:00") + ".</p>");
+    if (!transcripcio && !compteIns()) return fet('<p class="avis">Perquè la IA miri el vídeo cal el compte d\'ieslabisbal.cat connectat al correu (📬 Correu &gt; ⚙️). Si no, enganxa\'n la transcripció.</p>');
+    asOcupat = true; asResultat = ""; pintaAssistent();
+    const noms = ["Nivell bàsic", "Nivell mitjà", "Nivell avançat"].concat(asVid.dis ? ["Versió adaptada (DIS/PSI)"] : []);
+    const sistema = "Ets un professor de llengua " + (asVid.lleng === "català" ? "catalana" : "castellana") + " de secundària a Catalunya. Prepara preguntes de comprensió audiovisual d'un fragment de vídeo (del " + mmss(i) + " al " + mmss(f) + ") per a alumnat de " + asVid.curs + ", redactades en " + asVid.lleng + ". " +
+      "Fes aquests nivells, cadascun amb " + n + " preguntes: «Nivell bàsic» (informació explícita i literal, ordre dels fets), «Nivell mitjà» (idea principal, relacions entre idees, vocabulari en context), «Nivell avançat» (inferències, intenció de qui parla, to, recursos expressius, valoració)" +
+      (asVid.dis ? " i «Versió adaptada (DIS/PSI)» (enunciats curts d'una sola idea, vocabulari senzill, 3 opcions clares, preguntes més guiades i en l'ordre del vídeo)" : "") + ". " +
+      "Totes han de ser tancades: «test» (una sola correcta) o, poques vegades, «multiple» (més d'una de correcta); de 3 a 4 opcions amb distractors versemblants. Pregunta només pel que es veu i se sent dins del fragment, i indica el moment aproximat (m:ss del vídeo) a què es refereix cada pregunta. " +
+      "Respon només JSON: {\"titol\": títol curt del fragment, \"resum\": 2 o 3 frases sobre el contingut, \"nivells\": [{\"nom\": un d'aquests: " + JSON.stringify(noms) + ", \"preguntes\": [{\"tipus\": \"test\" o \"multiple\", \"enunciat\": text, \"opcions\": [textos], \"correctes\": [índexs de les correctes, des de 0], \"moment\": \"m:ss\"}]}]}.";
+    const ind = asVid.ind ? "Indicacions del professor: " + asVid.ind + "\n" : "";
+    try {
+      let r;
+      if (transcripcio) r = await ia(sistema, ind + "Transcripció del fragment:\n" + transcripcio, { json: true });
+      else {
+        const d = await cridaIns({ accio: "video-preguntes", url: "https://www.youtube.com/watch?v=" + v, inici: i, final: f, sistema: sistema, text: ind + "Mira el fragment i prepara les preguntes." });
+        try { r = JSON.parse(String(d.resposta).replace(/^```(json)?\s*|\s*```$/g, "")); } catch (e) { throw new Error("La IA no ha retornat dades vàlides; torna-ho a provar."); }
+      }
+      const valida = x => x && x.enunciat && Array.isArray(x.opcions) && x.opcions.length >= 2 && Array.isArray(x.correctes) && x.correctes.length && x.correctes.every(k => Number.isInteger(k) && k >= 0 && k < x.opcions.length);
+      const nivells = noms.map(nom => { const nv = (r && Array.isArray(r.nivells) ? r.nivells : []).find(x => x && String(x.nom).trim().toLowerCase() === nom.toLowerCase()); return { nom: nom, preguntes: nv && Array.isArray(nv.preguntes) ? nv.preguntes.filter(valida).map(x => ({ tipus: x.correctes.length > 1 ? "multiple" : "test", enunciat: String(x.enunciat), opcions: x.opcions.map(String), correctes: x.correctes, moment: String(x.moment || "") })) : [] }; }).filter(x => x.preguntes.length);
+      if (!nivells.length) throw new Error("La IA no ha preparat preguntes vàlides; torna-ho a provar.");
+      const titolV = String(r.titol || "Fragment de vídeo").trim();
+      const enllac = location.origin + location.pathname.replace(/[^/]*$/, "") + "video.html?v=" + v + "&i=" + i + "&f=" + f + "&t=" + encodeURIComponent(titolV);
+      const desc = "Mira el fragment del vídeo (del " + mmss(i) + " al " + mmss(f) + "): " + enllac + "\n\nDesprés respon les preguntes. Pots tornar a mirar el vídeo mentre respons.";
+      const lletra = k => String.fromCharCode(97 + k);
+      const txtNiv = nv => nv.preguntes.map((q, k) => (k + 1) + ". " + q.enunciat + (q.moment ? " [" + q.moment + "]" : "") + "\n" + q.opcions.map((o, j) => "   " + lletra(j) + ") " + o).join("\n")).join("\n");
+      asDades = {
+        titol: "Comprensió audiovisual · " + titolV,
+        text: titolV + "\n" + enllac + "\n\n" + nivells.map(nv => nv.nom.toUpperCase() + "\n" + txtNiv(nv)).join("\n\n") + "\n\nSOLUCIONARI\n" + nivells.map(nv => nv.nom + ": " + nv.preguntes.map((q, k) => (k + 1) + lletra(q.correctes[0]) + (q.correctes.length > 1 ? "+" + q.correctes.slice(1).map(lletra).join("+") : "")).join(" · ")).join("\n"),
+        video: { id: v, inici: i, final: f, enllac: enllac, desc: desc, nivells: nivells }
+      };
+      const htmlNiv = nv => "<h4>" + esc(nv.nom) + "</h4><ol>" + nv.preguntes.map(q => "<li>" + esc(q.enunciat) + (q.moment ? ' <span class="font">[' + esc(q.moment) + "]</span>" : "") + (q.tipus === "multiple" ? ' <span class="font">(pot haver-hi més d\'una resposta)</span>' : "") + '<ol type="a">' + q.opcions.map(o => "<li>" + esc(o) + "</li>").join("") + "</ol></li>").join("") + "</ol>";
+      asDades.html = "<h3>" + esc(titolV) + "</h3><p>Fragment del vídeo del " + mmss(i) + " al " + mmss(f) + ": " + esc(enllac) + "</p>" + (r.resum ? "<p><i>" + esc(String(r.resum)) + "</i></p>" : "") + nivells.map(htmlNiv).join("") +
+        "<h4>Solucionari</h4><ul>" + nivells.map(nv => "<li><b>" + esc(nv.nom) + ":</b> " + nv.preguntes.map((q, k) => (k + 1) + " " + q.correctes.map(lletra).join("+")).join(" · ") + "</li>").join("") + "</ul>";
+      const sel = '<select id="asQrNiv" aria-label="Nivell del qüestionari">' + nivells.map((nv, k) => "<option" + (k === 1 || (nivells.length === 1 && !k) ? " selected" : "") + ">" + esc(nv.nom) + "</option>").join("") + "</select>";
+      fet('<div class="alum-eines"><a class="boto clar" href="' + esc(enllac) + '" target="_blank" rel="noopener">▶️ Mira el fragment</a><button type="button" class="boto clar" data-asb="copia">Copia</button><button type="button" class="boto clar" data-asb="imprimeix">🖨️ Imprimeix / PDF</button>' + (compteIns() ? sel + '<button type="button" class="boto" data-asb="qr">📱 Qüestionari en línia</button>' : "") + '</div><div class="as-doc">' + capcaleraDoc() + asDades.html + "</div>");
+    } catch (e) { fet('<p class="avis">' + esc(e.message) + "</p>"); }
+  }
+  // Enllaça el qüestionari del vídeo a la columna EO1 del grup de la classe del Classroom (full del trimestre actual).
+  // Si el grup ja hi té un altre nivell del mateix vídeo, s'hi afegeix: cada alumne té la nota del que ha respost.
+  function enllacaEO1(curs, nomClasse, formId, titol) {
+    const clauC = String(nomClasse || "").replace(/\s+/g, "").toLowerCase();
+    const g = Q().grups.find(x => { const k = nomGrup(x.nom).replace(/\s+/g, "").toLowerCase(); return k && clauC.endsWith(k); }) || Q().grups.find(x => { const k = nomGrup(x.nom).replace(/\s+/g, "").toLowerCase(); return k && clauC.includes(k); });
+    if (!g || !g.fulls.length) return "No he trobat el grup d'aquesta classe a la Bitàcola; posa la nota amb el botó «Classroom» del full.";
+    const tA = trimDe(avuiISO()), deTrim = x => { const m = String(x.nom).match(/([123])\s*(r|n|er|º|a)?\s*trim/i); return !!m && TRIMESTRES[Number(m[1]) - 1] === tA; };
+    const teEO = x => x.columnes.some(c => c.nom.trim().toUpperCase() === "EO1");
+    const f = g.fulls.find(x => deTrim(x) && teEO(x)) || g.fulls.find(deTrim) || g.fulls.find(teEO) || g.fulls[0];
+    let col = f.columnes.find(c => c.nom.trim().toUpperCase() === "EO1");
+    if (col && col.tipus !== "nota") return "La columna EO1 del full «" + f.nom + "» de " + nomGrup(g.nom) + " no és de notes; no l'he enllaçada.";
+    if (!col) { col = { nom: "EO1", tipus: "nota" }; f.columnes.push(col); }
+    const ant = col.classroom;
+    const forms = ant && ant.curs === curs && ant.mode === "nota" && ant.form ? (Array.isArray(ant.forms) && ant.forms.length ? ant.forms : [ant.form]) : [];
+    if (!forms.includes(formId)) forms.push(formId);
+    col.classroom = { curs: curs, mode: "nota", form: forms[0], forms: forms, titol: titol };
+    desa(); pintaAlumnes();
+    return "La nota anirà a EO1 (" + nomGrup(g.nom) + ", full «" + f.nom + "»): quan hagin respost, prem 🔄 al full.";
+  }
+
   // Qüestionari autocorregible de Google Forms a partir de l'activitat de l'Assistent, amb QR
   async function creaQuestionari(b) {
     if (!asDades || !asDades.text) return;
@@ -2783,7 +2880,8 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     const titol = asDades.titol + " · " + niv.replace(/^Nivell /, "nivell ");
     b.disabled = true; b.textContent = "Preparant les preguntes…";
     try {
-      const q = await ia("Converteix l'activitat que et passo en un qüestionari autocorregible de Google Forms per a l'alumnat, només amb les preguntes del «" + niv + "». Respon només JSON: {\"text\": el text de lectura sencer si l'activitat en té, si no \"\", \"preguntes\": [{\"tipus\": \"test\" (una sola resposta correcta) o \"multiple\" (més d'una de correcta), \"enunciat\": text, \"opcions\": [entre 3 i 4 textos], \"correctes\": [índexs de les opcions correctes, comptant des de 0]}]}. Les preguntes obertes, converteix-les en preguntes tancades equivalents amb distractors versemblants. Fes servir el solucionari per marcar les correctes. Escriu en la mateixa llengua que l'activitat. Màxim 15 preguntes.", asDades.text, { json: true });
+      const nvV = asDades.video && (asDades.video.nivells.find(x => x.nom === niv) || asDades.video.nivells[0]);
+      const q = nvV ? { text: asDades.video.desc, preguntes: nvV.preguntes } : await ia("Converteix l'activitat que et passo en un qüestionari autocorregible de Google Forms per a l'alumnat, només amb les preguntes del «" + niv + "». Respon només JSON: {\"text\": el text de lectura sencer si l'activitat en té, si no \"\", \"preguntes\": [{\"tipus\": \"test\" (una sola resposta correcta) o \"multiple\" (més d'una de correcta), \"enunciat\": text, \"opcions\": [entre 3 i 4 textos], \"correctes\": [índexs de les opcions correctes, comptant des de 0]}]}. Les preguntes obertes, converteix-les en preguntes tancades equivalents amb distractors versemblants. Fes servir el solucionari per marcar les correctes. Escriu en la mateixa llengua que l'activitat. Màxim 15 preguntes.", asDades.text, { json: true });
       const pr = (q && Array.isArray(q.preguntes) ? q.preguntes : []).filter(x => x && x.enunciat && Array.isArray(x.opcions) && x.opcions.length >= 2 && Array.isArray(x.correctes) && x.correctes.length && x.correctes.every(i => i >= 0 && i < x.opcions.length));
       if (!pr.length) throw new Error("No s'han pogut preparar preguntes tancades d'aquesta activitat; torna-ho a provar.");
       b.textContent = "Creant el formulari…";
@@ -2802,7 +2900,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
         '<div class="alum-eines" style="margin:0"><button type="button" class="boto" data-asb="qrimp">🖨️ Imprimeix el QR</button><a class="boto clar" href="' + esc(d.edita) + '" target="_blank" rel="noopener">✏️ Revisa el formulari</a></div>' + pub + "</div></div>";
       asResultat = asResultat.replace('<div class="as-doc">', bloc + '<div class="as-doc">');
       pintaAssistent();
-    } catch (e) { b.disabled = false; b.textContent = "📱 Versió en línia (QR)"; alert(e.message); }
+    } catch (e) { b.disabled = false; b.textContent = asDades && asDades.video ? "📱 Qüestionari en línia" : "📱 Versió en línia (QR)"; alert(e.message); }
   }
 
   // Publica el qüestionari com a tasca d'una classe del Classroom (amb el formulari enllaçat)
@@ -2814,14 +2912,16 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     if (data && data < avuiISO()) { alert("La data de lliurament ja ha passat."); return; }
     b.disabled = true; b.lastChild.textContent = " Publicant…";
     try {
-      const r = await cridaIns({ accio: "classroom-publica", curs: sel.value, titol: q.titol, descripcio: "Respon el qüestionari de l'enllaç amb el compte de l'institut i, quan acabis, prem «Marca com a fet».", url: q.url, data: data, esborrany: esb });
+      const vid = asDades.video;
+      const r = await cridaIns({ accio: "classroom-publica", curs: sel.value, titol: q.titol, descripcio: vid ? "Mira el fragment del vídeo (del " + mmss(vid.inici) + " al " + mmss(vid.final) + ") i respon el qüestionari amb el compte de l'institut. Quan acabis, prem «Marca com a fet»." : "Respon el qüestionari de l'enllaç amb el compte de l'institut i, quan acabis, prem «Marca com a fet».", url: q.url, video: vid ? vid.enllac : "", data: data, esborrany: esb });
       const fm = (dades.formularis || []).find(x => x.id === q.id); if (fm) { fm.classroom = { curs: sel.value, tasca: r.id }; desa(); }
       let tancat = "";
       if (data && ($("pubTanca") || {}).checked) {
         try { await cridaIns({ accio: "formulari-tanca", id: q.id, quan: new Date(data + "T23:59").toISOString() }); tancat = " · el formulari es tancarà " + (/^(01|11)\./.test(dma(data)) ? "l'" : "el ") + dma(data) + " a les 23:59"; if (fm) { fm.tancament = new Date(data + "T23:59").toISOString(); desa(); } }
         catch (e) { tancat = " · no s'ha pogut programar el tancament (" + e.message + ")"; }
       }
-      const fet = '<p class="font" style="margin:8px 0 0">✓ ' + (esb ? "Desada en esborrany" : "Publicada") + " a " + esc(classe) + (data ? " · lliurament " + dma(data) : "") + esc(tancat) + (r.enllac ? ' · <a href="' + esc(r.enllac) + '" target="_blank" rel="noopener">obre la tasca</a>' : "") + "</p>";
+      const eo = vid ? enllacaEO1(sel.value, classe.split(" · ")[0], q.id, q.titol) : "";
+      const fet = '<p class="font" style="margin:8px 0 0">✓ ' + (esb ? "Desada en esborrany" : "Publicada") + " a " + esc(classe) + (data ? " · lliurament " + dma(data) : "") + esc(tancat) + (r.enllac ? ' · <a href="' + esc(r.enllac) + '" target="_blank" rel="noopener">obre la tasca</a>' : "") + (eo ? "<br>" + esc(eo) : "") + "</p>";
       asResultat = asResultat.replace(/<div class="clspub[\s\S]*?<\/button><\/div>/, fet);
       pintaAssistent();
     } catch (e) { b.disabled = false; b.lastChild.textContent = " Publica-la al Classroom"; alert(e.message); }

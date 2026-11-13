@@ -56,6 +56,12 @@
 //                                                       (en lloc d'«id» es pot passar «url», p. ex. el d'un qüestionari d'una tasca del Classroom)
 //   { accio: "formulari-obre", id }                   → torna a acceptar respostes i anul·la el tancament programat
 //   { accio: "formulari-estat", id }                  → { obert, tancament }
+//
+// VÍDEOS (13.11.2026): la IA mira un fragment d'un vídeo públic de YouTube i en fa les preguntes.
+//   Cal la propietat de l'script GEMINI_KEY (la mateixa clau de Gemini de l'assistent).
+//   Opcional: GEMINI_MODEL (per defecte, gemini-flash-latest).
+//   { accio: "video-preguntes", url, inici, final, sistema, text } → { resposta }: inici i final en segons
+//   «classroom-publica» accepta també «video»: l'enllaç del fragment, que s'afegeix com a material de la tasca
 // =============================================================================
 
 function doGet() {
@@ -227,7 +233,7 @@ function doPost(e) {
         const t = {
           title: String(cos.titol || "Qüestionari").slice(0, 300),
           description: String(cos.descripcio || ""),
-          materials: [{ link: { url: String(cos.url) } }],
+          materials: [{ link: { url: String(cos.url) } }].concat(cos.video ? [{ link: { url: String(cos.video) } }] : []),
           workType: "ASSIGNMENT",
           state: cos.esborrany ? "DRAFT" : "PUBLISHED",
           maxPoints: 10
@@ -285,6 +291,40 @@ function doPost(e) {
           it.setChoices(opcions.map(function (o, i) { return it.createChoice(o, bones.indexOf(i) >= 0); }));
         });
         return json_({ ok: true, id: form.getId(), url: form.shortenFormUrl(form.getPublishedUrl()), edita: form.getEditUrl() });
+      }
+
+      case "video-preguntes": {
+        const props = PropertiesService.getScriptProperties();
+        const clau = props.getProperty("GEMINI_KEY");
+        if (!clau) throw new Error("Falta la propietat GEMINI_KEY a l'script del compte d'ieslabisbal.cat (Configuració del projecte > Propietats de l'script).");
+        const model = props.getProperty("GEMINI_MODEL") || "gemini-flash-latest";
+        const m = String(cos.url || "").match(/(?:youtu\.be\/|[?&]v=|\/(?:embed|shorts|live)\/)([\w-]{11})/);
+        if (!m) throw new Error("L'enllaç no és d'un vídeo de YouTube.");
+        const inici = Math.max(0, Math.floor(Number(cos.inici) || 0)), final = Math.floor(Number(cos.final) || 0);
+        if (!(final > inici)) throw new Error("El final del fragment ha de ser posterior a l'inici.");
+        const peticio = {
+          systemInstruction: { parts: [{ text: String(cos.sistema || "") }] },
+          contents: [{ role: "user", parts: [
+            { fileData: { fileUri: "https://www.youtube.com/watch?v=" + m[1] }, videoMetadata: { startOffset: inici + "s", endOffset: final + "s" } },
+            { text: String(cos.text || "Mira el fragment i prepara les preguntes.") }
+          ] }],
+          generationConfig: { responseMimeType: "application/json", temperature: 0.4 }
+        };
+        const r = UrlFetchApp.fetch("https://generativelanguage.googleapis.com/v1beta/models/" + model + ":generateContent", {
+          method: "post", contentType: "application/json", headers: { "x-goog-api-key": clau },
+          payload: JSON.stringify(peticio), muteHttpExceptions: true
+        });
+        let d = {};
+        try { d = JSON.parse(r.getContentText()); } catch (e) {}
+        if (r.getResponseCode() !== 200) {
+          const msg = (d.error && d.error.message) || ("error " + r.getResponseCode());
+          if (/public|private|not found|unavailable|permission/i.test(msg)) throw new Error("La IA no ha pogut obrir el vídeo: ha de ser públic a YouTube (els ocults o privats no hi van). També pots enganxar-ne la transcripció.");
+          throw new Error("Gemini: " + msg);
+        }
+        const parts = (((d.candidates || [])[0] || {}).content || {}).parts || [];
+        const text = parts.map(function (p) { return p.text || ""; }).join("").trim();
+        if (!text) throw new Error("La IA no ha retornat cap resposta; torna-ho a provar.");
+        return json_({ ok: true, resposta: text });
       }
 
       case "formulari-respostes": {
