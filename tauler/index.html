@@ -217,6 +217,15 @@ dialog#dlgRub{width:min(760px,calc(100vw - 24px))}
 .qr-bloc .qr svg{width:100%;height:auto;display:block}
 .qr-bloc a{word-break:break-all}
 .cls-msg{font-size:.85rem;margin:-4px 0 10px}
+.tanca-box{border:1px solid var(--linia);border-radius:12px;padding:12px;background:#faf9f6;display:grid;gap:10px}
+.tanca-cap{display:flex;align-items:center;justify-content:space-between;gap:8px;font-weight:700}
+.tanca-estat{font-size:.8rem;font-weight:700;padding:3px 10px;border-radius:999px;white-space:nowrap}
+.tanca-estat.obert{background:#d3ecd4;color:#1f6b2a}
+.tanca-estat.tancat{background:#f8d0cf;color:#a3161b}
+.tanca-prog{margin:0;font-size:.9rem;color:var(--text)}
+.tanca-fila{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.tanca-quan{font:inherit;padding:6px 10px;border:1px solid var(--accent);border-radius:8px;color:var(--accent);background:var(--targeta);flex:1 1 200px;min-width:0}
+.tanca-quan:focus{outline:2px solid var(--accent);outline-offset:1px}
 .imp{position:relative;display:inline-block}
 .imp>summary{list-style:none;cursor:pointer}
 .imp>summary::-webkit-details-marker{display:none}
@@ -2625,7 +2634,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       '<label>Tasca o formulari<select id="clsTasca"><option value="">Tria primer la classe</option></select></label>' +
       '<div class="fila"><label>Columna<select id="clsCol">' + cols.map(c => '<option' + (c === colIni ? " selected" : "") + ">" + esc(c.nom) + "</option>").join("") + "</select></label>" +
       '<label>Què s\'hi posa<select id="clsMode"><option value="lliurat">Lliurat (1) o no (0)</option><option value="nota">La nota sobre 10</option></select></label></div>' +
-      '<div id="clsTanca" class="formules" style="margin:0" hidden></div>' +
+      '<div id="clsTanca" class="tanca-box" hidden></div>' +
       '<p class="avis" id="clsAvis" hidden></p><p class="font" id="clsRes" hidden></p>' +
       '<div class="botons"><button type="button" class="boto clar" data-cls="tanca">Tanca</button><button type="button" class="boto" data-cls="omple">Omple la columna</button></div></form>';
     const avis = t => { $("clsAvis").textContent = t; $("clsAvis").hidden = !t; };
@@ -2650,9 +2659,10 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     const dataHora = iso => { const d = new Date(iso); return dma(new Intl.DateTimeFormat("en-CA", { timeZone: TZ, year: "numeric", month: "2-digit", day: "2-digit" }).format(d)) + " a les " + new Intl.DateTimeFormat("ca", { timeZone: TZ, hour: "2-digit", minute: "2-digit", hour12: false }).format(d); };
     function pintaTanca(e) {
       const box = $("clsTanca");
-      box.innerHTML = "<b>Respostes del formulari:</b> " + (e.obert ? "obertes" + (e.tancament ? " · es tancaran " + art(dataHora(e.tancament)) + dataHora(e.tancament) : "") : "<b>tancades</b>") +
-        '<div class="alum-eines" style="margin:8px 0 0"><label class="font">Tanca-les el <input type="datetime-local" id="clsTancaQuan"></label>' +
-        '<button type="button" class="boto clar" data-cls="tprog">Programa el tancament</button>' + (e.obert ? '<button type="button" class="boto clar" data-cls="tara">Tanca ara</button>' : '<button type="button" class="boto clar" data-cls="tobre">Torna a obrir</button>') + "</div>";
+      box.innerHTML = '<div class="tanca-cap"><span>Respostes del formulari</span><span class="tanca-estat ' + (e.obert ? "obert" : "tancat") + '">' + (e.obert ? "● Obertes" : "● Tancades") + "</span></div>" +
+        (e.obert && e.tancament ? '<p class="tanca-prog">🕒 Es tancaran ' + art(dataHora(e.tancament)) + dataHora(e.tancament) + "</p>" : "") +
+        '<div class="tanca-fila">' + (e.obert ? '<input type="datetime-local" id="clsTancaQuan" class="tanca-quan" aria-label="Dia i hora del tancament"><button type="button" class="boto clar" data-cls="tprog">🕒 ' + (e.tancament ? "Canvia el tancament" : "Programa el tancament") + '</button><button type="button" class="boto" data-cls="tara">🔒 Tanca ara</button>'
+          : '<button type="button" class="boto clar" data-cls="tobre">🔓 Torna a obrir</button>') + "</div>";
       box.hidden = false;
     }
     // El formulari de l'opció triada: un del tauler (per id) o el qüestionari adjunt a una tasca del Classroom (per url)
