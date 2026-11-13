@@ -1322,6 +1322,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
   // ================= Assistent (IA i corrector) =================
   // Passa pel Worker (clau de Gemini guardada allà). Mai s'hi envien noms d'alumnes.
   let asEina = "corregir", asResultat = "", asOcupat = false, asDades = null;
+  const BOTO_QR = '<select id="asQrNiv" aria-label="Nivell del qüestionari"><option>Nivell bàsic</option><option selected>Nivell mitjà</option><option>Nivell avançat</option></select><button type="button" class="boto" data-asb="qr">📱 Versió en línia (QR)</button>';
   async function ia(sistema, text, opcions) {
     const d = await crida(Object.assign({ accio: "ia", sistema: sistema, text: text, json: !!(opcions && opcions.json) }, opcions && opcions.imatge ? { imatge: opcions.imatge } : {}));
     if (opcions && opcions.json) { try { return JSON.parse(d.resposta.replace(/^```(json)?\s*|\s*```$/g, "")); } catch (e) { throw new Error("La IA no ha retornat dades vàlides; torna-ho a provar."); } }
@@ -1501,7 +1502,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
           " Usa format Markdown senzill (##, llistes numerades, **negreta**). No posis cap introducció ni comentari fora de l'activitat.";
         const r = await ia(sistema, txt);
         asDades = { titol: F.tipus + " · " + F.curs, text: r, html: md(r) };
-        return fet('<div class="alum-eines"><button type="button" class="boto clar" data-asb="copia">Copia</button><button type="button" class="boto clar" data-asb="imprimeix">🖨️ Imprimeix / PDF</button><button type="button" class="boto clar" data-asb="imprimeixdis">🖨️ Format DIS</button>' + (compteIns() ? '<select id="asQrNiv" aria-label="Nivell del qüestionari"><option>Nivell bàsic</option><option selected>Nivell mitjà</option><option>Nivell avançat</option></select><button type="button" class="boto" data-asb="qr">📱 Versió en línia (QR)</button>' : "") + '</div><div class="as-doc">' + capcaleraDoc() + asDades.html + "</div>");
+        return fet('<div class="alum-eines"><button type="button" class="boto clar" data-asb="copia">Copia</button><button type="button" class="boto clar" data-asb="imprimeix">🖨️ Imprimeix / PDF</button><button type="button" class="boto clar" data-asb="imprimeixdis">🖨️ Format DIS</button>' + (compteIns() ? BOTO_QR : "") + '</div><div class="as-doc">' + capcaleraDoc() + asDades.html + "</div>");
       }
       if (a === "adapta") {
         if (!txt) return fet('<p class="avis">Enganxa primer el text.</p>');
@@ -1804,6 +1805,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
   function pintaAlumnes() {
     { const q = Q(), act = q.grups[qGrup]; q.grups.sort(ordenaGrups); if (act) qGrup = q.grups.indexOf(act); }
     const cos = $("alumCos"), g = grupActual(), f = fullActual(g);
+    detectaIns();
     const importa = (compteDrive() ? '<button type="button" class="boto clar" data-q="drive">⬇️ Importa de Drive</button>' : "") + '<label class="boto clar" style="display:inline-block">⬆️ Importa Excel<input type="file" id="alumFitxer" accept=".xlsx,.xls,.zip" multiple hidden></label>';
     if (!g) {
       cos.innerHTML = '<p class="buit">Encara no hi ha cap grup. ' + (compteDrive() ? "Prem «Importa de Drive» per copiar els fulls de notes de la carpeta de l'XTEC (alumnes, notes i fórmules), o puja'ls a mà." : "Quan el correu de l'XTEC estigui connectat (📬 Correu > ⚙️), es podran copiar directament de la carpeta de Drive. Mentrestant, pots pujar els fulls .xlsx (o la carpeta baixada en .zip).") + "</p>" + importa;
@@ -2500,7 +2502,26 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
 
   // ================= Classroom i qüestionaris en línia (compte d'ieslabisbal.cat) =================
   // Fan servir el mateix script del correu d'aquell compte (_eines/CorreuTauler.gs), amb el servei de Classroom
-  function compteIns() { const l = (dades.correu && dades.correu.comptes) || []; return l.find(c => c && c.url && /ieslabisbal/i.test(c.nom || "")) || null; }
+  // El compte es reconeix pel nom o, si no el porta, per l'adreça que diu el seu script (es demana una vegada i es recorda)
+  var correusComptes = {}; try { correusComptes = JSON.parse(lsLlegeix("tauler.correusComptes") || "{}") || {}; } catch (e) {}
+  function compteIns() { const l = (dades.correu && dades.correu.comptes) || []; return l.find(c => c && c.url && (/ieslabisbal/i.test(c.nom || "") || /@ieslabisbal\.cat$/i.test((correusComptes || {})[c.url] || ""))) || null; }
+  var detectantIns = false;
+  async function detectaIns() {
+    if (!correusComptes || detectantIns || compteIns() || !clau) return;
+    const l = ((dades.correu && dades.correu.comptes) || []).filter(c => c && c.url && !correusComptes[c.url]);
+    if (!l.length) return;
+    detectantIns = true;
+    await Promise.all(l.map(async c => {
+      try {
+        const r = await fetch(c.url, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ pin: clau, accio: "compte" }) });
+        const d = await r.json();
+        if (d && d.ok && d.correu) correusComptes[c.url] = String(d.correu).toLowerCase();
+      } catch (e) {}
+    }));
+    lsEscriu("tauler.correusComptes", JSON.stringify(correusComptes));
+    detectantIns = false;
+    if (compteIns()) { pintaAlumnes(); if (asEina === "activitats" && asResultat && asDades && !asDades.qr) asResultat = asResultat.replace('data-asb="imprimeixdis">🖨️ Format DIS</button></div>', 'data-asb="imprimeixdis">🖨️ Format DIS</button>' + BOTO_QR + "</div>"), pintaAssistent(); }
+  }
   async function cridaIns(cos) {
     const c = compteIns();
     if (!c) throw new Error("Primer cal connectar el compte d'ieslabisbal.cat al correu (📬 Correu > ⚙️).");
