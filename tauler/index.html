@@ -217,6 +217,8 @@ dialog#dlgRub{width:min(760px,calc(100vw - 24px))}
 .qr-bloc .qr svg{width:100%;height:auto;display:block}
 .qr-bloc a{word-break:break-all}
 .cls-msg{font-size:.85rem;margin:-4px 0 10px}
+.ico-cls{width:18px;height:18px;vertical-align:-3px}
+.ico-cls.gran{width:26px;height:26px;vertical-align:-5px}
 .cons-b .ini{width:28px;height:28px;flex:none;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;font-weight:700;font-size:.75rem;color:#fff}
 .cons-b small{display:block;color:var(--suau);font-size:.75rem}
 .rub-taula{border-collapse:collapse;width:100%;font-size:.88rem}
@@ -1816,7 +1818,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       '<select id="alumFull" aria-label="Full">' + g.fulls.map((x, i) => '<option value="' + i + '"' + (x === f ? " selected" : "") + ">" + esc(x.nom) + "</option>").join("") + "</select>" +
       '<input type="search" id="alumCerca" placeholder="Cerca alumne…" value="' + esc(cerca) + '" style="flex:1 1 140px"></div>' +
       '<div class="alum-eines"><button type="button" class="boto clar" data-q="formules">⚙️ ' + (qFormules ? "Amaga les fórmules" : "Columnes i fórmules") + "</button>" +
-      (compteIns() ? '<button type="button" class="boto clar" data-q="classroom" title="Omple una columna amb els lliuraments o les notes d\'una tasca del Classroom o d\'un formulari">🎒 Classroom</button>' + (f && f.columnes.some(c => c.classroom) ? '<button type="button" class="boto clar" data-q="clsact" title="Torna a llegir del Classroom totes les columnes enllaçades d\'aquest full">🔄 Actualitza del Classroom</button>' : "") : "") +
+      (compteIns() ? '<button type="button" class="boto clar" data-q="classroom" title="Omple una columna amb els lliuraments o les notes d\'una tasca del Classroom o d\'un formulari"><img src="https://www.gstatic.com/classroom/logo_square_rounded.svg" alt="" class="ico-cls"> Classroom</button>' + (f && f.columnes.some(c => c.classroom) ? '<button type="button" class="boto clar" data-q="clsact" title="Torna a llegir del Classroom totes les columnes enllaçades d\'aquest full">🔄 Actualitza del Classroom</button>' : "") : "") +
       '<button type="button" class="boto clar' + (qDeures ? " actiu" : "") + '" data-q="passadeures" title="Mode ràpid: cada toc a la columna de deures posa o treu la falta d\'avui">📕 ' + (qDeures ? "Prou deures" : "Passa deures") + '</button><button type="button" class="boto clar" data-q="alumne">+ Alumne</button><button type="button" class="boto clar" data-q="banc">📋 ' + (rubObert ? "Amaga les rúbriques" : "Rúbriques") + "</button>" + importa + "</div>" + (clsMsg ? '<p class="cls-msg ' + (clsMsg.err ? "avis" : "font") + '">' + esc(clsMsg.t) + "</p>" : "") + (rubObert ? htmlBanc() : "");
     if (f && qFormules) {
       h += '<div class="formules"><p class="font" style="margin:0 0 8px">Fórmules com a l\'Excel. <b>{EX1}</b> és una columna d\'aquest full i <b>{1R TRIM|NOTA FINAL TRIM}</b> una columna d\'un altre full. Funcions: SUM, AVERAGE, MIN, MAX, IF, ROUND… Els buits compten com a 0 a les operacions i AVERAGE se\'ls salta. <b>MITJANAFETS({DIC1};{DIC2})</b> fa la mitjana de les proves fetes: si a una nota hi escrius <b>EX</b> (o x, o -), no compta; un buit compta com a 0.</p>' +
@@ -2568,7 +2570,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     if (!dlg) { dlg = document.createElement("dialog"); dlg.id = "dlgCls"; document.body.appendChild(dlg); }
     const cols = f.columnes.filter(c => c.tipus === "nota");
     const colIni = cols.find(c => c.classroom) || cols.find(c => /^F\d+$/i.test(c.nom.trim()) && f.files.every(r => esBuit(r.v[c.nom]))) || cols.find(c => /^F\d+$/i.test(c.nom.trim())) || cols[0];
-    dlg.innerHTML = '<form method="dialog"><h2>🎒 Classroom</h2><p class="font" style="margin:0">Omple una columna del full «' + esc(f.nom) + "» de " + esc(nomGrup(g.nom)) + " amb qui ha lliurat una tasca (1 o 0) o amb la nota d'un formulari.</p>" +
+    dlg.innerHTML = '<form method="dialog"><h2><img src="https://www.gstatic.com/classroom/logo_square_rounded.svg" alt="" class="ico-cls gran"> Classroom</h2><p class="font" style="margin:0">Omple una columna del full «' + esc(f.nom) + "» de " + esc(nomGrup(g.nom)) + " amb qui ha lliurat una tasca (1 o 0) o amb la nota d'un formulari.</p>" +
       '<label>Classe del Classroom<select id="clsCurs"><option value="">Carregant…</option></select></label>' +
       '<label>Tasca o formulari<select id="clsTasca"><option value="">Tria primer la classe</option></select></label>' +
       '<div class="fila"><label>Columna<select id="clsCol">' + cols.map(c => '<option' + (c === colIni ? " selected" : "") + ">" + esc(c.nom) + "</option>").join("") + "</select></label>" +
@@ -2634,7 +2636,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       const qr = window.qrcode(0, "M"); qr.addData(d.url); qr.make();
       const svg = qr.createSvgTag({ cellSize: 4, margin: 2, scalable: true });
       asDades.qr = { titol: titol, url: d.url, svg: svg };
-      const bloc = '<div class="qr-bloc"><div class="qr">' + svg + '</div><div><b>' + esc(titol) + '</b><br><a href="' + esc(d.url) + '" target="_blank" rel="noopener">' + esc(d.url) + '</a><p class="font" style="margin:6px 0">' + pr.length + (pr.length === 1 ? " pregunta que es corregeix sola." : " preguntes que es corregeixen soles.") + " L'alumnat hi entra amb el compte de l'institut i les notes es poden passar a una columna amb «🎒 Classroom».</p>" +
+      const bloc = '<div class="qr-bloc"><div class="qr">' + svg + '</div><div><b>' + esc(titol) + '</b><br><a href="' + esc(d.url) + '" target="_blank" rel="noopener">' + esc(d.url) + '</a><p class="font" style="margin:6px 0">' + pr.length + (pr.length === 1 ? " pregunta que es corregeix sola." : " preguntes que es corregeixen soles.") + " L'alumnat hi entra amb el compte de l'institut i les notes es poden passar a una columna amb el botó «Classroom».</p>" +
         '<div class="alum-eines" style="margin:0"><button type="button" class="boto" data-asb="qrimp">🖨️ Imprimeix el QR</button><a class="boto clar" href="' + esc(d.edita) + '" target="_blank" rel="noopener">✏️ Revisa el formulari</a></div></div></div>';
       asResultat = asResultat.replace('<div class="as-doc">', bloc + '<div class="as-doc">');
       pintaAssistent();
