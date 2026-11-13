@@ -226,6 +226,10 @@ dialog#dlgRub{width:min(760px,calc(100vw - 24px))}
 .tanca-fila{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
 .tanca-quan{font:inherit;padding:6px 10px;border:1px solid var(--accent);border-radius:8px;color:var(--accent);background:var(--targeta);flex:1 1 200px;min-width:0}
 .tanca-quan:focus{outline:2px solid var(--accent);outline-offset:1px}
+.boto-grup{display:inline-flex}
+.boto-grup>.boto:not(:last-child){border-top-right-radius:0;border-bottom-right-radius:0}
+.boto-grup>.boto+.boto{border-top-left-radius:0;border-bottom-left-radius:0;margin-left:-1px}
+.boto-ico{padding-left:9px;padding-right:9px}
 .imp{position:relative;display:inline-block}
 .imp>summary{list-style:none;cursor:pointer}
 .imp>summary::-webkit-details-marker{display:none}
@@ -1842,7 +1846,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       '<select id="alumFull" aria-label="Full">' + g.fulls.map((x, i) => '<option value="' + i + '"' + (x === f ? " selected" : "") + ">" + esc(x.nom) + "</option>").join("") + "</select>" +
       '<input type="search" id="alumCerca" placeholder="Cerca alumne…" value="' + esc(cerca) + '" style="flex:1 1 140px"></div>' +
       '<div class="alum-eines"><button type="button" class="boto clar" data-q="formules">⚙️ ' + (qFormules ? "Amaga les fórmules" : "Columnes i fórmules") + "</button>" +
-      ('<button type="button" class="boto clar" data-q="classroom" title="Omple una columna amb els lliuraments o les notes d\'una tasca del Classroom o d\'un formulari"><img src="https://www.gstatic.com/classroom/logo_square_rounded.svg" alt="" class="ico-cls"> Classroom</button>' + (f && f.columnes.some(c => c.classroom) ? '<button type="button" class="boto clar" data-q="clsact" title="Torna a llegir del Classroom totes les columnes enllaçades d\'aquest full">🔄 Actualitza del Classroom</button>' : "")) +
+      ('<span class="boto-grup"><button type="button" class="boto clar" data-q="classroom" title="Omple una columna amb els lliuraments o les notes d\'una tasca del Classroom o d\'un formulari"><img src="https://www.gstatic.com/classroom/logo_square_rounded.svg" alt="" class="ico-cls"> Classroom</button>' + (f && f.columnes.some(c => c.classroom) ? '<button type="button" class="boto clar boto-ico" data-q="clsact" title="Actualitza del Classroom les columnes enllaçades d\'aquest full (' + esc(f.columnes.filter(c => c.classroom).map(c => c.nom).join(", ")) + ')" aria-label="Actualitza del Classroom">🔄</button>' : "") + "</span>") +
       '<button type="button" class="boto clar' + (qDeures ? " actiu" : "") + '" data-q="passadeures" title="Mode ràpid: cada toc a la columna de deures posa o treu la falta d\'avui">📕 ' + (qDeures ? "Prou deures" : "Passa deures") + '</button><button type="button" class="boto clar" data-q="alumne">+ Alumne</button><button type="button" class="boto clar" data-q="banc">📋 ' + (rubObert ? "Amaga les rúbriques" : "Rúbriques") + "</button>" + importa + "</div>" + (clsMsg ? '<p class="cls-msg ' + (clsMsg.err ? "avis" : "font") + '">' + esc(clsMsg.t) + "</p>" : "") + (rubObert ? htmlBanc() : "");
     if (f && qFormules) {
       h += '<div class="formules"><p class="font" style="margin:0 0 8px">Fórmules com a l\'Excel. <b>{EX1}</b> és una columna d\'aquest full i <b>{1R TRIM|NOTA FINAL TRIM}</b> una columna d\'un altre full. Funcions: SUM, AVERAGE, MIN, MAX, IF, ROUND… Els buits compten com a 0 a les operacions i AVERAGE se\'ls salta. <b>MITJANAFETS({DIC1};{DIC2})</b> fa la mitjana de les proves fetes: si a una nota hi escrius <b>EX</b> (o x, o -), no compta; un buit compta com a 0.</p>' +
@@ -2608,7 +2612,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     (r.ambFeina && r.ambFeina.length ? (r.mode === "feina" ? " Compten com a fet perquè han escrit al document, tot i no haver-lo lliurat: " : " Han escrit al document però no l'han lliurat (tenen 0): ") + r.ambFeina.join("; ") + "." : "") + (r.noTrobats.length ? " No trobats al Classroom: " + r.noTrobats.join("; ") + "." : "") + (r.sobren.length ? " Del Classroom sense parella al full: " + r.sobren.join("; ") + "." : "");
   async function actualitzaClassroom(g, f, boto) {
     const cols = f.columnes.filter(c => c.classroom);
-    boto.disabled = true; boto.textContent = "Llegint del Classroom…";
+    boto.disabled = true; boto.textContent = "⏳";
     const msg = []; let err = false;
     for (const c of cols) { try { msg.push(resumCls(c, await ompleColumna(g, f, c, c.classroom))); } catch (e) { msg.push(c.nom + ": " + e.message); err = true; } }
     clsMsg = { t: msg.join(" "), err: err };
