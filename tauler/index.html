@@ -147,7 +147,7 @@ ul.tasques button{background:none;border:0;color:var(--suau);padding:0 2px}
 .ag-mes .xip{font-size:.68rem;line-height:1.25;margin-top:1px}
 .ag-blocs .marca{display:block;font-size:.65rem;color:var(--suau);white-space:normal}
 .ag-mes .dn i{font-style:normal;color:var(--accent);font-weight:400}
-.ag-mes textarea{width:100%;border:0;background:transparent;resize:none;font:inherit;font-size:.8rem;padding:2px 0;min-height:0}
+.ag-mes textarea{width:100%;border:0;background:transparent;resize:none;font:inherit;font-size:.8rem;padding:2px 0;min-height:0;overflow:hidden;line-height:1.3}
 @media (max-width:600px){.ag-mes{grid-template-columns:repeat(5,minmax(0,1fr))}.ag-mes .obj{grid-column:1 / -1;min-height:0}.ag-mes .cap.obj{display:none}.ag-mes textarea{font-size:.7rem}.ag-mes .cel{padding:2px}.ag-mes .xip{font-size:.62rem;height:auto;line-height:1.2;padding:1px 3px;margin-top:2px;white-space:normal;overflow-wrap:anywhere}}
 .ag-setmana{display:grid;grid-template-columns:260px minmax(0,1fr);gap:14px;align-items:start}
 @media (max-width:860px){.ag-setmana{grid-template-columns:minmax(0,1fr)}}
@@ -1070,9 +1070,9 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
           h += '<div class="cel' + (fora ? " fora" : "") + (iso === avui ? " avui" : "") + (dsem(iso) >= 5 || esNoLectiu(iso) ? " nolectiu" : "") + '"><span class="dn" data-dia="' + iso + '" title="Obre el dia">' + Number(iso.slice(8)) + "</span>" +
             (marca && !fora ? '<span class="marca">' + esc(marca) + "</span>" : "") +
             llista.map(e => '<span class="xip" style="background:' + colorDe(e.tipus) + '"' + atrEsdev(e) + ' title="' + esc((e.hora ? e.hora + (e.horaFi ? "–" + e.horaFi : "") + " " : "") + e.titol + (e.lloc ? " · " + e.lloc : "")) + '">' + esc((e.hora ? e.hora + " " : "") + e.titol) + "</span>").join("") +
-            (fora ? "" : '<textarea rows="2" maxlength="60" data-agc="mensual" data-k="' + iso + '" aria-label="' + dma(iso) + '" placeholder="…">' + esc(a.mensual[iso] || "") + "</textarea>") + "</div>";
+            (fora ? "" : '<textarea rows="2" maxlength="1000" data-agc="mensual" data-k="' + iso + '" aria-label="' + dma(iso) + '" placeholder="…">' + esc(a.mensual[iso] || "") + "</textarea>") + "</div>";
         }
-        h += '<div class="cel obj"><textarea rows="3" maxlength="200" data-agc="objectius" data-k="' + dl + '" aria-label="Objectius de la setmana del ' + dm(dl) + '" placeholder="Objectius…">' + esc(a.objectius[dl] || "") + "</textarea></div>";
+        h += '<div class="cel obj"><textarea rows="3" maxlength="1000" data-agc="objectius" data-k="' + dl + '" aria-label="Objectius de la setmana del ' + dm(dl) + '" placeholder="Objectius…">' + esc(a.objectius[dl] || "") + "</textarea></div>";
       }
       h += "</div><p class=\"font\">Dues paraules per dia que resumeixin el rumb del matí i de la tarda, i els objectius de cada setmana.</p>";
     } else if (agVista === "setmana") {
@@ -1118,9 +1118,12 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     }
     return h;
   }
+  // Les notes de la vista mes creixen amb el text
+  function ajustaNota(t) { t.style.height = "auto"; t.style.height = t.scrollHeight + "px"; }
   // Escriure no torna a pintar (no es perd el cursor); només es desa
   $("calCos").addEventListener("input", ev => {
     const el = ev.target, c = el.dataset.agc; if (!c) return;
+    if (c === "mensual" || c === "objectius") ajustaNota(el);
     const a = AG();
     if (c === "macro" || c === "mensual" || c === "objectius") { if (el.value.trim()) a[c][el.dataset.k] = el.value; else delete a[c][el.dataset.k]; }
     else {
@@ -2285,7 +2288,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     const pend = repassosPendents();
     document.querySelector('#calVistes button[data-vista="repassos"]').textContent = "Repassos" + (pend ? " (" + pend + ")" : "");
     const cos = $("calCos");
-    if (vista !== "dia") { cos.innerHTML = agendaHTML(vista); return; }
+    if (vista !== "dia") { cos.innerHTML = agendaHTML(vista); cos.querySelectorAll(".ag-mes textarea").forEach(ajustaNota); return; }
     if (false) {
       const [y, m] = focus.split("-").map(Number);
       const primer = y + "-" + z(m) + "-01";
