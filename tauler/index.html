@@ -212,7 +212,8 @@ dialog#dlgCBN{width:min(860px,calc(100vw - 24px))}
 .cbn-taula input,.cbn-taula select{font:inherit;color:var(--text);width:100%;box-sizing:border-box}
 .cbn-taula tr.cbn-mal td{background:#fde2e2}
 .cb-taula tr.cb-dubte td:first-child{background:#fff4c2}
-.cb-resp{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:4px}
+.cb-resp{columns:190px;column-gap:4px}   /* ordre correlatiu: es llegeix de dalt a baix, columna per columna */
+.cb-resp>.cb-it{break-inside:avoid;margin-bottom:4px}
 .cb-it{flex-wrap:wrap}
 .cb-ops{display:flex;gap:3px}
 .cb-ops button{min-width:2.2em;padding:5px 0;border:1px solid var(--linia);border-radius:6px;background:var(--targeta);font:inherit;font-weight:600;color:inherit;cursor:pointer}
