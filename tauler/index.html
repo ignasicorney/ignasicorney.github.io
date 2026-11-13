@@ -1377,12 +1377,12 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
   async function ia(sistema, text, opcions) {
     const cos = Object.assign({ sistema: sistema, text: text, json: !!(opcions && opcions.json) }, opcions && opcions.imatge ? { imatge: opcions.imatge } : {});
     let d;
-    // 14.11.2026: si Gemini (Worker) falla, la mateixa petició va al model de reserva (Mistral) pel compte d'ieslabisbal.cat
+    // 14.11.2026: si Gemini (Worker) falla, la mateixa petició va al model de reserva (Groq) pel compte d'ieslabisbal.cat
     try { d = await crida(Object.assign({ accio: "ia" }, cos)); asModel = ""; }
     catch (e) {
       if (e.estat === 401 || !compteIns()) throw e;
       d = await cridaIns(Object.assign({ accio: "ia-reserva" }, cos));
-      asModel = d.model || "Mistral";
+      asModel = d.model || "Groq";
     }
     if (opcions && opcions.json) { try { return JSON.parse(d.resposta.replace(/^```(json)?\s*|\s*```$/g, "")); } catch (e) { throw new Error("La IA no ha retornat dades vàlides; torna-ho a provar."); } }
     return d.resposta;
