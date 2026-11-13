@@ -49,6 +49,9 @@
 //   { accio: "formulari-respostes", id }              → { max, respostes: [{ email, punts, data }] }
 //   { accio: "classroom-publica", curs, titol, descripcio, url, data, esborrany }
 //                                                     → { id, enllac }: tasca nova amb el formulari enllaçat
+//   { accio: "formulari-tanca", id, quan }            → tanca les respostes ara (sense «quan») o a l'hora «quan» (ISO)
+//   { accio: "formulari-obre", id }                   → torna a acceptar respostes i anul·la el tancament programat
+//   { accio: "formulari-estat", id }                  → { obert, tancament }
 // =============================================================================
 
 function doGet() {
@@ -229,6 +232,30 @@ function doPost(e) {
         return json_({ ok: true, id: r.id, enllac: r.alternateLink || "" });
       }
 
+      case "formulari-tanca": {
+        const id = String(cos.id), quan = cos.quan ? new Date(cos.quan) : null;
+        if (!quan || isNaN(quan.getTime()) || quan.getTime() <= Date.now()) {
+          tancaFormulari_(id);
+          return json_({ ok: true, obert: false, tancament: "" });
+        }
+        FormApp.openById(id);   // comprova que el formulari existeix
+        PropertiesService.getScriptProperties().setProperty("tanca_" + id, quan.toISOString());
+        const hi = ScriptApp.getProjectTriggers().some(function (t) { return t.getHandlerFunction() === "tancaFormularis"; });
+        if (!hi) ScriptApp.newTrigger("tancaFormularis").timeBased().everyMinutes(5).create();
+        return json_({ ok: true, obert: true, tancament: quan.toISOString() });
+      }
+
+      case "formulari-obre": {
+        PropertiesService.getScriptProperties().deleteProperty("tanca_" + String(cos.id));
+        FormApp.openById(String(cos.id)).setAcceptingResponses(true);
+        return json_({ ok: true, obert: true, tancament: "" });
+      }
+
+      case "formulari-estat": {
+        const f = FormApp.openById(String(cos.id));
+        return json_({ ok: true, obert: f.isAcceptingResponses(), tancament: PropertiesService.getScriptProperties().getProperty("tanca_" + String(cos.id)) || "" });
+      }
+
       case "formulari-crea": {
         const pr = cos.preguntes || [];
         if (!pr.length) throw new Error("No hi ha preguntes.");
@@ -285,6 +312,23 @@ function enviaProgramats() {
     });
     if (!programats_().length) treuActivador_();
   } finally { bloqueig.releaseLock(); }
+}
+
+// S'executa sola cada 5 minuts mentre hi hagi formularis amb el tancament programat.
+function tancaFormularis() {
+  const props = PropertiesService.getScriptProperties(), totes = props.getProperties();
+  let queden = 0;
+  Object.keys(totes).forEach(function (k) {
+    if (k.indexOf("tanca_") !== 0) return;
+    if (new Date(totes[k]).getTime() > Date.now()) { queden++; return; }
+    try { tancaFormulari_(k.slice(6)); } catch (err) { console.error("No s'ha pogut tancar " + k + ": " + err); props.deleteProperty(k); }
+  });
+  if (!queden) ScriptApp.getProjectTriggers().forEach(function (t) { if (t.getHandlerFunction() === "tancaFormularis") ScriptApp.deleteTrigger(t); });
+}
+
+function tancaFormulari_(id) {
+  FormApp.openById(id).setAcceptingResponses(false).setCustomClosedFormMessage("Aquest qüestionari ja està tancat.");
+  PropertiesService.getScriptProperties().deleteProperty("tanca_" + id);
 }
 
 function valida_(c) {

@@ -2625,6 +2625,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       '<label>Tasca o formulari<select id="clsTasca"><option value="">Tria primer la classe</option></select></label>' +
       '<div class="fila"><label>Columna<select id="clsCol">' + cols.map(c => '<option' + (c === colIni ? " selected" : "") + ">" + esc(c.nom) + "</option>").join("") + "</select></label>" +
       '<label>Què s\'hi posa<select id="clsMode"><option value="lliurat">Lliurat (1) o no (0)</option><option value="nota">La nota sobre 10</option></select></label></div>' +
+      '<div id="clsTanca" class="formules" style="margin:0" hidden></div>' +
       '<p class="avis" id="clsAvis" hidden></p><p class="font" id="clsRes" hidden></p>' +
       '<div class="botons"><button type="button" class="boto clar" data-cls="tanca">Tanca</button><button type="button" class="boto" data-cls="omple">Omple la columna</button></div></form>';
     const avis = t => { $("clsAvis").textContent = t; $("clsAvis").hidden = !t; };
@@ -2642,12 +2643,39 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
         sel.innerHTML = '<optgroup label="Tasques del Classroom">' + tasques.map(t => '<option value="t:' + t.id + '"' + (ant && ant.tasca === t.id ? " selected" : "") + ">" + esc(t.titol) + (t.data ? " · " + dma(t.data) : "") + "</option>").join("") + "</optgroup>" +
           (fs.length ? '<optgroup label="Formularis creats des del tauler">' + fs.map(x => '<option value="f:' + x.id + '"' + (ant && ant.form === x.id ? " selected" : "") + ">" + esc(x.titol) + " · " + dma(x.data) + "</option>").join("") + "</optgroup>" : "");
         if (!tasques.length && !fs.length) sel.innerHTML = '<option value="">Aquesta classe no té cap tasca</option>';
+        carregaEstat();
       } catch (e) { sel.innerHTML = '<option value="">—</option>'; avis(e.message); }
     }
-    dlg.onchange = ev => { if (ev.target.id === "clsCurs") carregaTasques(); else if (ev.target.id === "clsCol") posaMode(); };
+    // Respostes del formulari triat: obertes o tancades, i tancament programat
+    const dataHora = iso => { const d = new Date(iso); return dma(new Intl.DateTimeFormat("en-CA", { timeZone: TZ, year: "numeric", month: "2-digit", day: "2-digit" }).format(d)) + " a les " + new Intl.DateTimeFormat("ca", { timeZone: TZ, hour: "2-digit", minute: "2-digit", hour12: false }).format(d); };
+    function pintaTanca(e) {
+      const box = $("clsTanca");
+      box.innerHTML = "<b>Respostes del formulari:</b> " + (e.obert ? "obertes" + (e.tancament ? " · es tancaran " + art(dataHora(e.tancament)) + dataHora(e.tancament) : "") : "<b>tancades</b>") +
+        '<div class="alum-eines" style="margin:8px 0 0"><label class="font">Tanca-les el <input type="datetime-local" id="clsTancaQuan"></label>' +
+        '<button type="button" class="boto clar" data-cls="tprog">Programa el tancament</button>' + (e.obert ? '<button type="button" class="boto clar" data-cls="tara">Tanca ara</button>' : '<button type="button" class="boto clar" data-cls="tobre">Torna a obrir</button>') + "</div>";
+      box.hidden = false;
+    }
+    async function carregaEstat() {
+      const t = $("clsTasca").value, box = $("clsTanca");
+      if (t.charAt(0) !== "f") { box.hidden = true; return; }
+      box.innerHTML = '<span class="font">Consultant el formulari…</span>'; box.hidden = false;
+      try { pintaTanca(await cridaIns({ accio: "formulari-estat", id: t.slice(2) })); } catch (e) { box.hidden = true; avis(e.message); }
+    }
+    dlg.onchange = ev => { if (ev.target.id === "clsCurs") carregaTasques(); else if (ev.target.id === "clsCol") posaMode(); else if (ev.target.id === "clsTasca") carregaEstat(); };
     dlg.onclick = async ev => {
       const b = ev.target.closest("[data-cls]"); if (!b) return;
       if (b.dataset.cls === "tanca") { dlg.close(); return; }
+      if (/^t(prog|ara|obre)$/.test(b.dataset.cls)) {
+        const id = $("clsTasca").value.slice(2), v = ($("clsTancaQuan") || {}).value || "";
+        let cos;
+        if (b.dataset.cls === "tprog") { if (!v) { $("clsTancaQuan").focus(); return; } const q = new Date(v); if (!(q.getTime() > Date.now())) { avis("Tria una data i hora que encara no hagi passat."); return; } cos = { accio: "formulari-tanca", id: id, quan: q.toISOString() }; }
+        else if (b.dataset.cls === "tara") { if (!confirm("Vols tancar ara les respostes d'aquest formulari?")) return; cos = { accio: "formulari-tanca", id: id }; }
+        else cos = { accio: "formulari-obre", id: id };
+        avis(""); b.disabled = true;
+        try { const r = await cridaIns(cos); const fm = (dades.formularis || []).find(x => x.id === id); if (fm) { fm.tancament = r.tancament || ""; fm.obert = r.obert; desa(); } pintaTanca(r); }
+        catch (err) { avis(err.message); b.disabled = false; }
+        return;
+      }
       const curs = $("clsCurs").value, t = $("clsTasca").value, col = cols.find(x => x.nom === $("clsCol").value);
       if (!curs || !t || !col) { avis("Tria la classe, la tasca o el formulari i la columna."); return; }
       const e = { curs: curs, mode: $("clsMode").value, titol: $("clsTasca").selectedOptions[0].textContent };
@@ -2687,7 +2715,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       const svg = qr.createSvgTag({ cellSize: 4, margin: 2, scalable: true });
       asDades.qr = { titol: titol, url: d.url, svg: svg, id: d.id };
       const pub = cs.cursos.length ? '<div class="clspub alum-eines" style="margin:8px 0 0"><select id="pubCurs" aria-label="Classe del Classroom"><option value="">Classe del Classroom…</option>' + cs.cursos.map(x => '<option value="' + x.id + '">' + esc(x.nom + (x.seccio ? " · " + x.seccio : "")) + "</option>").join("") + "</select>" +
-        '<label class="font" title="Data de lliurament (opcional)">Lliurament <input type="date" id="pubData"></label><label class="font"><input type="checkbox" id="pubEsb"> En esborrany</label>' +
+        '<label class="font" title="Data de lliurament (opcional)">Lliurament <input type="date" id="pubData"></label><label class="font"><input type="checkbox" id="pubEsb"> En esborrany</label><label class="font" title="Les respostes del formulari es tanquen a les 23:59 del dia de lliurament"><input type="checkbox" id="pubTanca" checked> Tanca el formulari en acabar el termini</label>' +
         '<button type="button" class="boto" data-asb="clspub"><img src="https://www.gstatic.com/classroom/logo_square_rounded.svg" alt="" class="ico-cls"> Publica-la al Classroom</button></div>' : "";
       const bloc = '<div class="qr-bloc"><div class="qr">' + svg + '</div><div><b>' + esc(titol) + '</b><br><a href="' + esc(d.url) + '" target="_blank" rel="noopener">' + esc(d.url) + '</a><p class="font" style="margin:6px 0">' + pr.length + (pr.length === 1 ? " pregunta que es corregeix sola." : " preguntes que es corregeixen soles.") + " L'alumnat hi entra amb el compte de l'institut i les notes es poden passar a una columna amb el botó «Classroom».</p>" +
         '<div class="alum-eines" style="margin:0"><button type="button" class="boto" data-asb="qrimp">🖨️ Imprimeix el QR</button><a class="boto clar" href="' + esc(d.edita) + '" target="_blank" rel="noopener">✏️ Revisa el formulari</a></div>' + pub + "</div></div>";
@@ -2707,7 +2735,12 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     try {
       const r = await cridaIns({ accio: "classroom-publica", curs: sel.value, titol: q.titol, descripcio: "Respon el qüestionari de l'enllaç amb el compte de l'institut i, quan acabis, prem «Marca com a fet».", url: q.url, data: data, esborrany: esb });
       const fm = (dades.formularis || []).find(x => x.id === q.id); if (fm) { fm.classroom = { curs: sel.value, tasca: r.id }; desa(); }
-      const fet = '<p class="font" style="margin:8px 0 0">✓ ' + (esb ? "Desada en esborrany" : "Publicada") + " a " + esc(classe) + (data ? " · lliurament " + dma(data) : "") + (r.enllac ? ' · <a href="' + esc(r.enllac) + '" target="_blank" rel="noopener">obre la tasca</a>' : "") + "</p>";
+      let tancat = "";
+      if (data && ($("pubTanca") || {}).checked) {
+        try { await cridaIns({ accio: "formulari-tanca", id: q.id, quan: new Date(data + "T23:59").toISOString() }); tancat = " · el formulari es tancarà " + (/^(01|11)\./.test(dma(data)) ? "l'" : "el ") + dma(data) + " a les 23:59"; if (fm) { fm.tancament = new Date(data + "T23:59").toISOString(); desa(); } }
+        catch (e) { tancat = " · no s'ha pogut programar el tancament (" + e.message + ")"; }
+      }
+      const fet = '<p class="font" style="margin:8px 0 0">✓ ' + (esb ? "Desada en esborrany" : "Publicada") + " a " + esc(classe) + (data ? " · lliurament " + dma(data) : "") + esc(tancat) + (r.enllac ? ' · <a href="' + esc(r.enllac) + '" target="_blank" rel="noopener">obre la tasca</a>' : "") + "</p>";
       asResultat = asResultat.replace(/<div class="clspub[\s\S]*?<\/button><\/div>/, fet);
       pintaAssistent();
     } catch (e) { b.disabled = false; b.lastChild.textContent = " Publica-la al Classroom"; alert(e.message); }
