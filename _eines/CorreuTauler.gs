@@ -47,6 +47,8 @@
 //   { accio: "classroom-alumnes", curs }              → { alumnes: [{ email, nom, cognoms }] }
 //   { accio: "formulari-crea", titol, text, preguntes } → { id, url, edita }: qüestionari autocorregible
 //   { accio: "formulari-respostes", id }              → { max, respostes: [{ email, punts, data }] }
+//   { accio: "classroom-publica", curs, titol, descripcio, url, data, esborrany }
+//                                                     → { id, enllac }: tasca nova amb el formulari enllaçat
 // =============================================================================
 
 function doGet() {
@@ -206,6 +208,25 @@ function doPost(e) {
           pg = r.nextPageToken;
         } while (pg);
         return json_({ ok: true, alumnes: alumnes, lliuraments: lliuraments });
+      }
+
+      case "classroom-publica": {
+        const t = {
+          title: String(cos.titol || "Qüestionari").slice(0, 300),
+          description: String(cos.descripcio || ""),
+          materials: [{ link: { url: String(cos.url) } }],
+          workType: "ASSIGNMENT",
+          state: cos.esborrany ? "DRAFT" : "PUBLISHED",
+          maxPoints: 10
+        };
+        const m = String(cos.data || "").match(/^(\d{4})-(\d{2})-(\d{2})$/);
+        if (m) {   // a les 23:59 d'aquell dia, hora de Catalunya
+          const fi = new Date(Utilities.formatDate(new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]), 12), "Europe/Madrid", "yyyy-MM-dd'T'23:59:00XXX"));
+          t.dueDate = { year: fi.getUTCFullYear(), month: fi.getUTCMonth() + 1, day: fi.getUTCDate() };
+          t.dueTime = { hours: fi.getUTCHours(), minutes: fi.getUTCMinutes() };
+        }
+        const r = Classroom.Courses.CourseWork.create(t, String(cos.curs));
+        return json_({ ok: true, id: r.id, enllac: r.alternateLink || "" });
       }
 
       case "formulari-crea": {

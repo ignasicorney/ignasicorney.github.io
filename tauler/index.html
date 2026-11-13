@@ -1442,6 +1442,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     const fet = html => { asOcupat = false; asResultat = html; pintaAssistent(); };
     const err = e => fet('<p class="avis">' + esc(e.message) + "</p>");
     if (a === "qr") { creaQuestionari(b); return; }
+    if (a === "clspub") { publicaClassroom(b); return; }
     if (a === "qrimp") { const q = asDades && asDades.qr; if (q) imprimeix(q.titol, '<div style="text-align:center"><h3>' + esc(q.titol) + '</h3><p>Escaneja el codi amb el mòbil i entra amb el compte de l\'institut.</p><div style="width:110mm;margin:8mm auto">' + q.svg + '</div><p style="font-size:16px">' + esc(q.url) + "</p></div>", false); return; }
     if (a === "copia") { navigator.clipboard && navigator.clipboard.writeText(asDades && asDades.text || ""); b.textContent = "Copiat ✓"; return; }
     if (a === "imprimeix") { imprimeix(asDades.titol, asDades.html, false); return; }
@@ -2628,19 +2629,39 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       const pr = (q && Array.isArray(q.preguntes) ? q.preguntes : []).filter(x => x && x.enunciat && Array.isArray(x.opcions) && x.opcions.length >= 2 && Array.isArray(x.correctes) && x.correctes.length && x.correctes.every(i => i >= 0 && i < x.opcions.length));
       if (!pr.length) throw new Error("No s'han pogut preparar preguntes tancades d'aquesta activitat; torna-ho a provar.");
       b.textContent = "Creant el formulari…";
-      const d = await cridaIns({ accio: "formulari-crea", titol: titol, text: q.text || "", preguntes: pr });
+      const [d, cs] = await Promise.all([cridaIns({ accio: "formulari-crea", titol: titol, text: q.text || "", preguntes: pr }), cridaIns({ accio: "classroom-cursos" }).catch(() => ({ cursos: [] }))]);
       dades.formularis = dades.formularis || [];
       dades.formularis.unshift({ id: d.id, titol: titol, url: d.url, edita: d.edita, data: avuiISO() });
       desa();
       await carregaScript("qrcode.js", () => typeof window.qrcode === "function");
       const qr = window.qrcode(0, "M"); qr.addData(d.url); qr.make();
       const svg = qr.createSvgTag({ cellSize: 4, margin: 2, scalable: true });
-      asDades.qr = { titol: titol, url: d.url, svg: svg };
+      asDades.qr = { titol: titol, url: d.url, svg: svg, id: d.id };
+      const pub = cs.cursos.length ? '<div class="clspub alum-eines" style="margin:8px 0 0"><select id="pubCurs" aria-label="Classe del Classroom"><option value="">Classe del Classroom…</option>' + cs.cursos.map(x => '<option value="' + x.id + '">' + esc(x.nom + (x.seccio ? " · " + x.seccio : "")) + "</option>").join("") + "</select>" +
+        '<label class="font" title="Data de lliurament (opcional)">Lliurament <input type="date" id="pubData"></label><label class="font"><input type="checkbox" id="pubEsb"> En esborrany</label>' +
+        '<button type="button" class="boto" data-asb="clspub"><img src="https://www.gstatic.com/classroom/logo_square_rounded.svg" alt="" class="ico-cls"> Publica-la al Classroom</button></div>' : "";
       const bloc = '<div class="qr-bloc"><div class="qr">' + svg + '</div><div><b>' + esc(titol) + '</b><br><a href="' + esc(d.url) + '" target="_blank" rel="noopener">' + esc(d.url) + '</a><p class="font" style="margin:6px 0">' + pr.length + (pr.length === 1 ? " pregunta que es corregeix sola." : " preguntes que es corregeixen soles.") + " L'alumnat hi entra amb el compte de l'institut i les notes es poden passar a una columna amb el botó «Classroom».</p>" +
-        '<div class="alum-eines" style="margin:0"><button type="button" class="boto" data-asb="qrimp">🖨️ Imprimeix el QR</button><a class="boto clar" href="' + esc(d.edita) + '" target="_blank" rel="noopener">✏️ Revisa el formulari</a></div></div></div>';
+        '<div class="alum-eines" style="margin:0"><button type="button" class="boto" data-asb="qrimp">🖨️ Imprimeix el QR</button><a class="boto clar" href="' + esc(d.edita) + '" target="_blank" rel="noopener">✏️ Revisa el formulari</a></div>' + pub + "</div></div>";
       asResultat = asResultat.replace('<div class="as-doc">', bloc + '<div class="as-doc">');
       pintaAssistent();
     } catch (e) { b.disabled = false; b.textContent = "📱 Versió en línia (QR)"; alert(e.message); }
+  }
+
+  // Publica el qüestionari com a tasca d'una classe del Classroom (amb el formulari enllaçat)
+  async function publicaClassroom(b) {
+    const q = asDades && asDades.qr, sel = $("pubCurs");
+    if (!q || !sel) return;
+    if (!sel.value) { sel.focus(); return; }
+    const data = ($("pubData") || {}).value || "", esb = !!($("pubEsb") || {}).checked, classe = sel.selectedOptions[0].textContent;
+    if (data && data < avuiISO()) { alert("La data de lliurament ja ha passat."); return; }
+    b.disabled = true; b.lastChild.textContent = " Publicant…";
+    try {
+      const r = await cridaIns({ accio: "classroom-publica", curs: sel.value, titol: q.titol, descripcio: "Respon el qüestionari de l'enllaç amb el compte de l'institut i, quan acabis, prem «Marca com a fet».", url: q.url, data: data, esborrany: esb });
+      const fm = (dades.formularis || []).find(x => x.id === q.id); if (fm) { fm.classroom = { curs: sel.value, tasca: r.id }; desa(); }
+      const fet = '<p class="font" style="margin:8px 0 0">✓ ' + (esb ? "Desada en esborrany" : "Publicada") + " a " + esc(classe) + (data ? " · lliurament " + dma(data) : "") + (r.enllac ? ' · <a href="' + esc(r.enllac) + '" target="_blank" rel="noopener">obre la tasca</a>' : "") + "</p>";
+      asResultat = asResultat.replace(/<div class="clspub[\s\S]*?<\/button><\/div>/, fet);
+      pintaAssistent();
+    } catch (e) { b.disabled = false; b.lastChild.textContent = " Publica-la al Classroom"; alert(e.message); }
   }
 
   // ================= Dreceres de consulta =================
