@@ -1847,7 +1847,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       '<input type="search" id="alumCerca" placeholder="Cerca alumne…" value="' + esc(cerca) + '" style="flex:1 1 140px"></div>' +
       '<div class="alum-eines"><button type="button" class="boto clar" data-q="formules">⚙️ ' + (qFormules ? "Amaga les fórmules" : "Columnes i fórmules") + "</button>" +
       ('<span class="boto-grup"><button type="button" class="boto clar" data-q="classroom" title="Omple una columna amb els lliuraments o les notes d\'una tasca del Classroom o d\'un formulari"><img src="https://www.gstatic.com/classroom/logo_square_rounded.svg" alt="" class="ico-cls"> Classroom</button>' + (f && Array.isArray(f.desfes) && f.desfes.length ? '<button type="button" class="boto clar boto-ico" data-q="clsdesfes" title="Desfés l\'última càrrega del Classroom (' + esc(f.desfes.map(x => x.col).join(", ")) + ')" aria-label="Desfés l\'última càrrega del Classroom">↶</button>' : "") + (f && f.columnes.some(c => c.classroom) ? '<button type="button" class="boto clar boto-ico" data-q="clsact" title="Actualitza del Classroom les columnes enllaçades d\'aquest full (' + esc(f.columnes.filter(c => c.classroom).map(c => c.nom).join(", ")) + ')" aria-label="Actualitza del Classroom">🔄</button>' : "") + "</span>") +
-      '<button type="button" class="boto clar' + (qDeures ? " actiu" : "") + '" data-q="passadeures" title="Mode ràpid: cada toc a la columna de deures posa o treu la falta d\'avui">📕 ' + (qDeures ? "Prou deures" : "Passa deures") + '</button><button type="button" class="boto clar" data-q="alumne">+ Alumne</button><button type="button" class="boto clar" data-q="banc">📋 ' + (rubObert ? "Amaga les rúbriques" : "Rúbriques") + "</button>" + importa + "</div>" + (clsMsg ? '<p class="cls-msg ' + (clsMsg.err ? "avis" : "font") + '">' + esc(clsMsg.t) + "</p>" : "") + (rubObert ? htmlBanc() : "");
+      '<button type="button" class="boto clar' + (qDeures ? " actiu" : "") + '" data-q="passadeures" title="Mode ràpid: cada toc a la columna de deures posa o treu la falta d\'avui">📕 ' + (qDeures ? "Prou deures" : "Passa deures") + '</button><button type="button" class="boto clar" data-q="alumne">+ Alumne</button><button type="button" class="boto clar" data-q="banc">📋 ' + (rubObert ? "Amaga les rúbriques" : "Rúbriques") + "</button>" + importa + "</div>" + (clsMsg && f && g && clsMsg.clau === g.nom + "|" + f.nom ? '<p class="cls-msg ' + (clsMsg.err ? "avis" : "font") + '">' + esc(clsMsg.t) + "</p>" : "") + (rubObert ? htmlBanc() : "");
     if (f && qFormules) {
       h += '<div class="formules"><p class="font" style="margin:0 0 8px">Fórmules com a l\'Excel. <b>{EX1}</b> és una columna d\'aquest full i <b>{1R TRIM|NOTA FINAL TRIM}</b> una columna d\'un altre full. Funcions: SUM, AVERAGE, MIN, MAX, IF, ROUND… Els buits compten com a 0 a les operacions i AVERAGE se\'ls salta. <b>MITJANAFETS({DIC1};{DIC2})</b> fa la mitjana de les proves fetes: si a una nota hi escrius <b>EX</b> (o x, o -), no compta; un buit compta com a 0.</p>' +
         (pf => '<p class="font fparam" style="margin:0 0 8px"><b>Faltes d\'ortografia</b> (columnes amb «Faltes» marcat): es resten <input type="text" id="fPes" inputmode="decimal" value="' + String(pf.pes).replace(".", ",") + '"> punts per falta, fins a un màxim de <input type="text" id="fMax" inputmode="decimal" value="' + String(pf.max).replace(".", ",") + '"> punts; a l\'alumnat DIS, el descompte es divideix entre <input type="text" id="fDis" inputmode="decimal" value="' + String(pf.dis).replace(".", ",") + '">. Les fórmules fan servir la nota final, ja descomptada.</p>')(paramFaltes()) +
@@ -2042,7 +2042,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     else if (q.dataset.q === "passadeures") { qDeures = !qDeures; pintaAlumnes(); }
     else if (q.dataset.q === "classroom") obreClassroom(g, f);
     else if (q.dataset.q === "clsact") actualitzaClassroom(g, f, q);
-    else if (q.dataset.q === "clsdesfes") desfesClassroom(f);
+    else if (q.dataset.q === "clsdesfes") desfesClassroom(g, f);
     else if (q.dataset.q === "banc") { rubObert = !rubObert; pintaAlumnes(); }
     else if (q.dataset.q === "alumne") {
       const nom = (prompt("Nom de l'alumne nou (Cognoms , Nom):") || "").trim();
@@ -2614,7 +2614,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
   }
   let clsMsg = null;
   // Desfà l'última càrrega del Classroom d'aquest full: torna els valors i l'enllaç que hi havia
-  function desfesClassroom(f) {
+  function desfesClassroom(g, f) {
     const l = Array.isArray(f.desfes) ? f.desfes : [];
     if (!l.length) return;
     const quan = new Date(l[0].quan), cols = l.map(x => x.col).join(", ");
@@ -2630,7 +2630,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       if (col) { if (x.classroom) col.classroom = x.classroom; else delete col.classroom; }
     });
     delete f.desfes;
-    clsMsg = { t: "S'ha desfet l'última càrrega del Classroom (" + cols + ").", err: false };
+    clsMsg = { t: "S'ha desfet l'última càrrega del Classroom (" + cols + ").", err: false, clau: g.nom + "|" + f.nom };
     desa(); pintaAlumnes();
   }
   const resumCls = (col, r) => col.nom + ": " + r.fets + " alumne" + (r.fets === 1 ? "" : "s") + " al dia." +
@@ -2641,7 +2641,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     const msg = []; let err = false;
     let primera = true;
     for (const c of cols) { try { msg.push(resumCls(c, await ompleColumna(g, f, c, Object.assign({}, c.classroom, { afegeix: !primera })))); primera = false; } catch (e) { msg.push(c.nom + ": " + e.message); err = true; } }
-    clsMsg = { t: msg.join(" "), err: err };
+    clsMsg = { t: msg.join(" "), err: err, clau: g.nom + "|" + f.nom };
     pintaAlumnes();
   }
   async function obreClassroom(g, f) {
