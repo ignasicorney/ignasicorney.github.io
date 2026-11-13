@@ -210,6 +210,13 @@ dialog#dlgRub{width:min(760px,calc(100vw - 24px))}
 .cons-b:hover{border-color:var(--accent)}
 .cons-b img{width:28px;height:28px;flex:none;border-radius:6px;object-fit:contain}
 .cons-b img.retall{object-fit:cover;object-position:left center}
+/* QR i Classroom */
+.qr-bloc{display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap;border:1px solid var(--linia);border-radius:10px;padding:10px;margin:0 0 12px;background:#fff}
+.qr-bloc .qr{width:150px;flex:none}
+.qr-bloc>div:last-child{flex:1 1 260px;min-width:0}
+.qr-bloc .qr svg{width:100%;height:auto;display:block}
+.qr-bloc a{word-break:break-all}
+.cls-msg{font-size:.85rem;margin:-4px 0 10px}
 .cons-b .ini{width:28px;height:28px;flex:none;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;font-weight:700;font-size:.75rem;color:#fff}
 .cons-b small{display:block;color:var(--suau);font-size:.75rem}
 .rub-taula{border-collapse:collapse;width:100%;font-size:.88rem}
@@ -830,7 +837,8 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       if (Array.isArray(d.tasques)) r.tasques = d.tasques.filter(t => t && typeof t.text === "string");
       if (d.correu && Array.isArray(d.correu.comptes)) r.correu = { comptes: d.correu.comptes.filter(c => c && c.url) };
       if (d.qualificacions && Array.isArray(d.qualificacions.grups)) r.qualificacions = d.qualificacions;
-      if (d.genealogia && typeof d.genealogia === "object") r.genealogia = d.genealogia;   // dades de les persones vives (privades)
+      if (d.genealogia && typeof d.genealogia === "object") r.genealogia = d.genealogia;
+      if (Array.isArray(d.formularis)) r.formularis = d.formularis;   // qüestionaris en línia creats des de l'Assistent   // dades de les persones vives (privades)
     }
     return r;
   }
@@ -1431,6 +1439,8 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     const a = b.dataset.asb, txt = (($("asText") || {}).value || "").trim();
     const fet = html => { asOcupat = false; asResultat = html; pintaAssistent(); };
     const err = e => fet('<p class="avis">' + esc(e.message) + "</p>");
+    if (a === "qr") { creaQuestionari(b); return; }
+    if (a === "qrimp") { const q = asDades && asDades.qr; if (q) imprimeix(q.titol, '<div style="text-align:center"><h3>' + esc(q.titol) + '</h3><p>Escaneja el codi amb el mòbil i entra amb el compte de l\'institut.</p><div style="width:110mm;margin:8mm auto">' + q.svg + '</div><p style="font-size:16px">' + esc(q.url) + "</p></div>", false); return; }
     if (a === "copia") { navigator.clipboard && navigator.clipboard.writeText(asDades && asDades.text || ""); b.textContent = "Copiat ✓"; return; }
     if (a === "imprimeix") { imprimeix(asDades.titol, asDades.html, false); return; }
     if (a === "imprimeixdis") { imprimeix(asDades.titol, asDades.htmlDis || asDades.html, true); return; }
@@ -1488,7 +1498,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
           " Usa format Markdown senzill (##, llistes numerades, **negreta**). No posis cap introducció ni comentari fora de l'activitat.";
         const r = await ia(sistema, txt);
         asDades = { titol: F.tipus + " · " + F.curs, text: r, html: md(r) };
-        return fet('<div class="alum-eines"><button type="button" class="boto clar" data-asb="copia">Copia</button><button type="button" class="boto clar" data-asb="imprimeix">🖨️ Imprimeix / PDF</button><button type="button" class="boto clar" data-asb="imprimeixdis">🖨️ Format DIS</button></div><div class="as-doc">' + capcaleraDoc() + asDades.html + "</div>");
+        return fet('<div class="alum-eines"><button type="button" class="boto clar" data-asb="copia">Copia</button><button type="button" class="boto clar" data-asb="imprimeix">🖨️ Imprimeix / PDF</button><button type="button" class="boto clar" data-asb="imprimeixdis">🖨️ Format DIS</button>' + (compteIns() ? '<select id="asQrNiv" aria-label="Nivell del qüestionari"><option>Nivell bàsic</option><option selected>Nivell mitjà</option><option>Nivell avançat</option></select><button type="button" class="boto" data-asb="qr">📱 Versió en línia (QR)</button>' : "") + '</div><div class="as-doc">' + capcaleraDoc() + asDades.html + "</div>");
       }
       if (a === "adapta") {
         if (!txt) return fet('<p class="avis">Enganxa primer el text.</p>');
@@ -1806,7 +1816,8 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       '<select id="alumFull" aria-label="Full">' + g.fulls.map((x, i) => '<option value="' + i + '"' + (x === f ? " selected" : "") + ">" + esc(x.nom) + "</option>").join("") + "</select>" +
       '<input type="search" id="alumCerca" placeholder="Cerca alumne…" value="' + esc(cerca) + '" style="flex:1 1 140px"></div>' +
       '<div class="alum-eines"><button type="button" class="boto clar" data-q="formules">⚙️ ' + (qFormules ? "Amaga les fórmules" : "Columnes i fórmules") + "</button>" +
-      '<button type="button" class="boto clar' + (qDeures ? " actiu" : "") + '" data-q="passadeures" title="Mode ràpid: cada toc a la columna de deures posa o treu la falta d\'avui">📕 ' + (qDeures ? "Prou deures" : "Passa deures") + '</button><button type="button" class="boto clar" data-q="alumne">+ Alumne</button><button type="button" class="boto clar" data-q="banc">📋 ' + (rubObert ? "Amaga les rúbriques" : "Rúbriques") + "</button>" + importa + "</div>" + (rubObert ? htmlBanc() : "");
+      (compteIns() ? '<button type="button" class="boto clar" data-q="classroom" title="Omple una columna amb els lliuraments o les notes d\'una tasca del Classroom o d\'un formulari">🎒 Classroom</button>' + (f && f.columnes.some(c => c.classroom) ? '<button type="button" class="boto clar" data-q="clsact" title="Torna a llegir del Classroom totes les columnes enllaçades d\'aquest full">🔄 Actualitza del Classroom</button>' : "") : "") +
+      '<button type="button" class="boto clar' + (qDeures ? " actiu" : "") + '" data-q="passadeures" title="Mode ràpid: cada toc a la columna de deures posa o treu la falta d\'avui">📕 ' + (qDeures ? "Prou deures" : "Passa deures") + '</button><button type="button" class="boto clar" data-q="alumne">+ Alumne</button><button type="button" class="boto clar" data-q="banc">📋 ' + (rubObert ? "Amaga les rúbriques" : "Rúbriques") + "</button>" + importa + "</div>" + (clsMsg ? '<p class="cls-msg ' + (clsMsg.err ? "avis" : "font") + '">' + esc(clsMsg.t) + "</p>" : "") + (rubObert ? htmlBanc() : "");
     if (f && qFormules) {
       h += '<div class="formules"><p class="font" style="margin:0 0 8px">Fórmules com a l\'Excel. <b>{EX1}</b> és una columna d\'aquest full i <b>{1R TRIM|NOTA FINAL TRIM}</b> una columna d\'un altre full. Funcions: SUM, AVERAGE, MIN, MAX, IF, ROUND… Els buits compten com a 0 a les operacions i AVERAGE se\'ls salta. <b>MITJANAFETS({DIC1};{DIC2})</b> fa la mitjana de les proves fetes: si a una nota hi escrius <b>EX</b> (o x, o -), no compta; un buit compta com a 0.</p>' +
         (pf => '<p class="font fparam" style="margin:0 0 8px"><b>Faltes d\'ortografia</b> (columnes amb «Faltes» marcat): es resten <input type="text" id="fPes" inputmode="decimal" value="' + String(pf.pes).replace(".", ",") + '"> punts per falta, fins a un màxim de <input type="text" id="fMax" inputmode="decimal" value="' + String(pf.max).replace(".", ",") + '"> punts; a l\'alumnat DIS, el descompte es divideix entre <input type="text" id="fDis" inputmode="decimal" value="' + String(pf.dis).replace(".", ",") + '">. Les fórmules fan servir la nota final, ja descomptada.</p>')(paramFaltes()) +
@@ -1933,7 +1944,9 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       g.fulls.forEach(fu => { if (fu !== f) fu.columnes.forEach(x => { if (x.formula) x.formula = x.formula.split("{" + f.nom + "|" + c.vell + "}").join("{" + f.nom + "|" + c.nom + "}"); }); });
     });
     if (noves.some(c => c.tipus === "rubrica" && !c.rubrica)) return avis("Tria la rúbrica de cada columna de tipus «Rúbrica» (primer crea-la al banc).");
+    const ambCls = {}; f.columnes.forEach(c => { if (c.classroom) ambCls[c.nom] = c.classroom; });
     f.columnes = noves.map(c => c.tipus === "calc" ? { nom: c.nom, tipus: "calc", formula: c.formula } : c.tipus === "rubrica" ? { nom: c.nom, tipus: "rubrica", rubrica: c.rubrica } : c.tipus === "nota" ? { nom: c.nom, tipus: "nota", faltes: c.faltes } : { nom: c.nom, tipus: c.tipus });
+    noves.forEach((c, i) => { if (c.vell && ambCls[c.vell] && f.columnes[i].tipus === "nota") f.columnes[i].classroom = ambCls[c.vell]; });
     Object.assign(paramFaltes(), { pes: pes, max: max, dis: dis });
     desa(); pintaAlumnes();
   }
@@ -1997,6 +2010,8 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     if (!f) return;
     if (q.dataset.q === "formules") { qFormules = !qFormules; pintaAlumnes(); }
     else if (q.dataset.q === "passadeures") { qDeures = !qDeures; pintaAlumnes(); }
+    else if (q.dataset.q === "classroom") obreClassroom(g, f);
+    else if (q.dataset.q === "clsact") actualitzaClassroom(g, f, q);
     else if (q.dataset.q === "banc") { rubObert = !rubObert; pintaAlumnes(); }
     else if (q.dataset.q === "alumne") {
       const nom = (prompt("Nom de l'alumne nou (Cognoms , Nom):") || "").trim();
@@ -2480,10 +2495,157 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
   // ================= Notes =================
   $("notesText").addEventListener("input", () => { dades.notes = $("notesText").value; desa(); });
 
+  // ================= Classroom i qüestionaris en línia (compte d'ieslabisbal.cat) =================
+  // Fan servir el mateix script del correu d'aquell compte (_eines/CorreuTauler.gs), amb el servei de Classroom
+  function compteIns() { const l = (dades.correu && dades.correu.comptes) || []; return l.find(c => c && c.url && /ieslabisbal/i.test(c.nom || "")) || null; }
+  async function cridaIns(cos) {
+    const c = compteIns();
+    if (!c) throw new Error("Primer cal connectar el compte d'ieslabisbal.cat al correu (📬 Correu > ⚙️).");
+    let d = {};
+    try {
+      const r = await fetch(c.url, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(Object.assign({ pin: clau }, cos)) });
+      d = await r.json();
+    } catch (e) { throw new Error("El compte d'ieslabisbal.cat no respon. Torna-ho a provar d'aquí a una estona."); }
+    if (!d.ok) {
+      if (/Acció desconeguda|Classroom is not defined|Classroom no està definit/i.test(d.error || "")) throw new Error("Falta posar al dia l'script del correu del compte d'ieslabisbal.cat i afegir-hi el servei de Classroom (vegeu _eines/CorreuTauler.gs).");
+      throw new Error(d.error || "Hi ha hagut un error al compte d'ieslabisbal.cat.");
+    }
+    return d;
+  }
+  // Aparella els noms del tauler («Cognoms , Nom») amb els del Classroom
+  const motsNom = s => String(s || "").replace(/\s+DIS$/i, "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-zç\s]/g, " ").split(/\s+/).filter(Boolean);
+  function aparella(files, alumnes) {
+    const m = new Map(), usats = new Set(), clauM = t => t.slice().sort().join(" ");
+    const mots = alumnes.map(a => motsNom((a.cognoms || "") + " " + (a.nom || "") || a.complet));
+    files.forEach(r => { const k = clauM(motsNom(r.nom)); const i = alumnes.findIndex((a, j) => !usats.has(j) && clauM(mots[j]) === k); if (i >= 0) { m.set(r.nom, alumnes[i]); usats.add(i); } });
+    files.forEach(r => {
+      if (m.has(r.nom)) return;
+      const t = motsNom(r.nom); let millor = -1, pm = 0, empat = false;
+      mots.forEach((u, j) => { if (usats.has(j)) return; const p = u.filter(x => t.includes(x)).length; if (p > pm) { pm = p; millor = j; empat = false; } else if (p && p === pm) empat = true; });
+      if (millor >= 0 && pm >= 2 && !empat) { m.set(r.nom, alumnes[millor]); usats.add(millor); }
+    });
+    return { m, sobren: alumnes.filter((a, j) => !usats.has(j)) };
+  }
+  const LLIURAT = { TURNED_IN: 1, RETURNED: 1 };
+  async function ompleColumna(g, f, col, e) {
+    let alumnes, valorDe;
+    if (e.form) {
+      const [al, rs] = await Promise.all([cridaIns({ accio: "classroom-alumnes", curs: e.curs }), cridaIns({ accio: "formulari-respostes", id: e.form })]);
+      alumnes = al.alumnes;
+      const punts = {}; rs.respostes.forEach(r => { if (punts[r.email] == null || r.punts > punts[r.email]) punts[r.email] = r.punts; });
+      valorDe = a => e.mode === "nota" ? (punts[a.email] == null ? null : (rs.max ? Math.round(punts[a.email] / rs.max * 1000) / 100 : null)) : (punts[a.email] == null ? 0 : 1);
+    } else {
+      const d = await cridaIns({ accio: "classroom-lliuraments", curs: e.curs, tasca: e.tasca });
+      alumnes = d.alumnes;
+      const per = {}; d.lliuraments.forEach(l => { per[l.email] = l; });
+      valorDe = a => { const l = per[a.email]; if (e.mode === "nota") return l && l.nota != null && e.max ? Math.round(l.nota / e.max * 1000) / 100 : null; return l && LLIURAT[l.estat] ? 1 : 0; };
+    }
+    const { m, sobren } = aparella(f.files, alumnes);
+    let fets = 0; const noTrobats = [];
+    f.files.forEach(r => {
+      const a = m.get(r.nom); if (!a) { noTrobats.push(r.nom.replace(/\s+DIS$/i, "")); return; }
+      const v = valorDe(a); if (v == null) return;
+      if (r.v[col.nom] !== v) { r.v[col.nom] = v; oblidaExcel(r); }
+      fets++;
+    });
+    col.classroom = e;
+    desa();
+    return { fets, noTrobats, sobren: sobren.map(a => a.complet || (a.nom + " " + a.cognoms)) };
+  }
+  let clsMsg = null;
+  const resumCls = (col, r) => col.nom + ": " + r.fets + " alumne" + (r.fets === 1 ? "" : "s") + " al dia." + (r.noTrobats.length ? " No trobats al Classroom: " + r.noTrobats.join("; ") + "." : "") + (r.sobren.length ? " Del Classroom sense parella al full: " + r.sobren.join("; ") + "." : "");
+  async function actualitzaClassroom(g, f, boto) {
+    const cols = f.columnes.filter(c => c.classroom);
+    boto.disabled = true; boto.textContent = "Llegint del Classroom…";
+    const msg = []; let err = false;
+    for (const c of cols) { try { msg.push(resumCls(c, await ompleColumna(g, f, c, c.classroom))); } catch (e) { msg.push(c.nom + ": " + e.message); err = true; } }
+    clsMsg = { t: msg.join(" "), err: err };
+    pintaAlumnes();
+  }
+  function obreClassroom(g, f) {
+    if (!f) return;
+    let dlg = $("dlgCls");
+    if (!dlg) { dlg = document.createElement("dialog"); dlg.id = "dlgCls"; document.body.appendChild(dlg); }
+    const cols = f.columnes.filter(c => c.tipus === "nota");
+    const colIni = cols.find(c => c.classroom) || cols.find(c => /^F\d+$/i.test(c.nom.trim()) && f.files.every(r => esBuit(r.v[c.nom]))) || cols.find(c => /^F\d+$/i.test(c.nom.trim())) || cols[0];
+    dlg.innerHTML = '<form method="dialog"><h2>🎒 Classroom</h2><p class="font" style="margin:0">Omple una columna del full «' + esc(f.nom) + "» de " + esc(nomGrup(g.nom)) + " amb qui ha lliurat una tasca (1 o 0) o amb la nota d'un formulari.</p>" +
+      '<label>Classe del Classroom<select id="clsCurs"><option value="">Carregant…</option></select></label>' +
+      '<label>Tasca o formulari<select id="clsTasca"><option value="">Tria primer la classe</option></select></label>' +
+      '<div class="fila"><label>Columna<select id="clsCol">' + cols.map(c => '<option' + (c === colIni ? " selected" : "") + ">" + esc(c.nom) + "</option>").join("") + "</select></label>" +
+      '<label>Què s\'hi posa<select id="clsMode"><option value="lliurat">Lliurat (1) o no (0)</option><option value="nota">La nota sobre 10</option></select></label></div>' +
+      '<p class="avis" id="clsAvis" hidden></p><p class="font" id="clsRes" hidden></p>' +
+      '<div class="botons"><button type="button" class="boto clar" data-cls="tanca">Tanca</button><button type="button" class="boto" data-cls="omple">Omple la columna</button></div></form>';
+    const avis = t => { $("clsAvis").textContent = t; $("clsAvis").hidden = !t; };
+    const posaMode = () => { const c = cols.find(x => x.nom === $("clsCol").value); $("clsMode").value = c && c.classroom ? c.classroom.mode : (c && /^F\d+$/i.test(c.nom.trim()) ? "lliurat" : "nota"); };
+    posaMode();
+    const clauG = nomGrup(g.nom).replace(/\s+/g, "").toLowerCase();
+    let tasques = [];
+    async function carregaTasques() {
+      const curs = $("clsCurs").value, sel = $("clsTasca");
+      if (!curs) return;
+      sel.innerHTML = '<option value="">Carregant…</option>';
+      try {
+        tasques = (await cridaIns({ accio: "classroom-tasques", curs: curs })).tasques;
+        const fs = dades.formularis || [], c = cols.find(x => x.nom === $("clsCol").value), ant = c && c.classroom;
+        sel.innerHTML = '<optgroup label="Tasques del Classroom">' + tasques.map(t => '<option value="t:' + t.id + '"' + (ant && ant.tasca === t.id ? " selected" : "") + ">" + esc(t.titol) + (t.data ? " · " + dma(t.data) : "") + "</option>").join("") + "</optgroup>" +
+          (fs.length ? '<optgroup label="Formularis creats des del tauler">' + fs.map(x => '<option value="f:' + x.id + '"' + (ant && ant.form === x.id ? " selected" : "") + ">" + esc(x.titol) + " · " + dma(x.data) + "</option>").join("") + "</optgroup>" : "");
+        if (!tasques.length && !fs.length) sel.innerHTML = '<option value="">Aquesta classe no té cap tasca</option>';
+      } catch (e) { sel.innerHTML = '<option value="">—</option>'; avis(e.message); }
+    }
+    dlg.onchange = ev => { if (ev.target.id === "clsCurs") carregaTasques(); else if (ev.target.id === "clsCol") posaMode(); };
+    dlg.onclick = async ev => {
+      const b = ev.target.closest("[data-cls]"); if (!b) return;
+      if (b.dataset.cls === "tanca") { dlg.close(); return; }
+      const curs = $("clsCurs").value, t = $("clsTasca").value, col = cols.find(x => x.nom === $("clsCol").value);
+      if (!curs || !t || !col) { avis("Tria la classe, la tasca o el formulari i la columna."); return; }
+      const e = { curs: curs, mode: $("clsMode").value, titol: $("clsTasca").selectedOptions[0].textContent };
+      if (t.charAt(0) === "f") e.form = t.slice(2); else { e.tasca = t.slice(2); e.max = (tasques.find(x => x.id === e.tasca) || {}).max || 0; }
+      if (e.mode === "nota" && e.tasca && !e.max) { avis("Aquesta tasca del Classroom no té puntuació; tria «Lliurat (1) o no (0)»."); return; }
+      if (f.files.some(r => !esBuit(r.v[col.nom])) && !(col.classroom && (col.classroom.tasca === e.tasca && col.classroom.form === e.form)) && !confirm("La columna " + col.nom + " ja té valors. Vols substituir-los pels del Classroom?")) return;
+      avis(""); b.disabled = true; b.textContent = "Llegint del Classroom…";
+      try { const r = await ompleColumna(g, f, col, e); $("clsRes").textContent = "✓ " + resumCls(col, r); $("clsRes").hidden = false; clsMsg = null; pintaAlumnes(); }
+      catch (err) { avis(err.message); }
+      b.disabled = false; b.textContent = "Omple la columna";
+    };
+    dlg.showModal();
+    cridaIns({ accio: "classroom-cursos" }).then(d => {
+      const c = cols.find(x => x.nom === $("clsCol").value), ant = c && c.classroom && c.classroom.curs;
+      const auto = (d.cursos.find(x => x.id === ant) || d.cursos.find(x => (x.nom + x.seccio).replace(/\s+/g, "").toLowerCase().endsWith(clauG)) || d.cursos.find(x => (x.nom + " " + x.seccio).replace(/\s+/g, "").toLowerCase().includes(clauG)) || {}).id;
+      $("clsCurs").innerHTML = '<option value="">Tria la classe…</option>' + d.cursos.map(x => '<option value="' + x.id + '"' + (x.id === auto ? " selected" : "") + ">" + esc(x.nom + (x.seccio ? " · " + x.seccio : "")) + "</option>").join("");
+      if (auto) carregaTasques();
+    }).catch(e => { $("clsCurs").innerHTML = '<option value="">—</option>'; avis(e.message); });
+  }
+  // Qüestionari autocorregible de Google Forms a partir de l'activitat de l'Assistent, amb QR
+  async function creaQuestionari(b) {
+    if (!asDades || !asDades.text) return;
+    const niv = ($("asQrNiv") || {}).value || "Nivell mitjà";
+    const titol = asDades.titol + " · " + niv.replace(/^Nivell /, "nivell ");
+    b.disabled = true; b.textContent = "Preparant les preguntes…";
+    try {
+      const q = await ia("Converteix l'activitat que et passo en un qüestionari autocorregible de Google Forms per a l'alumnat, només amb les preguntes del «" + niv + "». Respon només JSON: {\"text\": el text de lectura sencer si l'activitat en té, si no \"\", \"preguntes\": [{\"tipus\": \"test\" (una sola resposta correcta) o \"multiple\" (més d'una de correcta), \"enunciat\": text, \"opcions\": [entre 3 i 4 textos], \"correctes\": [índexs de les opcions correctes, comptant des de 0]}]}. Les preguntes obertes, converteix-les en preguntes tancades equivalents amb distractors versemblants. Fes servir el solucionari per marcar les correctes. Escriu en la mateixa llengua que l'activitat. Màxim 15 preguntes.", asDades.text, { json: true });
+      const pr = (q && Array.isArray(q.preguntes) ? q.preguntes : []).filter(x => x && x.enunciat && Array.isArray(x.opcions) && x.opcions.length >= 2 && Array.isArray(x.correctes) && x.correctes.length && x.correctes.every(i => i >= 0 && i < x.opcions.length));
+      if (!pr.length) throw new Error("No s'han pogut preparar preguntes tancades d'aquesta activitat; torna-ho a provar.");
+      b.textContent = "Creant el formulari…";
+      const d = await cridaIns({ accio: "formulari-crea", titol: titol, text: q.text || "", preguntes: pr });
+      dades.formularis = dades.formularis || [];
+      dades.formularis.unshift({ id: d.id, titol: titol, url: d.url, edita: d.edita, data: avuiISO() });
+      desa();
+      await carregaScript("qrcode.js", () => typeof window.qrcode === "function");
+      const qr = window.qrcode(0, "M"); qr.addData(d.url); qr.make();
+      const svg = qr.createSvgTag({ cellSize: 4, margin: 2, scalable: true });
+      asDades.qr = { titol: titol, url: d.url, svg: svg };
+      const bloc = '<div class="qr-bloc"><div class="qr">' + svg + '</div><div><b>' + esc(titol) + '</b><br><a href="' + esc(d.url) + '" target="_blank" rel="noopener">' + esc(d.url) + '</a><p class="font" style="margin:6px 0">' + pr.length + (pr.length === 1 ? " pregunta que es corregeix sola." : " preguntes que es corregeixen soles.") + " L'alumnat hi entra amb el compte de l'institut i les notes es poden passar a una columna amb «🎒 Classroom».</p>" +
+        '<div class="alum-eines" style="margin:0"><button type="button" class="boto" data-asb="qrimp">🖨️ Imprimeix el QR</button><a class="boto clar" href="' + esc(d.edita) + '" target="_blank" rel="noopener">✏️ Revisa el formulari</a></div></div></div>';
+      asResultat = asResultat.replace('<div class="as-doc">', bloc + '<div class="as-doc">');
+      pintaAssistent();
+    } catch (e) { b.disabled = false; b.textContent = "📱 Versió en línia (QR)"; alert(e.message); }
+  }
+
   // ================= Dreceres de consulta =================
   // Cada obra s'obre en una pestanya nova amb la paraula ja buscada (cap d'aquestes obres té una API oberta)
   const CONSULTA = [
     { nom: "DIEC2", desc: "Diccionari de l'IEC", domini: "dlc.iec.cat", logo: "https://dlc.iec.cat/img/LOGO_IEC2.png", color: "#1f3a68", url: p => "https://dlc.iec.cat/Results?DecEntradaText=" + p },
+    { nom: "DCVB", desc: "Alcover-Moll", domini: "dcvb.iec.cat", logo: "https://dlc.iec.cat/img/LOGO_IEC2.png", color: "#1f3a68", lat1: true, url: p => "https://dcvb.iec.cat/results.asp?Word=" + p },
     { nom: "Optimot", desc: "Consultes lingüístiques", domini: "aplicacions.llengua.gencat.cat", logo: "https://aplicacions.llengua.gencat.cat/llc/img/logo_optimot.png", retall: true, color: "#c0001a", url: p => "https://aplicacions.llengua.gencat.cat/llc/AppJava/index.html?action=Principal&method=cerca_generica&tipusCerca=cerca.tot&input_cercar=" + p },
     { nom: "Termcat", desc: "Cercaterm", domini: "www.termcat.cat", color: "#e2001a", url: p => "https://www.termcat.cat/ca/cercaterm/" + p + "?type=basic" },
     { nom: "DLE", desc: "Diccionario de la RAE", domini: "dle.rae.es", color: "#7a1f2b", url: p => "https://dle.rae.es/" + p },
@@ -2496,7 +2658,9 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
   function consulta(i) {
     const t = $("consText").value.trim();
     if (!t) { $("consText").focus(); return; }
-    window.open(CONSULTA[i].url(encodeURIComponent(t)), "_blank", "noopener");
+    // El DCVB només entén la paraula codificada en Latin-1 (país → pa%EDs)
+    const lat1 = x => Array.from(x).map(c => { const n = c.charCodeAt(0); return /[A-Za-z0-9\-_.~]/.test(c) ? c : n < 256 ? "%" + n.toString(16).toUpperCase().padStart(2, "0") : encodeURIComponent(c); }).join("");
+    window.open(CONSULTA[i].url(CONSULTA[i].lat1 ? lat1(t) : encodeURIComponent(t)), "_blank", "noopener");
   }
   $("consLlista").addEventListener("click", ev => { const b = ev.target.closest("[data-cons]"); if (b) consulta(Number(b.dataset.cons)); });
   $("consForm").addEventListener("submit", ev => { ev.preventDefault(); consulta(0); });

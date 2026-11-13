@@ -37,6 +37,16 @@
 //   { accio: "anulla", clau }                         → anul·la un enviament programat
 //   { accio: "fitxers", carpeta }                     → els fulls .xlsx d'una carpeta de Drive
 //                                                       (per importar les notes al tauler)
+//
+// CLASSROOM I FORMULARIS (13.11.2026; només al compte d'ieslabisbal.cat):
+//   Cal afegir-hi el servei avançat «Google Classroom API» (Serveis > +) i fer una
+//   implementació nova (Implementa > Gestiona les implementacions > Edita > Versió nova).
+//   { accio: "classroom-cursos" }                     → { cursos: [{ id, nom, seccio }] }
+//   { accio: "classroom-tasques", curs }              → { tasques: [{ id, titol, max, data }] }
+//   { accio: "classroom-lliuraments", curs, tasca }   → { alumnes: [...], lliuraments: [{ email, estat, nota }] }
+//   { accio: "classroom-alumnes", curs }              → { alumnes: [{ email, nom, cognoms }] }
+//   { accio: "formulari-crea", titol, text, preguntes } → { id, url, edita }: qüestionari autocorregible
+//   { accio: "formulari-respostes", id }              → { max, respostes: [{ email, punts, data }] }
 // =============================================================================
 
 function doGet() {
@@ -155,6 +165,85 @@ function doPost(e) {
         }
         return json_({ ok: true, fitxers: fitxers });
       }
+
+      case "classroom-cursos": {
+        const cursos = [];
+        let pg;
+        do {
+          const r = Classroom.Courses.list({ teacherId: "me", courseStates: ["ACTIVE"], pageSize: 100, pageToken: pg });
+          (r.courses || []).forEach(function (c) { cursos.push({ id: c.id, nom: c.name, seccio: c.section || "" }); });
+          pg = r.nextPageToken;
+        } while (pg);
+        return json_({ ok: true, cursos: cursos });
+      }
+
+      case "classroom-tasques": {
+        const tasques = [];
+        let pg;
+        do {
+          const r = Classroom.Courses.CourseWork.list(String(cos.curs), { pageSize: 100, pageToken: pg, orderBy: "updateTime desc" });
+          (r.courseWork || []).forEach(function (t) { tasques.push({ id: t.id, titol: t.title, max: t.maxPoints || 0, data: String(t.creationTime || "").slice(0, 10) }); });
+          pg = r.nextPageToken;
+        } while (pg && tasques.length < 300);
+        return json_({ ok: true, tasques: tasques });
+      }
+
+      case "classroom-alumnes":
+        return json_({ ok: true, alumnes: alumnesCurs_(String(cos.curs)) });
+
+      case "classroom-lliuraments": {
+        const alumnes = alumnesCurs_(String(cos.curs)), perId = {};
+        alumnes.forEach(function (a) { perId[a.id] = a; });
+        const lliuraments = [];
+        let pg;
+        do {
+          const r = Classroom.Courses.CourseWork.StudentSubmissions.list(String(cos.curs), String(cos.tasca), { pageSize: 100, pageToken: pg });
+          (r.studentSubmissions || []).forEach(function (l) {
+            const a = perId[l.userId]; if (!a) return;
+            const nota = l.assignedGrade != null ? l.assignedGrade : (l.draftGrade != null ? l.draftGrade : null);
+            lliuraments.push({ email: a.email, estat: l.state, nota: nota });
+          });
+          pg = r.nextPageToken;
+        } while (pg);
+        return json_({ ok: true, alumnes: alumnes, lliuraments: lliuraments });
+      }
+
+      case "formulari-crea": {
+        const pr = cos.preguntes || [];
+        if (!pr.length) throw new Error("No hi ha preguntes.");
+        const form = FormApp.create(String(cos.titol || "Qüestionari"));
+        form.setIsQuiz(true);
+        form.setCollectEmail(true);
+        try { form.setRequireLogin(true); form.setLimitOneResponsePerUser(true); } catch (e) {}
+        form.setShowLinkToRespondAgain(false);
+        form.setConfirmationMessage("Respostes enviades. Gràcies!");
+        if (cos.text) form.setDescription(String(cos.text).slice(0, 4000));
+        pr.forEach(function (q) {
+          const opcions = (q.opcions || []).map(String);
+          const bones = (q.correctes || []).map(Number);
+          if (opcions.length < 2) return;
+          const it = q.tipus === "multiple" ? form.addCheckboxItem() : form.addMultipleChoiceItem();
+          it.setTitle(String(q.enunciat || "").slice(0, 900)).setPoints(Number(q.punts) > 0 ? Number(q.punts) : 1).setRequired(true);
+          it.setChoices(opcions.map(function (o, i) { return it.createChoice(o, bones.indexOf(i) >= 0); }));
+        });
+        return json_({ ok: true, id: form.getId(), url: form.shortenFormUrl(form.getPublishedUrl()), edita: form.getEditUrl() });
+      }
+
+      case "formulari-respostes": {
+        const form = FormApp.openById(String(cos.id));
+        let max = 0;
+        form.getItems().forEach(function (it) {
+          const t = it.getType();
+          if (t === FormApp.ItemType.MULTIPLE_CHOICE) max += it.asMultipleChoiceItem().getPoints();
+          else if (t === FormApp.ItemType.CHECKBOX) max += it.asCheckboxItem().getPoints();
+        });
+        const respostes = form.getResponses().map(function (r) {
+          let punts = 0;
+          r.getGradableItemResponses().forEach(function (ir) { punts += Number(ir.getScore()) || 0; });
+          return { email: String(r.getRespondentEmail() || "").toLowerCase(), punts: punts, data: r.getTimestamp().toISOString() };
+        });
+        return json_({ ok: true, max: max, respostes: respostes });
+      }
     }
     return json_({ ok: false, error: "Acció desconeguda" });
   } catch (err) {
@@ -213,6 +302,21 @@ function asseguraActivador_() {
 
 function treuActivador_() {
   ScriptApp.getProjectTriggers().forEach(function (t) { if (t.getHandlerFunction() === "enviaProgramats") ScriptApp.deleteTrigger(t); });
+}
+
+// Alumnes d'un curs del Classroom: id, correu, nom i cognoms
+function alumnesCurs_(curs) {
+  const l = [];
+  let pg;
+  do {
+    const r = Classroom.Courses.Students.list(curs, { pageSize: 100, pageToken: pg });
+    (r.students || []).forEach(function (s) {
+      const p = s.profile || {}, n = p.name || {};
+      l.push({ id: s.userId, email: String(p.emailAddress || "").toLowerCase(), nom: n.givenName || "", cognoms: n.familyName || "", complet: n.fullName || "" });
+    });
+    pg = r.nextPageToken;
+  } while (pg);
+  return l;
 }
 
 function netejaText_(t) {
