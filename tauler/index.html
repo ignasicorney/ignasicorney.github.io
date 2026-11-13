@@ -197,7 +197,7 @@ dialog#dlgRub{width:min(760px,calc(100vw - 24px))}
 .rub-nota{font-size:1.1rem;margin:4px 0}
 .taula td.rub{cursor:pointer;background:#fbf6ea}
 /* Assistent */
-.as-doc .cap-doc{width:100%;border-collapse:collapse;margin:0 0 12px;font:13px/1.35 Arial,Helvetica,sans-serif;letter-spacing:0}.as-doc .cap-doc td{border:1px solid #000;padding:4px 8px;vertical-align:top}.as-doc .cap-doc td.logo{width:80px;text-align:center;vertical-align:middle}.as-doc .cap-doc td.logo img{width:64px}.as-doc .cap-doc td.nota{width:22%}.as-doc .linia-al{font:bold 13px Arial,sans-serif;letter-spacing:0;margin:0 0 14px}
+.as-doc .cap-doc{width:100%;border-collapse:collapse;margin:0 0 12px;font:13px/1.35 Arial,Helvetica,sans-serif;letter-spacing:0}.as-doc .cap-doc td{border:1px solid #000;padding:4px 8px;vertical-align:top}.as-doc .cap-doc td.logo{width:80px;text-align:center;vertical-align:middle}.as-doc .cap-doc td.logo img{width:64px}.as-doc .cap-doc td.nota{width:22%}.as-doc .linia-al{font:bold 13px Arial,sans-serif;letter-spacing:0;margin:0 0 14px;display:flex;white-space:nowrap}.as-doc .linia-al .pt{flex-basis:0;min-width:0;overflow:hidden;margin:0 5px 0 4px}.linia-al .pt:last-child{margin-right:0}
 .fila-as{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0}
 .fila-as label{display:grid;gap:2px;font-size:.8rem;color:var(--suau)}
 #asCos textarea{width:100%;margin:6px 0}
@@ -1308,11 +1308,11 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     return '<table class="cap-doc"><tr><td class="logo"><img src="' + logo + '" alt="INS la Bisbal"></td>' +
       '<td class="dades"><b>Generalitat de Catalunya.</b><br>Departament d\u2019Ensenyament. Curs ' + cursActual() + "<br>Professor: Ignasi Corney Oller</td>" +
       '<td class="nota"><b>NOTA:</b></td></tr></table>' +
-      '<p class="linia-al"><b>CURS ............ GRUP .......... ALUMNE/A .......................................................................</b></p>';
+      '<p class="linia-al"><b>CURS</b><span class="pt" style="flex-grow:12"></span><b>GRUP</b><span class="pt" style="flex-grow:10"></span><b>ALUMNE/A</b><span class="pt" style="flex-grow:71"></span></p>'.replace(/<span class="pt"([^>]*)><\/span>/g, '<span class="pt"$1>' + ".".repeat(300) + "</span>");
   }
   const CSS_DOC = ".cap-doc{width:100%;border-collapse:collapse;margin:0 0 14px;font:14px/1.35 Arial,Helvetica,sans-serif;letter-spacing:0;word-spacing:0}" +
     ".cap-doc td{border:1px solid #000;padding:4px 8px;vertical-align:top}.cap-doc td.logo{width:90px;text-align:center;vertical-align:middle}.cap-doc td.logo img{width:72px;display:block;margin:auto}" +
-    ".cap-doc td.nota{width:22%}.linia-al{font:bold 14px Arial,Helvetica,sans-serif;letter-spacing:0;word-spacing:0;margin:0 0 16px}";
+    ".cap-doc td.nota{width:22%}.linia-al{font:bold 14px Arial,Helvetica,sans-serif;letter-spacing:0;word-spacing:0;margin:0 0 16px;display:flex;white-space:nowrap}.linia-al .pt{flex-basis:0;min-width:0;overflow:hidden;margin:0 5px 0 4px}.linia-al .pt:last-child{margin-right:0}";
   function imprimeix(titol, html, dis) {
     const w = window.open("", "_blank");
     if (!w) { alert("El navegador ha bloquejat la finestra. Permet les finestres emergents per a aquesta pàgina."); return; }
