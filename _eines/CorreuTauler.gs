@@ -50,6 +50,7 @@
 //   { accio: "classroom-publica", curs, titol, descripcio, url, data, esborrany }
 //                                                     → { id, enllac }: tasca nova amb el formulari enllaçat
 //   { accio: "formulari-tanca", id, quan }            → tanca les respostes ara (sense «quan») o a l'hora «quan» (ISO)
+//                                                       (en lloc d'«id» es pot passar «url», p. ex. el d'un qüestionari d'una tasca del Classroom)
 //   { accio: "formulari-obre", id }                   → torna a acceptar respostes i anul·la el tancament programat
 //   { accio: "formulari-estat", id }                  → { obert, tancament }
 // =============================================================================
@@ -187,7 +188,10 @@ function doPost(e) {
         let pg;
         do {
           const r = Classroom.Courses.CourseWork.list(String(cos.curs), { pageSize: 100, pageToken: pg, orderBy: "updateTime desc" });
-          (r.courseWork || []).forEach(function (t) { tasques.push({ id: t.id, titol: t.title, max: t.maxPoints || 0, data: String(t.creationTime || "").slice(0, 10) }); });
+          (r.courseWork || []).forEach(function (t) {
+            const fm = (t.materials || []).filter(function (m) { return m.form && m.form.formUrl; })[0];
+            tasques.push({ id: t.id, titol: t.title, max: t.maxPoints || 0, data: String(t.creationTime || "").slice(0, 10), form: fm ? fm.form.formUrl : "" });
+          });
           pg = r.nextPageToken;
         } while (pg && tasques.length < 300);
         return json_({ ok: true, tasques: tasques });
@@ -233,12 +237,11 @@ function doPost(e) {
       }
 
       case "formulari-tanca": {
-        const id = String(cos.id), quan = cos.quan ? new Date(cos.quan) : null;
+        const id = formulari_(cos).getId(), quan = cos.quan ? new Date(cos.quan) : null;
         if (!quan || isNaN(quan.getTime()) || quan.getTime() <= Date.now()) {
           tancaFormulari_(id);
           return json_({ ok: true, obert: false, tancament: "" });
         }
-        FormApp.openById(id);   // comprova que el formulari existeix
         PropertiesService.getScriptProperties().setProperty("tanca_" + id, quan.toISOString());
         const hi = ScriptApp.getProjectTriggers().some(function (t) { return t.getHandlerFunction() === "tancaFormularis"; });
         if (!hi) ScriptApp.newTrigger("tancaFormularis").timeBased().everyMinutes(5).create();
@@ -246,14 +249,15 @@ function doPost(e) {
       }
 
       case "formulari-obre": {
-        PropertiesService.getScriptProperties().deleteProperty("tanca_" + String(cos.id));
-        FormApp.openById(String(cos.id)).setAcceptingResponses(true);
+        const f = formulari_(cos);
+        PropertiesService.getScriptProperties().deleteProperty("tanca_" + f.getId());
+        f.setAcceptingResponses(true);
         return json_({ ok: true, obert: true, tancament: "" });
       }
 
       case "formulari-estat": {
-        const f = FormApp.openById(String(cos.id));
-        return json_({ ok: true, obert: f.isAcceptingResponses(), tancament: PropertiesService.getScriptProperties().getProperty("tanca_" + String(cos.id)) || "" });
+        const f = formulari_(cos);
+        return json_({ ok: true, obert: f.isAcceptingResponses(), tancament: PropertiesService.getScriptProperties().getProperty("tanca_" + f.getId()) || "" });
       }
 
       case "formulari-crea": {
@@ -324,6 +328,12 @@ function tancaFormularis() {
     try { tancaFormulari_(k.slice(6)); } catch (err) { console.error("No s'ha pogut tancar " + k + ": " + err); props.deleteProperty(k); }
   });
   if (!queden) ScriptApp.getProjectTriggers().forEach(function (t) { if (t.getHandlerFunction() === "tancaFormularis") ScriptApp.deleteTrigger(t); });
+}
+
+// El formulari per «id» o per «url» (cal que sigui teu, o que en siguis editor)
+function formulari_(cos) {
+  try { return cos.id ? FormApp.openById(String(cos.id)) : FormApp.openByUrl(String(cos.url)); }
+  catch (err) { throw new Error("No es pot obrir el formulari: cal que en siguis el propietari o editor."); }
 }
 
 function tancaFormulari_(id) {

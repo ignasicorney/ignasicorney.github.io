@@ -2655,22 +2655,27 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
         '<button type="button" class="boto clar" data-cls="tprog">Programa el tancament</button>' + (e.obert ? '<button type="button" class="boto clar" data-cls="tara">Tanca ara</button>' : '<button type="button" class="boto clar" data-cls="tobre">Torna a obrir</button>') + "</div>";
       box.hidden = false;
     }
+    // El formulari de l'opció triada: un del tauler (per id) o el qüestionari adjunt a una tasca del Classroom (per url)
+    const formTriat = () => { const t = $("clsTasca").value; if (t.charAt(0) === "f") return { id: t.slice(2) }; const x = tasques.find(y => "t:" + y.id === t); return x && x.form ? { url: x.form } : null; };
     async function carregaEstat() {
-      const t = $("clsTasca").value, box = $("clsTanca");
-      if (t.charAt(0) !== "f") { box.hidden = true; return; }
+      const t = $("clsTasca").value, box = $("clsTanca"), fm = formTriat();
+      if (!t) { box.hidden = true; return; }
+      if (!fm) { box.innerHTML = '<span class="font">Aquesta tasca no té cap qüestionari de Google Forms adjunt, així que no hi ha respostes per tancar.</span>'; box.hidden = false; return; }
       box.innerHTML = '<span class="font">Consultant el formulari…</span>'; box.hidden = false;
-      try { pintaTanca(await cridaIns({ accio: "formulari-estat", id: t.slice(2) })); } catch (e) { box.hidden = true; avis(e.message); }
+      try { pintaTanca(await cridaIns(Object.assign({ accio: "formulari-estat" }, fm))); } catch (e) { box.innerHTML = '<span class="font">' + esc(e.message) + "</span>"; }
     }
     dlg.onchange = ev => { if (ev.target.id === "clsCurs") carregaTasques(); else if (ev.target.id === "clsCol") posaMode(); else if (ev.target.id === "clsTasca") carregaEstat(); };
     dlg.onclick = async ev => {
       const b = ev.target.closest("[data-cls]"); if (!b) return;
       if (b.dataset.cls === "tanca") { dlg.close(); return; }
       if (/^t(prog|ara|obre)$/.test(b.dataset.cls)) {
-        const id = $("clsTasca").value.slice(2), v = ($("clsTancaQuan") || {}).value || "";
+        const fm = formTriat(), id = fm && fm.id, v = ($("clsTancaQuan") || {}).value || "";
+        if (!fm) return;
         let cos;
-        if (b.dataset.cls === "tprog") { if (!v) { $("clsTancaQuan").focus(); return; } const q = new Date(v); if (!(q.getTime() > Date.now())) { avis("Tria una data i hora que encara no hagi passat."); return; } cos = { accio: "formulari-tanca", id: id, quan: q.toISOString() }; }
-        else if (b.dataset.cls === "tara") { if (!confirm("Vols tancar ara les respostes d'aquest formulari?")) return; cos = { accio: "formulari-tanca", id: id }; }
-        else cos = { accio: "formulari-obre", id: id };
+        if (b.dataset.cls === "tprog") { if (!v) { $("clsTancaQuan").focus(); return; } const q = new Date(v); if (!(q.getTime() > Date.now())) { avis("Tria una data i hora que encara no hagi passat."); return; } cos = { accio: "formulari-tanca", quan: q.toISOString() }; }
+        else if (b.dataset.cls === "tara") { if (!confirm("Vols tancar ara les respostes d'aquest formulari?")) return; cos = { accio: "formulari-tanca" }; }
+        else cos = { accio: "formulari-obre" };
+        Object.assign(cos, fm);
         avis(""); b.disabled = true;
         try { const r = await cridaIns(cos); const fm = (dades.formularis || []).find(x => x.id === id); if (fm) { fm.tancament = r.tancament || ""; fm.obert = r.obert; desa(); } pintaTanca(r); }
         catch (err) { avis(err.message); b.disabled = false; }
