@@ -1485,7 +1485,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
         '<textarea id="asText" placeholder="Text o enunciats a adaptar…" rows="8"></textarea>' +
         '<div class="alum-eines"><button type="button" class="boto" data-asb="adapta">🧩 Adapta</button></div>';
     } else if (asEina === "cb") {
-      h = '<p class="font">Proves de competències bàsiques de 4t d\'ESO fetes en paper: marca les respostes a la fitxa de cada alumne i les notes de CL i EE van soles a les columnes que triïs. La redacció es puntua a la mateixa fitxa amb la teva graella. Amb «➕ Carrega una prova» puges el full de respostes i els criteris (PDF o foto) i la correcció queda a punt.</p><div id="cbCos"></div>';
+      h = '<p class="font">Proves de competències bàsiques de 4t d\'ESO fetes en paper: marca les respostes a la fitxa de cada alumne i les notes de CL i EE van soles a les columnes que triïs. La redacció es puntua a la mateixa fitxa amb la teva graella. Amb «➕ Carrega una prova» puges el full de respostes, les solucions i els criteris (PDF o foto) i la correcció queda a punt.</p><div id="cbCos"></div>';
     } else if (asEina === "rubrica") {
       h = '<p class="font">Descriu què vols avaluar i en surt una rúbrica que pots afegir al banc i vincular a una columna.</p>' +
         '<textarea id="asText" placeholder="Ex.: rúbrica per avaluar un comentari de text de 4t d\'ESO: comprensió, estructura, adequació, correcció lingüística…" rows="5"></textarea>' +
@@ -3512,7 +3512,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     const c = CB(), bloq = !!(p0 && cbHiHaResultats(p0));
     const st = {
       curs: p0 ? p0.curs : "", materia: p0 ? p0.materia : "Castellà", titol: p0 ? p0.titol : "", redaccio: p0 ? (p0.redaccio || "") : "",
-      full: null, crit: null, llegint: false, avis: "", nota: "",
+      full: null, sol: null, crit: null, llegint: false, avis: "", nota: "",
       items: p0 ? cbItems(p0).map(x => ({ n: x.n, t: x.t, k: x.k, d: x.d, max: x.max, pas: x.pas, pista: x.pista })) : []
     };
     let dlg = $("dlgCBN"); if (!dlg) { dlg = document.createElement("dialog"); dlg.id = "dlgCBN"; document.body.appendChild(dlg); }
@@ -3526,8 +3526,9 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
         '<label>Matèria<select data-n="materia">' + opc(CB_MATERIES.map(m => [m, m]), st.materia) + "</select></label></div>" +
         (doble ? '<p class="avis">Ja hi ha una prova ' + esc(st.curs) + " de " + esc(st.materia) + ". Si aquesta la substitueix, elimina l'altra després.</p>" : "") +
         '<div class="alum-eines"><label class="boto clar" style="display:inline-block">📄 Full de respostes<input type="file" data-n="full" accept="application/pdf,image/*" hidden></label><span class="font">' + (st.full ? esc(st.full.name) : "PDF o foto (opcional, ajuda a seguir l'ordre)") + "</span></div>" +
-        '<div class="alum-eines"><label class="boto clar" style="display:inline-block">✅ Criteris i solucions<input type="file" data-n="crit" accept="application/pdf,image/*" hidden></label><span class="font">' + (st.crit ? esc(st.crit.name) : "PDF o foto") + "</span></div>" +
-        '<div class="alum-eines"><button type="button" class="boto" data-n="llegeix"' + (st.crit && !st.llegint && !bloq ? "" : " disabled") + ">🔎 " + (it.length ? "Torna a llegir-los" : "Llegeix-los i prepara la correcció") + "</button>" +
+        '<div class="alum-eines"><label class="boto clar" style="display:inline-block">✅ Solucions<input type="file" data-n="sol" accept="application/pdf,image/*" hidden></label><span class="font">' + (st.sol ? esc(st.sol.name) : "PDF o foto: la clau de respostes o el full de respostes corregit") + "</span></div>" +
+        '<div class="alum-eines"><label class="boto clar" style="display:inline-block">📋 Criteris de correcció<input type="file" data-n="crit" accept="application/pdf,image/*" hidden></label><span class="font">' + (st.crit ? esc(st.crit.name) : "PDF o foto: quines preguntes són CL o EE i com es puntuen les obertes") + "</span></div>" +
+        '<div class="alum-eines"><button type="button" class="boto" data-n="llegeix"' + ((st.crit || st.sol) && !st.llegint && !bloq ? "" : " disabled") + ">🔎 " + (it.length ? "Torna a llegir-los" : "Llegeix-los i prepara la correcció") + "</button>" +
         (st.llegint ? '<span class="font">Llegint els documents… (pot trigar un minut)</span>' : "") + "</div>" +
         (bloq ? '<p class="font">Ja hi ha alumnes corregits amb aquesta prova: pots canviar respostes, parts i criteris (les notes es tornen a calcular), però no afegir ni treure preguntes.</p>' : "") +
         (st.avis ? '<p class="avis">' + esc(st.avis) + "</p>" : "") + (st.nota ? '<p class="font">ℹ️ ' + esc(st.nota) + "</p>" : "");
@@ -3551,14 +3552,14 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     const llegeix = async () => {
       st.llegint = true; st.avis = ""; st.nota = ""; pinta();
       try {
-        const docs = [["CRITERIS I SOLUCIONS", st.crit]].concat(st.full ? [["FULL DE RESPOSTES", st.full]] : []), parts = [], pags = [];
+        const docs = [["SOLUCIONS (CLAU DE RESPOSTES)", st.sol], ["CRITERIS DE CORRECCIÓ", st.crit], ["FULL DE RESPOSTES", st.full]].filter(x => x[1]), parts = [], pags = [];
         for (const [nom, f] of docs) {
           const d = await cbLlegeixDoc(f);
           if (d.text) parts.push("=== " + nom + " ===\n" + d.text.slice(0, nom === "FULL DE RESPOSTES" ? 20000 : 90000));
           else { parts.push("=== " + nom + " === (escanejat: és a la imatge adjunta)"); pags.push(...d.pags); }
         }
         const sistema = "Prepares la correcció d'una prova de competències bàsiques de 4t d'ESO (Generalitat de Catalunya) de la matèria " + st.materia + ". " +
-          "Reps el text (o la imatge) dels criteris de correcció amb les solucions i, si n'hi ha, del full de respostes. Si els criteris inclouen diverses llengües o matèries, fes servir NOMÉS la part de " + st.materia + ". " +
+          "Reps el text (o la imatge) de les solucions (la clau de respostes o el full de respostes corregit), dels criteris de correcció (quines preguntes compten a cada part, puntuació i criteris de les preguntes obertes) i, si n'hi ha, del full de respostes en blanc. Fes servir tots els documents alhora: les respostes correctes surten de les solucions; les parts (CL o LL), els punts i els criteris de les obertes, dels criteris. Si els criteris inclouen diverses llengües o matèries, fes servir NOMÉS la part de " + st.materia + ". " +
           "Respon només JSON: {\"titol\": títol de la prova, \"curs\": curs de la prova en format aaaa-aaaa o \"\", \"redaccio\": enunciat breu de la redacció o \"\", \"items\": [...], \"avisos\": dubtes o \"\"}. " +
           "Cada element d'items: {\"n\": número tal com surt al full de respostes (\"01\", \"7.1\"…), \"tipus\": \"abcd\" | \"ab\" | \"VF\" | \"oberta\", \"k\": resposta correcta (a, b, c o d en minúscula; per a VF, \"V\" o \"F\"; per a ab, \"a\" o \"b\"; per a oberta, \"\"), \"part\": \"CL\" | \"LL\", \"max\": punts màxims (1 a les tancades), \"pas\": 1, 0.5 o 0.25 (de quant en quant es puntua; 0.5 si hi ha puntuació parcial), \"criteri\": a les obertes, resum curt del criteri de puntuació (què val cada puntuació), \"\" a les tancades}. " +
           "Regles: segueix l'ordre del full de respostes; cada subapartat (7.1, 7.2…) és un element; tipus \"ab\" si el subapartat només té dues opcions (a/b, sí/no, adequat/inadequat: a = la primera, b = la segona); \"VF\" per a vertader/fals. " +
@@ -3566,7 +3567,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
           "No hi incloguis la redacció ni la producció escrita final com a element. Si dubtes d'una resposta, posa-la igualment i explica-ho a avisos.";
         const r = await ia(sistema, "MATÈRIA: " + st.materia + "\n\n" + parts.join("\n\n"), Object.assign({ json: true }, pags.length ? { imatge: cbJuntaPags(pags) } : {}));
         const items = (r && Array.isArray(r.items) ? r.items : []).map(cbNormItem).filter(x => x.n);
-        if (!items.length) throw new Error("No he trobat les preguntes als documents. Comprova que hi has posat els criteris amb les solucions.");
+        if (!items.length) throw new Error("No he trobat les preguntes als documents. Comprova que hi has posat les solucions i els criteris.");
         st.items = items;
         if (!st.curs && /^\d{4}-\d{4}$/.test(String(r.curs || "").trim())) st.curs = String(r.curs).trim();
         st.titol = String(r.titol || "").trim() || st.titol;
@@ -3599,7 +3600,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     };
     dlg.onchange = ev => {
       const s = ev.target, k = s.dataset.n, i = s.dataset.i, col = s.dataset.c;
-      if (k === "full" || k === "crit") { const f = s.files && s.files[0]; if (f) { st[k] = f; st.avis = ""; } pinta(); return; }
+      if (k === "full" || k === "crit" || k === "sol") { const f = s.files && s.files[0]; if (f) { st[k] = f; st.avis = ""; } pinta(); return; }
       if (k === "curs" || k === "materia" || k === "titol" || k === "redaccio") { st[k] = s.value; if (k === "curs" || k === "materia") pinta(); return; }
       if (i == null || !col) return;
       const x = st.items[Number(i)];
