@@ -310,24 +310,29 @@ function doPost(e) {
           ] }],
           generationConfig: { responseMimeType: "application/json", temperature: 0.4 }
         };
-        // 13.11.2026: si el model està saturat (503/429/500), es torna a provar i es passa a un altre model
-        const models = [model].concat(["gemini-flash-latest", "gemini-2.5-flash", "gemini-flash-lite-latest"].filter(function (x) { return x !== model; }));
+        // 13.11.2026: si un model està saturat (503/429/500) es torna a provar i després es passa al següent;
+        // si un model ja no existeix o està retirat, es passa directament al següent
+        const models = [model].concat(["gemini-flash-latest", "gemini-3.8-flash", "gemini-flash-lite-latest"].filter(function (x) { return x !== model; }));
         let r = null, d = {}, msg = "";
-        for (let k = 0; k < models.length * 2; k++) {
-          if (k) Utilities.sleep(k % 2 ? 4000 : 1000);
-          r = UrlFetchApp.fetch("https://generativelanguage.googleapis.com/v1beta/models/" + models[Math.floor(k / 2)] + ":generateContent", {
-            method: "post", contentType: "application/json", headers: { "x-goog-api-key": clau },
-            payload: JSON.stringify(peticio), muteHttpExceptions: true
-          });
-          d = {};
-          try { d = JSON.parse(r.getContentText()); } catch (e) {}
-          if (r.getResponseCode() === 200) break;
-          msg = (d.error && d.error.message) || ("error " + r.getResponseCode());
-          if ([429, 500, 503].indexOf(r.getResponseCode()) < 0 && !/not found|not supported/i.test(msg)) break;   // un error que no és de saturació no es reintenta
+        fora:
+        for (let i = 0; i < models.length; i++) {
+          for (let intent = 0; intent < 2; intent++) {
+            if (intent) Utilities.sleep(4000);
+            r = UrlFetchApp.fetch("https://generativelanguage.googleapis.com/v1beta/models/" + models[i] + ":generateContent", {
+              method: "post", contentType: "application/json", headers: { "x-goog-api-key": clau },
+              payload: JSON.stringify(peticio), muteHttpExceptions: true
+            });
+            d = {};
+            try { d = JSON.parse(r.getContentText()); } catch (e) {}
+            if (r.getResponseCode() === 200) break fora;
+            msg = (d.error && d.error.message) || ("error " + r.getResponseCode());
+            if (/no longer available|not found|not supported|deprecated|retired/i.test(msg)) continue fora;   // model retirat: el següent
+            if ([429, 500, 503].indexOf(r.getResponseCode()) < 0) break fora;                                  // un altre error: s'atura
+          }
         }
         if (r.getResponseCode() !== 200) {
           if (/api key|api_key/i.test(msg)) throw new Error("La clau GEMINI_KEY no és vàlida; revisa-la a les propietats de l'script.");
-          if ([429, 500, 503].indexOf(r.getResponseCode()) >= 0) throw new Error("Els models de Gemini estan saturats ara mateix; torna-ho a provar d'aquí a uns minuts.");
+          if ([429, 500, 503].indexOf(r.getResponseCode()) >= 0 || /no longer available|not found|deprecated|retired/i.test(msg)) throw new Error("Els models de Gemini estan saturats ara mateix; torna-ho a provar d'aquí a uns minuts.");
           if (/youtube|video|file/i.test(msg)) throw new Error("La IA no ha pogut obrir el vídeo: ha de ser públic a YouTube (els ocults o privats no hi van). També pots enganxar-ne la transcripció.");
           throw new Error("Gemini: " + msg);
         }
