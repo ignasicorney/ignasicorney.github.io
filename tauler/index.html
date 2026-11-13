@@ -206,6 +206,11 @@ dialog#dlgRub{width:min(760px,calc(100vw - 24px))}
 .cb-taula{width:100%;border-collapse:collapse;font-size:.9rem;margin-top:8px}
 .cb-taula th,.cb-taula td{border-bottom:1px solid var(--linia);padding:4px 6px;text-align:left}
 .cb-taula tr.cb-buit td{color:var(--suau)}
+dialog#dlgCBN{width:min(860px,calc(100vw - 24px))}
+.cbn-taula{width:100%;border-collapse:collapse;font-size:.85rem}
+.cbn-taula th,.cbn-taula td{border-bottom:1px solid var(--linia);padding:3px 4px;text-align:left;vertical-align:top}
+.cbn-taula input,.cbn-taula select{font:inherit;color:var(--text);width:100%;box-sizing:border-box}
+.cbn-taula tr.cbn-mal td{background:#fde2e2}
 .cb-taula tr.cb-dubte td:first-child{background:#fff4c2}
 .cb-resp{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:4px}
 .cb-it{flex-wrap:wrap}
@@ -1480,7 +1485,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
         '<textarea id="asText" placeholder="Text o enunciats a adaptar…" rows="8"></textarea>' +
         '<div class="alum-eines"><button type="button" class="boto" data-asb="adapta">🧩 Adapta</button></div>';
     } else if (asEina === "cb") {
-      h = '<p class="font">Proves de competències bàsiques de 4t d\'ESO fetes en paper: fotografia el full de respostes de cada alumne i les notes de CL i EE van soles a les columnes que triïs. La redacció es puntua a la mateixa fitxa amb la graella oficial.</p><div id="cbCos"></div>';
+      h = '<p class="font">Proves de competències bàsiques de 4t d\'ESO fetes en paper: marca les respostes a la fitxa de cada alumne i les notes de CL i EE van soles a les columnes que triïs. La redacció es puntua a la mateixa fitxa amb la teva graella. Amb «➕ Carrega una prova» puges el full de respostes i els criteris (PDF o foto) i la correcció queda a punt.</p><div id="cbCos"></div>';
     } else if (asEina === "rubrica") {
       h = '<p class="font">Descriu què vols avaluar i en surt una rúbrica que pots afegir al banc i vincular a una columna.</p>' +
         '<textarea id="asText" placeholder="Ex.: rúbrica per avaluar un comentari de text de 4t d\'ESO: comprensió, estructura, adequació, correcció lingüística…" rows="5"></textarea>' +
@@ -3300,14 +3305,21 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
 
   // ---------- Bloc de l'Institut ----------
   let cbSel = { p: 0, g: 0 }, cbMsg = "";
+  // Proves disponibles: les de sèrie (menys les eliminades) i les carregades des de la Bitàcola (dades.cb.proves)
+  const cbProves = () => { const c = CB(), fora = Array.isArray(c.treu) ? c.treu : []; return CB_PROVES.filter(x => !fora.includes(x.id)).concat(Array.isArray(c.proves) ? c.proves : []); };
+  const cbProva = () => { const ps = cbProves(); if (cbSel.p >= ps.length || cbSel.p < 0) cbSel.p = 0; return ps[cbSel.p] || null; };
   const cbOrdre = (a, b) => a.localeCompare(b, "ca", { sensitivity: "base", ignorePunctuation: true });
   const cbNet = a => a.replace(/\s+DIS$/i, "");
   function pintaCB() {
     const cos = $("cbCos"); if (!cos) return;
-    const p = CB_PROVES[cbSel.p], q = Q(), g = q.grups[cbSel.g], c = CB(), propi = p.full.model === "propi";
+    const ps = cbProves(), p = cbProva(), q = Q(), g = q.grups[cbSel.g], c = CB();
+    const nova = '<button type="button" class="boto clar" data-cb="nova">➕ Carrega una prova</button>';
+    if (!p) { cos.innerHTML = '<p class="font">No hi ha cap prova. Carrega\'n una amb el full de respostes i els criteris (PDF o foto).</p><div class="alum-eines">' + nova + "</div>"; return; }
+    const propi = p.full.model === "propi";
     const enl = (u, t) => u ? '<a class="boto clar" href="' + esc(u) + '" target="_blank" rel="noopener" style="text-decoration:none">' + t + "</a>" : "";
     // Proves per anys: un botó per curs (i matèria)
-    let h = '<div class="vistes" role="group" aria-label="Prova" style="flex-wrap:wrap;margin-bottom:8px">' + CB_PROVES.map((x, i) => [x, i]).sort((u, v) => v[0].curs.localeCompare(u[0].curs)).map(([x, i]) => '<button type="button" data-cbp="' + i + '" aria-pressed="' + (i === cbSel.p) + '">' + esc(x.curs) + (CB_PROVES.filter(y => y.curs === x.curs).length > 1 ? " · " + esc(x.materia) : "") + "</button>").join("") + "</div>" +
+    let h = '<div class="vistes" role="group" aria-label="Prova" style="flex-wrap:wrap;margin-bottom:8px">' + ps.map((x, i) => [x, i]).sort((u, v) => v[0].curs.localeCompare(u[0].curs)).map(([x, i]) => '<button type="button" data-cbp="' + i + '" aria-pressed="' + (i === cbSel.p) + '">' + esc(x.curs) + (ps.filter(y => y.curs === x.curs).length > 1 ? " · " + esc(x.materia) : "") + "</button>").join("") + "</div>" +
+      '<div class="alum-eines">' + nova + (p.propia ? '<button type="button" class="boto clar" data-cb="edita">✏️ Revisa la clau</button>' : "") + '<button type="button" class="boto clar" data-cb="treu">🗑️ Elimina la prova ' + esc(p.curs) + "</button></div>" +
       '<div class="fila-as">' + (q.grups.length ? '<label>Grup<select data-cb="g">' + q.grups.map((x, i) => '<option value="' + i + '"' + (i === cbSel.g ? " selected" : "") + ">" + esc(nomGrup(x.nom)) + "</option>").join("") + "</select></label>" : "") + "</div>";
     const eines = enl(p.quadern, "📄 Quadern") + enl(p.criteris, "✅ Criteris") +
       (propi ? '<button type="button" class="boto clar" data-cb="impgrup"' + (g ? "" : " disabled") + '>🖨️ Fulls del grup (amb nom)</button><button type="button" class="boto clar" data-cb="impbuit">🖨️ Full en blanc</button>' : "");
@@ -3407,7 +3419,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     dlg.showModal();
   }
   async function cbFotos(files) {
-    const p = CB_PROVES[cbSel.p], c = CB(), it = cbItems(p), fets = [], errs = [], revisa = [];
+    const p = cbProva(), c = CB(), it = cbItems(p), fets = [], errs = [], revisa = [];
     cbMsg = "Llegint " + files.length + " foto" + (files.length === 1 ? "" : "s") + "…"; pintaCB();
     for (const file of files) {
       try {
@@ -3430,6 +3442,196 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     cbMsg = (fets.length ? "✓ Notes posades: " + esc(fets.join("; ")) + "." : "") + (revisa.length ? "<br>⚠️ Comprova a la fitxa ✏️ aquestes caselles dubtoses: " + esc(revisa.join("; ")) + "." : "") + (errs.length ? "<br>❌ " + esc(errs.join(" · ")) : "");
     pintaCB(); pintaAlumnes();
   }
+  // ---------- Carregar una prova nova (full de respostes + criteris en PDF o foto) ----------
+  // El PDF es llegeix aquí mateix amb pdf.js (pdfjs/); la IA (Worker) només rep el text, o la imatge si el PDF és escanejat.
+  let cbPdfLib = null;
+  async function cbPdf() {
+    if (!cbPdfLib) {
+      try {
+        const lib = await import(new URL("pdfjs/pdf.min.mjs", location.href).href);
+        lib.GlobalWorkerOptions.workerSrc = new URL("pdfjs/pdf.worker.min.mjs", location.href).href;
+        cbPdfLib = lib;
+      } catch (e) { throw new Error("No s'ha pogut carregar el lector de PDF; torna-ho a provar."); }
+    }
+    return cbPdfLib;
+  }
+  const cbCanvas = (font, w, h) => { const c = document.createElement("canvas"); c.width = Math.round(w); c.height = Math.round(h); const cx = c.getContext("2d"); cx.fillStyle = "#fff"; cx.fillRect(0, 0, c.width, c.height); cx.drawImage(font, 0, 0, c.width, c.height); return c; };
+  // Retorna { text, pags }: el text del PDF o, si és escanejat (o una foto), les pàgines com a imatges
+  async function cbLlegeixDoc(file) {
+    if (/^image\//.test(file.type)) { const img = await cbCarrega(file), k = Math.min(1, 1600 / Math.max(img.width, img.height)); return { text: "", pags: [cbCanvas(img, img.width * k, img.height * k)] }; }
+    let pdf;
+    try { pdf = await (await cbPdf()).getDocument({ data: new Uint8Array(await file.arrayBuffer()) }).promise; }
+    catch (e) { if (/carregar el lector/.test(e.message)) throw e; throw new Error("«" + file.name + "» no s'obre com a PDF."); }
+    let text = "";
+    for (let n = 1; n <= pdf.numPages; n++) {
+      const tc = await (await pdf.getPage(n)).getTextContent(), ls = [];
+      tc.items.forEach(it => {
+        if (!it.str || !it.str.trim()) return;
+        const y = it.transform[5]; let l = ls.find(z => Math.abs(z.y - y) <= 2.5);
+        if (!l) ls.push(l = { y: y, t: [] });
+        l.t.push([it.transform[4], it.str]);
+      });
+      ls.sort((a, b) => b.y - a.y);
+      text += "\n--- Pàgina " + n + " ---\n" + ls.map(l => l.t.sort((a, b) => a[0] - b[0]).map(t => t[1]).join(" ").replace(/\s+/g, " ").trim()).join("\n");
+    }
+    if (text.replace(/--- Pàgina \d+ ---/g, "").replace(/\s/g, "").length > 150) return { text: text, pags: [] };
+    const pags = [];   // PDF escanejat: les primeres pàgines com a imatge
+    for (let n = 1; n <= Math.min(3, pdf.numPages); n++) {
+      const pg = await pdf.getPage(n), v0 = pg.getViewport({ scale: 1 }), v = pg.getViewport({ scale: 1500 / Math.max(v0.width, v0.height) });
+      const c = document.createElement("canvas"); c.width = Math.round(v.width); c.height = Math.round(v.height);
+      const cx = c.getContext("2d"); cx.fillStyle = "#fff"; cx.fillRect(0, 0, c.width, c.height);
+      await pg.render({ canvasContext: cx, viewport: v }).promise; pags.push(c);
+    }
+    return { text: "", pags: pags };
+  }
+  // Ajunta les pàgines escanejades en una sola imatge (la IA només en rep una)
+  function cbJuntaPags(pags) {
+    pags = pags.slice(0, 4); if (!pags.length) return null;
+    const W = 1100, hs = pags.map(c => c.height * W / c.width), c = document.createElement("canvas");
+    c.width = W; c.height = Math.round(hs.reduce((a, b) => a + b, 0));
+    const cx = c.getContext("2d"); cx.fillStyle = "#fff"; cx.fillRect(0, 0, c.width, c.height);
+    let y = 0; pags.forEach((p, i) => { cx.drawImage(p, 0, y, W, hs[i]); y += hs[i]; });
+    return { tipus: "image/jpeg", dades: c.toDataURL("image/jpeg", .85).split(",")[1] };
+  }
+  const CB_MATERIES = ["Castellà", "Català", "Anglès"];
+  const CB_TIPUS = [["abcd", "a b c d"], ["ab", "a b"], ["VF", "V F"], ["oberta", "Oberta"]];
+  function cbNormItem(x) {
+    const t = CB_TIPUS.some(([v]) => v === x.tipus) ? x.tipus : "abcd";
+    let k = String(x.k == null ? "" : x.k).trim();
+    if (t === "VF") k = /^[vt]/i.test(k) ? "V" : /^f/i.test(k) ? "F" : "";
+    else if (t === "oberta") k = "*";
+    else { k = k.toLowerCase().charAt(0); if (!(t === "ab" ? "ab" : "abcd").includes(k) || !k) k = ""; }
+    const pas = [1, .5, .25].includes(Number(x.pas)) ? Number(x.pas) : (t === "oberta" ? .5 : 1);
+    return { n: String(x.n == null ? "" : x.n).trim(), t: t, k: k, d: x.part === "LL" || x.d === "LL" ? "LL" : "CL",
+      max: t === "oberta" ? (Number(String(x.max).replace(",", ".")) > 0 ? Number(String(x.max).replace(",", ".")) : 1) : 1, pas: t === "oberta" ? pas : 1, pista: t === "oberta" ? String(x.criteri || x.pista || "").trim() : "" };
+  }
+  const cbItemMal = (x, tots) => !x.n || (x.t !== "oberta" && !x.k) || tots.filter(y => y.n === x.n).length > 1;
+  function cbHiHaResultats(p) { const r = CB().res[p.id]; return !!r && Object.keys(r).some(g => Object.keys(r[g] || {}).length); }
+
+  function cbNova(p0) {
+    const c = CB(), bloq = !!(p0 && cbHiHaResultats(p0));
+    const st = {
+      curs: p0 ? p0.curs : "", materia: p0 ? p0.materia : "Castellà", titol: p0 ? p0.titol : "", redaccio: p0 ? (p0.redaccio || "") : "",
+      full: null, crit: null, llegint: false, avis: "", nota: "",
+      items: p0 ? cbItems(p0).map(x => ({ n: x.n, t: x.t, k: x.k, d: x.d, max: x.max, pas: x.pas, pista: x.pista })) : []
+    };
+    let dlg = $("dlgCBN"); if (!dlg) { dlg = document.createElement("dialog"); dlg.id = "dlgCBN"; document.body.appendChild(dlg); }
+    const opc = (vs, v) => vs.map(([a, t]) => '<option value="' + a + '"' + (String(a) === String(v) ? " selected" : "") + ">" + esc(t) + "</option>").join("");
+    const pinta = () => {
+      const scr = dlg.scrollTop; setTimeout(() => { dlg.scrollTop = scr; }, 0);
+      const it = st.items, nCL = it.filter(x => x.d === "CL").length, nLL = it.length - nCL, nOb = it.filter(x => x.t === "oberta").length, mals = it.filter(x => cbItemMal(x, it)).length;
+      const doble = !p0 && st.curs && cbProves().some(x => x.curs === st.curs.trim() && x.materia === st.materia);
+      let h = '<form method="dialog"><h2>' + (p0 ? "Clau de la prova " + esc(p0.curs) : "Carrega una prova de competències bàsiques") + "</h2>" +
+        '<div class="fila"><label>Curs de la prova<input type="text" data-n="curs" placeholder="2023-2024" value="' + esc(st.curs) + '"></label>' +
+        '<label>Matèria<select data-n="materia">' + opc(CB_MATERIES.map(m => [m, m]), st.materia) + "</select></label></div>" +
+        (doble ? '<p class="avis">Ja hi ha una prova ' + esc(st.curs) + " de " + esc(st.materia) + ". Si aquesta la substitueix, elimina l'altra després.</p>" : "") +
+        '<div class="alum-eines"><label class="boto clar" style="display:inline-block">📄 Full de respostes<input type="file" data-n="full" accept="application/pdf,image/*" hidden></label><span class="font">' + (st.full ? esc(st.full.name) : "PDF o foto (opcional, ajuda a seguir l'ordre)") + "</span></div>" +
+        '<div class="alum-eines"><label class="boto clar" style="display:inline-block">✅ Criteris i solucions<input type="file" data-n="crit" accept="application/pdf,image/*" hidden></label><span class="font">' + (st.crit ? esc(st.crit.name) : "PDF o foto") + "</span></div>" +
+        '<div class="alum-eines"><button type="button" class="boto" data-n="llegeix"' + (st.crit && !st.llegint && !bloq ? "" : " disabled") + ">🔎 " + (it.length ? "Torna a llegir-los" : "Llegeix-los i prepara la correcció") + "</button>" +
+        (st.llegint ? '<span class="font">Llegint els documents… (pot trigar un minut)</span>' : "") + "</div>" +
+        (bloq ? '<p class="font">Ja hi ha alumnes corregits amb aquesta prova: pots canviar respostes, parts i criteris (les notes es tornen a calcular), però no afegir ni treure preguntes.</p>' : "") +
+        (st.avis ? '<p class="avis">' + esc(st.avis) + "</p>" : "") + (st.nota ? '<p class="font">ℹ️ ' + esc(st.nota) + "</p>" : "");
+      if (it.length) {
+        h += '<label>Títol<input type="text" data-n="titol" value="' + esc(st.titol) + '"></label>' +
+          '<p style="margin:0"><b>' + it.length + " preguntes</b>: " + nCL + " de comprensió lectora (CL) · " + nLL + " de llengua (compten a l'EE)" + (nOb ? " · " + nOb + (nOb === 1 ? " oberta" : " obertes") : "") + (mals ? ' · <span style="color:#b00020">' + mals + " per revisar (en vermell)</span>" : "") + "</p>" +
+          '<div style="overflow-x:auto"><table class="cbn-taula"><thead><tr><th style="width:4.5em">Núm.</th><th style="width:6.5em">Tipus</th><th style="width:5em">Resposta</th><th style="width:7.5em">Compta a</th><th style="width:7.5em">Punts</th><th>Criteri (obertes)</th><th></th></tr></thead><tbody>' +
+          it.map((x, i) => '<tr' + (cbItemMal(x, it) ? ' class="cbn-mal"' : "") + '><td><input type="text" data-i="' + i + '" data-c="n" value="' + esc(x.n) + '"' + (bloq ? " readonly" : "") + "></td>" +
+            '<td><select data-i="' + i + '" data-c="t"' + (bloq ? " disabled" : "") + ">" + opc(CB_TIPUS, x.t) + "</select></td>" +
+            "<td>" + (x.t === "oberta" ? "—" : '<select data-i="' + i + '" data-c="k"><option value="">?</option>' + opc(cbOpcions(x).map(l => [l, l]), x.k) + "</select>") + "</td>" +
+            '<td><select data-i="' + i + '" data-c="d">' + opc([["CL", "CL"], ["LL", "EE (llengua)"]], x.d) + "</select></td>" +
+            "<td>" + (x.t === "oberta" ? '<div style="display:flex;gap:3px"><input type="text" inputmode="decimal" data-i="' + i + '" data-c="max" value="' + cbNum(x.max) + '" title="Punts màxims"><select data-i="' + i + '" data-c="pas" title="De quant en quant">' + opc([[1, "1"], [.5, "0,5"], [.25, "0,25"]], x.pas) + "</select></div>" : "1") + "</td>" +
+            "<td>" + (x.t === "oberta" ? '<input type="text" data-i="' + i + '" data-c="pista" value="' + esc(x.pista) + '">' : "") + "</td>" +
+            "<td>" + (bloq ? "" : '<button type="button" class="boto clar" data-n="treu" data-i="' + i + '" aria-label="Treu la pregunta ' + esc(x.n) + '">✕</button>') + "</td></tr>").join("") +
+          "</tbody></table></div>" + (bloq ? "" : '<div class="alum-eines"><button type="button" class="boto clar" data-n="afegeix">➕ Afegeix una pregunta</button></div>') +
+          '<label>Enunciat de la redacció (surt al full imprès)<input type="text" data-n="redaccio" value="' + esc(st.redaccio) + '"></label>';
+      }
+      h += '<div class="botons"><button type="button" class="boto clar" data-n="tanca">Tanca</button>' + (it.length ? '<button type="button" class="boto" data-n="desa">Desa la prova</button>' : "") + "</div></form>";
+      dlg.innerHTML = h;
+    };
+    const llegeix = async () => {
+      st.llegint = true; st.avis = ""; st.nota = ""; pinta();
+      try {
+        const docs = [["CRITERIS I SOLUCIONS", st.crit]].concat(st.full ? [["FULL DE RESPOSTES", st.full]] : []), parts = [], pags = [];
+        for (const [nom, f] of docs) {
+          const d = await cbLlegeixDoc(f);
+          if (d.text) parts.push("=== " + nom + " ===\n" + d.text.slice(0, nom === "FULL DE RESPOSTES" ? 20000 : 90000));
+          else { parts.push("=== " + nom + " === (escanejat: és a la imatge adjunta)"); pags.push(...d.pags); }
+        }
+        const sistema = "Prepares la correcció d'una prova de competències bàsiques de 4t d'ESO (Generalitat de Catalunya) de la matèria " + st.materia + ". " +
+          "Reps el text (o la imatge) dels criteris de correcció amb les solucions i, si n'hi ha, del full de respostes. Si els criteris inclouen diverses llengües o matèries, fes servir NOMÉS la part de " + st.materia + ". " +
+          "Respon només JSON: {\"titol\": títol de la prova, \"curs\": curs de la prova en format aaaa-aaaa o \"\", \"redaccio\": enunciat breu de la redacció o \"\", \"items\": [...], \"avisos\": dubtes o \"\"}. " +
+          "Cada element d'items: {\"n\": número tal com surt al full de respostes (\"01\", \"7.1\"…), \"tipus\": \"abcd\" | \"ab\" | \"VF\" | \"oberta\", \"k\": resposta correcta (a, b, c o d en minúscula; per a VF, \"V\" o \"F\"; per a ab, \"a\" o \"b\"; per a oberta, \"\"), \"part\": \"CL\" | \"LL\", \"max\": punts màxims (1 a les tancades), \"pas\": 1, 0.5 o 0.25 (de quant en quant es puntua; 0.5 si hi ha puntuació parcial), \"criteri\": a les obertes, resum curt del criteri de puntuació (què val cada puntuació), \"\" a les tancades}. " +
+          "Regles: segueix l'ordre del full de respostes; cada subapartat (7.1, 7.2…) és un element; tipus \"ab\" si el subapartat només té dues opcions (a/b, sí/no, adequat/inadequat: a = la primera, b = la segona); \"VF\" per a vertader/fals. " +
+          "part \"CL\" = comprensió lectora; part \"LL\" = preguntes de coneixements de llengua (gramàtica, ortografia, lèxic, puntuació, morfosintaxi) que la prova compta a l'expressió escrita; si els criteris classifiquen cada pregunta per competència o dimensió, segueix-los. " +
+          "No hi incloguis la redacció ni la producció escrita final com a element. Si dubtes d'una resposta, posa-la igualment i explica-ho a avisos.";
+        const r = await ia(sistema, "MATÈRIA: " + st.materia + "\n\n" + parts.join("\n\n"), Object.assign({ json: true }, pags.length ? { imatge: cbJuntaPags(pags) } : {}));
+        const items = (r && Array.isArray(r.items) ? r.items : []).map(cbNormItem).filter(x => x.n);
+        if (!items.length) throw new Error("No he trobat les preguntes als documents. Comprova que hi has posat els criteris amb les solucions.");
+        st.items = items;
+        if (!st.curs && /^\d{4}-\d{4}$/.test(String(r.curs || "").trim())) st.curs = String(r.curs).trim();
+        st.titol = String(r.titol || "").trim() || st.titol;
+        st.redaccio = String(r.redaccio || "").trim() || st.redaccio;
+        st.nota = String(r.avisos || "").trim();
+      } catch (e) { st.avis = e.message; }
+      st.llegint = false; pinta();
+    };
+    const desaProva = () => {
+      const it = st.items, curs = st.curs.trim();
+      if (!/^\d{4}-\d{4}$/.test(curs)) { st.avis = "Escriu el curs de la prova (per exemple, 2023-2024)."; pinta(); return; }
+      if (it.some(x => cbItemMal(x, it))) { st.avis = "Hi ha preguntes en vermell: hi falta el número o la resposta, o el número està repetit."; pinta(); return; }
+      if (!it.some(x => x.d === "CL")) { st.avis = "Cal com a mínim una pregunta de comprensió lectora (CL)."; pinta(); return; }
+      const items = it.map(x => x.t === "oberta" ? [x.n, "*", x.d, x.max, x.pas, x.pista] : x.t === "ab" ? [x.n, x.k, x.d, "ab"] : [x.n, x.k, x.d]);
+      const titol = st.titol.trim() || ("Competències bàsiques 4t d'ESO · " + st.materia + " · " + curs);
+      let p;
+      if (p0) { p = p0; Object.assign(p, { curs: curs, materia: st.materia, titol: titol, redaccio: st.redaccio.trim(), items: items }); }
+      else {
+        if (!Array.isArray(c.proves)) c.proves = [];
+        p = { id: "u" + Date.now().toString(36), propia: true, curs: curs, materia: st.materia, titol: titol, redaccio: st.redaccio.trim(), items: items, full: { model: "propi" } };
+        c.proves.push(p);
+      }
+      // Si ja hi havia alumnes corregits, les notes es tornen a calcular amb la clau nova
+      let n = 0; const rs = c.res[p.id] || {};
+      Object.keys(rs).forEach(gn => Object.keys(rs[gn] || {}).forEach(a => { if (!cbDesaNotes(p, gn, a)) n++; }));
+      cbSel.p = Math.max(0, cbProves().indexOf(p));
+      const nCL = it.filter(x => x.d === "CL").length;
+      cbMsg = "✓ Prova " + esc(curs) + " desada: " + it.length + " preguntes (" + nCL + " CL, " + (it.length - nCL) + " de llengua). " + (n ? "Notes de " + n + " alumne" + (n === 1 ? "" : "s") + " recalculades." : "Tria les columnes CL i EE i ja pots corregir.");
+      desa(); dlg.close(); pintaCB(); if (n) pintaAlumnes();
+    };
+    dlg.onchange = ev => {
+      const s = ev.target, k = s.dataset.n, i = s.dataset.i, col = s.dataset.c;
+      if (k === "full" || k === "crit") { const f = s.files && s.files[0]; if (f) { st[k] = f; st.avis = ""; } pinta(); return; }
+      if (k === "curs" || k === "materia" || k === "titol" || k === "redaccio") { st[k] = s.value; if (k === "curs" || k === "materia") pinta(); return; }
+      if (i == null || !col) return;
+      const x = st.items[Number(i)];
+      if (col === "t") { x.t = s.value; Object.assign(x, cbNormItem({ n: x.n, tipus: x.t, k: x.k, part: x.d, max: x.max, pas: x.pas, criteri: x.pista })); }
+      else if (col === "max") { const v = Number(s.value.replace(",", ".")); x.max = v > 0 ? v : 1; }
+      else if (col === "pas") x.pas = Number(s.value);
+      else if (col === "n") x.n = s.value.trim();
+      else x[col] = s.value;
+      pinta();
+    };
+    dlg.onclick = ev => {
+      const b = ev.target.closest("button[data-n]"); if (!b) return;
+      const k = b.dataset.n;
+      if (k === "tanca") dlg.close();
+      else if (k === "llegeix") { if (st.items.length && !confirm("Es tornarà a llegir i se substituirà la taula que tens ara. Continuo?")) return; llegeix(); }
+      else if (k === "treu") { st.items.splice(Number(b.dataset.i), 1); pinta(); }
+      else if (k === "afegeix") { st.items.push({ n: "", t: "abcd", k: "", d: "CL", max: 1, pas: 1, pista: "" }); pinta(); }
+      else if (k === "desa") desaProva();
+    };
+    pinta(); dlg.showModal();
+  }
+  // Elimina una prova (de sèrie o carregada) amb les seves correccions; les notes ja posades a les columnes es queden
+  function cbTreu(p) {
+    const c = CB(), rs = c.res[p.id] || {};
+    const n = Object.keys(rs).reduce((s, g) => s + Object.keys(rs[g] || {}).length, 0);
+    if (!confirm("Vols eliminar la prova " + p.curs + " de " + p.materia + "?" + (n ? " Se n'esborraran les correccions de " + n + " alumne" + (n === 1 ? "" : "s") + " (les notes ja posades a les columnes CL i EE es queden)." : ""))) return;
+    if (p.propia) c.proves = (c.proves || []).filter(x => x !== p);
+    else { if (!Array.isArray(c.treu)) c.treu = []; if (!c.treu.includes(p.id)) c.treu.push(p.id); }
+    delete c.res[p.id]; delete c.cols[p.id];
+    cbSel.p = 0; cbMsg = "✓ Prova " + esc(p.curs) + " eliminada.";
+    desa(); pintaCB();
+  }
   // Viu dins de l'Assistent (eina «Competències bàsiques»): els esdeveniments es recullen des de #asCos
   {
     $("asCos").addEventListener("change", ev => {
@@ -3439,7 +3641,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       if (k === "p") { cbSel.p = Number(s.value); cbMsg = ""; pintaCB(); return; }
       if (k === "g") { cbSel.g = Number(s.value); cbMsg = ""; pintaCB(); return; }
       if (k === "f" || k === "cl" || k === "ee") {
-        const p = CB_PROVES[cbSel.p], g = Q().grups[cbSel.g], c = CB();
+        const p = cbProva(), g = Q().grups[cbSel.g], c = CB();
         c.cols[p.id] = c.cols[p.id] || {};
         const cols = c.cols[p.id][g.nom] = c.cols[p.id][g.nom] || {};
         if (k === "f") { cols.f = s.value; delete cols.cl; delete cols.ee; } else { cols.f = cols.f || (g.fulls[0] || {}).nom; cols[k] = s.value; }
@@ -3454,8 +3656,12 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       if (!ev.target.closest("#cbCos")) return;
       const bp = ev.target.closest("[data-cbp]"); if (bp) { cbSel.p = Number(bp.dataset.cbp); cbMsg = ""; pintaCB(); return; }
       const b = ev.target.closest("[data-cb]"); if (!b || b.tagName === "SELECT") return;
-      const p = CB_PROVES[cbSel.p], g = Q().grups[cbSel.g];
-      if (b.dataset.cb === "impgrup") cbImprimeix(p, g);
+      const p = cbProva(), g = Q().grups[cbSel.g];
+      if (b.dataset.cb === "nova") { cbNova(null); return; }
+      if (!p) return;
+      if (b.dataset.cb === "edita") cbNova(p);
+      else if (b.dataset.cb === "treu") cbTreu(p);
+      else if (b.dataset.cb === "impgrup") cbImprimeix(p, g);
       else if (b.dataset.cb === "impbuit") cbImprimeix(p, null);
       else if (b.dataset.cb === "obre") cbFitxa(p, g, b.dataset.a);
       else if (b.dataset.cb === "reposa") {
