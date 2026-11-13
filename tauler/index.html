@@ -3223,7 +3223,8 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
   const arr = v => Math.round(v * 100) / 100;
   function cbPuntua(p, resp, red) {
     const it = cbItems(p); let cl = 0, ncl = 0, ll = 0, nll = 0;
-    it.forEach((x, i) => { const ok = x.t === "oberta" ? Math.min(x.max, Number(String(resp[i] || 0).replace(",", ".")) || 0) : resp[i] === x.k ? 1 : 0;
+    it.forEach((x, i) => { if (x.t === "oberta" && (resp[i] === "" || resp[i] == null)) return;   // pregunta oberta sense corregir: no compta
+      const ok = x.t === "oberta" ? Math.min(x.max, Number(String(resp[i] || 0).replace(",", ".")) || 0) : resp[i] === x.k ? 1 : 0;
       if (x.d === "CL") { cl += ok; ncl += x.max; } else { ll += ok; nll += x.max; } });
     const rd = cbRedaccio(red);
     cl = arr(cl); ll = arr(ll);
@@ -3303,7 +3304,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
         it.map((x, i) => {
           if (x.t !== "oberta") return "";
           const vs = []; for (let v = 0; v <= x.max + 1e-9; v += x.pas) vs.push(arr(v));
-          return '<label>Pregunta ' + esc(x.n) + " (oberta, 0-" + cbNum(x.max) + ")" + (x.pista ? '<span class="font">' + esc(x.pista) + "</span>" : "") +
+          return '<label>Pregunta ' + esc(x.n) + " (oberta, 0-" + cbNum(x.max) + "; sense corregir, no compta)" + (x.pista ? '<span class="font">' + esc(x.pista) + "</span>" : "") +
             '<select data-i="' + i + '"><option value="">Sense corregir</option>' + vs.map(v => '<option value="' + v + '"' + (r.r[i] !== "" && r.r[i] != null && Number(r.r[i]) === v ? " selected" : "") + ">" + cbNum(v) + "</option>").join("") + "</select></label>";
         }).join("") +
         "<p style=\"margin:0\"><b>CL</b> " + cbPts(pt.cl, pt.ncl) + " → " + cbNum(pt.notaCL) + " · <b>Llengua</b> " + cbPts(pt.ll, pt.nll) + "</p>" +
