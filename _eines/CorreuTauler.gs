@@ -43,7 +43,10 @@
 //   implementació nova (Implementa > Gestiona les implementacions > Edita > Versió nova).
 //   { accio: "classroom-cursos" }                     → { cursos: [{ id, nom, seccio }] }
 //   { accio: "classroom-tasques", curs }              → { tasques: [{ id, titol, max, data }] }
-//   { accio: "classroom-lliuraments", curs, tasca }   → { alumnes: [...], lliuraments: [{ email, estat, nota }] }
+//   { accio: "classroom-lliuraments", curs, tasca, revisa }
+//                                                     → { alumnes: [...], lliuraments: [{ email, estat, nota, feina }] }
+//                                                       amb «revisa», de qui no ha lliurat s'obren els documents per veure
+//                                                       si hi ha escrit alguna cosa: feina = { escrit, paraules }
 //   { accio: "classroom-alumnes", curs }              → { alumnes: [{ email, nom, cognoms }] }
 //   { accio: "formulari-crea", titol, text, preguntes } → { id, url, edita }: qüestionari autocorregible
 //   { accio: "formulari-respostes", id }              → { max, respostes: [{ email, punts, data }] }
@@ -210,10 +213,13 @@ function doPost(e) {
           (r.studentSubmissions || []).forEach(function (l) {
             const a = perId[l.userId]; if (!a) return;
             const nota = l.assignedGrade != null ? l.assignedGrade : (l.draftGrade != null ? l.draftGrade : null);
-            lliuraments.push({ email: a.email, estat: l.state, nota: nota });
+            const ids = ((l.assignmentSubmission && l.assignmentSubmission.attachments) || []).map(function (x) { return x.driveFile && x.driveFile.id; }).filter(Boolean);
+            lliuraments.push({ email: a.email, estat: l.state, nota: nota, ids: ids });
           });
           pg = r.nextPageToken;
         } while (pg);
+        if (cos.revisa) revisaFeina_(String(cos.curs), String(cos.tasca), lliuraments);
+        lliuraments.forEach(function (l) { delete l.ids; });
         return json_({ ok: true, alumnes: alumnes, lliuraments: lliuraments });
       }
 
@@ -377,6 +383,50 @@ function asseguraActivador_() {
 
 function treuActivador_() {
   ScriptApp.getProjectTriggers().forEach(function (t) { if (t.getHandlerFunction() === "enviaProgramats") ScriptApp.deleteTrigger(t); });
+}
+
+// Mira si qui no ha lliurat la tasca té feina feta als seus documents: compara el text de les seves
+// còpies amb el de la plantilla de la tasca (Documents de Google) o, per a altres fitxers, si s'han modificat.
+function revisaFeina_(curs, tasca, lliuraments) {
+  const pendents = lliuraments.filter(function (l) { return l.estat !== "TURNED_IN" && l.estat !== "RETURNED"; });
+  if (!pendents.length) return;
+  const capc = { headers: { Authorization: "Bearer " + ScriptApp.getOAuthToken() }, muteHttpExceptions: true };
+  const API = "https://www.googleapis.com/drive/v3/files/";
+  const mots = function (t) { return String(t || "").replace(/\s+/g, " ").trim().split(" ").filter(String).length; };
+  // Text de la plantilla (els documents que hi vas adjuntar)
+  let plantilla = "";
+  try {
+    const t = Classroom.Courses.CourseWork.get(curs, tasca);
+    const pids = (t.materials || []).map(function (m) { return m.driveFile && m.driveFile.driveFile && m.driveFile.driveFile.id; }).filter(Boolean);
+    if (pids.length) plantilla = UrlFetchApp.fetchAll(pids.map(function (id) { return Object.assign({ url: API + id + "/export?mimeType=text/plain" }, capc); }))
+      .map(function (r) { return r.getResponseCode() === 200 ? r.getContentText() : ""; }).join("\n");
+  } catch (err) {}
+  const motsPlantilla = mots(plantilla);
+  const ids = [];
+  pendents.forEach(function (l) { l.ids.forEach(function (id) { ids.push(id); }); });
+  if (!ids.length) { pendents.forEach(function (l) { l.feina = { escrit: false, paraules: 0 }; }); return; }
+  const meta = {};
+  UrlFetchApp.fetchAll(ids.map(function (id) { return Object.assign({ url: API + id + "?fields=id,mimeType,createdTime,modifiedTime" }, capc); }))
+    .forEach(function (r, i) { if (r.getResponseCode() === 200) meta[ids[i]] = JSON.parse(r.getContentText()); });
+  const docs = ids.filter(function (id) { return meta[id] && meta[id].mimeType === "application/vnd.google-apps.document"; });
+  const text = {};
+  for (let i = 0; i < docs.length; i += 20) {   // de 20 en 20, per no saturar Drive
+    const tros = docs.slice(i, i + 20);
+    UrlFetchApp.fetchAll(tros.map(function (id) { return Object.assign({ url: API + id + "/export?mimeType=text/plain" }, capc); }))
+      .forEach(function (r, j) { text[tros[j]] = r.getResponseCode() === 200 ? r.getContentText() : null; });
+  }
+  pendents.forEach(function (l) {
+    let escrit = false, paraules = 0;
+    l.ids.forEach(function (id) {
+      const m = meta[id]; if (!m) return;
+      if (text[id] != null) {
+        const n = mots(text[id]) - motsPlantilla;
+        if (n > paraules) paraules = n;
+        if (n >= 3) escrit = true;
+      } else if (new Date(m.modifiedTime) - new Date(m.createdTime) > 120000) escrit = true;   // altres fitxers: modificats després de crear-se
+    });
+    l.feina = { escrit: escrit, paraules: Math.max(0, paraules) };
+  });
 }
 
 // Alumnes d'un curs del Classroom: id, correu, nom i cognoms

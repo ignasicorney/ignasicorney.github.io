@@ -2559,7 +2559,9 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     return d;
   }
   // Aparella els noms del tauler («Cognoms , Nom») amb els del Classroom
-  const motsNom = s => String(s || "").replace(/\s+DIS$/i, "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-zç\s]/g, " ").split(/\s+/).filter(Boolean);
+  // Mots del nom sense repetits ni partícules (el, de, la…), perquè «El Bouziani El Imrani» no compti dues vegades «el»
+  const PARTICULES = new Set(["el", "la", "els", "les", "de", "del", "dels", "d", "l", "i", "y", "da", "do", "dos", "das", "van", "von", "ben", "bin"]);
+  const motsNom = s => Array.from(new Set(String(s || "").replace(/\s+DIS$/i, "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-zç\s]/g, " ").split(/\s+/).filter(w => w && !PARTICULES.has(w))));
   function aparella(files, alumnes) {
     const m = new Map(), usats = new Set(), clauM = t => t.slice().sort().join(" ");
     const mots = alumnes.map(a => motsNom((a.cognoms || "") + " " + (a.nom || "") || a.complet));
@@ -2574,19 +2576,22 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
   }
   const LLIURAT = { TURNED_IN: 1, RETURNED: 1 };
   async function ompleColumna(g, f, col, e) {
-    let alumnes, valorDe;
+    let alumnes, valorDe, ambFeina = [];
     if (e.form) {
       const [al, rs] = await Promise.all([cridaIns({ accio: "classroom-alumnes", curs: e.curs }), cridaIns({ accio: "formulari-respostes", id: e.form })]);
       alumnes = al.alumnes;
       const punts = {}; rs.respostes.forEach(r => { if (punts[r.email] == null || r.punts > punts[r.email]) punts[r.email] = r.punts; });
       valorDe = a => e.mode === "nota" ? (punts[a.email] == null ? null : (rs.max ? Math.round(punts[a.email] / rs.max * 1000) / 100 : null)) : (punts[a.email] == null ? 0 : 1);
     } else {
-      const d = await cridaIns({ accio: "classroom-lliuraments", curs: e.curs, tasca: e.tasca });
+      const d = await cridaIns({ accio: "classroom-lliuraments", curs: e.curs, tasca: e.tasca, revisa: e.mode !== "nota" });
       alumnes = d.alumnes;
       const per = {}; d.lliuraments.forEach(l => { per[l.email] = l; });
-      valorDe = a => { const l = per[a.email]; if (e.mode === "nota") return l && l.nota != null && e.max ? Math.round(l.nota / e.max * 1000) / 100 : null; return l && LLIURAT[l.estat] ? 1 : 0; };
+      ambFeina = alumnes.filter(a => per[a.email] && !LLIURAT[per[a.email].estat] && per[a.email].feina && per[a.email].feina.escrit);
+      valorDe = a => { const l = per[a.email]; if (e.mode === "nota") return l && l.nota != null && e.max ? Math.round(l.nota / e.max * 1000) / 100 : null; return l && (LLIURAT[l.estat] || (e.mode === "feina" && l.feina && l.feina.escrit)) ? 1 : 0; };
     }
     const { m, sobren } = aparella(f.files, alumnes);
+    // Si ni la meitat dels alumnes del full són a la classe triada, és que la classe no és la del grup: no s'hi escriu res
+    if (f.files.length && m.size < f.files.length / 2) throw new Error("Aquesta classe del Classroom no sembla la de " + nomGrup(g.nom) + ": només hi coincideixen " + m.size + " dels " + f.files.length + " alumnes del full. No s'ha canviat res; tria la classe del grup.");
     let fets = 0; const noTrobats = [];
     f.files.forEach(r => {
       const a = m.get(r.nom); if (!a) { noTrobats.push(r.nom.replace(/\s+DIS$/i, "")); return; }
@@ -2596,10 +2601,11 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     });
     col.classroom = e;
     desa();
-    return { fets, noTrobats, sobren: sobren.map(a => a.complet || (a.nom + " " + a.cognoms)) };
+    return { fets, noTrobats, sobren: sobren.map(a => a.complet || (a.nom + " " + a.cognoms)), ambFeina: ambFeina.map(a => a.complet || (a.nom + " " + a.cognoms)), mode: e.mode };
   }
   let clsMsg = null;
-  const resumCls = (col, r) => col.nom + ": " + r.fets + " alumne" + (r.fets === 1 ? "" : "s") + " al dia." + (r.noTrobats.length ? " No trobats al Classroom: " + r.noTrobats.join("; ") + "." : "") + (r.sobren.length ? " Del Classroom sense parella al full: " + r.sobren.join("; ") + "." : "");
+  const resumCls = (col, r) => col.nom + ": " + r.fets + " alumne" + (r.fets === 1 ? "" : "s") + " al dia." +
+    (r.ambFeina && r.ambFeina.length ? (r.mode === "feina" ? " Compten com a fet perquè han escrit al document, tot i no haver-lo lliurat: " : " Han escrit al document però no l'han lliurat (tenen 0): ") + r.ambFeina.join("; ") + "." : "") + (r.noTrobats.length ? " No trobats al Classroom: " + r.noTrobats.join("; ") + "." : "") + (r.sobren.length ? " Del Classroom sense parella al full: " + r.sobren.join("; ") + "." : "");
   async function actualitzaClassroom(g, f, boto) {
     const cols = f.columnes.filter(c => c.classroom);
     boto.disabled = true; boto.textContent = "Llegint del Classroom…";
@@ -2633,7 +2639,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       '<label>Classe del Classroom<select id="clsCurs"><option value="">Carregant…</option></select></label>' +
       '<label>Tasca o formulari<select id="clsTasca"><option value="">Tria primer la classe</option></select></label>' +
       '<div class="fila"><label>Columna<select id="clsCol">' + cols.map(c => '<option' + (c === colIni ? " selected" : "") + ">" + esc(c.nom) + "</option>").join("") + "</select></label>" +
-      '<label>Què s\'hi posa<select id="clsMode"><option value="lliurat">Lliurat (1) o no (0)</option><option value="nota">La nota sobre 10</option></select></label></div>' +
+      '<label>Què s\'hi posa<select id="clsMode"><option value="lliurat">Lliurat (1) o no (0)</option><option value="feina">Fet (1): lliurat o amb feina al document</option><option value="nota">La nota sobre 10</option></select></label></div>' +
       '<div id="clsTanca" class="tanca-box" hidden></div>' +
       '<p class="avis" id="clsAvis" hidden></p><p class="font" id="clsRes" hidden></p>' +
       '<div class="botons"><button type="button" class="boto clar" data-cls="tanca">Tanca</button><button type="button" class="boto" data-cls="omple">Omple la columna</button></div></form>';
@@ -2695,9 +2701,10 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       if (!curs || !t || !col) { avis("Tria la classe, la tasca o el formulari i la columna."); return; }
       const e = { curs: curs, mode: $("clsMode").value, titol: $("clsTasca").selectedOptions[0].textContent };
       if (t.charAt(0) === "f") e.form = t.slice(2); else { e.tasca = t.slice(2); e.max = (tasques.find(x => x.id === e.tasca) || {}).max || 0; }
+      if (e.mode === "feina" && e.form) e.mode = "lliurat";   // en un formulari, fet = respost
       if (e.mode === "nota" && e.tasca && !e.max) { avis("Aquesta tasca del Classroom no té puntuació; tria «Lliurat (1) o no (0)»."); return; }
       if (f.files.some(r => !esBuit(r.v[col.nom])) && !(col.classroom && (col.classroom.tasca === e.tasca && col.classroom.form === e.form)) && !confirm("La columna " + col.nom + " ja té valors. Vols substituir-los pels del Classroom?")) return;
-      avis(""); b.disabled = true; b.textContent = "Llegint del Classroom…";
+      avis(""); b.disabled = true; b.textContent = e.tasca && e.mode !== "nota" ? "Revisant els documents…" : "Llegint del Classroom…";
       try { const r = await ompleColumna(g, f, col, e); $("clsRes").textContent = "✓ " + resumCls(col, r); $("clsRes").hidden = false; clsMsg = null; pintaAlumnes(); }
       catch (err) { avis(err.message); }
       b.disabled = false; b.textContent = "Omple la columna";
@@ -2705,7 +2712,8 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     dlg.showModal();
     cridaIns({ accio: "classroom-cursos" }).then(d => {
       const c = cols.find(x => x.nom === $("clsCol").value), ant = c && c.classroom && c.classroom.curs;
-      const auto = (d.cursos.find(x => x.id === ant) || d.cursos.find(x => (x.nom + x.seccio).replace(/\s+/g, "").toLowerCase().endsWith(clauG)) || d.cursos.find(x => (x.nom + " " + x.seccio).replace(/\s+/g, "").toLowerCase().includes(clauG)) || {}).id;
+      // Primer, la classe que porta el nom del grup obert (1r A → «LE 1rA»); si no n'hi ha cap, la de l'enllaç anterior de la columna
+      const auto = (d.cursos.find(x => x.nom.replace(/\s+/g, "").toLowerCase().endsWith(clauG)) || d.cursos.find(x => (x.nom + x.seccio).replace(/\s+/g, "").toLowerCase().endsWith(clauG)) || d.cursos.find(x => (x.nom + " " + x.seccio).replace(/\s+/g, "").toLowerCase().includes(clauG)) || d.cursos.find(x => x.id === ant) || {}).id;
       $("clsCurs").innerHTML = '<option value="">Tria la classe…</option>' + d.cursos.map(x => '<option value="' + x.id + '"' + (x.id === auto ? " selected" : "") + ">" + esc(x.nom + (x.seccio ? " · " + x.seccio : "")) + "</option>").join("");
       if (auto) carregaTasques();
     }).catch(e => { $("clsCurs").innerHTML = '<option value="">—</option>'; avis(e.message); });
