@@ -202,6 +202,16 @@ dialog#dlgRub{width:min(760px,calc(100vw - 24px))}
 .deu-dates{list-style:none;margin:0;padding:0;max-height:40vh;overflow:auto}
 .deu-dates li{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:4px 0;border-bottom:1px solid var(--linia)}
 .deu-dates h4{margin:8px 0 2px;font-size:.85rem;color:var(--suau)}
+/* Competències bàsiques */
+.cb-taula{width:100%;border-collapse:collapse;font-size:.9rem;margin-top:8px}
+.cb-taula th,.cb-taula td{border-bottom:1px solid var(--linia);padding:4px 6px;text-align:left}
+.cb-taula tr.cb-buit td{color:var(--suau)}
+.cb-taula tr.cb-dubte td:first-child{background:#fff4c2}
+.cb-resp{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:4px}
+.cb-it select{padding:2px 4px;min-width:3.4em;font-size:1rem}
+.cb-it{display:flex!important;align-items:center;gap:4px;padding:2px 4px;border-radius:6px;border:2px solid transparent;color:var(--text)!important;font-size:.85rem!important}
+.cb-it span{min-width:2.4em;font-weight:700}
+.cb-it.be{background:#dff3df}.cb-it.malament{background:#f8d9d9}.cb-it.buida{background:#eee}.cb-it.dubte{border-color:#e0b000}
 /* Dreceres de consulta */
 .cons-form{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
 .cons-form input{flex:1 1 220px;font-size:1rem}
@@ -528,6 +538,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     <h3 class="bt">🤖 Assistent</h3>
     <div class="vistes" role="group" aria-label="Eina" id="asEines" style="flex-wrap:wrap;margin-bottom:10px">
       <button type="button" data-as="corregir">✍️ Corregir</button>
+      <button type="button" data-as="cb">🧪 Competències bàsiques</button>
       <button type="button" data-as="activitats">📚 Activitats</button>
       <button type="button" data-as="video">🎬 Vídeo</button>
       <button type="button" data-as="adaptar">🧩 Adaptar</button>
@@ -867,7 +878,8 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
         }));
       }
       if (d.genealogia && typeof d.genealogia === "object") r.genealogia = d.genealogia;
-      if (Array.isArray(d.formularis)) r.formularis = d.formularis;   // qüestionaris en línia creats des de l'Assistent   // dades de les persones vives (privades)
+      if (Array.isArray(d.formularis)) r.formularis = d.formularis;
+      if (d.cb && typeof d.cb === "object") r.cb = d.cb;   // competències bàsiques: codis dels fulls, columnes CL/EE i respostes   // qüestionaris en línia creats des de l'Assistent   // dades de les persones vives (privades)
     }
     return r;
   }
@@ -1464,6 +1476,8 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
         '<div class="fila-as"><label>Adaptació<select id="asAdap"><option value="DIS">DIS (dislèxia)</option><option value="PSI">PSI (simplificada, amb glossari)</option><option value="totes">Totes dues</option></select></label></div>' +
         '<textarea id="asText" placeholder="Text o enunciats a adaptar…" rows="8"></textarea>' +
         '<div class="alum-eines"><button type="button" class="boto" data-asb="adapta">🧩 Adapta</button></div>';
+    } else if (asEina === "cb") {
+      h = '<p class="font">Proves de competències bàsiques de 4t d\'ESO fetes en paper: fotografia el full de respostes de cada alumne i les notes de CL i EE van soles a les columnes que triïs. La redacció es puntua a la mateixa fitxa amb la graella oficial.</p><div id="cbCos"></div>';
     } else if (asEina === "rubrica") {
       h = '<p class="font">Descriu què vols avaluar i en surt una rúbrica que pots afegir al banc i vincular a una columna.</p>' +
         '<textarea id="asText" placeholder="Ex.: rúbrica per avaluar un comentari de text de 4t d\'ESO: comprensió, estructura, adequació, correcció lingüística…" rows="5"></textarea>' +
@@ -1480,6 +1494,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     if (asEina === "corregir") h += selectorsAlumne(asSel);
     h += '<div id="asSortida">' + (asOcupat ? '<p class="cr-buit">Treballant… pot trigar uns segons.</p>' : asResultat) + "</div>";
     cos.innerHTML = h;
+    if (asEina === "cb") pintaCB();
     if ($("asText") && textAbans) $("asText").value = textAbans;
     if (asEina === "video") {
       const dur = () => {
@@ -1884,6 +1899,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     return "nota";
   }
   function pintaAlumnes() {
+    try { pintaCB(); } catch (e) { /* el mòdul encara no s'ha carregat */ }
     { const q = Q(), act = q.grups[qGrup]; q.grups.sort(ordenaGrups); if (act) qGrup = q.grups.indexOf(act); }
     const cos = $("alumCos"), g = grupActual(), f = fullActual(g);
     detectaIns();
@@ -2927,6 +2943,460 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     } catch (e) { b.disabled = false; b.lastChild.textContent = " Publica-la al Classroom"; alert(e.message); }
   }
 
+  // ================= Competències bàsiques (proves en paper corregides amb una foto) =================
+  // Cada prova: la clau de respostes i a quina part compta cada pregunta (CL: comprensió lectora · LL: preguntes
+  // de llengua, que la prova oficial compta a l'expressió escrita). Per afegir una prova n'hi ha prou amb un objecte nou.
+  // Ítems: [número, resposta, part, extra]. Part: CL (comprensió lectora) o LL (preguntes de llengua, que compten a l'EE).
+  // Resposta «*» = pregunta oberta (extra = punts màxims). Extra «ab» = pregunta de dues caselles a/b.
+  // full: model del full de respostes. «propi» = el que imprimeix la Bitàcola (amb codi de l'alumne);
+  // «oficial» = el full oficial de la prova, amb les coordenades (en punts del PDF) dels quadrats negres i de les caselles.
+  const CB_PROVES = [
+    { id: "cast-2023", curs: "2022-2023", materia: "Castellà", titol: "Competencias básicas 4.º ESO · Lengua castellana · 2022-2023",
+      items: [["01", "c", "CL"], ["02", "d", "CL"], ["03", "a", "CL"], ["04", "d", "CL"], ["05", "d", "CL"], ["06", "*", "CL", 1, 1, "Vetusta"],
+        ["07.1", "a", "CL", "ab"], ["07.2", "a", "CL", "ab"], ["07.3", "b", "CL", "ab"], ["07.4", "b", "CL", "ab"],
+        ["08", "d", "LL"], ["09", "c", "CL"], ["10", "b", "CL"], ["11", "a", "LL"], ["12", "b", "LL"], ["13", "b", "CL"],
+        ["14", "b", "LL"], ["15", "d", "LL"], ["16", "a", "LL"], ["17", "a", "CL"], ["18", "d", "CL"], ["19", "a", "CL"],
+        ["20", "c", "CL"], ["21", "b", "CL"], ["22.1", "b", "CL", "ab"], ["22.2", "a", "CL", "ab"], ["22.3", "b", "CL", "ab"], ["22.4", "a", "CL", "ab"],
+        ["23", "a", "LL"], ["24", "c", "CL"],
+        ["25", "*", "CL", 1, .5, "1: Ana Ozores está sometida a las tradiciones (no es feminista) y lo justifica bien. 0,5: lo dice pero no lo justifica o lo justifica mal. 0: otra respuesta o en blanco."],
+        ["26", "*", "CL", 1, .5, "1: respuesta clara y bien construida que muestra sus argumentos (respuesta abierta). 0,5: insuficiente o poco clara. 0: otra respuesta o en blanco."]],
+      full: { model: "oficial", mk: [[20, 20], [575.3, 20], [575.3, 821.9]], b: 11.3,
+        x: [[109.3, 154.6, 200, 245.3], [367.4, 412.7, 458.1, 503.4]],
+        y: { "01": 290.2, "02": 308.6, "03": 327.1, "04": 345.5, "05": 363.9, "07.1": 400.8, "07.2": 419.2, "07.3": 437.6, "07.4": 456.1,
+          "08": 474.5, "09": 492.9, "10": 511.3, "11": 529.8, "12": 548.2, "13": 566.6, "14": 612, "15": 630.4, "16": 648.9, "17": 667.3, "18": 685.7, "19": 704.1,
+          "20": 301.6, "21": 320, "22.1": 338.4, "22.2": 356.8, "22.3": 375.3, "22.4": 393.7, "23": 412.1, "24": 457.5 },
+        col2: ["20", "21", "22.1", "22.2", "22.3", "22.4", "23", "24"] } },
+    { id: "cast-2025", curs: "2024-2025", materia: "Castellà", titol: "Competencias básicas 4.º ESO · Lengua castellana · 2024-2025",
+      quadern: "https://ape.gencat.cat/content/dam/avaluacioeducativa/avaluacio-educativa/avaluacions/final-etapa/quart-eso/2024-2025/castella/prova-castella-a4s2025.pdf",
+      criteris: "https://ape.gencat.cat/content/dam/avaluacioeducativa/avaluacio-educativa/avaluacions/final-etapa/quart-eso/2024-2025/catala/criteris-correccio-llengues-a4s2025.pdf",
+      items: [["1", "c", "CL"], ["2", "b", "LL"], ["3", "a", "CL"], ["4.1", "F", "CL"], ["4.2", "V", "CL"], ["4.3", "V", "CL"], ["4.4", "F", "CL"],
+        ["5", "c", "CL"], ["6", "d", "LL"], ["7", "c", "CL"], ["8", "a", "LL"], ["9", "c", "CL"], ["10", "b", "CL"], ["11", "b", "CL"],
+        ["12", "b", "CL"], ["13", "c", "LL"], ["14.1", "F", "CL"], ["14.2", "F", "CL"], ["14.3", "V", "CL"], ["14.4", "V", "CL"],
+        ["15", "a", "CL"], ["16", "d", "LL"], ["17", "d", "CL"], ["18", "d", "LL"], ["19", "d", "CL"], ["20", "b", "LL"], ["21", "a", "CL"],
+        ["22", "d", "CL"], ["23", "d", "CL"], ["24", "c", "CL"], ["25", "a", "CL"], ["26", "b", "CL"]],
+      full: { model: "propi" } }
+  ];
+  const cbItems = p => p.items.map(([n, k, d, e, pas, pista]) => ({ n: n, k: k, d: d, t: k === "*" ? "oberta" : /^[VF]$/.test(k) ? "VF" : e === "ab" ? "ab" : "abcd", max: k === "*" ? Number(e) || 1 : 1, pas: Number(pas) || 1, pista: pista || "" }));
+  const cbOpcions = x => x.t === "VF" ? ["V", "F"] : x.t === "ab" ? ["a", "b"] : ["a", "b", "c", "d"];
+  const CB = () => {
+    if (!dades.cb || typeof dades.cb !== "object") dades.cb = {};
+    const c = dades.cb;
+    if (!c.codis || typeof c.codis !== "object") c.codis = { seg: 1, m: {} };
+    if (!c.cols || typeof c.cols !== "object") c.cols = {};
+    if (!c.res || typeof c.res !== "object") c.res = {};
+    return c;
+  };
+  // Geometria del full de respostes (mil·límetres dins del requadre amb els quatre quadrats negres)
+  const CBG = { W: 178, H: 176, M: 10, X0: [14, 98], Y0: 34, P: 8.4, B: 6, DX: 15, CODI: 12 };
+  const cbCaixa = (i, k, n) => { const files = Math.ceil(n / 2), col = i < files ? 0 : 1, fila = i % files; return { x: CBG.X0[col] + 16 + k * CBG.DX, y: CBG.Y0 + fila * CBG.P }; };
+  const cbCodiCaixa = b => ({ x: 46 + b * 8.5, y: 14 });
+  // Codi de 12 bits + 2 de control: identifica l'alumne del full
+  const cbBits = n => { const b = []; for (let i = 11; i >= 0; i--) b.push((n >> i) & 1); const u = b.filter(x => x).length; b.push(u % 2, Math.floor(u / 2) % 2); return b; };
+  const cbDeBits = b => { if (b.length !== 14) return null; let n = 0; for (let i = 0; i < 12; i++) n = n * 2 + b[i]; const u = b.slice(0, 12).filter(x => x).length; return (u % 2 === b[12] && Math.floor(u / 2) % 2 === b[13]) ? n : null; };
+  function cbCodiDe(g, a) {
+    const c = CB().codis;
+    for (const k in c.m) if (c.m[k].g === g && c.m[k].a === a) return Number(k);
+    const n = c.seg++; c.m[n] = { g: g, a: a }; return n;
+  }
+
+  // ---------- Full de respostes per imprimir ----------
+  function cbFullHTML(p, alumne, codi) {
+    const it = cbItems(p).filter(x => x.t !== "oberta"), mm = v => v.toFixed(2) + "mm", W = CBG.W, H = CBG.H, M = CBG.M;
+    let h = '<div class="cbf" style="position:relative;width:' + W + "mm;height:" + H + 'mm;margin:0 auto">';
+    // Quadrats de referència (fets amb vores, que s'imprimeixen sempre). El de dalt a l'esquerra té un forat blanc: marca l'orientació
+    [[0, 0, 1], [W - M, 0], [0, H - M], [W - M, H - M]].forEach(q => {
+      h += '<div style="position:absolute;left:' + mm(q[0]) + ";top:" + mm(q[1]) + ";width:" + (q[2] ? "4mm" : "0") + ";height:" + (q[2] ? "4mm" : "0") + ";border:" + (q[2] ? "3mm" : "5mm") + ' solid #000"></div>';
+    });
+    h += '<div style="position:absolute;left:14mm;top:1mm;width:150mm;font:bold 12px Arial;text-align:center">' + esc(p.titol) + "</div>";
+    if (alumne) {
+      h += '<div style="position:absolute;left:14mm;top:6.5mm;width:150mm;font:12px Arial;text-align:center">' + esc(alumne) + "</div>";
+      cbBits(codi).forEach((b, i) => { const q = cbCodiCaixa(i); h += '<div style="position:absolute;left:' + mm(q.x) + ";top:" + mm(q.y) + ";width:0;height:0;border:" + (b ? "2.5mm" : "0.6mm") + " solid #000;" + (b ? "" : "padding:1.9mm") + '"></div>'; });
+      h += '<div style="position:absolute;left:46mm;top:21mm;width:120mm;font:9px Arial;color:#444">Codi ' + String(codi).padStart(4, "0") + " · no hi escriguis a sobre</div>";
+    }
+    it.forEach((x, i) => {
+      const c0 = cbCaixa(i, 0, it.length);
+      h += '<div style="position:absolute;left:' + mm(c0.x - 16) + ";top:" + mm(c0.y + .3) + ';width:9mm;font:bold 13px Arial;text-align:right">' + esc(x.n) + "</div>";
+      cbOpcions(x).forEach((l, k) => {
+        const c = cbCaixa(i, k, it.length);
+        h += '<div style="position:absolute;left:' + mm(c.x - 4) + ";top:" + mm(c.y + .6) + ';font:12px Arial">' + l + "</div>" +
+          '<div style="position:absolute;left:' + mm(c.x) + ";top:" + mm(c.y) + ";width:" + mm(CBG.B - .7) + ";height:" + mm(CBG.B - .7) + ';border:.35mm solid #000"></div>';
+      });
+    });
+    return h + "</div>";
+  }
+  function cbImprimeix(p, g) {
+    const instr = '<h3 style="margin:0 0 4px">Hoja de respuestas · Parte 1: comprensión lectora</h3><p style="margin:0 0 8px;font-size:12px">Marca con una <b>X</b> la casilla de la respuesta correcta. Si te equivocas, rellena todo el cuadrado y marca con una X la respuesta correcta. Usa bolígrafo azul o negro. No escribas cerca de los cuadrados negros ni de los códigos.</p>';
+    const red = '<div style="break-before:page"></div><h3>Parte 2: redacción</h3><p style="font-size:12px">' + esc(p.redaccio || "Escribe la versión definitiva de tu redacción (125 palabras como mínimo).") + "</p>" +
+      '<div style="height:200mm;background:repeating-linear-gradient(#fff 0 8.6mm,#999 8.6mm 8.9mm)"></div><p>Número de palabras: ..........</p>';
+    let html;
+    if (g) {
+      const f = g.fulls[0] || { files: [] };
+      const noms = f.files.map(r => r.nom).sort((a, b) => a.localeCompare(b, "ca", { sensitivity: "base", ignorePunctuation: true }));
+      if (!noms.length) { alert("Aquest grup no té alumnes."); return; }
+      html = noms.map((a, i) => (i ? '<div style="break-before:page"></div>' : "") + instr + cbFullHTML(p, a.replace(/\s+DIS$/i, "") + " · " + nomGrup(g.nom), cbCodiDe(g.nom, a)) + red).join("");
+      desa();
+    } else html = instr + cbFullHTML(p) + red;
+    imprimeix(p.titol, html);
+  }
+
+  // ---------- Lectura de la foto ----------
+  const cbImatge = file => new Promise((ok, ko) => {
+    const u = URL.createObjectURL(file), img = new Image();
+    img.onload = () => {
+      const k = Math.min(1, 1600 / Math.max(img.naturalWidth, img.naturalHeight)), w = Math.round(img.naturalWidth * k), h = Math.round(img.naturalHeight * k);
+      const c = document.createElement("canvas"); c.width = w; c.height = h;
+      const cx = c.getContext("2d"); cx.drawImage(img, 0, 0, w, h); URL.revokeObjectURL(u);
+      const px = cx.getImageData(0, 0, w, h).data, g = new Float32Array(w * h);
+      for (let i = 0; i < w * h; i++) g[i] = .299 * px[i * 4] + .587 * px[i * 4 + 1] + .114 * px[i * 4 + 2];
+      ok({ w, h, g });
+    };
+    img.onerror = () => { URL.revokeObjectURL(u); ko(new Error("No s'ha pogut obrir la foto.")); };
+    img.src = u;
+  });
+  // Píxels foscos respecte de la claror del voltant (aguanta ombres i llum desigual)
+  function cbFoscos(im) {
+    const { w, h, g } = im, r = Math.max(15, Math.round(Math.max(w, h) * .04)), S = new Float64Array((w + 1) * (h + 1));
+    for (let y = 0; y < h; y++) { let s = 0; for (let x = 0; x < w; x++) { s += g[y * w + x]; S[(y + 1) * (w + 1) + x + 1] = S[y * (w + 1) + x + 1] + s; } }
+    const d = new Uint8Array(w * h), fc = new Float32Array(w * h);
+    for (let y = 0; y < h; y++) { const y0 = Math.max(0, y - r), y1 = Math.min(h, y + r + 1); for (let x = 0; x < w; x++) {
+      const x0 = Math.max(0, x - r), x1 = Math.min(w, x + r + 1), m = (S[y1 * (w + 1) + x1] - S[y0 * (w + 1) + x1] - S[y1 * (w + 1) + x0] + S[y0 * (w + 1) + x0]) / ((x1 - x0) * (y1 - y0));
+      const v = g[y * w + x];
+      d[y * w + x] = v < m * .72 && v < 170 ? 1 : 0;
+      fc[y * w + x] = Math.max(0, 1 - v / (m + 1));   // foscor contínua: per trobar les vores fines de les caselles
+    } }
+    d.fc = fc;
+    return d;
+  }
+  // Taques fosques grosses i quadrades: candidates a quadrats de referència
+  function cbTaques(d, w, h) {
+    const vist = new Uint8Array(w * h), pila = new Int32Array(w * h), mida = Math.max(w, h), res = [];
+    for (let i0 = 0; i0 < w * h; i0++) {
+      if (!d[i0] || vist[i0]) continue;
+      let n = 0, sx = 0, sy = 0, x0 = 1e9, x1 = -1, y0 = 1e9, y1 = -1, p = 0; pila[p++] = i0; vist[i0] = 1;
+      while (p) { const i = pila[--p], x = i % w, y = (i - x) / w; n++; sx += x; sy += y; if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y;
+        if (x > 0 && d[i - 1] && !vist[i - 1]) { vist[i - 1] = 1; pila[p++] = i - 1; } if (x < w - 1 && d[i + 1] && !vist[i + 1]) { vist[i + 1] = 1; pila[p++] = i + 1; }
+        if (y > 0 && d[i - w] && !vist[i - w]) { vist[i - w] = 1; pila[p++] = i - w; } if (y < h - 1 && d[i + w] && !vist[i + w]) { vist[i + w] = 1; pila[p++] = i + w; } }
+      const bw = x1 - x0 + 1, bh = y1 - y0 + 1;
+      if (bw < mida * .012 || bh < mida * .012 || bw > mida * .12 || bh > mida * .12) continue;
+      if (bw / bh < .5 || bw / bh > 2 || n / (bw * bh) < .45) continue;
+      const cx = sx / n, cy = sy / n, ci = Math.round(cy) * w + Math.round(cx);
+      res.push({ x: cx, y: cy, n: n, forat: !d[ci] });
+    }
+    return res;
+  }
+  // Homografia (4 parelles de punts): del full en mm a la foto en píxels
+  function cbHomografia(src, dst) {
+    const A = [], b = [];
+    for (let i = 0; i < 4; i++) { const [x, y] = src[i], [u, v] = dst[i];
+      A.push([x, y, 1, 0, 0, 0, -u * x, -u * y]); b.push(u); A.push([0, 0, 0, x, y, 1, -v * x, -v * y]); b.push(v); }
+    for (let c = 0; c < 8; c++) { let m = c; for (let r = c + 1; r < 8; r++) if (Math.abs(A[r][c]) > Math.abs(A[m][c])) m = r;
+      [A[c], A[m]] = [A[m], A[c]]; [b[c], b[m]] = [b[m], b[c]];
+      for (let r = 0; r < 8; r++) { if (r === c) continue; const f = A[r][c] / A[c][c]; for (let k = c; k < 8; k++) A[r][k] -= f * A[c][k]; b[r] -= f * b[c]; } }
+    const H = b.map((v, i) => v / A[i][i]);
+    return (x, y) => { const z = H[6] * x + H[7] * y + 1; return [(H[0] * x + H[1] * y + H[2]) / z, (H[3] * x + H[4] * y + H[5]) / z]; };
+  }
+  function cbHomografiaN(src, dst) {
+    const M = Array.from({ length: 8 }, () => new Array(9).fill(0));
+    src.forEach(([x, y], i) => { const [u, v] = dst[i];
+      [[x, y, 1, 0, 0, 0, -u * x, -u * y, u], [0, 0, 0, x, y, 1, -v * x, -v * y, v]].forEach(r => { for (let a = 0; a < 8; a++) for (let b = 0; b < 9; b++) M[a][b] += r[a] * r[b]; }); });
+    for (let c = 0; c < 8; c++) { let m = c; for (let r = c + 1; r < 8; r++) if (Math.abs(M[r][c]) > Math.abs(M[m][c])) m = r; [M[c], M[m]] = [M[m], M[c]];
+      for (let r = 0; r < 8; r++) { if (r === c) continue; const f = M[r][c] / M[c][c]; for (let k = c; k < 9; k++) M[r][k] -= f * M[c][k]; } }
+    const H = M.map((r, i) => r[8] / r[i]);
+    return (x, y) => { const z = H[6] * x + H[7] * y + 1; return [(H[0] * x + H[1] * y + H[2]) / z, (H[3] * x + H[4] * y + H[5]) / z]; };
+  }
+  const cbArea = q => Math.abs(q.reduce((s, p, i) => { const r = q[(i + 1) % q.length]; return s + p.x * r.y - r.x * p.y; }, 0)) / 2;
+  // Transformació afí (3 parelles de punts)
+  function cbAfi(src, dst) {
+    const sol = k => { const A = src.map(([x, y], i) => [x, y, 1, dst[i][k]]);
+      for (let c = 0; c < 3; c++) { let m = c; for (let r = c + 1; r < 3; r++) if (Math.abs(A[r][c]) > Math.abs(A[m][c])) m = r; [A[c], A[m]] = [A[m], A[c]];
+        for (let r = 0; r < 3; r++) { if (r === c) continue; const f = A[r][c] / A[c][c]; for (let j = c; j < 4; j++) A[r][j] -= f * A[c][j]; } }
+      return [A[0][3] / A[0][0], A[1][3] / A[1][1], A[2][3] / A[2][2]]; };
+    const u = sol(0), v = sol(1);
+    return (x, y) => [u[0] * x + u[1] * y + u[2], v[0] * x + v[1] * y + v[2]];
+  }
+  // Situa el full a la foto: retorna la transformació (coordenades del full → píxels) i les caselles de cada ítem tancat
+  function cbSitua(im, d, p) {
+    const t = cbTaques(d, im.w, im.h).sort((a, b) => b.n - a.n).slice(0, 14), it = cbItems(p), ful = p.full;
+    if (ful.model === "oficial") {
+      // Tres quadrats negres (dalt esquerra, dalt dreta, baix dreta): el triangle rectangle més gran amb les proporcions del full
+      const [A, B, C] = ful.mk, dAB = Math.hypot(B[0] - A[0], B[1] - A[1]), dBC = Math.hypot(C[0] - B[0], C[1] - B[1]), rt = dAB / dBC;
+      let millor = null, mp = 0;
+      for (let a = 0; a < t.length; a++) for (let b = 0; b < t.length; b++) for (let c = 0; c < t.length; c++) {
+        if (a === b || b === c || a === c) continue;
+        const P = t[a], Q = t[b], R = t[c], l1 = Math.hypot(Q.x - P.x, Q.y - P.y), l2 = Math.hypot(R.x - Q.x, R.y - Q.y);
+        if (!l1 || !l2 || Math.abs(l1 / l2 - rt) > .12) continue;
+        const cs = ((P.x - Q.x) * (R.x - Q.x) + (P.y - Q.y) * (R.y - Q.y)) / (l1 * l2);
+        if (Math.abs(cs) > .2) continue;
+        // P → Q → R ha de girar en el sentit de les agulles del rellotge (dalt esq. → dalt dreta → baix dreta)
+        if ((Q.x - P.x) * (R.y - Q.y) - (Q.y - P.y) * (R.x - Q.x) <= 0) continue;
+        const ar = l1 * l2; if (ar > mp) { mp = ar; millor = [P, Q, R]; }
+      }
+      if (!millor || mp < im.w * im.h * .15) throw new Error("No trobo els tres quadrats negres de les cantonades del full. Fes la foto amb tot el full dins de la imatge, des de dalt i amb bona llum.");
+      const T = cbAfi(ful.mk, millor.map(x => [x.x, x.y]));
+      const caixes = it.map(x => { if (x.t === "oberta") return null; const c = ful.col2.includes(x.n) ? 1 : 0; return cbOpcions(x).map((l, k) => [ful.x[c][k], ful.y[x.n], ful.b]); });
+      return { T, caixes, escala: ful.b };
+    }
+    // Full propi: quatre quadrats, el de dalt a l'esquerra amb un forat blanc
+    let millor = null, mp = -1;
+    for (let a = 0; a < t.length; a++) for (let b = a + 1; b < t.length; b++) for (let c = b + 1; c < t.length; c++) for (let e = c + 1; e < t.length; e++) {
+      const q = [t[a], t[b], t[c], t[e]], mn = Math.min(...q.map(x => x.n)), mx = Math.max(...q.map(x => x.n));
+      if (mx / mn > 3.5) continue;
+      const cx = q.reduce((s, x) => s + x.x, 0) / 4, cy = q.reduce((s, x) => s + x.y, 0) / 4;
+      q.sort((u, v) => Math.atan2(u.y - cy, u.x - cx) - Math.atan2(v.y - cy, v.x - cx));
+      const forats = q.filter(x => x.forat).length, s = cbArea(q) + (forats === 1 ? 1e9 : 0);
+      if (s > mp) { mp = s; millor = q; }
+    }
+    if (!millor || cbArea(millor) < im.w * im.h * .08) throw new Error("No trobo els quatre quadrats negres del full. Fes la foto des de més amunt, amb tot el requadre dins de la imatge i bona llum.");
+    if (millor.filter(x => x.forat).length !== 1) throw new Error("No distingeixo el quadrat de dalt a l'esquerra (el que té el forat blanc). Torna a fer la foto més de prop i sense ombres.");
+    const i0 = millor.findIndex(x => x.forat), q = [0, 1, 2, 3].map(k => millor[(i0 + k) % 4]);
+    const W = CBG.W, H = CBG.H, m = CBG.M / 2;
+    const T = cbHomografia([[m, m], [W - m, m], [W - m, H - m], [m, H - m]], q.map(x => [x.x, x.y]));
+    const tancats = it.filter(x => x.t !== "oberta");
+    const caixes = it.map(x => { if (x.t === "oberta") return null; const i = tancats.indexOf(x); return cbOpcions(x).map((l, k) => { const c = cbCaixa(i, k, tancats.length); return [c.x, c.y, CBG.B - .7]; }); });
+    return { T, caixes, propi: true };
+  }
+  async function cbLlegeix(file, p) {
+    const im = await cbImatge(file), d = cbFoscos(im), sit = cbSitua(im, d, p), { caixes, propi } = sit, fc = d.fc;
+    let T = sit.T;
+    const lloc = (T, x, y) => { const [u, v] = T(x, y), xi = Math.round(u), yi = Math.round(v); return xi < 0 || yi < 0 || xi >= im.w || yi >= im.h ? -1 : yi * im.w + xi; };
+    // Vora impresa de la casella (foscor contínua al llarg dels quatre costats)
+    const vora = (T, x, y, m) => { let f = 0, n = 0;
+      // la vora ha de ser més fosca que just a fora: així una franja fosca (un títol) no atrau la casella
+      const e = m * .14;
+      for (let k = 0; k <= 12; k++) { const t = m * k / 12;
+        [[x + t, y, x + t, y - e], [x + t, y + m, x + t, y + m + e], [x, y + t, x - e, y + t], [x + m, y + t, x + m + e, y + t]].forEach(([a, b, a2, b2]) => {
+          const i = lloc(T, a, b), j = lloc(T, a2, b2); if (i < 0 || j < 0) return; n++; f += fc[i] - fc[j]; }); }
+      return n ? f / n : 0; };
+    // Desplaçament de cada fila que fa encaixar millor les vores de les seves caselles
+    const ajusta = (T, i, R) => { const m0 = caixes[i][0][2], pas = m0 / 12; let dx = 0, dy = 0, mv = -1;
+      for (let ox = -R; ox <= R + 1e-9; ox += pas) for (let oy = -R; oy <= R + 1e-9; oy += pas) {
+        const v = caixes[i].reduce((s, [cx, cy, m]) => s + vora(T, cx + ox, cy + oy, m), 0);
+        if (v > mv) { mv = v; dx = ox; dy = oy; } }
+      return [dx, dy]; };
+    // Ajust global: amb la posició trobada de totes les files es recalcula la transformació (descartant les que no lliguen)
+    const files = caixes.map((c, i) => c ? i : -1).filter(i => i >= 0);
+    // (cada casella hi aporta un punt; si l'ajust no millora, es manté la transformació inicial)
+    let parells = [];
+    files.forEach(i => { const [dx, dy] = ajusta(T, i, caixes[i][0][2] * .9); caixes[i].forEach(([cx, cy, m]) => parells.push({ s: [cx + m / 2, cy + m / 2], d: T(cx + dx + m / 2, cy + dy + m / 2) })); });
+    const T0 = T, errDe = H => parells.map(x => { const [u, v] = H(x.s[0], x.s[1]); return Math.hypot(u - x.d[0], v - x.d[1]); });
+    const mediana = e => e.slice().sort((a, b) => a - b)[Math.floor(e.length / 2)];
+    let tots = parells.slice(), medT = mediana(errDe(T0));
+    for (let k = 0; k < 4 && parells.length >= 12; k++) {
+      const H = cbHomografiaN(parells.map(x => x.s), parells.map(x => x.d));
+      const eT = tots.map(x => { const [u, v] = H(x.s[0], x.s[1]); return Math.hypot(u - x.d[0], v - x.d[1]); }), med = mediana(eT);
+      if (!isFinite(med) || med > medT) break;
+      T = H; medT = med;
+      const lim = Math.max(med * 2.5, 2), bons = tots.filter((x, j) => eT[j] <= lim);
+      if (bons.length === parells.length) break;
+      parells = bons;
+    }
+    if (T !== T0) { const [u, v] = T(0, 0), [u0, v0] = T0(0, 0); if (!isFinite(u) || Math.hypot(u - u0, v - v0) > Math.max(im.w, im.h) * .05) T = T0; }
+    // Proporció de tinta dins d'una casella (en deixa fora la vora impresa)
+    const tinta = (x, y, mida) => { let f = 0, n = 0; const a = .2 * mida, l = mida - 2 * a;
+      for (let i = 0; i <= 10; i++) for (let j = 0; j <= 10; j++) { const k = lloc(T, x + a + l * i / 10, y + a + l * j / 10); if (k < 0) continue; n++; f += d[k]; }
+      return n ? f / n : 0; };
+    const it = cbItems(p);
+    const resp = it.map((x, i) => {
+      if (!caixes[i]) return null;
+      const [dx, dy] = ajusta(T, i, caixes[i][0][2] * .3);
+      const op = cbOpcions(x), f = caixes[i].map(([cx, cy, m]) => tinta(cx + dx, cy + dy, m));
+      const marc = op.filter((l, k) => f[k] >= .06 && f[k] < .72);
+      if (marc.length === 1) return { v: marc[0], dubte: f[op.indexOf(marc[0])] < .1 || f.some(v => v >= .72) };
+      if (!marc.length) return { v: "", dubte: f.some(v => v >= .03) };
+      return { v: "", dubte: true };
+    });
+    let codi = null;
+    if (propi) { const bits = []; for (let b = 0; b < 14; b++) { const c = cbCodiCaixa(b); bits.push(tinta(c.x - .6, c.y - .6, 5) > .55 ? 1 : 0); } codi = cbDeBits(bits); }
+    return { resp, codi };
+  }
+
+  // ---------- Puntuació ----------
+  const CB_FRANGES = [["", "Sense corregir"], ["125", "125 paraules o més"], ["110", "Entre 110 i 124"], ["90", "Entre 90 i 109"], ["0", "Menys de 90 (0 punts)"]];
+  const CB_APARTATS = [["A", "Adequació"], ["R", "Coherència"], ["S", "Cohesió"], ["L", "Lèxic"], ["O", "Ortografia"], ["M", "Morfosintaxi"], ["P", "Presentació"]];
+  function cbRedaccio(r) {
+    if (!r || !r.fr) return null;
+    if (r.fr === "0") return 0;
+    let s = 0;
+    CB_APARTATS.forEach(([k]) => { let v = Number(r[k]) || 0; if (k === "P") v = Math.min(v, 1); else if (r.fr === "90" || (r.fr === "110" && k === "A")) v = Math.min(v, 2); else v = Math.min(v, 4); s += v; });
+    return s;
+  }
+  const arr = v => Math.round(v * 100) / 100;
+  function cbPuntua(p, resp, red) {
+    const it = cbItems(p); let cl = 0, ncl = 0, ll = 0, nll = 0;
+    it.forEach((x, i) => { const ok = x.t === "oberta" ? Math.min(x.max, Number(String(resp[i] || 0).replace(",", ".")) || 0) : resp[i] === x.k ? 1 : 0;
+      if (x.d === "CL") { cl += ok; ncl += x.max; } else { ll += ok; nll += x.max; } });
+    const rd = cbRedaccio(red);
+    cl = arr(cl); ll = arr(ll);
+    return { cl, ncl, ll, nll, rd, notaCL: arr(cl / ncl * 10), notaEE: rd == null ? null : arr((ll + rd) / (nll + 25) * 10) };
+  }
+  const cbNum = v => v == null ? "—" : String(v).replace(".", ",");
+  const cbPts = (a, b) => cbNum(a) + "/" + b;
+  // Escriu les notes a les columnes CL i EE triades per a aquest grup
+  function cbDesaNotes(p, gNom, alumne) {
+    const c = CB(), r = c.res[p.id] && c.res[p.id][gNom] && c.res[p.id][gNom][alumne], cols = c.cols[p.id] && c.cols[p.id][gNom];
+    if (!r || !cols) return "Falten les columnes";
+    const g = Q().grups.find(x => x.nom === gNom), f = g && g.fulls.find(x => x.nom === cols.f), fila = f && f.files.find(x => x.nom === alumne);
+    if (!fila) return "No trobo l'alumne al full";
+    const pt = cbPuntua(p, r.r, r.red);
+    if (cols.cl) fila.v[cols.cl] = pt.notaCL;
+    if (cols.ee && pt.notaEE != null) fila.v[cols.ee] = pt.notaEE;
+    oblidaExcel(fila);
+    return "";
+  }
+
+  // ---------- Bloc de l'Institut ----------
+  let cbSel = { p: 0, g: 0 }, cbMsg = "";
+  const cbOrdre = (a, b) => a.localeCompare(b, "ca", { sensitivity: "base", ignorePunctuation: true });
+  const cbNet = a => a.replace(/\s+DIS$/i, "");
+  function pintaCB() {
+    const cos = $("cbCos"); if (!cos) return;
+    const p = CB_PROVES[cbSel.p], q = Q(), g = q.grups[cbSel.g], c = CB(), propi = p.full.model === "propi";
+    const enl = (u, t) => u ? '<a class="boto clar" href="' + esc(u) + '" target="_blank" rel="noopener" style="text-decoration:none">' + t + "</a>" : "";
+    // Proves per anys: un botó per curs (i matèria)
+    let h = '<div class="vistes" role="group" aria-label="Prova" style="flex-wrap:wrap;margin-bottom:8px">' + CB_PROVES.map((x, i) => [x, i]).sort((u, v) => v[0].curs.localeCompare(u[0].curs)).map(([x, i]) => '<button type="button" data-cbp="' + i + '" aria-pressed="' + (i === cbSel.p) + '">' + esc(x.curs) + (CB_PROVES.filter(y => y.curs === x.curs).length > 1 ? " · " + esc(x.materia) : "") + "</button>").join("") + "</div>" +
+      '<div class="fila-as">' + (q.grups.length ? '<label>Grup<select data-cb="g">' + q.grups.map((x, i) => '<option value="' + i + '"' + (i === cbSel.g ? " selected" : "") + ">" + esc(nomGrup(x.nom)) + "</option>").join("") + "</select></label>" : "") + "</div>";
+    const eines = enl(p.quadern, "📄 Quadern") + enl(p.criteris, "✅ Criteris") +
+      (propi ? '<button type="button" class="boto clar" data-cb="impgrup"' + (g ? "" : " disabled") + '>🖨️ Fulls del grup (amb nom)</button><button type="button" class="boto clar" data-cb="impbuit">🖨️ Full en blanc</button>' : "");
+    if (eines) h += '<div class="alum-eines">' + eines + "</div>";
+    if (!g) { cos.innerHTML = h + '<p class="font">Importa o crea primer els grups a «Alumnes i qualificacions».</p>'; return; }
+    const cols = (c.cols[p.id] && c.cols[p.id][g.nom]) || {}, f = g.fulls.find(x => x.nom === cols.f) || g.fulls[0];
+    const notes = f ? f.columnes.filter(x => x.tipus !== "calc") : [];
+    const opc = v => '<option value="">—</option>' + notes.map(x => "<option" + (x.nom === v ? " selected" : "") + ">" + esc(x.nom) + "</option>").join("");
+    h += '<div class="fila-as"><label>Full<select data-cb="f">' + g.fulls.map(x => "<option" + (x === f ? " selected" : "") + ">" + esc(x.nom) + "</option>").join("") + "</select></label>" +
+      '<label>Columna CL (comprensió lectora)<select data-cb="cl">' + opc(cols.cl) + "</select></label>" +
+      '<label>Columna EE (expressió escrita)<select data-cb="ee">' + opc(cols.ee) + "</select></label></div>" +
+      (propi ? '<div class="alum-eines"><label class="boto" style="display:inline-block">📷 Fotografia fulls<input type="file" id="cbFoto" accept="image/*" capture="environment" multiple hidden></label>' +
+        '<span class="font">Pots triar diverses fotos alhora: cada full es reconeix pel codi i la nota va sola a la fila de l\'alumne.</span></div>'
+        : '<p class="font" style="margin:4px 0">Full de respostes oficial: toca ✏️ al costat de l\'alumne i fotografia-hi el seu full.</p>') +
+      (cbMsg ? '<p class="font">' + cbMsg + "</p>" : "");
+    const rs = (c.res[p.id] && c.res[p.id][g.nom]) || {}, fl = f ? f.files.map(r => r.nom).sort(cbOrdre) : [];
+    h += '<table class="cb-taula"><thead><tr><th>Alumne/a</th><th>CL</th><th>Llengua</th><th>Redacció</th><th>EE</th><th></th></tr></thead><tbody>' +
+      fl.map(a => {
+        const r = rs[a], bt = '<td><button type="button" class="boto clar" data-cb="obre" data-a="' + esc(a) + '" aria-label="Fitxa de ' + esc(cbNet(a)) + '">' + (propi ? "✏️" : "📷 ✏️") + "</button></td>";
+        if (!r) return '<tr class="cb-buit"><td>' + esc(cbNet(a)) + '</td><td colspan="4">—</td>' + bt + "</tr>";
+        const pt = cbPuntua(p, r.r, r.red), dub = r.dubtes && r.dubtes.length;
+        return "<tr" + (dub ? ' class="cb-dubte"' : "") + "><td>" + esc(cbNet(a)) + (dub ? ' <span title="Caselles per revisar">⚠️</span>' : "") + "</td><td>" + cbPts(pt.cl, pt.ncl) + " · <b>" + cbNum(pt.notaCL) + "</b></td><td>" + cbPts(pt.ll, pt.nll) + "</td><td>" + (pt.rd == null ? "—" : pt.rd + "/25") + "</td><td><b>" + cbNum(pt.notaEE) + "</b></td>" + bt + "</tr>";
+      }).join("") + "</tbody></table>";
+    cos.innerHTML = h;
+  }
+  // Fitxa d'un alumne: foto del full, respostes (corregibles a mà), preguntes obertes i graella de la redacció
+  function cbFitxa(p, g, a) {
+    const c = CB(); c.res[p.id] = c.res[p.id] || {}; c.res[p.id][g.nom] = c.res[p.id][g.nom] || {};
+    const it = cbItems(p), r0 = c.res[p.id][g.nom][a] || { r: it.map(() => ""), dubtes: [], red: null };
+    const r = JSON.parse(JSON.stringify(r0)); r.red = r.red || { fr: "" }; r.dubtes = r.dubtes || [];
+    let foto = "", llegint = false, avis = "";
+    let dlg = $("dlgCB"); if (!dlg) { dlg = document.createElement("dialog"); dlg.id = "dlgCB"; document.body.appendChild(dlg); }
+    const tancats = it.map((x, i) => i).filter(i => it[i].t !== "oberta");
+    const pinta = () => {
+      const pt = cbPuntua(p, r.r, r.red);
+      dlg.innerHTML = '<form method="dialog"><h2>' + esc(cbNet(a)) + '</h2><p class="font" style="margin:0">' + esc(p.titol) + " · " + esc(nomGrup(g.nom)) + "</p>" +
+        '<div class="alum-eines"><label class="boto" style="display:inline-block">📷 ' + (foto ? "Torna a fotografiar" : "Fotografia el full") + '<input type="file" id="cbFotoA" accept="image/*" capture="environment" hidden></label>' +
+        (llegint ? '<span class="font">Llegint el full…</span>' : "") + "</div>" + (avis ? '<p class="avis">' + esc(avis) + "</p>" : "") +
+        (foto ? '<img src="' + foto + '" alt="Foto del full" style="max-width:100%;max-height:260px;object-fit:contain;border:1px solid var(--linia);border-radius:8px">' : "") +
+        '<label>Respostes seguides (una lletra per casella; punt = en blanc)<input type="text" data-seq autocomplete="off" spellcheck="false" style="font-family:monospace;letter-spacing:.15em" value="' + esc(tancats.map(i => r.r[i] || ".").join("")) + '"></label>' +
+        '<div class="cb-resp">' + it.map((x, i) => {
+          if (x.t === "oberta") return "";
+          const v = r.r[i], cls = !v ? "buida" : v === x.k ? "be" : "malament";
+          return '<label class="cb-it ' + cls + (r.dubtes.includes(i) ? " dubte" : "") + '"><span>' + esc(x.n) + (x.d === "LL" ? "ᴸ" : "") + '</span><select data-i="' + i + '"><option value="">·</option>' + cbOpcions(x).map(l => "<option" + (l === v ? " selected" : "") + ">" + l + "</option>").join("") + "</select></label>";
+        }).join("") + "</div>" +
+        '<p class="font" style="margin:0">Verd: correcta · vermell: errada · gris: en blanc · requadre groc: comprova-la al full. ᴸ: pregunta de llengua (compta a l\'EE).</p>' +
+        it.map((x, i) => {
+          if (x.t !== "oberta") return "";
+          const vs = []; for (let v = 0; v <= x.max + 1e-9; v += x.pas) vs.push(arr(v));
+          return '<label>Pregunta ' + esc(x.n) + " (oberta, 0-" + cbNum(x.max) + ")" + (x.pista ? '<span class="font">' + esc(x.pista) + "</span>" : "") +
+            '<select data-i="' + i + '"><option value="">Sense corregir</option>' + vs.map(v => '<option value="' + v + '"' + (r.r[i] !== "" && r.r[i] != null && Number(r.r[i]) === v ? " selected" : "") + ">" + cbNum(v) + "</option>").join("") + "</select></label>";
+        }).join("") +
+        "<p style=\"margin:0\"><b>CL</b> " + cbPts(pt.cl, pt.ncl) + " → " + cbNum(pt.notaCL) + " · <b>Llengua</b> " + cbPts(pt.ll, pt.nll) + "</p>" +
+        '<h3 style="margin:4px 0 0;font-size:.95rem">Redacció</h3><div class="fila"><label>Paraules<select data-red="fr">' + CB_FRANGES.map(([v, t]) => '<option value="' + v + '"' + (r.red.fr === v ? " selected" : "") + ">" + t + "</option>").join("") + "</select></label></div>" +
+        (r.red.fr && r.red.fr !== "0" ? '<div class="fila">' + CB_APARTATS.map(([k, t]) => "<label>" + t + '<select data-red="' + k + '">' + (k === "P" ? [0, 1] : [0, 1, 2, 3, 4]).map(n => "<option" + (Number(r.red[k] || 0) === n ? " selected" : "") + ">" + n + "</option>").join("") + "</select></label>").join("") + "</div>" : "") +
+        "<p style=\"margin:0\"><b>Redacció</b> " + (pt.rd == null ? "—" : pt.rd + "/25") + " · <b>EE</b> " + cbNum(pt.notaEE) + (pt.rd == null ? " (falta la redacció; la columna EE no es toca)" : "") + "</p>" +
+        '<div class="botons"><button type="button" class="boto clar" data-f="tanca">Tanca</button><button type="button" class="boto" data-f="desa">Desa i posa les notes</button></div></form>';
+    };
+    pinta();
+    dlg.onchange = async ev => {
+      const s = ev.target;
+      if (s.id === "cbFotoA") {
+        const file = s.files && s.files[0]; if (!file) return;
+        if (foto) URL.revokeObjectURL(foto);
+        foto = URL.createObjectURL(file); llegint = true; avis = ""; pinta();
+        try {
+          const l = await cbLlegeix(file, p);
+          if (p.full.model === "propi" && l.codi != null) { const qui = c.codis.m[l.codi]; if (qui && (qui.a !== a || qui.g !== g.nom)) avis = "Compte: aquest full és de " + cbNet(qui.a) + " (" + nomGrup(qui.g) + "), no d'aquest alumne."; }
+          l.resp.forEach((x, i) => { if (x) r.r[i] = x.v; });
+          r.dubtes = l.resp.map((x, i) => x && x.dubte ? i : -1).filter(i => i >= 0);
+        } catch (e) { avis = e.message; }
+        llegint = false; pinta(); return;
+      }
+      if (s.dataset.i != null) { const i = Number(s.dataset.i); r.r[i] = s.value; r.dubtes = r.dubtes.filter(x => x !== i); pinta(); }
+      else if (s.dataset.red) { r.red[s.dataset.red] = s.value; pinta(); }
+      else if (s.dataset.seq != null) {
+        const cs = s.value.replace(/\s+/g, "").split("");
+        tancats.forEach((i, j) => { const x = it[i], ch = (cs[j] || "").toLowerCase(); r.r[i] = x.t === "VF" ? ({ v: "V", f: "F" }[ch] || "") : (cbOpcions(x).includes(ch) ? ch : ""); });
+        r.dubtes = []; pinta();
+      }
+    };
+    dlg.onclick = ev => {
+      const b = ev.target.closest("[data-f]"); if (!b) return;
+      if (b.dataset.f === "tanca") { if (foto) URL.revokeObjectURL(foto); dlg.close(); return; }
+      const red = r.red && r.red.fr ? r.red : null;
+      c.res[p.id][g.nom][a] = { r: r.r, dubtes: r.dubtes, red: red, d: new Date().toISOString() };
+      const err = cbDesaNotes(p, g.nom, a);
+      desa(); if (foto) URL.revokeObjectURL(foto); dlg.close();
+      cbMsg = err ? "⚠️ " + esc(cbNet(a)) + ": desat, però " + esc(err.toLowerCase()) + ". Tria les columnes CL i EE i torna a desar." : "✓ Notes de " + esc(cbNet(a)) + " posades.";
+      pintaCB(); pintaAlumnes();
+    };
+    dlg.showModal();
+  }
+  async function cbFotos(files) {
+    const p = CB_PROVES[cbSel.p], c = CB(), it = cbItems(p), fets = [], errs = [], revisa = [];
+    cbMsg = "Llegint " + files.length + " foto" + (files.length === 1 ? "" : "s") + "…"; pintaCB();
+    for (const file of files) {
+      try {
+        const l = await cbLlegeix(file, p);
+        const qui = l.codi != null && c.codis.m[l.codi];
+        if (!qui) { errs.push(file.name + ": no llegeixo el codi de l'alumne; fes-ho des de la seva fitxa ✏️"); continue; }
+        const g = Q().grups.find(x => x.nom === qui.g);
+        if (!g) { errs.push(file.name + ": el grup " + qui.g + " ja no hi és"); continue; }
+        c.res[p.id] = c.res[p.id] || {}; c.res[p.id][g.nom] = c.res[p.id][g.nom] || {};
+        const ant = c.res[p.id][g.nom][qui.a];
+        const r = l.resp.map((x, i) => x ? x.v : (ant ? ant.r[i] : ""));
+        const dubtes = l.resp.map((x, i) => x && x.dubte ? i : -1).filter(i => i >= 0);
+        c.res[p.id][g.nom][qui.a] = { r: r, dubtes: dubtes, red: ant ? ant.red : null, d: new Date().toISOString() };
+        const e = cbDesaNotes(p, g.nom, qui.a);
+        if (e) errs.push(cbNet(qui.a) + ": llegit, però " + e.toLowerCase()); else fets.push(cbNet(qui.a));
+        if (dubtes.length) revisa.push(cbNet(qui.a) + " (" + dubtes.map(i => it[i].n).join(", ") + ")");
+      } catch (e) { errs.push(file.name + ": " + e.message); }
+    }
+    desa();
+    cbMsg = (fets.length ? "✓ Notes posades: " + esc(fets.join("; ")) + "." : "") + (revisa.length ? "<br>⚠️ Comprova a la fitxa ✏️ aquestes caselles dubtoses: " + esc(revisa.join("; ")) + "." : "") + (errs.length ? "<br>❌ " + esc(errs.join(" · ")) : "");
+    pintaCB(); pintaAlumnes();
+  }
+  // Viu dins de l'Assistent (eina «Competències bàsiques»): els esdeveniments es recullen des de #asCos
+  {
+    $("asCos").addEventListener("change", ev => {
+      if (!ev.target.closest("#cbCos")) return;
+      const s = ev.target, k = s.dataset && s.dataset.cb;
+      if (s.id === "cbFoto") { const fs = Array.from(s.files || []); s.value = ""; if (fs.length) cbFotos(fs); return; }
+      if (k === "p") { cbSel.p = Number(s.value); cbMsg = ""; pintaCB(); return; }
+      if (k === "g") { cbSel.g = Number(s.value); cbMsg = ""; pintaCB(); return; }
+      if (k === "f" || k === "cl" || k === "ee") {
+        const p = CB_PROVES[cbSel.p], g = Q().grups[cbSel.g], c = CB();
+        c.cols[p.id] = c.cols[p.id] || {};
+        const cols = c.cols[p.id][g.nom] = c.cols[p.id][g.nom] || {};
+        if (k === "f") { cols.f = s.value; delete cols.cl; delete cols.ee; } else { cols.f = cols.f || (g.fulls[0] || {}).nom; cols[k] = s.value; }
+        desa(); pintaCB();
+      }
+    });
+    $("asCos").addEventListener("click", ev => {
+      if (!ev.target.closest("#cbCos")) return;
+      const bp = ev.target.closest("[data-cbp]"); if (bp) { cbSel.p = Number(bp.dataset.cbp); cbMsg = ""; pintaCB(); return; }
+      const b = ev.target.closest("[data-cb]"); if (!b || b.tagName === "SELECT") return;
+      const p = CB_PROVES[cbSel.p], g = Q().grups[cbSel.g];
+      if (b.dataset.cb === "impgrup") cbImprimeix(p, g);
+      else if (b.dataset.cb === "impbuit") cbImprimeix(p, null);
+      else if (b.dataset.cb === "obre") cbFitxa(p, g, b.dataset.a);
+    });
+  }
   // ================= Dreceres de consulta =================
   // Cada obra s'obre en una pestanya nova amb la paraula ja buscada (cap d'aquestes obres té una API oberta)
   const CONSULTA = [
