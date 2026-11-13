@@ -212,8 +212,8 @@ dialog#dlgCBN{width:min(860px,calc(100vw - 24px))}
 .cbn-taula input,.cbn-taula select{font:inherit;color:var(--text);width:100%;box-sizing:border-box}
 .cbn-taula tr.cbn-mal td{background:#fde2e2}
 .cb-taula tr.cb-dubte td:first-child{background:#fff4c2}
-.cb-resp{columns:190px;column-gap:4px}   /* ordre correlatiu: es llegeix de dalt a baix, columna per columna */
-.cb-resp>.cb-it{break-inside:avoid;margin-bottom:4px}
+.cb-resp{display:flex;gap:6px;flex-wrap:wrap;align-items:flex-start}
+.cb-col{flex:1 1 260px;display:flex;flex-direction:column;gap:4px}
 .cb-it{flex-wrap:wrap}
 .cb-ops{display:flex;gap:3px}
 .cb-ops button{min-width:2.2em;padding:5px 0;border:1px solid var(--linia);border-radius:6px;background:var(--targeta);font:inherit;font-weight:600;color:inherit;cursor:pointer}
@@ -3355,6 +3355,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     let foto = "", llegint = false, avis = "";
     let dlg = $("dlgCB"); if (!dlg) { dlg = document.createElement("dialog"); dlg.id = "dlgCB"; document.body.appendChild(dlg); }
     const tancats = it.map((x, i) => i).filter(i => it[i].t !== "oberta");
+    const colDe = i => p.full.model === "oficial" ? (p.full.col2.includes(it[i].n) ? 1 : 0) : (tancats.indexOf(i) >= Math.ceil(tancats.length / 2) ? 1 : 0);
     const pinta = () => {
       const pt = cbPuntua(p, r.r, r.red), st = dlg.scrollTop;
       setTimeout(() => { dlg.scrollTop = st; }, 0);
@@ -3363,11 +3364,12 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
         (llegint ? '<span class="font">Llegint el full…</span>' : "") + "</div>" + (avis ? '<p class="avis">' + esc(avis) + "</p>" : "") +
         (foto ? '<img src="' + foto + '" alt="Foto del full" style="max-width:100%;max-height:260px;object-fit:contain;border:1px solid var(--linia);border-radius:8px">' : "") +
         '<label>Respostes seguides (una lletra per casella; punt = en blanc)<input type="text" data-seq autocomplete="off" spellcheck="false" style="font-family:monospace;letter-spacing:.15em" value="' + esc(tancats.map(i => r.r[i] || ".").join("")) + '"></label>' +
-        '<div class="cb-resp">' + it.map((x, i) => {
-          if (x.t === "oberta") return "";
+        // Mateixa disposició que el full de respostes: columna esquerra i columna dreta, cadascuna en ordre correlatiu
+        '<div class="cb-resp">' + [0, 1].map(cc => '<div class="cb-col">' + it.map((x, i) => {
+          if (x.t === "oberta" || colDe(i) !== cc) return "";
           const v = r.r[i], cls = !v ? "buida" : v === x.k ? "be" : "malament";
           return '<div class="cb-it ' + cls + (r.dubtes.includes(i) ? " dubte" : "") + '"><span>' + esc(x.n) + (x.d === "LL" ? "ᴸ" : "") + '</span><span class="cb-ops">' + cbOpcions(x).map(l => '<button type="button" data-i="' + i + '" data-v="' + l + '" aria-pressed="' + (l === v) + '">' + l + "</button>").join("") + "</span></div>";
-        }).join("") + "</div>" +
+        }).join("") + "</div>").join("") + "</div>" +
         '<p class="font" style="margin:0">Verd: correcta · vermell: errada · gris: en blanc · requadre groc: comprova-la al full. ᴸ: pregunta de llengua (compta a l\'EE).</p>' +
         it.map((x, i) => {
           if (x.t !== "oberta") return "";
