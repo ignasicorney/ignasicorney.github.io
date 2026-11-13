@@ -1846,7 +1846,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       '<select id="alumFull" aria-label="Full">' + g.fulls.map((x, i) => '<option value="' + i + '"' + (x === f ? " selected" : "") + ">" + esc(x.nom) + "</option>").join("") + "</select>" +
       '<input type="search" id="alumCerca" placeholder="Cerca alumne…" value="' + esc(cerca) + '" style="flex:1 1 140px"></div>' +
       '<div class="alum-eines"><button type="button" class="boto clar" data-q="formules">⚙️ ' + (qFormules ? "Amaga les fórmules" : "Columnes i fórmules") + "</button>" +
-      ('<span class="boto-grup"><button type="button" class="boto clar" data-q="classroom" title="Omple una columna amb els lliuraments o les notes d\'una tasca del Classroom o d\'un formulari"><img src="https://www.gstatic.com/classroom/logo_square_rounded.svg" alt="" class="ico-cls"> Classroom</button>' + (f && f.columnes.some(c => c.classroom) ? '<button type="button" class="boto clar boto-ico" data-q="clsact" title="Actualitza del Classroom les columnes enllaçades d\'aquest full (' + esc(f.columnes.filter(c => c.classroom).map(c => c.nom).join(", ")) + ')" aria-label="Actualitza del Classroom">🔄</button>' : "") + "</span>") +
+      ('<span class="boto-grup"><button type="button" class="boto clar" data-q="classroom" title="Omple una columna amb els lliuraments o les notes d\'una tasca del Classroom o d\'un formulari"><img src="https://www.gstatic.com/classroom/logo_square_rounded.svg" alt="" class="ico-cls"> Classroom</button>' + (f && Array.isArray(f.desfes) && f.desfes.length ? '<button type="button" class="boto clar boto-ico" data-q="clsdesfes" title="Desfés l\'última càrrega del Classroom (' + esc(f.desfes.map(x => x.col).join(", ")) + ')" aria-label="Desfés l\'última càrrega del Classroom">↶</button>' : "") + (f && f.columnes.some(c => c.classroom) ? '<button type="button" class="boto clar boto-ico" data-q="clsact" title="Actualitza del Classroom les columnes enllaçades d\'aquest full (' + esc(f.columnes.filter(c => c.classroom).map(c => c.nom).join(", ")) + ')" aria-label="Actualitza del Classroom">🔄</button>' : "") + "</span>") +
       '<button type="button" class="boto clar' + (qDeures ? " actiu" : "") + '" data-q="passadeures" title="Mode ràpid: cada toc a la columna de deures posa o treu la falta d\'avui">📕 ' + (qDeures ? "Prou deures" : "Passa deures") + '</button><button type="button" class="boto clar" data-q="alumne">+ Alumne</button><button type="button" class="boto clar" data-q="banc">📋 ' + (rubObert ? "Amaga les rúbriques" : "Rúbriques") + "</button>" + importa + "</div>" + (clsMsg ? '<p class="cls-msg ' + (clsMsg.err ? "avis" : "font") + '">' + esc(clsMsg.t) + "</p>" : "") + (rubObert ? htmlBanc() : "");
     if (f && qFormules) {
       h += '<div class="formules"><p class="font" style="margin:0 0 8px">Fórmules com a l\'Excel. <b>{EX1}</b> és una columna d\'aquest full i <b>{1R TRIM|NOTA FINAL TRIM}</b> una columna d\'un altre full. Funcions: SUM, AVERAGE, MIN, MAX, IF, ROUND… Els buits compten com a 0 a les operacions i AVERAGE se\'ls salta. <b>MITJANAFETS({DIC1};{DIC2})</b> fa la mitjana de les proves fetes: si a una nota hi escrius <b>EX</b> (o x, o -), no compta; un buit compta com a 0.</p>' +
@@ -2042,6 +2042,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     else if (q.dataset.q === "passadeures") { qDeures = !qDeures; pintaAlumnes(); }
     else if (q.dataset.q === "classroom") obreClassroom(g, f);
     else if (q.dataset.q === "clsact") actualitzaClassroom(g, f, q);
+    else if (q.dataset.q === "clsdesfes") desfesClassroom(f);
     else if (q.dataset.q === "banc") { rubObert = !rubObert; pintaAlumnes(); }
     else if (q.dataset.q === "alumne") {
       const nom = (prompt("Nom de l'alumne nou (Cognoms , Nom):") || "").trim();
@@ -2597,24 +2598,49 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     // Si ni la meitat dels alumnes del full són a la classe triada, és que la classe no és la del grup: no s'hi escriu res
     if (f.files.length && m.size < f.files.length / 2) throw new Error("Aquesta classe del Classroom no sembla la de " + nomGrup(g.nom) + ": només hi coincideixen " + m.size + " dels " + f.files.length + " alumnes del full. No s'ha canviat res; tria la classe del grup.");
     let fets = 0; const noTrobats = [];
+    // Còpia del que hi havia, per poder-ho desfer
+    const abans = { col: col.nom, valors: {}, classroom: col.classroom ? JSON.parse(JSON.stringify(col.classroom)) : null, quan: new Date().toISOString() };
+    f.files.forEach(r => { abans.valors[r.nom] = r.v[col.nom] === undefined ? null : r.v[col.nom]; });
+    f.desfes = (e.afegeix && Array.isArray(f.desfes) ? f.desfes : []).concat([abans]);
     f.files.forEach(r => {
       const a = m.get(r.nom); if (!a) { noTrobats.push(r.nom.replace(/\s+DIS$/i, "")); return; }
       const v = valorDe(a); if (v == null) return;
       if (r.v[col.nom] !== v) { r.v[col.nom] = v; oblidaExcel(r); }
       fets++;
     });
-    col.classroom = e;
+    col.classroom = Object.assign({}, e); delete col.classroom.afegeix;
     desa();
     return { fets, noTrobats, sobren: sobren.map(a => a.complet || (a.nom + " " + a.cognoms)), ambFeina: ambFeina.map(a => a.complet || (a.nom + " " + a.cognoms)), mode: e.mode };
   }
   let clsMsg = null;
+  // Desfà l'última càrrega del Classroom d'aquest full: torna els valors i l'enllaç que hi havia
+  function desfesClassroom(f) {
+    const l = Array.isArray(f.desfes) ? f.desfes : [];
+    if (!l.length) return;
+    const quan = new Date(l[0].quan), cols = l.map(x => x.col).join(", ");
+    if (!confirm("Vols desfer l'última càrrega del Classroom (" + cols + ", " + dma(new Intl.DateTimeFormat("en-CA", { timeZone: TZ }).format(quan)) + " a les " + new Intl.DateTimeFormat("ca", { timeZone: TZ, hour: "2-digit", minute: "2-digit", hour12: false }).format(quan) + ")? La columna tornarà a quedar com estava.")) return;
+    l.slice().reverse().forEach(x => {
+      const col = f.columnes.find(c => c.nom === x.col);
+      f.files.forEach(r => {
+        if (!(r.nom in x.valors)) return;
+        const v = x.valors[r.nom];
+        if (v === null) delete r.v[x.col]; else r.v[x.col] = v;
+        oblidaExcel(r);
+      });
+      if (col) { if (x.classroom) col.classroom = x.classroom; else delete col.classroom; }
+    });
+    delete f.desfes;
+    clsMsg = { t: "S'ha desfet l'última càrrega del Classroom (" + cols + ").", err: false };
+    desa(); pintaAlumnes();
+  }
   const resumCls = (col, r) => col.nom + ": " + r.fets + " alumne" + (r.fets === 1 ? "" : "s") + " al dia." +
     (r.ambFeina && r.ambFeina.length ? (r.mode !== "nota" ? " Tenen 1 perquè han escrit al document, tot i no haver-lo lliurat: " : " Han escrit al document però no l'han lliurat: ") + r.ambFeina.join("; ") + "." : "") + (r.noTrobats.length ? " No trobats al Classroom: " + r.noTrobats.join("; ") + "." : "") + (r.sobren.length ? " Del Classroom sense parella al full: " + r.sobren.join("; ") + "." : "");
   async function actualitzaClassroom(g, f, boto) {
     const cols = f.columnes.filter(c => c.classroom);
     boto.disabled = true; boto.textContent = "⏳";
     const msg = []; let err = false;
-    for (const c of cols) { try { msg.push(resumCls(c, await ompleColumna(g, f, c, c.classroom))); } catch (e) { msg.push(c.nom + ": " + e.message); err = true; } }
+    let primera = true;
+    for (const c of cols) { try { msg.push(resumCls(c, await ompleColumna(g, f, c, Object.assign({}, c.classroom, { afegeix: !primera })))); primera = false; } catch (e) { msg.push(c.nom + ": " + e.message); err = true; } }
     clsMsg = { t: msg.join(" "), err: err };
     pintaAlumnes();
   }
