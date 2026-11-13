@@ -1372,10 +1372,18 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
 
   // ================= Assistent (IA i corrector) =================
   // Passa pel Worker (clau de Gemini guardada allà). Mai s'hi envien noms d'alumnes.
-  let asEina = "corregir", asResultat = "", asOcupat = false, asDades = null;
+  let asEina = "corregir", asResultat = "", asOcupat = false, asDades = null, asModel = "";
   const BOTO_QR = '<select id="asQrNiv" aria-label="Nivell del qüestionari"><option>Nivell bàsic</option><option selected>Nivell mitjà</option><option>Nivell avançat</option></select><button type="button" class="boto" data-asb="qr">📱 Versió en línia (QR)</button>';
   async function ia(sistema, text, opcions) {
-    const d = await crida(Object.assign({ accio: "ia", sistema: sistema, text: text, json: !!(opcions && opcions.json) }, opcions && opcions.imatge ? { imatge: opcions.imatge } : {}));
+    const cos = Object.assign({ sistema: sistema, text: text, json: !!(opcions && opcions.json) }, opcions && opcions.imatge ? { imatge: opcions.imatge } : {});
+    let d;
+    // 14.11.2026: si Gemini (Worker) falla, la mateixa petició va al model de reserva (Mistral) pel compte d'ieslabisbal.cat
+    try { d = await crida(Object.assign({ accio: "ia" }, cos)); asModel = ""; }
+    catch (e) {
+      if (e.estat === 401 || !compteIns()) throw e;
+      d = await cridaIns(Object.assign({ accio: "ia-reserva" }, cos));
+      asModel = d.model || "Mistral";
+    }
     if (opcions && opcions.json) { try { return JSON.parse(d.resposta.replace(/^```(json)?\s*|\s*```$/g, "")); } catch (e) { throw new Error("La IA no ha retornat dades vàlides; torna-ho a provar."); } }
     return d.resposta;
   }
@@ -1501,7 +1509,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
           '<div class="alum-eines"><button type="button" class="boto" data-asb="butlleti">💬 Proposa els comentaris</button></div>' : '<p class="buit">Primer cal tenir algun grup amb notes.</p>');
     }
     if (asEina === "corregir") h += selectorsAlumne(asSel);
-    h += '<div id="asSortida">' + (asOcupat ? '<p class="cr-buit">Treballant… pot trigar uns segons.</p>' : asResultat) + "</div>";
+    h += '<div id="asSortida">' + (asOcupat ? '<p class="cr-buit">Treballant… pot trigar uns segons.</p>' : asResultat + (asResultat && asModel ? '<p class="font">Fet amb el model de reserva (' + esc(asModel) + ') perquè Gemini estava saturat.</p>' : "")) + "</div>";
     cos.innerHTML = h;
     if (asEina === "cb") pintaCB();
     if ($("asText") && textAbans) $("asText").value = textAbans;
@@ -1547,7 +1555,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     // Es llegeix tot el formulari abans de redibuixar
     const val = id => ($(id) ? ($(id).type === "checkbox" ? $(id).checked : $(id).value) : "");
     const F = { lleng: val("asLleng"), rub: val("asRub"), max: val("asMax"), foto: $("asFoto") && $("asFoto").files[0], curs: val("asCurs"), tipus: val("asTipus"), n: val("asN"), dis: val("asDisAct"), adap: val("asAdap") };
-    asOcupat = true; asResultat = ""; pintaAssistent();
+    asOcupat = true; asResultat = ""; asModel = ""; pintaAssistent();
     try {
       if (a === "ortografia") {
         if (!txt) return fet('<p class="avis">Enganxa primer el text.</p>');
@@ -1630,7 +1638,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       fet("");
     } catch (e) { err(e); }
   }
-  document.querySelectorAll("#asEines button").forEach(b => b.addEventListener("click", () => { asEina = b.dataset.as; asResultat = ""; pintaAssistent(); }));
+  document.querySelectorAll("#asEines button").forEach(b => b.addEventListener("click", () => { asEina = b.dataset.as; asResultat = ""; asModel = ""; pintaAssistent(); }));
   $("asCos").addEventListener("click", ev => { const b = ev.target.closest("[data-asb]"); if (b && !asOcupat) executa(b); });
   $("asCos").addEventListener("change", ev => {
     const el = ev.target;
@@ -2843,7 +2851,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     if (i == null || f == null) return fet('<p class="avis">Escriu l\'inici i el final del fragment en minuts i segons (p. ex. 2:15 i 6:45).</p>');
     if (f - i < VID_MIN || f - i > VID_MAX) return fet('<p class="avis">El fragment ha de durar entre 4 i 5 minuts; ara en fa ' + (f > i ? mmss(f - i) : "0:00") + ".</p>");
     if (!transcripcio && !compteIns()) return fet('<p class="avis">Perquè la IA miri el vídeo cal el compte d\'ieslabisbal.cat connectat al correu (📬 Correu &gt; ⚙️). Si no, enganxa\'n la transcripció.</p>');
-    asOcupat = true; asResultat = ""; pintaAssistent();
+    asOcupat = true; asResultat = ""; asModel = ""; pintaAssistent();
     const noms = ["Nivell bàsic", "Nivell mitjà", "Nivell avançat"].concat(asVid.dis ? ["Versió adaptada (DIS/PSI)"] : []);
     const sistema = "Ets un professor de llengua " + (asVid.lleng === "català" ? "catalana" : "castellana") + " de secundària a Catalunya. Prepara preguntes de comprensió audiovisual d'un fragment de vídeo (del " + mmss(i) + " al " + mmss(f) + ") per a alumnat de " + asVid.curs + ", redactades en " + asVid.lleng + ". " +
       "Fes aquests nivells, cadascun amb " + n + " preguntes: «Nivell bàsic» (informació explícita i literal, ordre dels fets), «Nivell mitjà» (idea principal, relacions entre idees, vocabulari en context), «Nivell avançat» (inferències, intenció de qui parla, to, recursos expressius, valoració)" +

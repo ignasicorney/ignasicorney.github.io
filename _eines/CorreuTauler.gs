@@ -62,6 +62,12 @@
 //   Opcional: GEMINI_MODEL (per defecte, gemini-flash-latest).
 //   { accio: "video-preguntes", url, inici, final, sistema, text } → { resposta }: inici i final en segons
 //   «classroom-publica» accepta també «video»: l'enllaç del fragment, que s'afegeix com a material de la tasca
+//
+// MODEL DE RESERVA (14.11.2026): quan Gemini està saturat, el tauler hi passa la mateixa petició.
+//   Cal la propietat de l'script MISTRAL_KEY (clau de console.mistral.ai, pla gratuït «Experiment»).
+//   Opcional: MISTRAL_MODEL (per defecte, mistral-medium-latest; si falla, mistral-small-latest).
+//   { accio: "ia-reserva", sistema, text, json, imatge } → { resposta, model }  (imatge: { tipus, dades } en base64)
+//   Els vídeos no hi poden anar (Mistral no mira YouTube): cal enganxar-ne la transcripció.
 // =============================================================================
 
 function doGet() {
@@ -332,7 +338,7 @@ function doPost(e) {
         }
         if (r.getResponseCode() !== 200) {
           if (/api key|api_key/i.test(msg)) throw new Error("La clau GEMINI_KEY no és vàlida; revisa-la a les propietats de l'script.");
-          if ([429, 500, 503].indexOf(r.getResponseCode()) >= 0 || /no longer available|not found|deprecated|retired/i.test(msg)) throw new Error("Els models de Gemini estan saturats ara mateix; torna-ho a provar d'aquí a uns minuts.");
+          if ([429, 500, 503].indexOf(r.getResponseCode()) >= 0 || /no longer available|not found|deprecated|retired/i.test(msg)) throw new Error("Els models de Gemini estan saturats ara mateix i només Gemini pot mirar vídeos. Enganxa la transcripció del fragment (a YouTube: «…» > «Mostra la transcripció») i les preguntes es faran amb el model de reserva; o torna-ho a provar d'aquí a uns minuts.");
           if (/youtube|video|file/i.test(msg)) throw new Error("La IA no ha pogut obrir el vídeo: ha de ser públic a YouTube (els ocults o privats no hi van). També pots enganxar-ne la transcripció.");
           throw new Error("Gemini: " + msg);
         }
@@ -340,6 +346,10 @@ function doPost(e) {
         const text = parts.map(function (p) { return p.text || ""; }).join("").trim();
         if (!text) throw new Error("La IA no ha retornat cap resposta; torna-ho a provar.");
         return json_({ ok: true, resposta: text });
+      }
+
+      case "ia-reserva": {
+        return json_(Object.assign({ ok: true }, mistral_(cos)));
       }
 
       case "formulari-respostes": {
@@ -497,6 +507,52 @@ function alumnesCurs_(curs) {
     pg = r.nextPageToken;
   } while (pg);
   return l;
+}
+
+// Model de reserva (Mistral) per a l'Assistent quan Gemini està saturat (14.11.2026)
+function mistral_(cos) {
+  const props = PropertiesService.getScriptProperties();
+  const clau = props.getProperty("MISTRAL_KEY");
+  if (!clau) throw new Error("Gemini està saturat i el model de reserva no està configurat: falta la propietat MISTRAL_KEY a l'script del compte d'ieslabisbal.cat.");
+  const preferit = props.getProperty("MISTRAL_MODEL") || "mistral-medium-latest";
+  const models = [preferit].concat(["mistral-medium-latest", "mistral-small-latest"].filter(function (x) { return x !== preferit; }));
+  const json = !!cos.json;
+  let contingut = String(cos.text || "");
+  if (cos.imatge && cos.imatge.dades) {
+    contingut = [
+      { type: "text", text: contingut },
+      { type: "image_url", image_url: "data:" + (cos.imatge.tipus || "image/jpeg") + ";base64," + cos.imatge.dades }
+    ];
+  }
+  const missatges = [];
+  if (cos.sistema) missatges.push({ role: "system", content: String(cos.sistema) + (json ? "\nRespon només amb un objecte JSON vàlid." : "") });
+  missatges.push({ role: "user", content: contingut });
+  let r = null, d = {}, msg = "";
+  fora:
+  for (let i = 0; i < models.length; i++) {
+    for (let intent = 0; intent < 2; intent++) {
+      if (intent) Utilities.sleep(3000);
+      const peticio = { model: models[i], messages: missatges, temperature: 0.4 };
+      if (json) peticio.response_format = { type: "json_object" };
+      r = UrlFetchApp.fetch("https://api.mistral.ai/v1/chat/completions", {
+        method: "post", contentType: "application/json", headers: { Authorization: "Bearer " + clau },
+        payload: JSON.stringify(peticio), muteHttpExceptions: true
+      });
+      d = {};
+      try { d = JSON.parse(r.getContentText()); } catch (e) {}
+      if (r.getResponseCode() === 200) {
+        const c = (((d.choices || [])[0] || {}).message || {}).content;
+        const text = (Array.isArray(c) ? c.map(function (x) { return x.text || ""; }).join("") : String(c || "")).trim();
+        if (text) return { resposta: text, model: models[i] };
+        msg = "resposta buida"; continue fora;
+      }
+      msg = d.message || (d.error && d.error.message) || d.detail || ("error " + r.getResponseCode());
+      if (typeof msg !== "string") msg = JSON.stringify(msg);
+      if (r.getResponseCode() === 401) throw new Error("La clau MISTRAL_KEY no és vàlida; revisa-la a les propietats de l'script.");
+      if ([429, 500, 502, 503].indexOf(r.getResponseCode()) < 0) continue fora;   // un altre error: es prova el model següent
+    }
+  }
+  throw new Error("Gemini i el model de reserva (Mistral) estan saturats ara mateix; torna-ho a provar d'aquí a uns minuts. (" + msg + ")");
 }
 
 function netejaText_(t) {
