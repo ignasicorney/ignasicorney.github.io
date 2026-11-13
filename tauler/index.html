@@ -202,12 +202,6 @@ dialog#dlgRub{width:min(760px,calc(100vw - 24px))}
 .deu-dates{list-style:none;margin:0;padding:0;max-height:40vh;overflow:auto}
 .deu-dates li{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:4px 0;border-bottom:1px solid var(--linia)}
 .deu-dates h4{margin:8px 0 2px;font-size:.85rem;color:var(--suau)}
-/* Competències bàsiques */
-.cb-any{border:1px solid var(--linia);border-radius:10px;padding:10px 12px;margin-bottom:10px;background:var(--targeta)}
-.cb-any h4{margin:0 0 8px;font-size:1rem}
-.cb-prova{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:6px 0}
-.cb-prova .cb-nom{font-weight:600;margin-right:4px;min-width:90px}
-.cb-prova a.boto{text-decoration:none}
 /* Dreceres de consulta */
 .cons-form{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
 .cons-form input{flex:1 1 220px;font-size:1rem}
@@ -542,11 +536,6 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     </div>
     <div id="asCos"></div>
   </div>
-  <div class="bloc" id="competencies">
-    <h3 class="bt">🧪 Competències bàsiques</h3>
-    <div id="cbCos"></div>
-    <p class="font">Proves de final d'etapa de 4t d'ESO convertides en formularis autocorrectius de Google (compte d'ieslabisbal.cat). L'alumnat veu la nota en enviar-lo; les respostes van al full de càlcul i, si l'assignes al Classroom amb importació de notes, també al Classroom.</p>
-  </div>
   <div class="bloc" id="notes">
     <h3 class="bt">📝 Notes de feina</h3>
     <textarea id="notesText" placeholder="Escriu aquí el que vulguis recordar…"></textarea>
@@ -812,7 +801,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
   const $ = id => document.getElementById(id);
   // Blocs plegables de l'Institut: cada apartat s'obre i es tanca tocant-ne el títol
   (function () {
-    const PLEGATS = { reunions: 1, alumnes: 1, assistent: 1, competencies: 1 };
+    const PLEGATS = { reunions: 1, alumnes: 1, assistent: 1 };
     document.querySelectorAll("#institutCos > .bloc").forEach(b => {
       const h = b.querySelector(":scope > h3.bt"); if (!h) return;
       const cos = document.createElement("div"); cos.className = "bloc-cos"; cos.id = "plec-" + b.id;
@@ -2938,37 +2927,6 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     } catch (e) { b.disabled = false; b.lastChild.textContent = " Publica-la al Classroom"; alert(e.message); }
   }
 
-  // ================= Competències bàsiques =================
-  // Una entrada per prova i curs. Per afegir-ne una, n'hi ha prou de copiar un objecte i canviar-ne els enllaços.
-  const PROVES_CB = [
-    { curs: "2024-2025", materia: "Castellà",
-      alumnat: "https://docs.google.com/forms/d/e/1FAIpQLSfXeDwaBCs6Q_PEuRQLhAzdY3xeLpVX7JNekq4ih6Xy-4VjMQ/viewform",
-      edicio: "https://docs.google.com/forms/d/1XtfV9b5OAuZ5cgM5A8khNgUsr3Z5oAIKtg9skZGQuZk/edit",
-      respostes: "https://docs.google.com/spreadsheets/d/1OzHfK3jLA_Cmnyy-cNIs_PLuq61wv4s2bzi_PyvlYsY/edit",
-      quadern: "https://ape.gencat.cat/content/dam/avaluacioeducativa/avaluacio-educativa/avaluacions/final-etapa/quart-eso/2024-2025/castella/prova-castella-a4s2025.pdf",
-      criteris: "https://ape.gencat.cat/content/dam/avaluacioeducativa/avaluacio-educativa/avaluacions/final-etapa/quart-eso/2024-2025/catala/criteris-correccio-llengues-a4s2025.pdf" }
-  ];
-  (function () {
-    const cos = $("cbCos"); if (!cos) return;
-    const esc = t => String(t).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
-    const enl = (u, t) => u ? '<a class="boto clar" href="' + esc(u) + '" target="_blank" rel="noopener">' + t + '</a>' : "";
-    const cursos = [...new Set(PROVES_CB.map(p => p.curs))].sort().reverse();
-    cos.innerHTML = cursos.map(c => '<div class="cb-any"><h4>Curs ' + esc(c) + '</h4>' +
-      PROVES_CB.filter(p => p.curs === c).map(p => {
-        const i = PROVES_CB.indexOf(p);
-        return '<div class="cb-prova"><span class="cb-nom">' + esc(p.materia) + '</span>' +
-          enl(p.alumnat, "📝 Formulari") +
-          '<button type="button" class="boto clar" data-cbcopia="' + i + '">🔗 Copia l\'enllaç</button>' +
-          enl(p.respostes, "📊 Respostes") + enl(p.edicio, "✏️ Edita") +
-          enl(p.quadern, "📄 Quadern") + enl(p.criteris, "✅ Criteris") + '</div>';
-      }).join("") + '</div>').join("");
-    cos.addEventListener("click", ev => {
-      const b = ev.target.closest("[data-cbcopia]"); if (!b) return;
-      const u = PROVES_CB[Number(b.dataset.cbcopia)].alumnat;
-      const fet = () => { const t = b.textContent; b.textContent = "✔ Copiat"; setTimeout(() => { b.textContent = t; }, 1500); };
-      if (navigator.clipboard) navigator.clipboard.writeText(u).then(fet, () => prompt("Copia l'enllaç:", u)); else prompt("Copia l'enllaç:", u);
-    });
-  })();
   // ================= Dreceres de consulta =================
   // Cada obra s'obre en una pestanya nova amb la paraula ja buscada (cap d'aquestes obres té una API oberta)
   const CONSULTA = [
