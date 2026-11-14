@@ -4430,7 +4430,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       const svg = qr.createSvgTag({ cellSize: 4, margin: 2, scalable: true });
       asDades.qr = { titol: titol, url: d.url, svg: svg, id: d.id };
       const pub = cs.cursos.length ? '<div class="clspub alum-eines" style="margin:8px 0 0"><select id="pubCurs" aria-label="Classe del Classroom"><option value="">Classe del Classroom…</option>' + cs.cursos.map(x => '<option value="' + x.id + '">' + esc(x.nom + (x.seccio ? " · " + x.seccio : "")) + "</option>").join("") + "</select>" +
-        '<label class="font" title="Data de lliurament (opcional)">Lliurament <input type="date" id="pubData"></label><label class="font"><input type="checkbox" id="pubEsb"> En esborrany</label><label class="font" title="Les respostes del formulari es tanquen a les 23:59 del dia de lliurament"><input type="checkbox" id="pubTanca" checked> Tanca el formulari en acabar el termini</label>' +
+        '<label class="font" title="Data de lliurament (opcional)">Lliurament <input type="date" id="pubData"></label><label class="font"><input type="checkbox" id="pubEsb"> En esborrany</label><label class="font" title="Opcional: la tasca es publicarà sola aquell dia i hora">Programa la publicació <input type="date" id="pubProgData"> <input type="time" id="pubProgHora" value="08:00"></label><label class="font" title="Les respostes del formulari es tanquen a les 23:59 del dia de lliurament"><input type="checkbox" id="pubTanca" checked> Tanca el formulari en acabar el termini</label>' +
         '<button type="button" class="boto" data-asb="clspub"><img src="https://www.gstatic.com/classroom/logo_square_rounded.svg" alt="" class="ico-cls"> Publica-la al Classroom</button></div>' : "";
       const bloc = '<div class="qr-bloc"><div class="qr">' + svg + '</div><div><b>' + esc(titol) + '</b><br><a href="' + esc(d.url) + '" target="_blank" rel="noopener">' + esc(d.url) + '</a><p class="font" style="margin:6px 0">' + pr.length + (pr.length === 1 ? " pregunta que es corregeix sola." : " preguntes que es corregeixen soles.") + " L'alumnat hi entra amb el compte de l'institut i les notes es poden passar a una columna amb el botó «Classroom».</p>" +
         '<div class="alum-eines" style="margin:0"><button type="button" class="boto" data-asb="qrimp">🖨️ Imprimeix el QR</button><a class="boto clar" href="' + esc(d.edita) + '" target="_blank" rel="noopener">✏️ Revisa el formulari</a><button type="button" class="boto clar" data-asb="qresb">🗑️ Esborra el formulari</button></div>' + pub + "</div></div>";
@@ -4457,12 +4457,17 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     const q = asDades && asDades.qr, sel = $("pubCurs");
     if (!q || !sel) return;
     if (!sel.value) { sel.focus(); return; }
-    const data = ($("pubData") || {}).value || "", esb = !!($("pubEsb") || {}).checked, classe = sel.selectedOptions[0].textContent;
+    const data = ($("pubData") || {}).value || "", classe = sel.selectedOptions[0].textContent;
+    // 14.11.2026: publicació programada (si hi ha data, té preferència sobre «En esborrany»)
+    const pData = ($("pubProgData") || {}).value || "", pHora = ($("pubProgHora") || {}).value || "08:00";
+    const prog = pData ? new Date(pData + "T" + pHora) : null, esb = !prog && !!($("pubEsb") || {}).checked;
     if (data && data < avuiISO()) { alert("La data de lliurament ja ha passat."); return; }
+    if (prog && !(prog.getTime() > Date.now() + 60000)) { alert("L'hora de publicació ha de ser posterior a ara."); return; }
+    if (prog && data && data < pData) { alert("La data de lliurament no pot ser anterior a la de publicació."); return; }
     b.disabled = true; b.lastChild.textContent = " Publicant…";
     try {
       const vid = asDades.video;
-      const r = await cridaIns({ accio: "classroom-publica", curs: sel.value, titol: q.titol, descripcio: vid && vid.es ? "Mira el fragmento del vídeo (del " + mmss(vid.inici) + " al " + mmss(vid.final) + ") y responde el cuestionario con la cuenta del instituto. Cuando acabes, pulsa «Marcar como completado»." : vid ? "Mira el fragment del vídeo (del " + mmss(vid.inici) + " al " + mmss(vid.final) + ") i respon el qüestionari amb el compte de l'institut. Quan acabis, prem «Marca com a fet»." : "Respon el qüestionari de l'enllaç amb el compte de l'institut i, quan acabis, prem «Marca com a fet».", url: q.url, video: vid ? vid.enllac : "", data: data, esborrany: esb });
+      const r = await cridaIns({ accio: "classroom-publica", curs: sel.value, titol: q.titol, descripcio: vid && vid.es ? "Mira el fragmento del vídeo (del " + mmss(vid.inici) + " al " + mmss(vid.final) + ") y responde el cuestionario con la cuenta del instituto. Cuando acabes, pulsa «Marcar como completado»." : vid ? "Mira el fragment del vídeo (del " + mmss(vid.inici) + " al " + mmss(vid.final) + ") i respon el qüestionari amb el compte de l'institut. Quan acabis, prem «Marca com a fet»." : "Respon el qüestionari de l'enllaç amb el compte de l'institut i, quan acabis, prem «Marca com a fet».", url: q.url, video: vid ? vid.enllac : "", data: data, esborrany: esb, programa: prog ? prog.toISOString() : "" });
       const fm = (dades.formularis || []).find(x => x.id === q.id); if (fm) { fm.classroom = { curs: sel.value, tasca: r.id }; desa(); }
       let tancat = "";
       if (data && ($("pubTanca") || {}).checked) {
@@ -4470,7 +4475,8 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
         catch (e) { tancat = " · no s'ha pogut programar el tancament (" + e.message + ")"; }
       }
       const eo = vid ? enllacaEO1(sel.value, classe.split(" · ")[0], q.id, q.titol) : "";
-      const fet = '<p class="font" style="margin:8px 0 0">✓ ' + (esb ? "Desada en esborrany" : "Publicada") + " a " + esc(classe) + (data ? " · lliurament " + dma(data) : "") + esc(tancat) + (r.enllac ? ' · <a href="' + esc(r.enllac) + '" target="_blank" rel="noopener">obre la tasca</a>' : "") + (eo ? "<br>" + esc(eo) : "") + "</p>";
+      const progTxt = prog ? "Programada a " + esc(classe) + " per " + (/^(01|11)\./.test(dma(pData)) ? "a l'" : "al ") + dma(pData) + " a les " + pHora : "";
+      const fet = '<p class="font" style="margin:8px 0 0">✓ ' + (prog ? progTxt : (esb ? "Desada en esborrany" : "Publicada") + " a " + esc(classe)) + (data ? " · lliurament " + dma(data) : "") + esc(tancat) + (r.enllac ? ' · <a href="' + esc(r.enllac) + '" target="_blank" rel="noopener">obre la tasca</a>' : "") + (eo ? "<br>" + esc(eo) : "") + "</p>";
       asResultat = asResultat.replace(/<div class="clspub[\s\S]*?<\/button><\/div>/, fet);
       pintaAssistent();
     } catch (e) { b.disabled = false; b.lastChild.textContent = " Publica-la al Classroom"; alert(e.message); }

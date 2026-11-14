@@ -58,6 +58,7 @@
 //   { accio: "formulari-estat", id }                  → { obert, tancament }
 //   { accio: "formulari-esborra", id, curs, tasca }   → envia el formulari a la paperera del Drive (14.11.2026)
 //                                                       i, si hi ha «curs» i «tasca», esborra també la tasca del Classroom
+//   «classroom-publica» accepta també «programa» (ISO): la tasca es publica sola a aquella hora (14.11.2026)
 //   «formulari-crea» accepta també «confirmacio»: el missatge en enviar (p. ex. en castellà)
 //
 // VÍDEOS (13.11.2026): la IA mira un fragment d'un vídeo públic de YouTube i en fa les preguntes.
@@ -252,6 +253,12 @@ function doPost(e) {
           const fi = new Date(Utilities.formatDate(new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]), 12), "Europe/Madrid", "yyyy-MM-dd'T'23:59:00XXX"));
           t.dueDate = { year: fi.getUTCFullYear(), month: fi.getUTCMonth() + 1, day: fi.getUTCDate() };
           t.dueTime = { hours: fi.getUTCHours(), minutes: fi.getUTCMinutes() };
+        }
+        if (cos.programa) {   // 14.11.2026: publicació programada (la tasca queda programada i surt sola a l'hora indicada)
+          const q = new Date(String(cos.programa));
+          if (isNaN(q.getTime()) || q.getTime() <= Date.now()) throw new Error("L'hora de publicació ha de ser posterior a ara.");
+          t.state = "DRAFT";
+          t.scheduledTime = q.toISOString();
         }
         const r = Classroom.Courses.CourseWork.create(t, String(cos.curs));
         return json_({ ok: true, id: r.id, enllac: r.alternateLink || "" });
