@@ -4227,7 +4227,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
         if (!nom) { if (op.pendents) op.pendents.push(fi); else dubtes.push(fi.name + " (no és de cap alumne dels teus grups)"); continue; }
         gD.psiDocs = gD.psiDocs || {};
         const clau = gD.nom + "|" + nom, ant = gD.psiDocs[nom];
-        if (!nomFix && fi.drive && ant && ant.drive && ant.drive !== fi.drive && ant.dm && fi.dm && ant.dm > fi.dm) continue;   // ja té un PSI del Drive més recent: no el trepitja (es pot assignar a mà)
+        if (!nomFix && fi.drive && ant && ant.drive && ant.drive !== fi.drive && ant.dm && fi.dm && ant.dm > fi.dm) { dubtes.push(fi.name + ": " + nom.replace(/\s+DIS$/i, "") + " ja té un PSI més recent; si és d'un altre alumne, assigna'l a sota."); continue; }   // ja té un PSI del Drive més recent: no el trepitja (es pot assignar a mà)
         if (ara.has(clau) && ant) { if (fi.dm && ant.dm ? fi.dm > ant.dm : text.length > ant.text.length) { gD.psiDocs[nom] = docDe(fi, text); await idbPosaPSI(clauPSI(gD, nom), fi); } }   // el mateix PSI dues vegades: se'n queda un (del Drive, el més recent)
         else {
           await idbPosaPSI(clauPSI(gD, nom), fi); gD.psiDocs[nom] = docDe(fi, text); fets.push(nom.replace(/\s+DIS$/i, "") + (gD === g ? "" : " (" + nomGrup(gD.nom) + ")")); }
@@ -4238,7 +4238,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       } catch (e) { dubtes.push(e.message); }
     }
     desa(); if (fets.length) pintaAlumnes();
-    if (op.silenci) return;
+    if (op.silenci) return dubtes;
     alert((op.pendents && op.pendents.length ? "Sense alumne (" + op.pendents.length + "): ara els pots assignar tu.\n\n" : "") + (fets.length ? "PSI desats (" + fets.length + "): " + fets.join(", ") + "." : "No s'ha desat cap PSI.") + (dubtes.length ? "\n\nNo s'han posat:\n" + dubtes.join("\n") + "\n\nSi algun és d'un alumne teu, toca la marca PSI al costat del seu nom i puja-l'hi." : ""));
   }
   // ================= PSI des de les carpetes del Drive del centre (14.11.2026) =================
@@ -4304,10 +4304,10 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
         try {
           const fi = await baixa(cal[i]), a = assignatDe(cal[i].id);
           const pendents = [];
-          if (a) await pujaPSI(a.gx, [fi], a.n, { silenci: true });   // ja tenia alumne: s'hi queda (actualitzat)
-          else await pujaPSI(g, [fi], null, { pendents, silenci: true });
+          const dub = a ? await pujaPSI(a.gx, [fi], a.n, { silenci: true })   // ja tenia alumne: s'hi queda (actualitzat)
+            : await pujaPSI(g, [fi], null, { pendents, silenci: true });
           if (assignatDe(cal[i].id)) fets++;
-          else { if (!pendents.length) errors.push(cal[i].nom + ": l'alumne que diu ja té un PSI més recent; si és d'un altre alumne, assigna'l a sota."); }
+          else (dub || []).forEach(x => errors.push(/^«?[^:]*\.(xlsx?|ods|docx|pdf)/i.test(x) ? x : cal[i].nom + ": " + x));
         } catch (e) { errors.push(cal[i].nom + ": " + e.message); }
       }
       desa(); pintaAlumnes();
