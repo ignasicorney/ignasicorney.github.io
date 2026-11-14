@@ -4288,7 +4288,8 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
         q.psiCarpetes.map(c => { const fs = ordena(q.psiFitxers.filter(f => f.carpeta === c.id)), sn = fs.filter(f => !assignatDe(f.id)).length;
           return '<details class="rub-bloc" data-c="' + esc(c.id) + '"' + ((obertes && obertes.totes.has(c.id) ? obertes.obertes.has(c.id) : sn) ? " open" : "") + '><summary><b>' + esc(c.nom || "(sense llegir)") + '</b> <span class="font">· ' + fs.length + " documents" + (sn ? " · " + sn + " sense alumne" : "") + "</span></summary>" +
             '<div class="botons" style="flex-wrap:wrap;align-items:center;margin:4px 0"><a href="' + urlCarpeta(c.id) + '" target="_blank" rel="noopener" style="word-break:break-all">' + esc(urlCarpeta(c.id)) + "</a>" +
-            '<button type="button" class="boto clar" data-pdc="' + esc(c.id) + '" title="Llegeix només aquesta carpeta (documents nous o canviats)"' + (ocupat ? " disabled" : "") + ">🔄 Actualitza</button></div>" +
+            '<button type="button" class="boto clar" data-pdc="' + esc(c.id) + '" title="Llegeix només aquesta carpeta (documents nous o canviats)"' + (ocupat ? " disabled" : "") + ">🔄 Actualitza</button>" +
+            '<button type="button" class="boto clar" data-pdedit="' + esc(c.id) + '" title="Canvia l\'enllaç d\'aquesta carpeta"' + (ocupat ? " disabled" : "") + ">✏️ Canvia l'enllaç</button></div>" +
             fs.map(filaDoc).join("") + "</details>"; }).join("") +
         '<div class="botons"><button type="button" class="boto" data-pd="tanca">Fet</button></div></form>';
     };
@@ -4327,8 +4328,21 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       pinta();
     };
     dlg.onclick = async ev => {
-      const b = ev.target.closest("[data-pd],[data-pdesa],[data-pdc]"); if (!b || ocupat) return;
+      const b = ev.target.closest("[data-pd],[data-pdesa],[data-pdc],[data-pdedit]"); if (!b || ocupat) return;
       if (b.dataset.pdc) { await llegeix([b.dataset.pdc]); return; }
+      // Canviar l'enllaç d'una carpeta: només es llegeix la nova; els PSI ja assignats es queden amb el seu alumne
+      if (b.dataset.pdedit) {
+        const vell = b.dataset.pdedit, c = q.psiCarpetes.find(x => x.id === vell); if (!c) return;
+        const t = prompt("Nou enllaç de la carpeta «" + (c.nom || "sense llegir") + "»:", "https://drive.google.com/drive/folders/" + vell);
+        if (t == null) return;
+        const nou = idCarpeta(t);
+        if (!nou) { alert("Això no sembla l'enllaç d'una carpeta del Drive (ha de contenir «/folders/…»)."); return; }
+        if (nou === vell) return;
+        if (q.psiCarpetes.some(x => x.id === nou)) { avis = "Aquesta carpeta ja hi és."; pinta(); return; }
+        c.id = nou; c.nom = "";
+        q.psiFitxers = q.psiFitxers.filter(x => x.carpeta !== vell);
+        desa(); await llegeix([nou]); return;
+      }
       if (b.dataset.pd === "tanca") { dlg.close(); return; }
       if (b.dataset.pd === "afegeix") {
         const t = prompt("Enganxa l'enllaç de la carpeta del Drive amb els PSI (o diversos enllaços, separats per espais):", "");
