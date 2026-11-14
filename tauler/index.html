@@ -1591,7 +1591,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
         '<label class="font"><input type="checkbox" id="asDisAct"' + (asVid.dis ? " checked" : "") + '> Afegeix també una versió adaptada DIS/PSI</label>' +
         '<input type="text" id="vInd" value="' + esc(asVid.ind) + '" placeholder="Indicacions (opcional): què vols treballar, vocabulari, tipus de preguntes…">' +
         '<textarea id="asText" placeholder="Transcripció del fragment (opcional). Si la deixes buida, la IA transcriu el vídeo (ha de ser públic a YouTube), la transcripció apareix aquí perquè la revisis i les preguntes es fan a partir d\'ella." rows="4"></textarea>' +
-        '<div class="alum-eines"><button type="button" class="boto" data-asb="video">🎬 Prepara les preguntes</button></div>';
+        '<div class="alum-eines"><button type="button" class="boto" data-asb="video">🎬 Prepara les preguntes</button></div>' + llistaVideos();
     } else if (asEina === "adaptar") {
       h = '<p class="font">Enganxa un text o uns enunciats i en tens la versió per a alumnat amb dislèxia (DIS) o amb pla de suport (PSI).</p>' +
         '<div class="fila-as"><label>Adaptació<select id="asAdap"><option value="DIS">DIS (dislèxia)</option><option value="PSI">PSI (simplificada, amb glossari)</option><option value="totes">Totes dues</option></select></label></div>' +
@@ -1657,6 +1657,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     }
     if (a === "qrimp") { const q = asDades && asDades.qr; if (q) imprimeix(q.titol, '<div style="text-align:center"><h3>' + esc(q.titol) + '</h3><p>Escaneja el codi amb el mòbil i entra amb el compte de l\'institut.</p><div style="width:110mm;margin:8mm auto">' + q.svg + '</div><p style="font-size:16px">' + esc(q.url) + "</p></div>", false); return; }
     if (a === "copia") { navigator.clipboard && navigator.clipboard.writeText(asDades && asDades.text || ""); b.textContent = "Copiat ✓"; return; }
+    if (a === "vdobre" || a === "vdesb") { accioVideoDesat(a, b.dataset.id); return; }
     if (a === "videoword" || a === "videosolword") { videoWord(a === "videosolword"); return; }
     if (a === "imprimeixsol") { if (asDades && asDades.sol) imprimeix(asDades.titol + " · Solucionari", asDades.sol, false, false, true); return; }
     if (a === "imprimeix") { imprimeix(asDades.titol, asDades.html, false); return; }
@@ -2329,6 +2330,35 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       vr.map((q, i) => { const p = c.preg[q.i];
         return wPar([wRun((i + 1) + ".\t" + ctlPr(q.p, c) + " → "), wRun("abcdefgh"[q.c] + ") " + ctlOp(q.o[q.c]), { b: true })], { esq: 400, penj: 400, keep: !!(p.pag || p.cita), despres: p.pag || p.cita ? 0 : 120 }) +
           (p.pag || p.cita ? wPar([wRun((p.pag ? "p. " + p.pag : "") + (p.cita ? (p.pag ? " · " : "") + "«" + p.cita + "»" : ""), { sz: 18 })], { esq: 400, despres: 120 }) : ""); }).join("")));
+  }
+  // ---------- 📂 Qüestionaris de vídeo desats (14.11.2026) ----------
+  function desaVideo(transcripcio) {
+    if (!asDades || !asDades.video) return;
+    dades.videos = dades.videos || [];
+    const id = nouId(), d = Object.assign({}, asDades); delete d.qr;
+    dades.videos.unshift({ id: id, data: avuiISO(), titol: asDades.titol, curs: asVid.curs, nivell: asVid.niv, params: Object.assign({}, asVid), transcripcio: transcripcio || "", dades: d, html: asResultat });
+    asDades.desatId = id;
+    desa();
+  }
+  function llistaVideos() {
+    const l = dades.videos || [];
+    if (!l.length) return "";
+    const data = iso => { const m = String(iso || "").match(/^(\d{4})-(\d{2})-(\d{2})/); return m ? m[3] + "." + m[2] + "." + m[1] : ""; };
+    return '<details class="vd-desats" style="margin-top:12px"' + (asResultat ? "" : " open") + '><summary><b>📂 Qüestionaris desats</b> <span class="font">(' + l.length + ')</span></summary><ul style="margin:6px 0 0;padding-left:1.2em">' +
+      l.map(x => '<li style="margin:4px 0">' + esc(x.titol) + ' <span class="font">· ' + esc(x.curs || "") + (x.nivell ? " · " + esc(x.nivell) : "") + " · " + data(x.data) + (x.formulari ? " · amb formulari" : "") + "</span> " +
+        '<button type="button" class="boto clar" data-asb="vdobre" data-id="' + esc(x.id) + '">Obre</button> <button type="button" class="boto perill" data-asb="vdesb" data-id="' + esc(x.id) + '">✕</button></li>').join("") + "</ul></details>";
+  }
+  function accioVideoDesat(a, id) {
+    const l = dades.videos || [], x = l.find(y => y.id === id); if (!x) return;
+    if (a === "vdesb") {
+      if (!confirm("Vols esborrar «" + x.titol + "» dels qüestionaris desats?" + (x.formulari ? " El formulari de Google no s'esborra (es fa des del bloc del formulari)." : ""))) return;
+      dades.videos = l.filter(y => y !== x); desa(); pintaAssistent(); return;
+    }
+    asVid = Object.assign({}, asVid, x.params || {});
+    asDades = Object.assign({}, x.dades, { desatId: x.id }); asResultat = x.html || ""; asModel = "";
+    pintaAssistent();
+    if ($("asText")) $("asText").value = x.transcripcio || "";
+    const o = $("asSortida"); if (o) o.scrollIntoView({ behavior: "smooth", block: "start" });
   }
   // 14.11.2026: el qüestionari del vídeo en Word editable (un nivell per secció, amb la capçalera del centre) i el solucionari a part
   async function videoWord(sol) {
@@ -5019,6 +5049,8 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       asDades.sol = "<h3>" + esc(titolV) + "</h3><h4>Solucionari</h4><ul>" + nivells.map(nv => "<li><b>" + esc(nv.nom) + ":</b> " + nv.preguntes.map((q, k) => esc(solQ(q, k))).join(" · ") + "</li>").join("") + "</ul>";
       const sel = '<select id="asQrNiv" aria-label="Nivell del qüestionari">' + nivells.map((nv, k) => "<option" + (k === (nivells.length >= 3 && triats.length > 1 ? 1 : 0) ? " selected" : "") + ">" + esc(nv.nom) + "</option>").join("") + "</select>";
       fet('<div class="alum-eines"><a class="boto clar" href="' + esc(enllac) + '" target="_blank" rel="noopener">▶️ Mira el fragment</a><button type="button" class="boto clar" data-asb="copia">Copia</button><button type="button" class="boto clar" data-asb="imprimeix">🖨️ Imprimeix / PDF</button><button type="button" class="boto clar" data-asb="imprimeixsol">🔑 Solucionari</button><button type="button" class="boto clar" data-asb="videoword">⬇️ Word</button><button type="button" class="boto clar" data-asb="videosolword">⬇️ Solucionari en Word</button>' + (compteIns() ? sel + '<button type="button" class="boto" data-asb="qr">📱 Qüestionari en línia</button>' : "") + '</div><div class="as-doc">' + capcaleraDoc() + asDades.html + '</div><div class="as-doc as-sol">' + asDades.sol + "</div>");
+      // 14.11.2026: cada qüestionari preparat es desa sol (amb la transcripció) i es pot tornar a obrir des de «📂 Qüestionaris desats»
+      desaVideo(transcripcio);
     } catch (e) { fet('<p class="avis">' + esc(e.message) + "</p>"); }
   }
   // Enllaça el qüestionari del vídeo a la columna EO1 del grup de la classe del Classroom (full del trimestre actual).
@@ -5069,6 +5101,9 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       const bloc = '<div class="qr-bloc"><div class="qr">' + svg + '</div><div><b>' + esc(titol) + '</b><br><a href="' + esc(d.url) + '" target="_blank" rel="noopener">' + esc(d.url) + '</a><p class="font" style="margin:6px 0">' + pr.length + (pr.length === 1 ? " pregunta." : " preguntes.") + (pr.some(x => x.tipus === "oberta") ? " Les tancades i les de completar es corregeixen soles; les obertes les puntues tu al formulari (Respostes > Individual) i la nota s'hi suma quan tornes a passar les notes." : " Es corregeixen soles.") + " L'alumnat hi entra amb el compte de l'institut i les notes es poden passar a una columna amb el botó «Classroom».</p>" +
         '<div class="alum-eines" style="margin:0"><button type="button" class="boto" data-asb="qrimp">🖨️ Imprimeix el QR</button><a class="boto clar" href="' + esc(d.edita) + '" target="_blank" rel="noopener">✏️ Revisa el formulari</a><button type="button" class="boto clar" data-asb="qresb">🗑️ Esborra el formulari</button></div>' + pub + "</div></div>";
       asResultat = asResultat.replace('<div class="as-doc">', bloc + '<div class="as-doc">');
+      // si és un qüestionari de vídeo desat, s'hi guarda també el formulari creat (enllaç i QR)
+      const vds = asDades.desatId && (dades.videos || []).find(x => x.id === asDades.desatId);
+      if (vds) { vds.html = asResultat; vds.formulari = { id: d.id, url: d.url, titol: titol }; vds.dades = Object.assign({}, vds.dades, { qr: asDades.qr }); desa(); }
       pintaAssistent();
     } catch (e) { b.disabled = false; b.textContent = asDades && asDades.video ? "📱 Qüestionari en línia" : "📱 Versió en línia (QR)"; alert(e.message); }
   }
