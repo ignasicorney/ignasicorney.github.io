@@ -5013,7 +5013,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       html = noms.map((a, i) => (i ? '<div style="break-before:page"></div>' : "") + instr + cbFullHTML(p, a.replace(/\s+DIS$/i, "") + " · " + nomGrup(g.nom), cbCodiDe(g.nom, a)) + red).join("");
       desa();
     } else html = instr + cbFullHTML(p) + red;
-    imprimeix(p.titol, html, false, false, !g);   // el full en blanc, sense la capçalera del centre
+    imprimeix(p.titol, html, false, false, true);   // els fulls de respostes (en blanc i del grup), sense la capçalera del centre
   }
 
   // ---------- Lectura de la foto ----------
