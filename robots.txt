@@ -1,4 +1,5 @@
 User-agent: *
 Allow: /
 Disallow: /editor/
+Disallow: /tauler/
 Sitemap: https://ignasicorney.github.io/sitemap.xml
