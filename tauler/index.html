@@ -5278,7 +5278,13 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
   // ---------- Bloc de l'Institut ----------
   let cbSel = { p: 0, g: 0 }, cbMsg = "";
   // Proves disponibles: les de sèrie (menys les eliminades) i les carregades des de la Bitàcola (dades.cb.proves)
-  const cbProves = () => { const c = CB(), fora = Array.isArray(c.treu) ? c.treu : []; return CB_PROVES.filter(x => !fora.includes(x.id)).concat(Array.isArray(c.proves) ? c.proves : []); };
+  // Les proves carregades a mà que ja són a la llista fixa (mateix curs i matèria) s'amaguen, si encara no tenen cap alumne corregit
+  const cbProves = () => {
+    const c = CB(), fora = Array.isArray(c.treu) ? c.treu : [], fixes = CB_PROVES.filter(x => !fora.includes(x.id));
+    const ambNotes = x => c.res && c.res[x.id] && Object.values(c.res[x.id]).some(g => g && Object.keys(g).length);
+    const propies = (Array.isArray(c.proves) ? c.proves : []).filter(x => ambNotes(x) || !fixes.some(f => f.curs === x.curs && f.materia === x.materia));
+    return fixes.concat(propies);
+  };
   const cbProva = () => { const ps = cbProves(); if (cbSel.p >= ps.length || cbSel.p < 0) cbSel.p = 0; return ps[cbSel.p] || null; };
   const cbOrdre = (a, b) => a.localeCompare(b, "ca", { sensitivity: "base", ignorePunctuation: true });
   const cbNet = a => a.replace(/\s+DIS$/i, "");
@@ -5290,7 +5296,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     const propi = p.full.model === "propi";
     const enl = (u, t) => u ? '<a class="boto clar" href="' + esc(u) + '" target="_blank" rel="noopener" style="text-decoration:none">' + t + "</a>" : "";
     // Proves per anys: un botó per curs (i matèria)
-    let h = '<div class="vistes" role="group" aria-label="Prova" style="flex-wrap:wrap;margin-bottom:8px">' + ps.map((x, i) => [x, i]).sort((u, v) => v[0].curs.localeCompare(u[0].curs)).map(([x, i]) => '<button type="button" data-cbp="' + i + '" aria-pressed="' + (i === cbSel.p) + '">' + esc(x.curs) + (ps.filter(y => y.curs === x.curs).length > 1 ? " · " + esc(x.materia) : "") + "</button>").join("") + "</div>" +
+    let h = '<div class="vistes" role="group" aria-label="Prova" style="flex-wrap:wrap;margin-bottom:8px">' + ps.map((x, i) => [x, i]).sort((u, v) => v[0].curs.localeCompare(u[0].curs)).map(([x, i]) => '<button type="button" data-cbp="' + i + '" aria-pressed="' + (i === cbSel.p) + '">' + esc(x.curs) + (ps.filter(y => y.curs === x.curs).length > 1 ? (x.propia ? " · carregada" : "") : "") + "</button>").join("") + "</div>" +
       '<div class="alum-eines">' + nova + (p.propia ? '<button type="button" class="boto clar" data-cb="edita">✏️ Revisa la clau</button>' : "") + '<button type="button" class="boto clar" data-cb="treu">🗑️ Elimina la prova ' + esc(p.curs) + "</button></div>" +
       '<div class="fila-as">' + (q.grups.length ? '<label>Grup<select data-cb="g">' + q.grups.map((x, i) => '<option value="' + i + '"' + (i === cbSel.g ? " selected" : "") + ">" + esc(nomGrup(x.nom)) + "</option>").join("") + "</select></label>" : "") + "</div>";
     const eines = enl(p.quadern, "📄 Quadern") + enl(p.criteris, "✅ Criteris") + enl(p.claus, "🔑 Claus") + enl(p.audio, "🎧 Àudio") + enl(p.transcripcio, "📝 Transcripció") +
