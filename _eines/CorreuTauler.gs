@@ -69,6 +69,11 @@
 //   Opcional: GEMINI_MODEL (per defecte, gemini-flash-latest).
 //   { accio: "video-preguntes", url, inici, final, sistema, text } → { resposta }: inici i final en segons
 //   «classroom-publica» accepta també «video»: l'enllaç del fragment, que s'afegeix com a material de la tasca
+//   { accio: "video-transcripcio", url, inici, final } → { transcripcio, paraules } (14.11.2026)
+//     La IA NOMÉS transcriu el tros (sense cap altra instrucció, perquè no s'inventi res) i l'script comprova
+//     que els temps de la transcripció caiguin dins del tros; si no, és que no ha vist el vídeo i dona error.
+//     El tauler la fa a trossos de poc més d'un minut (així no s'esgota el temps d'espera) i amb la
+//     transcripció comprovada fa les preguntes.
 //
 // MODEL DE RESERVA (14.11.2026): quan Gemini està saturat, el tauler hi passa la mateixa petició.
 //   Cal la propietat de l'script GROQ_KEY (clau gratuïta de console.groq.com > API Keys, sense targeta).
@@ -364,6 +369,7 @@ function doPost(e) {
           try { Classroom.Courses.CourseWork.remove(String(cos.curs), String(cos.tasca)); tasca = true; } catch (e) {}
         }
         PropertiesService.getScriptProperties().deleteProperty("tanca_" + id);
+        PropertiesService.getScriptProperties().deleteProperty("claus_" + id);
         try { DriveApp.getFileById(id).setTrashed(true); }
         catch (e) { throw new Error("No s'ha pogut esborrar el formulari: potser ja no existeix o no en ets el propietari."); }
         return json_({ ok: true, tasca: tasca });
@@ -384,7 +390,16 @@ function doPost(e) {
         form.setShowLinkToRespondAgain(false);
         form.setConfirmationMessage(String(cos.confirmacio || "Respostes enviades. Gràcies!"));
         if (cos.text) form.setDescription(String(cos.text).slice(0, 4000));
+        // 14.11.2026: també preguntes de completar (resposta curta; es corregeixen soles amb les paraules
+        // guardades a la propietat «claus_<id>») i obertes (paràgraf; les puntua el professor al formulari)
+        const claus = {};
         pr.forEach(function (q) {
+          if (q.tipus === "completa" || q.tipus === "oberta") {
+            const t = q.tipus === "completa" ? form.addTextItem() : form.addParagraphTextItem();
+            t.setTitle(String(q.enunciat || "").slice(0, 900)).setPoints(Number(q.punts) > 0 ? Number(q.punts) : (q.tipus === "oberta" ? 2 : 1)).setRequired(true);
+            if (q.tipus === "completa") claus[t.getId()] = (q.respostes || []).map(String);
+            return;
+          }
           const opcions = (q.opcions || []).map(String);
           const bones = (q.correctes || []).map(Number);
           if (opcions.length < 2) return;
@@ -392,6 +407,7 @@ function doPost(e) {
           it.setTitle(String(q.enunciat || "").slice(0, 900)).setPoints(Number(q.punts) > 0 ? Number(q.punts) : 1).setRequired(true);
           it.setChoices(opcions.map(function (o, i) { return it.createChoice(o, bones.indexOf(i) >= 0); }));
         });
+        if (Object.keys(claus).length) PropertiesService.getScriptProperties().setProperty("claus_" + form.getId(), JSON.stringify(claus));
         return json_({ ok: true, id: form.getId(), url: form.shortenFormUrl(form.getPublishedUrl()), edita: form.getEditUrl() });
       }
 
@@ -444,6 +460,10 @@ function doPost(e) {
         return json_({ ok: true, resposta: text });
       }
 
+      case "video-transcripcio": {
+        return json_(Object.assign({ ok: true }, transcripcioVideo_(cos)));
+      }
+
       case "ia-reserva": {
         return json_(Object.assign({ ok: true }, reserva_(cos)));
       }
@@ -455,10 +475,23 @@ function doPost(e) {
           const t = it.getType();
           if (t === FormApp.ItemType.MULTIPLE_CHOICE) max += it.asMultipleChoiceItem().getPoints();
           else if (t === FormApp.ItemType.CHECKBOX) max += it.asCheckboxItem().getPoints();
+          else if (t === FormApp.ItemType.TEXT) max += it.asTextItem().getPoints();
+          else if (t === FormApp.ItemType.PARAGRAPH_TEXT) max += it.asParagraphTextItem().getPoints();
         });
+        // 14.11.2026: les de completar es corregeixen aquí amb les paraules guardades (sense accents, majúscules ni puntuació)
+        let claus = {};
+        try { claus = JSON.parse(PropertiesService.getScriptProperties().getProperty("claus_" + String(cos.id)) || "{}"); } catch (e) {}
+        const norm = function (t) { return String(t || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-zñç0-9]+/g, " ").trim(); };
         const respostes = form.getResponses().map(function (r) {
           let punts = 0;
-          r.getGradableItemResponses().forEach(function (ir) { punts += Number(ir.getScore()) || 0; });
+          r.getGradableItemResponses().forEach(function (ir) {
+            const it = ir.getItem(), cl = claus[it.getId()];
+            if (cl && it.getType() === FormApp.ItemType.TEXT) {
+              const sc = ir.getScore();
+              punts += (sc != null && sc !== "" && Number(sc) > 0) ? Number(sc)   // si el professor ja l'ha puntuat a mà, mana la seva nota
+                : (cl.map(norm).indexOf(norm(ir.getResponse())) >= 0 ? it.asTextItem().getPoints() : 0);
+            } else punts += Number(ir.getScore()) || 0;
+          });
           return { email: String(r.getRespondentEmail() || "").toLowerCase(), punts: punts, data: r.getTimestamp().toISOString() };
         });
         return json_({ ok: true, max: max, respostes: respostes });
@@ -645,6 +678,75 @@ function alumnesCurs_(curs) {
 }
 
 // Model de reserva (Groq) per a l'Assistent quan Gemini està saturat (14.11.2026)
+// 14.11.2026: transcripció comprovada d'un tros de vídeo de YouTube (vegeu «video-transcripcio» a dalt)
+function transcripcioVideo_(cos) {
+  const props = PropertiesService.getScriptProperties();
+  const clau = props.getProperty("GEMINI_KEY");
+  if (!clau) throw new Error("Falta la propietat GEMINI_KEY a l'script del compte d'ieslabisbal.cat (Configuració del projecte > Propietats de l'script).");
+  const model = props.getProperty("GEMINI_MODEL") || "gemini-flash-latest";
+  const m = String(cos.url || "").match(/(?:youtu\.be\/|[?&]v=|\/(?:embed|shorts|live)\/)([\w-]{11})/);
+  if (!m) throw new Error("L'enllaç no és d'un vídeo de YouTube.");
+  const inici = Math.max(0, Math.floor(Number(cos.inici) || 0)), final = Math.floor(Number(cos.final) || 0);
+  if (!(final > inici)) throw new Error("El final del fragment ha de ser posterior a l'inici.");
+  const mmss = function (x) { return Math.floor(x / 60) + ":" + ("0" + (x % 60)).slice(-2); };
+  const peticio = {
+    systemInstruction: { parts: [{ text: "Ets un transcriptor. Transcrius literalment el que es diu en un tros de vídeo de YouTube, paraula per paraula, en la llengua en què es parla. No resumeixes, no comentes i no inventes res. Si no pots veure ni sentir el vídeo, o no s'hi sent ningú parlar, ho dius posant \"accessible\": false o deixant la llista buida." }] },
+    contents: [{ role: "user", parts: [
+      { fileData: { fileUri: "https://www.youtube.com/watch?v=" + m[1] }, videoMetadata: { startOffset: inici + "s", endOffset: final + "s" } },
+      { text: "Transcriu literalment tot el que es diu en aquest tros del vídeo (del " + mmss(inici) + " al " + mmss(final) + " del vídeo complet). Fes una entrada per frase o tros de frase, amb el moment en què comença en m:ss del vídeo complet. " +
+        "Respon només JSON: {\"accessible\": true o false, \"segments\": [{\"t\": \"m:ss\", \"text\": \"el que es diu, literal\"}]}" }
+    ] }],
+    // resolució baixa de la imatge: l'important és l'àudio, i així va més de pressa
+    generationConfig: { responseMimeType: "application/json", temperature: 0, mediaResolution: "MEDIA_RESOLUTION_LOW" }
+  };
+  const models = [model].concat(["gemini-flash-latest", "gemini-3.8-flash", "gemini-flash-lite-latest"].filter(function (x) { return x !== model; }));
+  let r = null, d = {}, msg = "", temps = false;
+  fora:
+  for (let i = 0; i < models.length; i++) {
+    for (let intent = 0; intent < 2; intent++) {
+      if (intent) Utilities.sleep(4000);
+      try {
+        r = UrlFetchApp.fetch("https://generativelanguage.googleapis.com/v1beta/models/" + models[i] + ":generateContent", {
+          method: "post", contentType: "application/json", headers: { "x-goog-api-key": clau },
+          payload: JSON.stringify(peticio), muteHttpExceptions: true
+        });
+      } catch (e) { r = null; temps = true; msg = String(e.message || e); continue fora; }   // temps d'espera esgotat: el model següent
+      d = {};
+      try { d = JSON.parse(r.getContentText()); } catch (e) {}
+      if (r.getResponseCode() === 200) break fora;
+      msg = (d.error && d.error.message) || ("error " + r.getResponseCode());
+      if (/no longer available|not found|not supported|deprecated|retired/i.test(msg)) continue fora;
+      if (/mediaResolution|media_resolution/i.test(msg)) { delete peticio.generationConfig.mediaResolution; intent--; continue; }   // si el model no l'accepta, sense
+      if ([429, 500, 503].indexOf(r.getResponseCode()) < 0) break fora;
+    }
+  }
+  if (!r || r.getResponseCode() !== 200) {
+    if (/api key|api_key/i.test(msg)) throw new Error("La clau GEMINI_KEY no és vàlida; revisa-la a les propietats de l'script.");
+    if (!r && temps) throw new Error("La IA ha trigat massa a mirar el vídeo. Torna-ho a provar d'aquí a uns minuts.");
+    if ([429, 500, 503].indexOf(r.getResponseCode()) >= 0 || /no longer available|not found|deprecated|retired/i.test(msg)) throw new Error("Els models de Gemini estan saturats ara mateix i només Gemini pot mirar vídeos. Torna-ho a provar d'aquí a uns minuts o enganxa la transcripció del fragment (a YouTube: «…» > «Mostra la transcripció»).");
+    if (/youtube|video|file/i.test(msg)) throw new Error("La IA no ha pogut obrir el vídeo: ha de ser públic a YouTube (els ocults o privats no hi van). També pots enganxar-ne la transcripció.");
+    throw new Error("Gemini: " + msg);
+  }
+  const parts = (((d.candidates || [])[0] || {}).content || {}).parts || [];
+  let res = {};
+  try { res = JSON.parse(parts.map(function (p) { return p.text || ""; }).join("").trim().replace(/^```(json)?\s*|\s*```$/g, "")); } catch (e) {}
+  const NO_VIST = "La IA no ha pogut veure el vídeo (del " + mmss(inici) + " al " + mmss(final) + ") i no se'n fan preguntes inventades. Comprova que el vídeo sigui públic a YouTube i torna-ho a provar, o enganxa'n la transcripció.";
+  if (res.accessible === false) throw new Error(NO_VIST);
+  const seg = (Array.isArray(res.segments) ? res.segments : []).map(function (x) {
+    const t = String((x && x.t) || "").trim(), mt = t.match(/^(?:(\d+):)?(\d+):(\d{1,2})$/);
+    return { s: mt ? Number(mt[1] || 0) * 3600 + Number(mt[2]) * 60 + Number(mt[3]) : (/^\d+(\.\d+)?$/.test(t) ? Math.floor(Number(t)) : null), text: String((x && x.text) || "").replace(/\s+/g, " ").trim() };
+  }).filter(function (x) { return x.text; });
+  if (!seg.length) return { transcripcio: "", paraules: 0 };   // tros sense veu (música…): el tauler decideix amb el total
+  // Comprovació: els temps han de caure dins del tros. S'accepten temps del vídeo complet o comptats des de l'inici del tros.
+  const dur = final - inici, marge = 8;
+  const dinsAbs = seg.filter(function (x) { return x.s != null && x.s >= inici - marge && x.s <= final + marge; }).length;
+  const dinsRel = seg.filter(function (x) { return x.s != null && x.s <= dur + marge; }).length;
+  const rel = inici > dur + marge && dinsRel > dinsAbs;
+  if ((rel ? dinsRel : dinsAbs) < Math.ceil(seg.length * 0.7)) throw new Error(NO_VIST);
+  const txt = seg.map(function (x) { return "[" + (x.s == null ? "?" : mmss(rel ? x.s + inici : x.s)) + "] " + x.text; }).join("\n");
+  return { transcripcio: txt, paraules: txt.replace(/\[[^\]]*\]/g, " ").split(/\s+/).filter(String).length };
+}
+
 const GROQ_ = "https://api.groq.com/openai/v1/";
 function modelsGroq_(clau) {
   const cache = CacheService.getScriptCache();
