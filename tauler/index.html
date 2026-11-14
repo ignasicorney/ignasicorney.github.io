@@ -630,6 +630,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       <button type="button" data-as="pau">🧩 Sintaxi i selectivitat</button>
       <button type="button" data-as="cur">📘 Currículum</button>
       <button type="button" data-as="crit">📋 Criteris del departament</button>
+      <button type="button" data-as="mat">🗂️ Material 4t ESO</button>
     </div>
     <div id="asCos"></div>
   </div>
@@ -2911,6 +2912,58 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     }
   }
   EINES.crit = pintaCrit;
+
+  // ================= Material per nivells (carpetes del Drive de l'XTEC) =================
+  // Cada nivell: carpeta arrel, índex i blocs (trimestres o apartats) amb les carpetes per tema. Per afegir un nivell, un objecte nou.
+  const MATERIAL = [
+    { nivell: "4t d'ESO · Castellà", arrel: "19oCy1zYt7PImZ9WTOfN5xsnDvRyfjCs1", index: "1Msa2PTDm9RXO4GcxkWYScntifkmXVU7P1bnti75PqXc",
+      origen: "Material de l'Òscar Canudas (cursos 2018-19 a 2025-26), organitzat el 14.11.2026.",
+      blocs: [
+        { t: "1r trimestre", id: "17VcqhJh7ewpXQj2hRZHKBaNr-AeSPV8r", c: "Comunicació i propietats del text; textos narratius i descriptius (i la Il·lustració el 22-23).",
+          f: [["A. Exàmens i solucions", "1E6eFQ1nwOM8H7TtjNzxvE9qnT8rWH5kJ", "Exàmens de 22-23 a 25-26 («Aquel mensaje», «La primera muñeca», propietats del text)."],
+            ["B. Adaptacions", "1w_OrcfUH3klEgjk38Dk6NeQbWLEqSyHR", "Dues adaptacions del 1r examen (24-25), una per a 4PS."],
+            ["C. Comprensió lectora", "1s0a5w49GadmQ8ikDiitqITpuQTOsFQTS", "«El extraordinario invento del cinematógrafo» i el control «Un buen día»."],
+            ["D. Expressió escrita", "1g6RGvXMzF8n97Qw8BHwCGX5YM1tWkb3m", "EE1: redacció a partir d'un àudio."]] },
+        { t: "2n trimestre", id: "121ZHtESbHLo24JeOyTm0xFMeFdxWrccw", c: "Textos expositius i argumentatius, descripcions i narrador; sintaxi de l'oració simple; Realisme i Naturalisme; lectura «El bosque de los corazones dormidos».",
+          f: [["A. Exàmens i solucions", "19YRCIFJD9bmp4PneTTAnOBz5cxWBCQil", "Exàmens de 21-22 a 25-26, recuperació i solucions."],
+            ["B. Textos projectats a l'examen", "1s2CZdk_xJV4jGV06yDqxXmncDAe8uTPy", "Vídeos i imatges del 2n examen del 23-24."],
+            ["C. Lectures (novel·les)", "1I8XTuC5VHReCRNXu1F6-B8N_rtbTX_7x", "«El bosque de los corazones dormidos» (qüestionaris, examen i solucions) i EE3 de «Tristes armas»."],
+            ["D. Sintaxi", "19q5ACGlrfKEROY15pbf17R1PjNzHEkvL", "Funcions sintàctiques i test de l'oració simple."],
+            ["E. Tipologia textual", "1bcQNSl2PjyMV21L3B_b_yg_nHS7hp35o", "Activitat de consolidació de textos expositius."],
+            ["F. Literatura", "1voWSd_6P47cwbpmNgv0SaAEocwTUgcAh", "Apunts de Realisme i Naturalisme."],
+            ["G. Comprensió lectora i oral", "1nH7Qm7qxJLJLeS8aS20VEN6TdDQSfiaY", "Neruda, «Recuerdos de infancia» (CL4), i àudio «Al otro lado del muro»."],
+            ["H. Expressió escrita", "1wKjqet0Xstddq6zmWRRXS5XfT0AYnekT", "EE2: «Cómo te ves de aquí a diez años»."]] },
+        { t: "3r trimestre", id: "1-K3G3eBIXnPh4IlkGio3F7EP5Um9KPXn", c: "Textos argumentatius i instructius, narrador i descripcions, lèxic i semàntica, discursos orals i audiovisuals.",
+          f: [["A. Exàmens i solucions", "1dSOawdQv3V8claTNtRyItgdgzh15LzOU", "Exàmens de 21-22 a 25-26, finals i solucions."],
+            ["B. Comprensió oral i audiovisual", "1BLwPKrEpgrQYYi2zy_rrYpR7fhY5WOjQ", "CO «Filosofía viva» (Para todos La 2) i «Fragmento audiovisual 2»."],
+            ["C. Comprensió lectora", "1HRQW93FbxeF1IjosFwmh89FaRoSrqedH", "«El fin del capitán Blay» amb respostes i Neruda (CL3)."]] },
+        { t: "Altres carpetes", id: "", c: "",
+          f: [["Competències bàsiques (proves oficials)", "1udOZNknf5aTvFAID_RswiFFrSPRlZwhx", "Proves de 2018-19 a 2023-24 per cursos. Ja són a «🧪 Competències bàsiques» per corregir-les."],
+            ["Avaluació i notes", "1-a-muoDDUENSoD1Kc1EiKq4Bplb-Mb70", "Graelles del company: contenen dades de l'alumnat del 25-26."],
+            ["Recursos generals", "1jFlOa2An9fPBqBTqSLTaAFpkm0lKyQ2r", "Llibre «básico de 4º»."],
+            ["Duplicats", "1UvrrvvF3Q2CVpHIM_RhwSpeuTkX4IQZT", "Còpies idèntiques, per revisar i esborrar."]] }
+      ] }
+  ];
+  const MAT_COMPTE = "icorney@xtec.cat";
+  const matCarpeta = id => "https://drive.google.com/drive/folders/" + id + "?authuser=" + encodeURIComponent(MAT_COMPTE);
+  let matSel = 0;
+  function pintaMat() {
+    const m = MATERIAL[Math.min(matSel, MATERIAL.length - 1)];
+    const enl = (id, t) => '<a href="' + matCarpeta(id) + '" target="_blank" rel="noopener">' + esc(t) + "</a>";
+    let h = '<p class="font">El material de cada nivell, ordenat per trimestres i temes. Cada enllaç obre la carpeta al Drive de l\'XTEC (' + esc(MAT_COMPTE) + ").</p>";
+    if (MATERIAL.length > 1) h += '<div class="vistes" role="group" aria-label="Nivell" style="flex-wrap:wrap;margin-bottom:8px">' + MATERIAL.map((x, i) => '<button type="button" data-mat="' + i + '" aria-pressed="' + (i === matSel) + '">' + esc(x.nivell) + "</button>").join("") + "</div>";
+    h += '<div class="alum-eines"><a class="boto clar" style="text-decoration:none" href="' + matCarpeta(m.arrel) + '" target="_blank" rel="noopener">📁 Carpeta ' + esc(m.nivell) + '</a><a class="boto clar" style="text-decoration:none" href="https://docs.google.com/document/d/' + m.index + "/edit?authuser=" + encodeURIComponent(MAT_COMPTE) + '" target="_blank" rel="noopener">📄 Índex detallat</a></div>';
+    if (m.origen) h += '<p class="font">' + esc(m.origen) + "</p>";
+    h += m.blocs.map((b, i) => '<details class="rub-bloc"><summary><b>" + esc(b.t) + "</b>" + (b.id ? ' <span class="font">· ' + enl(b.id, "obre la carpeta") + "</span>" : "") + "</summary>" +
+      (b.c ? '<p class="font">' + esc(b.c) + "</p>" : "") +
+      "<ul>" + b.f.map(f => "<li>" + enl(f[1], "📁 " + f[0]) + (f[2] ? ' <span class="font">— ' + esc(f[2]) + "</span>" : "") + "</li>").join("") + "</ul></details>").join("");
+    return h;
+  }
+  document.addEventListener("click", e => {
+    const b = e.target.closest("[data-mat]"); if (!b) return;
+    matSel = Number(b.dataset.mat) || 0; pintaAssistent();
+  });
+  EINES.mat = pintaMat;
   EINES_DESPRES.crit = critDespres;
   ACCIONS_EI.cr = critAccio;
   ACCIONS_EI.pa = pauAccio;
