@@ -2223,30 +2223,49 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
         const doc = await llegeixDocEi(file, 900000), mat = (String(fv("mat", "")).trim() + "\n" + doc.text).trim();
         if (!mat && !doc.imatge) throw new Error("Puja el PDF del llibre (o dels capítols): sense el text, no es pot fer el control.");
         const n = Math.max(3, Math.min(40, Number(fv("n", "10")) || 10)), k = Number(fv("k", "4")), caps = String(fv("caps", "")).trim(), lleng = fv("lleng", "castellà");
-        const demanades = Math.min(50, n + Math.ceil(n / 3));   // en demana de més per si se n'han de descartar
-        const r = await ia("Ets professor de llengua " + lleng + " de secundària. Fes un control de lectura del llibre «" + ll.t + "»" + (ll.a ? " de " + ll.a : "") + (caps ? ", capítols " + caps : ", de tot el llibre") + ", per a " + cursCtl() + ": " + demanades + " preguntes tipus test amb " + k + " opcions i una sola de correcta.\n\n" +
-          "NORMES OBLIGATÒRIES:\n" +
-          "1) LLEGEIX SENCER el text del llibre que t'envio. Les marques «--- Pàgina N ---» indiquen on comença cada pàgina.\n" +
-          "2) NO INVENTIS RES. Fes servir NOMÉS el text que t'envio; ignora tot el que creguis saber del llibre, de l'autora, d'altres obres o de resums. Si un personatge, lloc, fet o detall no surt escrit al text enviat, no el posis ni a l'enunciat ni a les opcions correctes.\n" +
-          "3) Cada pregunta ha de dur la JUSTIFICACIÓ: «pag» = número de la pàgina (el de la marca «--- Pàgina N ---») on hi ha la resposta, i «cita» = una frase COPIADA LITERALMENT del text (entre 6 i 25 paraules seguides, sense canviar ni una lletra, en la llengua original del llibre) que demostri que la resposta correcta ho és.\n" +
-          "4) Es comprovarà automàticament que cada cita és al text: la pregunta amb una cita que no hi sigui literalment es descartarà.\n" +
-          "5) Preguntes sobre fets concrets de la trama, personatges, llocs i alguna d'inferència senzilla, repartides per tot el llibre" + (caps ? " (dels capítols indicats)" : " (del principi, del mig i del final)") + ". Opcions plausibles i de llargada semblant, sense «totes les anteriors» ni «cap de les anteriors». Reparteix la posició de la correcta.\n\n" +
-          "Redacta les preguntes i les opcions en " + lleng + ", amb bona ortografia: cada opció acaba amb punt" + (lleng === "castellà" ? " i les preguntes porten «¿» i «?»" : "") + ". Respon només JSON: {\"preguntes\": [{\"p\": enunciat, \"o\": [opcions sense lletra], \"c\": índex de la correcta (0 = la primera), \"pag\": número de pàgina, \"cita\": frase literal del text}]}.", mat, { json: true, imatge: doc.imatge });
-        // Comprovació: la cita ha de ser literalment al text (sense comptar majúscules, accents, signes ni salts de línia)
+        // Comprovació: la cita ha de ser al text (sense comptar majúscules, accents, signes ni salts de línia). S'admeten petites
+        // diferències de còpia: n'hi ha prou que hi siguin la majoria dels trossos de 5 paraules seguides de la cita.
         const normCtl = t => String(t).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9ñ]+/g, " ").trim();
         const pagines = [];
         mat.split(/--- Pàgina (\d+) ---/).forEach((x, i, a) => { if (i % 2) pagines.push({ n: Number(x), t: normCtl(a[i + 1] || "") }); });
         const totNorm = normCtl(mat.replace(/--- Pàgina \d+ ---/g, " "));
-        let descartades = 0;
-        const preg = (r && Array.isArray(r.preguntes) ? r.preguntes : []).filter(p => p && p.p && Array.isArray(p.o) && p.o.length === k && Number.isInteger(Number(p.c)) && Number(p.c) >= 0 && Number(p.c) < k).map(p => {
-          const q = { p: String(p.p), o: p.o.map(String), c: Number(p.c), pag: Number(p.pag) || null, cita: String(p.cita || "").trim() };
-          if (!mat) return q.cita ? q : null;   // només foto: no es pot comprovar, però ha de dur cita
-          const c = normCtl(q.cita);
-          if (c.split(" ").length < 4 || !totNorm.includes(c)) { descartades++; return null; }
-          const pg = pagines.find(x => x.t.includes(c));
-          if (pg) q.pag = pg.n;   // la pàgina, la del text real (no la que digui la IA)
-          return q;
-        }).filter(Boolean).slice(0, n);
+        const trobaCita = cita => {
+          const w = normCtl(cita).split(" ").filter(Boolean); if (w.length < 4) return null;
+          const fin = [];
+          for (let i = 0; i + 5 <= w.length; i++) fin.push(w.slice(i, i + 5).join(" "));
+          if (!fin.length) fin.push(w.join(" "));
+          const bons = fin.filter(f => totNorm.includes(f));
+          if (bons.length < Math.ceil(fin.length * 0.6)) return null;
+          const pg = pagines.find(x => x.t.includes(bons[0]));
+          return { pag: pg ? pg.n : null };
+        };
+        // Es demana per tandes (com a màxim 20 preguntes per tanda) fins a arribar a les demanades
+        const preg = [], vistes = new Set();
+        let descartades = 0, tandes = 0;
+        while (preg.length < n && tandes < 6) {
+          tandes++;
+          const falten = n - preg.length, quantes = Math.min(20, falten + Math.ceil(falten / 4));
+          const r = await ia("Ets professor de llengua " + lleng + " de secundària. Fes un control de lectura del llibre «" + ll.t + "»" + (ll.a ? " de " + ll.a : "") + (caps ? ", capítols " + caps : ", de tot el llibre") + ", per a " + cursCtl() + ": " + quantes + " preguntes tipus test amb " + k + " opcions i una sola de correcta.\n\n" +
+            "NORMES OBLIGATÒRIES:\n" +
+            "1) LLEGEIX SENCER el text del llibre que t'envio. Les marques «--- Pàgina N ---» indiquen on comença cada pàgina.\n" +
+            "2) NO INVENTIS RES. Fes servir NOMÉS el text que t'envio; ignora tot el que creguis saber del llibre, de l'autora, d'altres obres o de resums. Si un personatge, lloc, fet o detall no surt escrit al text enviat, no el posis ni a l'enunciat ni a les opcions correctes.\n" +
+            "3) Cada pregunta ha de dur la JUSTIFICACIÓ: «pag» = número de la pàgina (el de la marca «--- Pàgina N ---») on hi ha la resposta, i «cita» = una frase COPIADA LITERALMENT del text (entre 6 i 25 paraules seguides, sense canviar ni una lletra, en la llengua original del llibre) que demostri que la resposta correcta ho és.\n" +
+            "4) Es comprovarà automàticament que cada cita és al text: la pregunta amb una cita que no hi sigui es descartarà.\n" +
+            "5) Preguntes sobre fets concrets de la trama, personatges, llocs i alguna d'inferència senzilla, repartides per tot el llibre" + (caps ? " (dels capítols indicats)" : " (del principi, del mig i del final)") + ". Opcions plausibles i de llargada semblant, sense «totes les anteriors» ni «cap de les anteriors». Reparteix la posició de la correcta.\n" +
+            (preg.length ? "6) Ja hi ha aquestes preguntes; NO les repeteixis ni en preguntis el mateix, i busca fets d'altres pàgines:\n" + preg.map(q => "- " + q.p + " (p. " + (q.pag || "?") + ")").join("\n") + "\n" : "") +
+            "\nRedacta les preguntes i les opcions en " + lleng + ", amb bona ortografia: cada opció acaba amb punt" + (lleng === "castellà" ? " i les preguntes porten «¿» i «?»" : "") + ". Respon només JSON: {\"preguntes\": [{\"p\": enunciat, \"o\": [opcions sense lletra], \"c\": índex de la correcta (0 = la primera), \"pag\": número de pàgina, \"cita\": frase literal del text}]}.", mat, { json: true, imatge: doc.imatge });
+          const abans = preg.length;
+          (r && Array.isArray(r.preguntes) ? r.preguntes : []).forEach(p => {
+            if (preg.length >= n) return;
+            if (!(p && p.p && Array.isArray(p.o) && p.o.length === k && Number.isInteger(Number(p.c)) && Number(p.c) >= 0 && Number(p.c) < k)) return;
+            const q = { p: String(p.p), o: p.o.map(String), c: Number(p.c), pag: Number(p.pag) || null, cita: String(p.cita || "").trim() };
+            const clau = normCtl(q.p); if (vistes.has(clau)) return;
+            if (mat) { const t = trobaCita(q.cita); if (!t) { descartades++; return; } if (t.pag) q.pag = t.pag; }   // la pàgina, la del text real
+            else if (!q.cita) return;   // només foto: no es pot comprovar, però ha de dur cita
+            vistes.add(clau); preg.push(q);
+          });
+          if (preg.length === abans && tandes >= 2) break;   // dues tandes sense res de nou: plega
+        }
         if (!preg.length) throw new Error("La IA no ha fet cap pregunta amb una cita que es trobi al llibre" + (descartades ? " (n'ha fet " + descartades + " amb cites inventades)" : "") + "; torna-ho a provar.");
         ctl = { id: nouId(), d: avuiISO(), llibre: ll.t, caps, curs: cursCtl(), lleng, k, vars: Number(fv("vars", "2")), preg, resp: {} };
         eiRes.ctl = ""; eiMsg.ctl = (preg.length < n ? "Només n'hi ha " + preg.length + " de comprovades (de " + n + " demanades)." : "✓ " + preg.length + " preguntes, totes amb la cita trobada al llibre.") + (descartades ? " S'han descartat " + descartades + " preguntes amb cites que no són al text." : "") + (!mat ? " ⚠️ Amb una foto no es poden comprovar les cites: revisa-les." : "");
