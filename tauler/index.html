@@ -2357,36 +2357,66 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
           const pg = pagines.find(x => x.t.includes(bons[0]));
           return { pag: pg ? pg.n : null };
         };
-        // Es demana per tandes (com a màxim 20 preguntes per tanda) fins a arribar a les demanades
-        const preg = [], vistes = new Set();
-        let descartades = 0, tandes = 0;
-        while (preg.length < n && tandes < 6) {
-          tandes++;
-          const falten = n - preg.length, quantes = Math.min(20, falten + Math.ceil(falten / 4));
-          const r = await ia("Ets professor de llengua " + lleng + " de secundària. Fes un control de lectura del llibre «" + ll.t + "»" + (ll.a ? " de " + ll.a : "") + (caps ? ", capítols " + caps : ", de tot el llibre") + ", per a " + cursCtl() + ": " + quantes + " preguntes tipus test amb " + k + " opcions i una sola de correcta.\n\n" +
+        // 14.11.2026: el llibre es parteix en trossos seguits (per pàgines) i a cada tros se li demanen les preguntes que li toquen,
+        // amb només el text d'aquell tros: així surten preguntes del principi, del mig i del final (epíleg inclòs), i no només del començament.
+        const trossos = [];
+        if (pagines.length > 1) {
+          const blocs = mat.split(/(?=--- Pàgina \d+ ---)/).filter(x => x.trim()), total = blocs.reduce((s, x) => s + x.length, 0);
+          const nT = Math.max(1, Math.min(8, Math.ceil(n / 7), blocs.length)), mida = total / nT;
+          let cur = "", acum = 0;
+          blocs.forEach(x => { cur += x; acum += x.length; if (acum >= mida * (trossos.length + 1) && trossos.length < nT - 1) { trossos.push(cur); cur = ""; } });
+          if (cur.trim()) trossos.push(cur);
+        } else if (mat.length > 30000) {
+          const nT = Math.max(1, Math.min(8, Math.ceil(n / 7))), mida = Math.ceil(mat.length / nT);
+          for (let x = 0; x < mat.length; x += mida) trossos.push(mat.slice(x, x + mida));
+        } else trossos.push(mat);
+        const rangPag = t => { const m = t.match(/--- Pàgina (\d+) ---/g); if (!m) return ""; const a = m[0].match(/\d+/)[0], b = m[m.length - 1].match(/\d+/)[0]; return a === b ? " (pàgina " + a + ")" : " (pàgines " + a + "-" + b + ")"; };
+        // Repetides: mateixa pregunta amb altres paraules (moltes paraules en comú entre enunciat i resposta correcta) o mateixa frase del llibre com a prova
+        const PARAULES_BUIDES = new Set("que quien quienes cual cuales como cuando donde porque para pero por con sin sobre entre hasta desde segun este esta estos estas ese esa esos esas aquel aquella una uno unos unas los las del les els dels amb per quin quina quins quines com quan on perque aquest aquesta sus sus suya suyo tiene tenia hace hizo habia era fue segun libro novela capitulo".split(" "));
+        const motsQ = q => new Set(normCtl(q.p + " " + q.o[q.c]).split(" ").filter(w => w.length > 3 && !PARAULES_BUIDES.has(w)));
+        const ngrames = t => { const w = normCtl(t).split(" ").filter(Boolean), s = new Set(); for (let x = 0; x + 4 <= w.length; x++) s.add(w.slice(x, x + 4).join(" ")); return s; };
+        const repetida = q => { const m = motsQ(q), g = ngrames(q.cita);
+          return preg.some(r => { const m2 = r._m, com = [...m].filter(w => m2.has(w)).length;
+            if (com / Math.max(1, m.size + m2.size - com) >= 0.6) return true;   // Jaccard
+            if (g.size && r._g.size) { const cg = [...g].filter(x => r._g.has(x)).length; if (cg / Math.min(g.size, r._g.size) >= 0.5) return true; }
+            return false; }); };
+        const preg = [];
+        let descartades = 0, repes = 0;
+        const quota = trossos.map((x, t) => Math.floor(n * (t + 1) / trossos.length) - Math.floor(n * t / trossos.length));
+        const demana = async (t, quantes) => {
+          const tros = trossos[t];
+          const r = await ia("Ets professor de llengua " + lleng + " de secundària. Fes preguntes d'un control de lectura del llibre «" + ll.t + "»" + (ll.a ? " de " + ll.a : "") + (caps ? ", capítols " + caps : "") + ", per a " + cursCtl() + ": " + quantes + " preguntes tipus test amb " + k + " opcions i una sola de correcta.\n\n" +
+            "T'envio NOMÉS LA PART " + (t + 1) + " DE " + trossos.length + " del text" + rangPag(tros) + (t === trossos.length - 1 && trossos.length > 1 ? ", que és el FINAL del llibre (desenllaç i, si n'hi ha, epíleg)" : "") + ". Totes les preguntes han de ser d'aquesta part i repartides per tot el tros, del començament al final del tros.\n\n" +
             "NORMES OBLIGATÒRIES:\n" +
-            "1) LLEGEIX SENCER el text del llibre que t'envio. Les marques «--- Pàgina N ---» indiquen on comença cada pàgina.\n" +
+            "1) LLEGEIX SENCER el text que t'envio. Les marques «--- Pàgina N ---» indiquen on comença cada pàgina.\n" +
             "2) NO INVENTIS RES. Fes servir NOMÉS el text que t'envio; ignora tot el que creguis saber del llibre, de l'autora, d'altres obres o de resums. Si un personatge, lloc, fet o detall no surt escrit al text enviat, no el posis ni a l'enunciat ni a les opcions correctes.\n" +
             "3) Cada pregunta ha de dur la JUSTIFICACIÓ: «pag» = número de la pàgina (el de la marca «--- Pàgina N ---») on hi ha la resposta, i «cita» = una frase COPIADA LITERALMENT del text (entre 6 i 25 paraules seguides, sense canviar ni una lletra, en la llengua original del llibre) que demostri que la resposta correcta ho és.\n" +
             "4) Es comprovarà automàticament que cada cita és al text: la pregunta amb una cita que no hi sigui es descartarà.\n" +
-            "5) Preguntes sobre fets concrets de la trama, personatges, llocs i alguna d'inferència senzilla, repartides per tot el llibre" + (caps ? " (dels capítols indicats)" : " (del principi, del mig i del final)") + ". Opcions plausibles i de llargada semblant, sense «totes les anteriors» ni «cap de les anteriors». Reparteix la posició de la correcta.\n" +
-            (preg.length ? "6) Ja hi ha aquestes preguntes; NO les repeteixis ni en preguntis el mateix, i busca fets d'altres pàgines:\n" + preg.map(q => "- " + q.p + " (p. " + (q.pag || "?") + ")").join("\n") + "\n" : "") +
-            "\nRedacta les preguntes i les opcions en " + lleng + ", amb bona ortografia: cada opció acaba amb punt" + (lleng === "castellà" ? " i les preguntes porten «¿» i «?»" : "") + ". Respon només JSON: {\"preguntes\": [{\"p\": enunciat, \"o\": [opcions sense lletra], \"c\": índex de la correcta (0 = la primera), \"pag\": número de pàgina, \"cita\": frase literal del text}]}.", mat, { json: true, imatge: doc.imatge });
-          const abans = preg.length;
+            "5) Pregunta pels FETS IMPORTANTS d'aquesta part: què passa, on van i què fan els personatges, viatges i canvis de lloc, relacions, fills, estudis, feines i aficions, què els passa al final i com acaba cada història. Cada pregunta ha de tractar un fet DIFERENT: no facis dues preguntes sobre el mateix fet ni sobre la mateixa frase, encara que sigui amb altres paraules. Opcions plausibles i de llargada semblant, sense «totes les anteriors» ni «cap de les anteriors». Reparteix la posició de la correcta.\n" +
+            (preg.length ? "6) Ja hi ha aquestes preguntes; NO les repeteixis ni en preguntis el mateix fet amb altres paraules:\n" + preg.map(q => "- " + q.p + " → " + q.o[q.c]).join("\n") + "\n" : "") +
+            "\nRedacta les preguntes i les opcions en " + lleng + ", amb bona ortografia: cada opció acaba amb punt" + (lleng === "castellà" ? " i les preguntes porten «¿» i «?»" : "") + ". Respon només JSON: {\"preguntes\": [{\"p\": enunciat, \"o\": [opcions sense lletra], \"c\": índex de la correcta (0 = la primera), \"pag\": número de pàgina, \"cita\": frase literal del text}]}.", tros, { json: true, imatge: doc.imatge });
+          let posades = 0;
           (r && Array.isArray(r.preguntes) ? r.preguntes : []).forEach(p => {
-            if (preg.length >= n) return;
+            if (posades >= quantes) return;
             if (!(p && p.p && Array.isArray(p.o) && p.o.length === k && Number.isInteger(Number(p.c)) && Number(p.c) >= 0 && Number(p.c) < k)) return;
             const q = { p: String(p.p), o: p.o.map(String), c: Number(p.c), pag: Number(p.pag) || null, cita: String(p.cita || "").trim() };
-            const clau = normCtl(q.p); if (vistes.has(clau)) return;
-            if (mat) { const t = trobaCita(q.cita); if (!t) { descartades++; return; } if (t.pag) q.pag = t.pag; }   // la pàgina, la del text real
+            if (mat) { const tr = trobaCita(q.cita); if (!tr) { descartades++; return; } if (tr.pag) q.pag = tr.pag; }   // la pàgina, la del text real
             else if (!q.cita) return;   // només foto: no es pot comprovar, però ha de dur cita
-            vistes.add(clau); preg.push(q);
+            if (repetida(q)) { repes++; return; }
+            q._m = motsQ(q); q._g = ngrames(q.cita); q._t = t; preg.push(q); posades++;
           });
-          if (preg.length === abans && tandes >= 2) break;   // dues tandes sense res de nou: plega
-        }
+          return posades;
+        };
+        // Primera volta: cada tros, les seves; segona volta: els trossos que s'han quedat curts ho tornen a provar
+        const falta = quota.slice();
+        for (let t = 0; t < trossos.length; t++) falta[t] -= await demana(t, Math.min(20, falta[t] + Math.ceil(falta[t] / 4)));
+        for (let t = 0; t < trossos.length && preg.length < n; t++) if (falta[t] > 0) falta[t] -= await demana(t, Math.min(20, falta[t] + 2));
+        // Les preguntes, en l'ordre del llibre (el model A segueix la lectura)
+        preg.sort((a, b) => (a._t - b._t) || ((a.pag || 0) - (b.pag || 0)));
+        preg.forEach(q => { delete q._m; delete q._g; delete q._t; });
         if (!preg.length) throw new Error("La IA no ha fet cap pregunta amb una cita que es trobi al llibre" + (descartades ? " (n'ha fet " + descartades + " amb cites inventades)" : "") + "; torna-ho a provar.");
         ctl = { id: nouId(), d: avuiISO(), llibre: ll.t, caps, curs: cursCtl(), lleng, k, vars: Number(fv("vars", "2")), preg, resp: {} };
-        eiRes.ctl = ""; eiMsg.ctl = (preg.length < n ? "Només n'hi ha " + preg.length + " de comprovades (de " + n + " demanades)." : "✓ " + preg.length + " preguntes, totes amb la cita trobada al llibre.") + (descartades ? " S'han descartat " + descartades + " preguntes amb cites que no són al text." : "") + (!mat ? " ⚠️ Amb una foto no es poden comprovar les cites: revisa-les." : "");
+        eiRes.ctl = ""; eiMsg.ctl = (preg.length < n ? "Només n'hi ha " + preg.length + " de comprovades (de " + n + " demanades)." : "✓ " + preg.length + " preguntes, totes amb la cita trobada al llibre.") + (descartades ? " S'han descartat " + descartades + " preguntes amb cites que no són al text." : "") + (repes ? " S'han tret " + repes + " preguntes repetides." : "") + (!mat ? " ⚠️ Amb una foto no es poden comprovar les cites: revisa-les." : "");
       });
     }
     if (a === "ctlobre" || a === "ctlesb") {
