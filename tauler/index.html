@@ -1661,6 +1661,8 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     }
     if (a === "qrimp") { const q = asDades && asDades.qr; if (q) imprimeix(q.titol, '<div style="text-align:center"><h3>' + esc(q.titol) + '</h3><p>Escaneja el codi amb el mòbil i entra amb el compte de l\'institut.</p><div style="width:110mm;margin:8mm auto">' + q.svg + '</div><p style="font-size:16px">' + esc(q.url) + "</p></div>", false); return; }
     if (a === "copia") { navigator.clipboard && navigator.clipboard.writeText(asDades && asDades.text || ""); b.textContent = "Copiat ✓"; return; }
+    if (a === "vdinstr") { editaInstr(); return; }
+    if (a === "vdinstrdesa") { desaInstr(); return; }
     if (a === "trusa" || a === "trdel") { accioTranscripcio(a, b.dataset.k); return; }
     if (a === "vdobre" || a === "vdesb") { accioVideoDesat(a, b.dataset.id); return; }
     if (a === "videoword" || a === "videosolword") { videoWord(a === "videosolword"); return; }
@@ -2345,6 +2347,35 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     asDades.desatId = id;
     desa();
   }
+  // ---------- ✏️ Instruccions per a l'alumnat del vídeo (15.11.2026) ----------
+  const instrDefecte = es => es ? "Verás el fragmento dos veces. En el primer visionado, toma apuntes y trata de responder todo lo que puedas. Después haremos un segundo y último visionado para completar y revisar tus respuestas."
+    : "Veuràs el fragment dues vegades. En el primer visionat, pren apunts i intenta respondre tot el que puguis. Després farem un segon i últim visionat per completar i revisar les respostes.";
+  const descVideo = (es, i, f, enllac, instr) => (es ? "Mira el fragmento del vídeo (del " : "Mira el fragment del vídeo (del ") + mmss(i) + " al " + mmss(f) + "): " + enllac + "\n\n" + instr;
+  function capsaInstr() {
+    const vd = asDades && asDades.video; if (!vd) return "";
+    return '<div id="vdInstr" style="border:1px solid #ccc;border-radius:8px;padding:8px 10px;margin:8px 0"><b>Instruccions per a l\'alumnat</b> <button type="button" class="boto clar" data-asb="vdinstr" title="Edita les instruccions">✏️</button>' +
+      '<p style="margin:6px 0 0">' + esc(vd.instr || instrDefecte(vd.es)) + "</p></div>";
+  }
+  function editaInstr() {
+    const c = $("vdInstr"), vd = asDades && asDades.video; if (!c || !vd) return;
+    c.innerHTML = "<b>Instruccions per a l'alumnat</b><textarea id=\"vdInstrTxt\" rows=\"3\" style=\"width:100%;margin-top:6px\">" + esc(vd.instr || instrDefecte(vd.es)) + "</textarea>" +
+      '<div class="alum-eines" style="margin-top:6px"><button type="button" class="boto" data-asb="vdinstrdesa">Desa</button><span class="font">Surten a la pàgina del vídeo, al full imprès, al Word i a la tasca del Classroom.</span></div>';
+    $("vdInstrTxt").focus();
+  }
+  function desaInstr() {
+    const vd = asDades && asDades.video, t = (($("vdInstrTxt") || {}).value || "").trim(); if (!vd) return;
+    const nova = t || instrDefecte(vd.es), base = vd.base || vd.enllac;
+    const enllac = base + (nova === instrDefecte(vd.es) ? "" : "&m=" + encodeURIComponent(nova));
+    const canvia = h => String(h || "").split(vd.enllac).join(enllac).split(esc(vd.enllac)).join(esc(enllac)).replace(/<p class="vd-instr">[\s\S]*?<\/p>/, '<p class="vd-instr">' + esc(nova) + "</p>");
+    if (asDades.text) asDades.text = asDades.text.split(vd.enllac).join(enllac);
+    asDades.html = canvia(asDades.html);
+    Object.assign(vd, { instr: nova, enllac: enllac, base: base, desc: descVideo(vd.es, vd.inici, vd.final, enllac, nova) });
+    asResultat = canvia(asResultat).replace(/<div id="vdInstr"[\s\S]*?<\/div>/, capsaInstr());
+    const x = asDades.desatId && (dades.videos || []).find(y => y.id === asDades.desatId);
+    if (x) { x.html = asResultat; x.dades = Object.assign({}, asDades); delete x.dades.desatId; desa(); }
+    pintaAssistent();
+    if (asDades.qr) alert("Fet. El formulari ja creat porta les instruccions d'abans: si el publiques ara, a la tasca del Classroom hi aniran les noves, però dins del formulari no canvien (les pots editar amb «Revisa el formulari»).");
+  }
   // 15.11.2026: transcripcions de vídeo desades, per fer-les servir sense tornar a mirar el vídeo
   function llistaTranscripcions() {
     const TR = dades.transcripcions || {};
@@ -2387,7 +2418,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     if (asDades.text) asDades.text = asDades.text.replace(/^(\d+\. .*?) \[\d+:\d{2}\]$/gm, "$1");
     x.html = String(x.html || "").replace(/(<ol class="preg">[\s\S]*?)<\/ol>/g, m => m.replace(/ <span class="font">\[\d+:\d{2}\]<\/span>/g, ""));
     // avís a dalt del resultat, perquè es vegi que s'ha obert el desat (i no el que hi havia abans)
-    asResultat = '<p class="avis" style="background:#e8f5e9;color:#1b5e20;border-color:#a5d6a7">📂 Obert el qüestionari desat «' + esc(x.titol) + "» (" + esc(x.data.split("-").reverse().join(".")) + ")" + (x.formulari ? ", amb el seu formulari" : "") + ".</p>" + (x.html || "");
+    asResultat = '<p class="avis" style="background:#e8f5e9;color:#1b5e20;border-color:#a5d6a7">📂 Obert el qüestionari desat «' + esc(x.titol) + "» (" + esc(x.data.split("-").reverse().join(".")) + ")" + (x.formulari ? ", amb el seu formulari" : "") + ".</p>" + (/id="vdInstr"/.test(x.html || "") ? "" : capsaInstr()) + (x.html || "");
     pintaAssistent();
     if ($("asText")) $("asText").value = x.transcripcio || "";
     const o = $("asSortida"); if (o) o.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -2408,7 +2439,8 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     const nivell = nv => wCapcalera(false) +
       wPar([wRun(tit + (vd.nivells.length > 1 ? " · " + nv.nom : ""), { b: true })], { antes: 120, despres: 80, keep: true }) +
       wPar([wRun(frag, { sz: 18 })], { despres: 80 }) +
-      wPar(es ? "Mira el fragmento y responde las preguntas. En las de test, rodea la respuesta correcta; en las de completar, escribe las palabras exactas que se dicen." : "Mira el fragment i respon les preguntes. A les de test, encercla la resposta correcta; a les de completar, escriu les paraules exactes que es diuen.", { despres: 200 }) +
+      wPar(vd.instr || instrDefecte(es), { despres: 80 }) +
+      wPar(es ? "En las de test, rodea la respuesta correcta; en las de completar, escribe las palabras exactas que se dicen." : "A les de test, encercla la resposta correcta; a les de completar, escriu les paraules exactes que es diuen.", { despres: 200 }) +
       nv.preguntes.map(preg).join("");
     const solucio = () => wCapcalera(true) + wPar([wRun((es ? "Solucionario · " : "Solucionari · ") + tit, { b: true })], { despres: 160 }) +
       vd.nivells.map(nv => (vd.nivells.length > 1 ? wPar([wRun(nv.nom, { b: true })], { antes: 160, despres: 80, keep: true }) : "") +
@@ -5145,24 +5177,24 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       const nivells = noms.map(nom => { const nv = (r && Array.isArray(r.nivells) ? r.nivells : []).find(x => x && String(x.nom).trim().toLowerCase() === nom.toLowerCase()); return { nom: nom, preguntes: nv && Array.isArray(nv.preguntes) ? nv.preguntes.filter(valida).map(neta) : [] }; }).filter(x => x.preguntes.length);
       if (!nivells.length) throw new Error("La IA no ha preparat preguntes vàlides; torna-ho a provar.");
       const titolV = String(r.titol || "Fragment de vídeo").trim();
-      const enllac = location.origin + location.pathname.replace(/[^/]*$/, "") + "video.html?v=" + v + "&i=" + i + "&f=" + f + (es ? "&l=es" : "") + "&t=" + encodeURIComponent(titolV);
+      const base = location.origin + location.pathname.replace(/[^/]*$/, "") + "video.html?v=" + v + "&i=" + i + "&f=" + f + (es ? "&l=es" : "") + "&t=" + encodeURIComponent(titolV);
+      const enllac = base, instr = instrDefecte(es);
       // 14.11.2026: el que veu l'alumnat (formulari, pàgina del vídeo, Classroom) va en la llengua de l'activitat
-      const desc = es ? "Mira el fragmento del vídeo (del " + mmss(i) + " al " + mmss(f) + "): " + enllac + "\n\nDespués responde las preguntas. Puedes volver a mirar el vídeo mientras respondes."
-        : "Mira el fragment del vídeo (del " + mmss(i) + " al " + mmss(f) + "): " + enllac + "\n\nDesprés respon les preguntes. Pots tornar a mirar el vídeo mentre respons.";
+      const desc = descVideo(es, i, f, enllac, instr);
       const lletra = k => String.fromCharCode(97 + k);
       const txtNiv = nv => nv.preguntes.map((q, k) => (k + 1) + ". " + q.enunciat + "\n" + (q.opcions ? q.opcions.map((o, j) => "   " + lletra(j) + ") " + o).join("\n") : q.tipus === "oberta" ? "   ______________________________\n   ______________________________" : "")).join("\n\n");
       const solQ = (q, k) => (k + 1) + (q.tipus === "completa" ? " " + q.respostes.join(" / ") : q.tipus === "oberta" ? " (oberta) " + q.resposta : lletra(q.correctes[0]) + (q.correctes.length > 1 ? "+" + q.correctes.slice(1).map(lletra).join("+") : "")) + (q.moment ? " [" + q.moment + "]" : "");
       asDades = {
         titol: (es ? "Comprensión audiovisual · " : "Comprensió audiovisual · ") + titolV,
         text: titolV + "\n" + enllac + "\n\n" + nivells.map(nv => nv.nom.toUpperCase() + "\n" + txtNiv(nv)).join("\n\n") + "\n\nSOLUCIONARI\n" + nivells.map(nv => nv.nom + ": " + nv.preguntes.map(solQ).join(" · ")).join("\n"),
-        video: { id: v, inici: i, final: f, enllac: enllac, desc: desc, nivells: nivells, es: es }
+        video: { id: v, inici: i, final: f, enllac: enllac, base: base, instr: instr, desc: desc, nivells: nivells, es: es }
       };
       const htmlNiv = nv => "<h4>" + esc(nv.nom) + "</h4><ol class=\"preg\">" + nv.preguntes.map(q => "<li>" + esc(q.enunciat) + (q.tipus === "multiple" ? ' <span class="font">(pot haver-hi més d\'una resposta)</span>' : "") + (q.opcions ? '<ol type="a">' + q.opcions.map(o => "<li>" + esc(o) + "</li>").join("") + "</ol>" : q.tipus === "oberta" ? '<div style="border-bottom:1px solid #999;height:1.8em"></div><div style="border-bottom:1px solid #999;height:1.8em"></div><div style="border-bottom:1px solid #999;height:1.8em"></div>' : "") + "</li>").join("") + "</ol>";
-      asDades.html = "<h3>" + esc(titolV) + "</h3><p>" + (es ? "Fragmento del vídeo del " : "Fragment del vídeo del ") + mmss(i) + " al " + mmss(f) + ": " + esc(enllac) + "</p>" + (r.resum ? "<p><i>" + esc(String(r.resum)) + "</i></p>" : "") + nivells.map(htmlNiv).join("");
+      asDades.html = "<h3>" + esc(titolV) + "</h3><p>" + (es ? "Fragmento del vídeo del " : "Fragment del vídeo del ") + mmss(i) + " al " + mmss(f) + ": " + esc(enllac) + '</p><p class="vd-instr">' + esc(instr) + "</p>" + (r.resum ? "<p><i>" + esc(String(r.resum)) + "</i></p>" : "") + nivells.map(htmlNiv).join("");
       // 14.11.2026: el solucionari va a part (es veu i s'imprimeix separat de les preguntes)
       asDades.sol = "<h3>" + esc(titolV) + "</h3><h4>Solucionari</h4><ul>" + nivells.map(nv => "<li><b>" + esc(nv.nom) + ":</b> " + nv.preguntes.map((q, k) => esc(solQ(q, k))).join(" · ") + "</li>").join("") + "</ul>";
       const sel = '<select id="asQrNiv" aria-label="Nivell del qüestionari">' + nivells.map((nv, k) => "<option" + (k === (nivells.length >= 3 && triats.length > 1 ? 1 : 0) ? " selected" : "") + ">" + esc(nv.nom) + "</option>").join("") + "</select>";
-      fet('<div class="alum-eines"><a class="boto clar" href="' + esc(enllac) + '" target="_blank" rel="noopener">▶️ Mira el fragment</a><button type="button" class="boto clar" data-asb="copia">Copia</button><button type="button" class="boto clar" data-asb="imprimeix">🖨️ Imprimeix / PDF</button><button type="button" class="boto clar" data-asb="imprimeixsol">🔑 Solucionari</button><button type="button" class="boto clar" data-asb="videoword">⬇️ Word</button><button type="button" class="boto clar" data-asb="videosolword">⬇️ Solucionari en Word</button>' + (compteIns() ? sel + '<button type="button" class="boto" data-asb="qr">📱 Qüestionari en línia</button>' : "") + '</div><div class="as-doc">' + capcaleraDoc() + asDades.html + '</div><div class="as-doc as-sol">' + asDades.sol + "</div>");
+      fet(capsaInstr() + '<div class="alum-eines"><a class="boto clar" href="' + esc(enllac) + '" target="_blank" rel="noopener">▶️ Mira el fragment</a><button type="button" class="boto clar" data-asb="copia">Copia</button><button type="button" class="boto clar" data-asb="imprimeix">🖨️ Imprimeix / PDF</button><button type="button" class="boto clar" data-asb="imprimeixsol">🔑 Solucionari</button><button type="button" class="boto clar" data-asb="videoword">⬇️ Word</button><button type="button" class="boto clar" data-asb="videosolword">⬇️ Solucionari en Word</button>' + (compteIns() ? sel + '<button type="button" class="boto" data-asb="qr">📱 Qüestionari en línia</button>' : "") + '</div><div class="as-doc">' + capcaleraDoc() + asDades.html + '</div><div class="as-doc as-sol">' + asDades.sol + "</div>");
       // 14.11.2026: cada qüestionari preparat es desa sol (amb la transcripció) i es pot tornar a obrir des de «📂 Qüestionaris desats»
       desaVideo(transcripcio);
       pintaAssistent();   // perquè la llista de desats ja hi surti

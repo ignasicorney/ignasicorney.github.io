@@ -41,7 +41,8 @@
     const src = () => "https://www.youtube-nocookie.com/embed/" + v + "?start=" + i + "&end=" + f + "&rel=0&modestbranding=1&playsinline=1";
     cos.innerHTML = '<div class="video"><iframe id="yt" src="' + src() + '" title="Vídeo" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe></div>' +
       '<button type="button" id="reinicia">↺ ' + (es ? "Vuelve a empezar el fragmento" : "Torna a començar el fragment") + '</button>' +
-      '<p class="ajuda">' + (es ? "Mira el fragmento con atención (puedes volver a verlo tantas veces como quieras) y después responde el cuestionario." : "Mira el fragment amb atenció (el pots tornar a veure tantes vegades com vulguis) i després respon el qüestionari.") + '</p>';
+      // 15.11.2026: les instruccions les pot canviar el professor des de la Bitàcola (paràmetre m); si no, les de dos visionats
+      '<p class="ajuda">' + (p.get("m") || (es ? "Verás el fragmento dos veces. En el primer visionado, toma apuntes y trata de responder todo lo que puedas. Después haremos un segundo y último visionado para completar y revisar tus respuestas." : "Veuràs el fragment dues vegades. En el primer visionat, pren apunts i intenta respondre tot el que puguis. Després farem un segon i últim visionat per completar i revisar les respostes.")).replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" })[c]).replace(/\n/g, "<br>") + '</p>';
     document.getElementById("reinicia").addEventListener("click", () => { document.getElementById("yt").src = src() + "&autoplay=1"; });
   })();
 </script>
