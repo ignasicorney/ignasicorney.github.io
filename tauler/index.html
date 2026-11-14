@@ -237,6 +237,7 @@ dialog#dlgCBN{width:min(860px,calc(100vw - 24px))}
 dialog#dlgCB{width:min(760px,calc(100vw - 24px))}
 #dlgCB .cb-resp{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px 12px}
 #dlgCB .cb-col{min-width:0}
+#dlgCB .cb-forat{background:none!important;color:var(--suau)!important}
 .cbn-taula{width:100%;border-collapse:collapse;font-size:.85rem}
 .cbn-taula th,.cbn-taula td{border-bottom:1px solid var(--linia);padding:3px 4px;text-align:left;vertical-align:top}
 .cbn-taula input,.cbn-taula select{font:inherit;color:var(--text);width:100%;box-sizing:border-box}
@@ -5124,8 +5125,18 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     let foto = "", llegint = false, avis = "";
     let dlg = $("dlgCB"); if (!dlg) { dlg = document.createElement("dialog"); dlg.id = "dlgCB"; document.body.appendChild(dlg); }
     const tancats = it.map((x, i) => i).filter(i => it[i].t !== "oberta");
-    // Dues columnes correlatives: l'esquerra amb la primera meitat de les preguntes tancades i la dreta amb la resta
-    const meitat = Math.ceil(tancats.length / 2), colDe = i => tancats.indexOf(i) < meitat ? 0 : 1;
+    // Mateixa disposició que el full de respostes de la prova: les mateixes preguntes a cada columna i, si el full oficial
+    // té les posicions, els mateixos espais buits (on hi ha una pregunta oberta, se n'indica el número)
+    const disF = cbDisposicio(p), colDe = i => disF.pos[it[i].n] ? disF.pos[it[i].n].col : 0;
+    const fy = p.full && p.full.y, FILA = 18.4, abans = {};
+    if (fy) [0, 1].forEach(cc => { let prev = null;
+      tancats.filter(i => colDe(i) === cc).forEach(i => {
+        if (prev !== null && fy[it[i].n] != null && fy[it[prev].n] != null) {
+          const buits = Math.round((fy[it[i].n] - fy[it[prev].n]) / FILA) - 1;
+          if (buits > 0) abans[i] = { n: buits, ob: it.slice(prev + 1, i).filter(x => x.t === "oberta").map(x => x.n) };
+        }
+        prev = i; }); });
+    const buit = b => Array.from({ length: b.n }, (_, k) => '<div class="cb-it cb-forat"><span>' + (b.ob[k] ? esc(b.ob[k]) : "") + '</span>' + (b.ob[k] ? '<span class="font" style="font-weight:400">oberta (a sota)</span>' : "") + '<span class="cb-ops" style="visibility:hidden"><button type="button" tabindex="-1">a</button></span></div>').join("");
     const pinta = () => {
       const pt = cbPuntua(p, r.r, r.red), st = dlg.scrollTop;
       setTimeout(() => { dlg.scrollTop = st; }, 0);
@@ -5134,11 +5145,11 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
         (llegint ? '<span class="font">Llegint el full…</span>' : "") + "</div>" + (avis ? '<p class="avis">' + esc(avis) + "</p>" : "") +
         (foto ? '<img src="' + foto + '" alt="Foto del full" style="max-width:100%;max-height:260px;object-fit:contain;border:1px solid var(--linia);border-radius:8px">' : "") +
         '<label>Respostes seguides (una lletra per casella; punt = en blanc)<input type="text" data-seq autocomplete="off" spellcheck="false" style="font-family:monospace;letter-spacing:.15em" value="' + esc(tancats.map(i => r.r[i] || ".").join("")) + '"></label>' +
-        // Columna esquerra i columna dreta, cadascuna en ordre correlatiu
+        // Columna esquerra i columna dreta, com al full de respostes
         '<div class="cb-resp">' + [0, 1].map(cc => '<div class="cb-col">' + it.map((x, i) => {
           if (x.t === "oberta" || colDe(i) !== cc) return "";
           const v = r.r[i], cls = !v ? "buida" : v === x.k ? "be" : "malament";
-          return '<div class="cb-it ' + cls + (r.dubtes.includes(i) ? " dubte" : "") + '"><span>' + esc(x.n) + (x.d === "LL" ? "ᴸ" : "") + '</span><span class="cb-ops">' + cbOpcions(x).map(l => '<button type="button" data-i="' + i + '" data-v="' + l + '" aria-pressed="' + (l === v) + '">' + l + "</button>").join("") + "</span></div>";
+          return (abans[i] ? buit(abans[i]) : "") + '<div class="cb-it ' + cls + (r.dubtes.includes(i) ? " dubte" : "") + '"><span>' + esc(x.n) + (x.d === "LL" ? "ᴸ" : "") + '</span><span class="cb-ops">' + cbOpcions(x).map(l => '<button type="button" data-i="' + i + '" data-v="' + l + '" aria-pressed="' + (l === v) + '">' + l + "</button>").join("") + "</span></div>";
         }).join("") + "</div>").join("") + "</div>" +
         '<p class="font" style="margin:0">Verd: correcta · vermell: errada · gris: en blanc · requadre groc: comprova-la al full. ᴸ: pregunta de llengua (compta a l\'EE).</p>' +
         it.map((x, i) => {
