@@ -410,7 +410,13 @@
     arrel.addEventListener("search", ev => { if (ev.target.dataset && ev.target.dataset.cr === "cerca") { cerca = ev.target.value.trim(); carrega(); } });
 
     pinta();
-    return { carrega: carrega, pinta: pinta };
+    // Correu nou ja adreçat (14.11.2026: la icona ✉️ al costat del nom d'un alumne). «ci» = índex del compte de sortida.
+    function nouA(o) {
+      const l = comptes(), ci = o && o.ci != null && l[o.ci] ? o.ci : Math.max(compte, 0);
+      redacta = { a: (o && o.a) || "", cc: "", cco: "", assumpte: (o && o.assumpte) || "", cos: sigCos(l[ci]), ci: ci };
+      configura = false; pinta();
+    }
+    return { carrega: carrega, pinta: pinta, nouA: nouA };
   }
   window.Correu = { munta: munta };
 })();

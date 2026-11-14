@@ -82,6 +82,7 @@ h3.bt{margin:0 0 8px;font-size:1rem;text-transform:uppercase}
 .taula td.txt{max-width:220px;overflow:hidden;text-overflow:ellipsis;text-align:left}
 .taula td.nomal{cursor:pointer}
 .taula td.psi{color:#c0001a;font-weight:600}
+.mail-al{text-decoration:none;margin-left:4px;font-size:.85em}
 .marca-al{display:inline-block;font-size:.68rem;font-weight:700;border:1px solid currentColor;border-radius:4px;padding:0 3px;margin-left:3px;color:#c0001a;vertical-align:1px}
 .marca-al.psi{color:#1d1d1b}
 .celaed{width:5.5em;font:inherit;padding:2px 4px;border:1px solid var(--accent);border-radius:4px;text-align:right}
@@ -680,7 +681,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
   </form>
 </dialog>
 
-<script src="correu.js?v=9"></script>
+<script src="correu.js?v=10"></script>
 <script>
 (function () {
   "use strict";
@@ -2535,6 +2536,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     ["ESO", "120 oraciones simples analizadas", "https://elvelerodigital.com/apuntes/lyl/ejercicios_os2.htm"],
     ["ESO", "30 oraciones simples más", "https://elvelerodigital.com/apuntes/lyl/ejercicios_os3.htm"],
     ["ESO", "Análisis de oraciones simples: 50 ejercicios resueltos", "https://elvelerodigital.com/apuntes/lyl/sintaxis_os.htm"],
+    ["ESO", "Las oraciones impersonales", "https://elvelerodigital.com/apuntes/lyl/impersonales.htm"],
     ["Batx", "Teoría de la oración simple", "https://elvelerodigital.com/apuntes/lyl/os.htm"],
     ["Batx", "56 cuestiones básicas sobre sintaxis", "https://elvelerodigital.com/apuntes/lyl/os-faq.htm"],
     ["Batx", "Cuestiones sobre oraciones simples resueltas", "https://elvelerodigital.com/apuntes/lyl/ejercicios_os.htm"],
@@ -2569,7 +2571,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       const e = EI(); e.pau = Array.isArray(e.pau) ? e.pau : [];
       const enll = (l, ini, col) => '<div class="cons-llista">' + l.map(x => '<a class="cons-b" href="' + esc(x[1]) + '" target="_blank" rel="noopener"><span class="ini" style="background:' + col + '">' + ini + "</span><span>" + esc(x[0]) + "</span></a>").join("") + "</div>";
       h += '<p class="font">S\'obren en una pestanya nova.</p>' +
-        "<h4>El Velero Digital · 4t d'ESO: oracions simples</h4>" + enll(VELERO.filter(x => x[0] === "ESO").map(x => [x[1], x[2]]), "EVD", "#2f6f8f") +
+        "<h4>El Velero Digital · 4t d'ESO: oracions simples i impersonals</h4>" + enll(VELERO.filter(x => x[0] === "ESO").map(x => [x[1], x[2]]), "EVD", "#2f6f8f") +
         "<h4>El Velero Digital · 2n de batxillerat: tots els recursos</h4>" + enll(VELERO.filter(x => x[0] === "Batx").map(x => [x[1], x[2]]), "EVD", "#2f6f8f") +
         '<h4>Exàmens de selectivitat</h4><p class="font">Exàmens d\'anys anteriors amb les correccions. Pots afegir-hi els enllaços que facis servir.</p><div class="cons-llista">' +
         PAU_ENLLACOS.concat(e.pau.map(x => [x.t, x.u])).map((x, i) => '<a class="cons-b" href="' + esc(x[1]) + '" target="_blank" rel="noopener"><span class="ini" style="background:#5b6e8c">PAU</span><span>' + esc(x[0]) + (i >= PAU_ENLLACOS.length ? ' <small>afegit per tu · <span data-asb="ei-pauesb" data-i="' + (i - PAU_ENLLACOS.length) + '" style="text-decoration:underline">treu</span></small>' : "") + "</span></a>").join("") + "</div>" +
@@ -2914,6 +2916,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       '<input type="search" id="alumCerca" placeholder="Cerca alumne…" value="' + esc(cerca) + '" style="flex:1 1 140px"></div>' +
       '<div class="alum-eines"><button type="button" class="boto clar" data-q="formules">⚙️ ' + (qFormules ? "Amaga les fórmules" : "Columnes i fórmules") + "</button>" +
       ('<span class="boto-grup"><button type="button" class="boto clar" data-q="classroom" title="Omple una columna amb els lliuraments o les notes d\'una tasca del Classroom o d\'un formulari"><img src="https://www.gstatic.com/classroom/logo_square_rounded.svg" alt="" class="ico-cls"> Classroom</button>' + (f && Array.isArray(f.desfes) && f.desfes.length ? '<button type="button" class="boto clar boto-ico" data-q="clsdesfes" title="Desfés l\'última càrrega del Classroom (' + esc(f.desfes.map(x => x.col).join(", ")) + ')" aria-label="Desfés l\'última càrrega del Classroom">↶</button>' : "") + (f && f.columnes.some(c => c.classroom) ? '<button type="button" class="boto clar boto-ico" data-q="clsact" title="Actualitza del Classroom les columnes enllaçades d\'aquest full (' + esc(f.columnes.filter(c => c.classroom).map(c => c.nom).join(", ")) + ')" aria-label="Actualitza del Classroom">🔄</button>' : "") + "</span>") +
+      '<button type="button" class="boto clar" data-q="correus" title="Posa el correu de cada alumne (de la classe del Classroom) amb una icona ✉️ al costat del nom">✉️ Correus</button>' +
       '<span class="boto-grup"><button type="button" class="boto clar' + (qDeures ? " actiu" : "") + '" data-q="passadeures" title="Mode ràpid: cada toc a la columna de deures posa o treu la falta d\'avui">📕 ' + (qDeures ? "Prou deures" : "Passa deures") + '</button><button type="button" class="boto clar boto-ico" data-q="deuimp" title="Imprimeix les faltes de deures del grup" aria-label="Imprimeix les faltes de deures del grup">🖨️</button></span><button type="button" class="boto clar" data-q="alumne">+ Alumne</button><button type="button" class="boto clar" data-q="banc">📋 ' + (rubObert ? "Amaga les rúbriques" : "Rúbriques") + "</button>" + importa + "</div>" + (clsMsg && f && g && clsMsg.clau === g.nom + "|" + f.nom ? '<p class="cls-msg ' + (clsMsg.err ? "avis" : "font") + '">' + esc(clsMsg.t) + "</p>" : "") + (rubObert ? htmlBanc() : "");
     if (f && qFormules) {
       h += '<div class="formules"><p class="font" style="margin:0 0 8px">Fórmules com a l\'Excel. <b>{EX1}</b> és una columna d\'aquest full i <b>{1R TRIM|NOTA FINAL TRIM}</b> una columna d\'un altre full. Funcions: SUM, AVERAGE, MIN, MAX, IF, ROUND… Els buits compten com a 0 a les operacions i AVERAGE se\'ls salta. <b>MITJANAFETS({DIC1};{DIC2})</b> fa la mitjana de les proves fetes: si a una nota hi escrius <b>EX</b> (o x, o -), no compta; un buit compta com a 0.</p>' +
@@ -2935,7 +2938,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       const ombra = (c, v) => { if (!tcol[c.nom]) return ""; if (esExempt(v)) return " n-ex"; const n = numOpcional(v); if (n === null) return ""; if (tcol[c.nom] === "sobre") return " n-sobre"; return tcol[c.nom] === "form" ? (n === 0 ? " f-0" : " f-1") : " " + colorNota(n); };
       const tD = trimDeures(f), dAvui = avuiISO();
       h += '<div class="taula' + (qDeures ? " passa" : "") + '"><table><thead><tr><th>Alumne</th><th class="deu" title="Faltes de deures del ' + tD.nom + ' trimestre. Toca la xifra per afegir-ne o treure\'n.">📕 Deures ' + tD.nom + "</th>" + f.columnes.map(c => "<th" + (c.tipus === "calc" ? ' class="calc" title="' + esc(c.formula) + '"' : "") + ">" + esc(c.nom) + (desquadres[c.nom] ? " ⚠️" : "") + "</th>").join("") + "</tr></thead><tbody>" +
-        (files.map(r => { const psi = (g.psi || []).includes(r.nom), dis = /\sDIS$/i.test(r.nom); return '<tr><td class="nomal' + (psi ? " psi" : "") + '" data-alumne="' + esc(r.nom) + '" title="' + (psi ? "PSI" : "") + (psi && dis ? " · " : "") + (dis ? "Dislèxia" : "") + '">' + esc(dis ? r.nom.replace(/\s+DIS$/i, "") : r.nom) + (psi ? ' <span class="marca-al psi">PSI</span>' : "") + (dis ? ' <span class="marca-al">DIS</span>' : "") + "</td>" + (() => { const ds = deuresDe(g, r.nom), n = ds.filter(d => d >= tD.de && d <= tD.fins).length, av = ds.includes(dAvui); return '<td class="deu' + (n ? "" : " zero") + (av ? " avui" : "") + '" data-deu="' + esc(r.nom) + '" title="' + n + " falt" + (n === 1 ? "a" : "es") + " de deures al " + tD.nom + " trimestre" + (av ? " (una d'avui)" : "") + '">' + (n || "–") + "</td>"; })() + f.columnes.map(c => {
+        (files.map(r => { const psi = (g.psi || []).includes(r.nom), dis = /\sDIS$/i.test(r.nom); return '<tr><td class="nomal' + (psi ? " psi" : "") + '" data-alumne="' + esc(r.nom) + '" title="' + (psi ? "PSI" : "") + (psi && dis ? " · " : "") + (dis ? "Dislèxia" : "") + '">' + esc(dis ? r.nom.replace(/\s+DIS$/i, "") : r.nom) + (psi ? ' <span class="marca-al psi">PSI</span>' : "") + (dis ? ' <span class="marca-al">DIS</span>' : "") + (g.correus && g.correus[r.nom] ? ' <a href="#" class="mail-al" data-mail="' + esc(g.correus[r.nom]) + '" title="Escriu a ' + esc(g.correus[r.nom]) + '" aria-label="Escriu un correu a ' + esc(dis ? r.nom.replace(/\s+DIS$/i, "") : r.nom) + '">✉️</a>' : "") + "</td>" + (() => { const ds = deuresDe(g, r.nom), n = ds.filter(d => d >= tD.de && d <= tD.fins).length, av = ds.includes(dAvui); return '<td class="deu' + (n ? "" : " zero") + (av ? " avui" : "") + '" data-deu="' + esc(r.nom) + '" title="' + n + " falt" + (n === 1 ? "a" : "es") + " de deures al " + tD.nom + " trimestre" + (av ? " (una d'avui)" : "") + '">' + (n || "–") + "</td>"; })() + f.columnes.map(c => {
           const v = valor(f, r, c), txt = mostraValor(v);
           if (c.tipus === "calc") {
             const n = numOpcional(v), ok = coincideix(v, r.o && r.o[c.nom]);
@@ -3082,6 +3085,8 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       if (c0 && c0.tipus === "rubrica") { const fl = f0.files.find(r => r.nom === td.dataset.alumne); if (fl) obreAvaluacio(g0, f0, fl, c0); return; }
       editaCela(td); return;
     }
+    const ml = ev.target.closest("[data-mail]");
+    if (ml) { ev.preventDefault(); escriuA(ml.dataset.mail); return; }
     const nomal = ev.target.closest("td.nomal");
     const g = grupActual(), f = fullActual(g);
     if (nomal && g) {
@@ -3094,6 +3099,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       } else {
         const net = nou.trim().replace(/\s+dis$/i, " DIS");
         g.fulls.forEach(fu => fu.files.forEach(r => { if (r.nom === vell) r.nom = net; }));
+        if (g.correus && g.correus[vell] && net !== vell) { g.correus[net] = g.correus[vell]; delete g.correus[vell]; }
         if (g.deures && g.deures[vell] && net !== vell) { posaDeures(g, net, deuresDe(g, net).concat(g.deures[vell])); delete g.deures[vell]; }
         const teniaPsi = g.psi.includes(vell);
         const psi = confirm("«" + net + "» té un PSI (nom en vermell)?\n\nD'acord = sí · Cancel·la = no" + (teniaPsi ? "\n(Ara en té.)" : ""));
@@ -3104,6 +3110,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     }
     const q = ev.target.closest("[data-q]"); if (!q) return;
     if (q.dataset.q === "drive") { importaDeDrive(q); return; }
+    if (q.dataset.q === "correus") { if (g) carregaCorreus(g, q); return; }
     if (!f) return;
     if (q.dataset.q === "formules") { qFormules = !qFormules; pintaAlumnes(); }
     else if (q.dataset.q === "passadeures") { qDeures = !qDeures; pintaAlumnes(); }
@@ -3816,6 +3823,41 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       $("clsCurs").innerHTML = '<option value="">Tria la classe…</option>' + d.cursos.map(x => '<option value="' + x.id + '"' + (x.id === auto ? " selected" : "") + ">" + esc(x.nom + (x.seccio ? " · " + x.seccio : "")) + "</option>").join("");
       if (auto) carregaTasques();
     }).catch(e => { $("clsCurs").innerHTML = '<option value="">—</option>'; avis(e.message); });
+  }
+  // ================= Correus de l'alumnat (14.11.2026) =================
+  // g.correus = { "Nom de l'alumne": "adreça@ieslabisbal.cat" }: es treuen de la classe del Classroom del grup
+  async function carregaCorreus(g, boto) {
+    if (!compteIns()) await detectaIns(true);
+    if (!compteIns()) { alert("No trobo el compte d'ieslabisbal.cat al correu de la Bitàcola (📬 Correu > ⚙️). Els correus surten del Classroom d'aquest compte."); return; }
+    const txt = boto.textContent; boto.disabled = true; boto.textContent = "✉️ Carregant…";
+    try {
+      const clauG = nomGrup(g.nom).replace(/\s+/g, "").toLowerCase();
+      const cs = (await cridaIns({ accio: "classroom-cursos" })).cursos;
+      let curs = cs.find(x => x.nom.replace(/\s+/g, "").toLowerCase().endsWith(clauG)) || cs.find(x => (x.nom + x.seccio).replace(/\s+/g, "").toLowerCase().endsWith(clauG)) || cs.find(x => (x.nom + " " + x.seccio).replace(/\s+/g, "").toLowerCase().includes(clauG));
+      if (!curs) {
+        const t = prompt("No trobo cap classe del Classroom que acabi en «" + nomGrup(g.nom) + "». Escriu el número de la classe:\n\n" + cs.map((x, i) => (i + 1) + ". " + x.nom + (x.seccio ? " · " + x.seccio : "")).join("\n"));
+        curs = t && cs[Number(t) - 1]; if (!curs) return;
+      }
+      const alumnes = (await cridaIns({ accio: "classroom-alumnes", curs: curs.id })).alumnes.filter(a => a.email);
+      const noms = Array.from(new Set([].concat(...g.fulls.map(f => f.files.map(r => r.nom))))).map(n => ({ nom: n }));
+      const { m } = aparella(noms, alumnes);
+      if (noms.length && m.size < noms.length / 2) { alert("La classe «" + curs.nom + "» no sembla la de " + nomGrup(g.nom) + ": només hi coincideixen " + m.size + " dels " + noms.length + " alumnes. No he canviat res."); return; }
+      g.correus = g.correus || {};
+      m.forEach((a, nom) => { g.correus[nom] = a.email; });
+      desa(); pintaAlumnes();
+      const sense = noms.filter(x => !g.correus[x.nom]).map(x => x.nom.replace(/\s+DIS$/i, ""));
+      alert("Correus de " + nomGrup(g.nom) + " (classe «" + curs.nom + "»): " + m.size + " de " + noms.length + " alumnes." + (sense.length ? "\n\nSense correu (no els trobo al Classroom): " + sense.join(", ") : ""));
+    } catch (e) { alert("No s'han pogut carregar els correus: " + e.message); }
+    finally { boto.disabled = false; boto.textContent = txt; }
+  }
+  // Obre un correu nou per a l'alumne, des del compte d'ieslabisbal.cat si hi és
+  function escriuA(email) {
+    muntaCorreu();
+    if (!gestorCorreu || !gestorCorreu.nouA) { location.href = "mailto:" + email; return; }
+    const l = ((dades.correu && dades.correu.comptes) || []).filter(c => c && c.url), ci = Math.max(0, l.indexOf(compteIns()));
+    const b = $("correu"); if (b && b.classList.contains("plegat")) { const bt = b.querySelector(":scope > h3.bt button"); if (bt) bt.click(); }
+    gestorCorreu.nouA({ a: email, ci: ci });
+    setTimeout(() => { const f = document.querySelector('#correuCos [data-cr-form="redacta"]'); if (f) { f.scrollIntoView({ behavior: "smooth", block: "start" }); const as = f.querySelector(".cr-as"); if (as) as.focus({ preventScroll: true }); } }, 60);
   }
   // ================= Comprensió audiovisual (vídeo) =================
   async function preparaVideo(transcripcio) {
