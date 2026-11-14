@@ -4890,13 +4890,14 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       full: { model: "propi" } },
     { id: "cast-2021", curs: "2020-2021", materia: "Castellà", titol: "Competencias básicas 4.º ESO · Lengua castellana · 2020-2021",
       quadern: "https://drive.google.com/file/d/1vW7mDCEM45cLhWHNfSYRWBLYdXFIlTM1/view",
-      criteris: "https://drive.google.com/file/d/1GJcDc0_B1GgYCt4KBVNcLGAsBq-qhHXZ/view",
-      items: [["01", "b", "LL"], ["02", "*", "CL", 1, 0.5, "Criterio orientativo. 1: las firmas, el dibujo y la carta de protesta. 0,5: solo uno o dos de estos elementos. 0: otra respuesta o en blanco."], ["03", "a", "LL"], ["04", "d", "LL"], ["05", "c", "CL"], ["06.1", "a", "CL", "ab"],
+      criteris: "https://drive.google.com/file/d/10vN0i0Ig6pU4tIQ10LTdUVkWUtlzD4Wx/view",
+      claus: "https://drive.google.com/file/d/1GJcDc0_B1GgYCt4KBVNcLGAsBq-qhHXZ/view",
+      items: [["01", "b", "LL"], ["02", "*", "CL", 1, 0.5, "1: una carta (o denuncia), firmas y un dibujo. 0,5: dos de estos elementos o uno solo. 0: otra respuesta o en blanco."], ["03", "a", "LL"], ["04", "d", "LL"], ["05", "c", "CL"], ["06.1", "a", "CL", "ab"],
         ["06.2", "a", "CL", "ab"], ["06.3", "a", "CL", "ab"], ["06.4", "b", "CL", "ab"], ["07", "a", "CL"], ["08", "d", "LL"], ["09", "b", "CL"],
         ["10", "d", "LL"], ["11", "a", "CL"], ["12", "c", "CL"], ["13", "b", "CL"], ["14", "b", "CL"], ["15", "a", "CL"],
         ["16", "b", "CL"], ["17", "c", "CL"], ["18", "b", "LL"], ["19", "a", "LL"], ["20", "b", "CL"], ["21", "c", "CL"],
         ["22", "d", "CL"], ["23", "d", "CL"], ["24.1", "a", "CL", "ab"], ["24.2", "b", "CL", "ab"], ["24.3", "b", "CL", "ab"], ["24.4", "a", "CL", "ab"],
-        ["25", "*", "CL", 1, 0.5, "Criterio orientativo. 1: copia una oración del texto 2 como «Sin memoria, al despertar cada día, no sabríamos quiénes somos, nos faltaría nuestra identidad» o «gracias a ella somos lo que somos». 0,5: la oración es aproximada o incompleta. 0: otra respuesta o en blanco."], ["26", "*", "CL", 1, 0.5, "Criterio orientativo. 1: porque los guardamos en el móvil y delegamos en la memoria externa (internet, dispositivos), y lo justifica. 0,5: da la causa sin justificarla. 0: otra respuesta o en blanco."]],
+        ["25", "*", "CL", 1, 0.5, "1: copia «La memoria es nuestro gran tesoro, porque gracias a ella somos lo que somos… Sin memoria, al despertar cada día, no sabríamos quiénes somos, nos faltaría nuestra identidad» (imprescindible al menos «Sin memoria… nuestra identidad»). 0,5: solo «La memoria es nuestro gran tesoro» u otra oración del texto 2 que se aproxime («Sin la memoria no existiría relación entre el pasado y el futuro», «la memoria es mucho más que el cofre autobiográfico…»). 0: otra oración, explica el enunciado en vez de copiar o en blanco."], ["26", "*", "CL", 1, 0.5, "1: porque los tienen guardados en la memoria del teléfono y no usan la propia. 0,5: respuesta insuficiente o mal redactada. 0: otra respuesta o en blanco."]],
       col2: ["12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23", "24.1", "24.2", "24.3", "24.4"],
       full: { model: "propi" } },
     { id: "cast-2024", curs: "2023-2024", materia: "Castellà", titol: "Competencias básicas 4.º ESO · Lengua castellana · 2023-2024",
@@ -5277,7 +5278,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     let h = '<div class="vistes" role="group" aria-label="Prova" style="flex-wrap:wrap;margin-bottom:8px">' + ps.map((x, i) => [x, i]).sort((u, v) => v[0].curs.localeCompare(u[0].curs)).map(([x, i]) => '<button type="button" data-cbp="' + i + '" aria-pressed="' + (i === cbSel.p) + '">' + esc(x.curs) + (ps.filter(y => y.curs === x.curs).length > 1 ? " · " + esc(x.materia) : "") + "</button>").join("") + "</div>" +
       '<div class="alum-eines">' + nova + (p.propia ? '<button type="button" class="boto clar" data-cb="edita">✏️ Revisa la clau</button>' : "") + '<button type="button" class="boto clar" data-cb="treu">🗑️ Elimina la prova ' + esc(p.curs) + "</button></div>" +
       '<div class="fila-as">' + (q.grups.length ? '<label>Grup<select data-cb="g">' + q.grups.map((x, i) => '<option value="' + i + '"' + (i === cbSel.g ? " selected" : "") + ">" + esc(nomGrup(x.nom)) + "</option>").join("") + "</select></label>" : "") + "</div>";
-    const eines = enl(p.quadern, "📄 Quadern") + enl(p.criteris, "✅ Criteris") + enl(p.audio, "🎧 Àudio") + enl(p.transcripcio, "📝 Transcripció") +
+    const eines = enl(p.quadern, "📄 Quadern") + enl(p.criteris, "✅ Criteris") + enl(p.claus, "🔑 Claus") + enl(p.audio, "🎧 Àudio") + enl(p.transcripcio, "📝 Transcripció") +
       (propi ? '<button type="button" class="boto clar" data-cb="impgrup"' + (g ? "" : " disabled") + '>🖨️ Fulls del grup (amb nom)</button><button type="button" class="boto clar" data-cb="impbuit">🖨️ Full en blanc</button>' : "");
     if (eines) h += '<div class="alum-eines">' + eines + "</div>";
     if (!g) { cos.innerHTML = h + '<p class="font">Importa o crea primer els grups a «Alumnes i qualificacions».</p>'; return; }
