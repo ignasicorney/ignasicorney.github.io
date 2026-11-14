@@ -3194,6 +3194,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       '<div class="alum-eines"><button type="button" class="boto clar" data-q="formules">⚙️ ' + (qFormules ? "Amaga les fórmules" : "Columnes i fórmules") + "</button>" +
       ('<span class="boto-grup"><button type="button" class="boto clar" data-q="classroom" title="Omple una columna amb els lliuraments o les notes d\'una tasca del Classroom o d\'un formulari"><img src="https://www.gstatic.com/classroom/logo_square_rounded.svg" alt="" class="ico-cls"> Classroom</button>' + (f && Array.isArray(f.desfes) && f.desfes.length ? '<button type="button" class="boto clar boto-ico" data-q="clsdesfes" title="Desfés l\'última càrrega del Classroom (' + esc(f.desfes.map(x => x.col).join(", ")) + ')" aria-label="Desfés l\'última càrrega del Classroom">↶</button>' : "") + (f && f.columnes.some(c => c.classroom) ? '<button type="button" class="boto clar boto-ico" data-q="clsact" title="Actualitza del Classroom les columnes enllaçades d\'aquest full (' + esc(f.columnes.filter(c => c.classroom).map(c => c.nom).join(", ")) + ')" aria-label="Actualitza del Classroom">🔄</button>' : "") + "</span>") +
       '<label class="boto clar" title="Puja els PSI (Word, Excel o PDF): cada un va a l\'alumne que surt al nom del fitxer o al document">📄 PSI<input type="file" id="psiMolts" accept=".docx,.xlsx,.xls,.ods,.pdf,.txt" multiple hidden></label>' +
+      '<button type="button" class="boto clar" data-q="psidrive" title="Llegeix els PSI de les carpetes del Drive del centre (compte d\'ieslabisbal.cat): cada document va al seu alumne i l\'original s\'obre a qualsevol aparell">📁 PSI del Drive</button>' +
       '<button type="button" class="boto clar" data-q="correus" title="Posa el correu de cada alumne (del Classroom o d\'un Excel del centre) amb una icona ✉️ al costat del nom">✉️ Correus</button>' +
       '<span class="boto-grup"><button type="button" class="boto clar' + (qDeures ? " actiu" : "") + '" data-q="passadeures" title="Mode ràpid: cada toc a la columna de deures posa o treu la falta d\'avui">📕 ' + (qDeures ? "Prou deures" : "Passa deures") + '</button><button type="button" class="boto clar boto-ico" data-q="deuimp" title="Imprimeix les faltes de deures del grup" aria-label="Imprimeix les faltes de deures del grup">🖨️</button></span><button type="button" class="boto clar" data-q="alumne">+ Alumne</button><button type="button" class="boto clar" data-q="banc">📋 ' + (rubObert ? "Amaga les rúbriques" : "Rúbriques") + "</button>" + importa + "</div>" + (clsMsg && f && g && clsMsg.clau === g.nom + "|" + f.nom ? '<p class="cls-msg ' + (clsMsg.err ? "avis" : "font") + '">' + esc(clsMsg.t) + "</p>" : "") + (rubObert ? htmlBanc() : "");
     if (f && qFormules) {
@@ -3396,6 +3397,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     const q = ev.target.closest("[data-q]"); if (!q) return;
     if (q.dataset.q === "drive") { importaDeDrive(q); return; }
     if (q.dataset.q === "correus") { if (g) triaCorreus(g, q); return; }
+    if (q.dataset.q === "psidrive") { if (g) psiDelDrive(g, q); return; }
     if (!f) return;
     if (q.dataset.q === "formules") { qFormules = !qFormules; pintaAlumnes(); }
     else if (q.dataset.q === "passadeures") { qDeures = !qDeures; pintaAlumnes(); }
@@ -4168,7 +4170,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
   // perquè ocupen massa. A les dades hi va el text (per cercar i per a la resta d'aparells).
   const idbPSI = () => new Promise((ok, ko) => { const r = indexedDB.open("bitacola-psi", 1); r.onupgradeneeded = () => r.result.createObjectStore("fitxers"); r.onsuccess = () => ok(r.result); r.onerror = () => ko(r.error); });
   async function idbFes(mode, f) { const db = await idbPSI(); return new Promise((ok, ko) => { const tx = db.transaction("fitxers", mode), st = tx.objectStore("fitxers"), r = f(st); tx.oncomplete = () => ok(r && r.result); tx.onerror = () => ko(tx.error); }); }
-  const idbPosaPSI = (k, file) => file.arrayBuffer().then(buf => idbFes("readwrite", st => st.put({ nom: file.name, tipus: file.type, buf: buf }, k))).catch(() => null);
+  const idbPosaPSI = (k, file) => file.arrayBuffer().then(buf => idbFes("readwrite", st => st.put({ nom: file.name, tipus: file.type, buf: buf, dm: file.dm || null }, k))).catch(() => null);
   const idbLlegeixPSI = k => idbFes("readonly", st => st.get(k)).catch(() => null);
   const idbTreuPSI = k => idbFes("readwrite", st => st.delete(k)).catch(() => null);
   async function idbMouPSI(a, b) { const v = await idbLlegeixPSI(a); if (v) { await idbFes("readwrite", st => st.put(v, b)); await idbTreuPSI(a); } }
@@ -4212,9 +4214,10 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     }
     throw new Error("format desconegut");
   }
-  async function pujaPSI(g, fitxers, nomFix) {
+  async function pujaPSI(g, fitxers, nomFix, errorsAbans) {
     const grups = nomFix ? [g] : [g].concat(Q().grups.filter(x => x !== g));
-    const fets = [], dubtes = [], ara = new Set();
+    const fets = [], dubtes = (errorsAbans || []).slice(), ara = new Set();
+    const docDe = (fi, text) => { const o = { fitxer: fi.name, d: avuiISO(), text: text.slice(0, 40000) }; if (fi.drive) { o.drive = fi.drive; o.dm = fi.dm; } return o; };
     for (const fi of fitxers) {
       try {
         const text = await textDoc(fi);
@@ -4224,28 +4227,77 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
         if (!nom) { dubtes.push(fi.name + " (no és de cap alumne dels teus grups)"); continue; }
         gD.psiDocs = gD.psiDocs || {};
         const clau = gD.nom + "|" + nom, ant = gD.psiDocs[nom];
-        if (ara.has(clau) && ant) { if (text.length > ant.text.length) { gD.psiDocs[nom] = { fitxer: fi.name, d: avuiISO(), text: text.slice(0, 40000) }; await idbPosaPSI(clauPSI(gD, nom), fi); } }   // el mateix PSI baixat dues vegades: se'n queda un
+        if (ara.has(clau) && ant) { if (fi.dm && ant.dm ? fi.dm > ant.dm : text.length > ant.text.length) { gD.psiDocs[nom] = docDe(fi, text); await idbPosaPSI(clauPSI(gD, nom), fi); } }   // el mateix PSI dues vegades: se'n queda un (del Drive, el més recent)
         else {
-          await idbPosaPSI(clauPSI(gD, nom), fi); gD.psiDocs[nom] = { fitxer: fi.name, d: avuiISO(), text: text.slice(0, 40000) }; fets.push(nom.replace(/\s+DIS$/i, "") + (gD === g ? "" : " (" + nomGrup(gD.nom) + ")")); }
+          await idbPosaPSI(clauPSI(gD, nom), fi); gD.psiDocs[nom] = docDe(fi, text); fets.push(nom.replace(/\s+DIS$/i, "") + (gD === g ? "" : " (" + nomGrup(gD.nom) + ")")); }
         const ogF = grupDeFitxer(fi.name);   // només si és del mateix curs (un PSI antic de 1r d'un alumne de 4t no diu el grup d'ara)
         if (ogF && ogF.charAt(0) === String(nomGrup(gD.nom)).trim().charAt(0)) posaOrigen(gD, nom, ogF, false);
         ara.add(clau);
+        if (fi.drive) { const q = Q(); q.psiVistos = q.psiVistos || {}; q.psiVistos[fi.drive] = fi.dm; }   // ja aparellat: no cal tornar-lo a baixar si no canvia
       } catch (e) { dubtes.push(e.message); }
     }
-    if (fets.length) { desa(); pintaAlumnes(); }
+    desa(); if (fets.length) pintaAlumnes();
     alert((fets.length ? "PSI desats (" + fets.length + "): " + fets.join(", ") + "." : "No s'ha desat cap PSI.") + (dubtes.length ? "\n\nNo s'han posat:\n" + dubtes.join("\n") + "\n\nSi algun és d'un alumne teu, toca la marca PSI al costat del seu nom i puja-l'hi." : ""));
+  }
+  // ================= PSI des de les carpetes del Drive del centre (14.11.2026) =================
+  // Q().psiCarpetes = [{ id, nom }]: carpetes compartides amb el compte d'ieslabisbal.cat (una per grup, p. ex. «4D»).
+  // Es llegeixen amb l'script d'aquell compte; cada document va a l'alumne que diu el nom del fitxer (també si és d'un
+  // altre grup teu) i l'original s'obre des del Drive a qualsevol aparell. Només es baixen els nous o els que han canviat.
+  const b64aBuf = b64 => Uint8Array.from(atob(String(b64).replace(/\n/g, "")), c => c.charCodeAt(0));
+  const idCarpeta = t => { t = String(t || "").trim(); const m = t.match(/folders\/([\w-]{10,})/) || t.match(/[?&]id=([\w-]{10,})/) || t.match(/^([\w-]{20,})$/); return m ? m[1] : null; };
+  async function psiDelDrive(g, boto) {
+    const q = Q(); q.psiCarpetes = Array.isArray(q.psiCarpetes) ? q.psiCarpetes : []; q.psiVistos = q.psiVistos || {};
+    if (!compteIns()) await detectaIns(true);
+    if (!compteIns()) { alert("No trobo el compte d'ieslabisbal.cat al correu de la Bitàcola (📬 Correu > ⚙️). Els PSI es llegeixen amb aquell compte."); return; }
+    const t = prompt((q.psiCarpetes.length ? "Carpetes de PSI que ja hi ha: " + q.psiCarpetes.map(c => c.nom || "?").join(", ") + ".\n\n" : "") +
+      "Enganxa l'enllaç de la carpeta del Drive amb els PSI (o diversos enllaços, separats per espais)." + (q.psiCarpetes.length ? "\nDeixa-ho buit per tornar a llegir les carpetes que ja hi ha." : ""), "");
+    if (t === null) return;
+    const brut = t.match(/\S+/g) || [], nous = brut.map(idCarpeta).filter(Boolean);
+    if (brut.length && !nous.length) { alert("Això no sembla l'enllaç d'una carpeta del Drive (ha de contenir «/folders/…»)."); return; }
+    nous.forEach(id => { if (!q.psiCarpetes.some(c => c.id === id)) q.psiCarpetes.push({ id }); });
+    if (!q.psiCarpetes.length) return;
+    const txt = boto.textContent; boto.disabled = true;
+    try {
+      const fitxers = [], errors = [];
+      for (const c of q.psiCarpetes) {
+        boto.textContent = "📁 Llegint " + (c.nom || "la carpeta") + "…";
+        try { const r = await cridaIns({ accio: "drive-llista", carpeta: c.id }); c.nom = r.nom; r.fitxers.forEach(x => fitxers.push(x)); }
+        catch (e) { errors.push("Carpeta " + (c.nom || c.id) + ": " + (/Acció desconeguda/i.test(e.message) ? "cal posar al dia l'script d'ieslabisbal.cat" : e.message)); }
+      }
+      const cal = fitxers.filter(x => /\.(xlsx?|ods|docx|pdf)$/i.test(x.nom) || /spreadsheet|wordprocessing|ms-excel|google-apps\.(document|spreadsheet)|pdf/i.test(x.tipus)).filter(x => q.psiVistos[x.id] !== x.data);
+      const baixats = [];
+      for (let i = 0; i < cal.length; i++) {
+        boto.textContent = "📁 PSI " + (i + 1) + "/" + cal.length + "…";
+        try { const r = await cridaIns({ accio: "drive-fitxer", id: cal[i].id }); const fi = new File([b64aBuf(r.b64)], r.nom, { type: r.tipus || "" }); fi.drive = cal[i].id; fi.dm = cal[i].data; baixats.push(fi); }
+        catch (e) { errors.push(cal[i].nom + ": " + e.message); }
+      }
+      desa();
+      if (!baixats.length) { alert((errors.length ? "No s'ha pogut llegir:\n" + errors.join("\n") : "Els PSI de les carpetes (" + fitxers.length + ") ja estan al dia.")); return; }
+      boto.textContent = "📁 Aparellant…";
+      await pujaPSI(g, baixats, null, errors);
+    } finally { boto.disabled = false; boto.textContent = txt; }
   }
   function obrePSI(g, nom) {
     let dlg = $("dlgPsi");
     if (!dlg) { dlg = document.createElement("dialog"); dlg.id = "dlgPsi"; document.body.appendChild(dlg); }
-    let vista = "orig", orig, zoom = 0;
+    let vista = "orig", orig, zoom = 0, errDrive = "", provatDrive = false;
     const pinta = async () => {
       const d = psiDocDe(g, nom);
       orig = d ? await idbLlegeixPSI(clauPSI(g, nom)) : null;
+      // PSI del Drive del centre: si no és en aquest aparell (o ha canviat), es baixa a través del compte d'ieslabisbal.cat
+      if (d && d.drive && (!orig || (d.dm && orig.dm !== d.dm)) && !provatDrive) {
+        provatDrive = true;
+        dlg.innerHTML = '<form method="dialog"><h2>📄 PSI</h2><p class="font">Obrint el document del Drive del centre…</p></form>';
+        try {
+          const r = await cridaIns({ accio: "drive-fitxer", id: d.drive });
+          orig = { nom: r.nom, tipus: r.tipus, buf: b64aBuf(r.b64).buffer, dm: d.dm || null };
+          const o = orig; idbFes("readwrite", st => st.put(o, clauPSI(g, nom))).catch(() => null);
+        } catch (e) { errDrive = e.message; }
+      }
       if (!orig && vista === "orig") vista = "text";
       dlg.innerHTML = '<form method="dialog"><h2>📄 PSI</h2><p style="margin:0"><b>' + esc(nom.replace(/\s+DIS$/i, "")) + "</b> · " + esc(nomGrup(g.nom)) + (d ? ' <span class="font">· ' + esc(d.fitxer) + " · " + dma(d.d) + "</span>" : "") + "</p>" +
         (d ? '<div class="vistes" role="group" aria-label="Com es mostra" style="margin:6px 0"><button type="button" data-psi="v-orig" aria-pressed="' + (vista === "orig") + '"' + (orig ? "" : " disabled") + '>Document original</button><button type="button" data-psi="v-text" aria-pressed="' + (vista === "text") + '">Text i cerca</button></div>' +
-          (!orig ? '<p class="font">L\'original no és en aquest aparell (es guarda només on el vas pujar). Pots consultar-ne el text, o tornar-lo a pujar aquí amb el botó de sota.</p>' : "") +
+          (!orig ? (d.drive ? '<p class="font">No s\'ha pogut obrir l\'original del Drive del centre' + (errDrive ? " (" + esc(errDrive) + ")" : "") + '. Mentrestant en tens el text.</p>' : '<p class="font">L\'original no és en aquest aparell (es guarda només on el vas pujar). Pots consultar-ne el text, o tornar-lo a pujar aquí amb el botó de sota, o llegir-lo del Drive amb «📁 PSI del Drive».</p>') : "") +
           (vista === "orig" ? '<div class="psi-zoom"><button type="button" class="boto clar boto-ico" data-psi="z-" aria-label="Més petit">−</button><button type="button" class="boto clar boto-ico" data-psi="z+" aria-label="Més gran">+</button><span class="font">Mida</span></div><div class="psi-orig" id="psiOrig" style="--z:' + zoom + '"></div>' :
             '<input type="search" id="psiCerca" placeholder="Cerca dins del PSI (p. ex. examen, temps, lectura…)" style="width:100%;box-sizing:border-box;font:inherit;padding:6px 8px;border:1px solid var(--linia);border-radius:8px"><div class="psi-text" id="psiText">' + esc(d.text) + "</div>")
           : '<p class="font">Encara no hi ha cap PSI per a aquest alumne.</p>') +
@@ -4273,7 +4325,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       if (a === "v-orig" || a === "v-text") { vista = a.slice(2); pinta(); return; }
       if (a === "z-" || a === "z+") { zoom = Math.max(0.6, Math.min(4, Math.round(((zoom || 1) * (a === "z+" ? 1.3 : 1 / 1.3)) * 100) / 100)); const el = $("psiOrig"); if (el) el.style.setProperty("--z", zoom); return; }
       if (a === "baixa" && orig) { const u = URL.createObjectURL(new Blob([orig.buf], { type: orig.tipus || "application/octet-stream" })); const el = document.createElement("a"); el.href = u; el.download = orig.nom || "PSI"; document.body.appendChild(el); el.click(); el.remove(); setTimeout(() => URL.revokeObjectURL(u), 4000); return; }
-      if (a === "treu" && confirm("Vols treure el PSI de " + nom.replace(/\s+DIS$/i, "") + "?")) { delete g.psiDocs[nom]; await idbTreuPSI(clauPSI(g, nom)); desa(); pintaAlumnes(); pinta(); }
+      if (a === "treu" && confirm("Vols treure el PSI de " + nom.replace(/\s+DIS$/i, "") + "?")) { const dv = g.psiDocs[nom] && g.psiDocs[nom].drive; if (dv && Q().psiVistos) delete Q().psiVistos[dv]; delete g.psiDocs[nom]; await idbTreuPSI(clauPSI(g, nom)); desa(); pintaAlumnes(); pinta(); }
     };
     dlg.showModal();
   }

@@ -37,6 +37,9 @@
 //   { accio: "anulla", clau }                         → anul·la un enviament programat
 //   { accio: "fitxers", carpeta }                     → els fulls .xlsx d'una carpeta de Drive
 //                                                       (per importar les notes al tauler)
+//   { accio: "drive-llista", carpeta }                → { nom, fitxers: [{ id, nom, tipus, mida, data }] } (14.11.2026)
+//                                                       carpeta compartida amb aquest compte (PSI), amb subcarpetes
+//   { accio: "drive-fitxer", id }                     → { nom, tipus, b64 }: el document original (els de Google, en .xlsx/.docx)
 //
 // CLASSROOM I FORMULARIS (13.11.2026; només al compte d'ieslabisbal.cat):
 //   Cal afegir-hi el servei avançat «Google Classroom API» (Serveis > +) i fer una
@@ -189,6 +192,34 @@ function doPost(e) {
           fitxers.push({ nom: f.getName().replace(/\.xlsx?$/i, "") + ".xlsx", b64: Utilities.base64Encode(blob.getBytes()) });
         }
         return json_({ ok: true, fitxers: fitxers });
+      }
+
+      case "drive-llista": {   // 14.11.2026: PSI de les carpetes del Drive del centre
+        const arrel = DriveApp.getFolderById(String(cos.carpeta)), fitxers = [];
+        const recorre = (c, n) => {
+          const it = c.getFiles();
+          while (it.hasNext() && fitxers.length < 400) {
+            const f = it.next();
+            fitxers.push({ id: f.getId(), nom: f.getName(), tipus: f.getMimeType(), mida: f.getSize(), data: f.getLastUpdated().toISOString() });
+          }
+          if (n < 2) { const sc = c.getFolders(); while (sc.hasNext()) recorre(sc.next(), n + 1); }
+        };
+        recorre(arrel, 0);
+        return json_({ ok: true, nom: arrel.getName(), fitxers: fitxers });
+      }
+
+      case "drive-fitxer": {
+        const f = DriveApp.getFileById(String(cos.id)), t = f.getMimeType();
+        let blob, nom = f.getName();
+        if (t === MimeType.GOOGLE_SHEETS || t === MimeType.GOOGLE_DOCS) {
+          const xl = t === MimeType.GOOGLE_SHEETS;
+          blob = UrlFetchApp.fetch("https://docs.google.com/" + (xl ? "spreadsheets" : "document") + "/d/" + f.getId() + "/export?format=" + (xl ? "xlsx" : "docx"),
+            { headers: { Authorization: "Bearer " + ScriptApp.getOAuthToken() } }).getBlob();
+          nom = nom.replace(/\.(xlsx?|docx?)$/i, "") + (xl ? ".xlsx" : ".docx");
+        } else blob = f.getBlob();
+        const bytes = blob.getBytes();
+        if (bytes.length > 25 * 1024 * 1024) return json_({ ok: false, error: "El document fa més de 25 MB: obre'l al Drive." });
+        return json_({ ok: true, nom: nom, tipus: blob.getContentType(), b64: Utilities.base64Encode(bytes) });
       }
 
       case "classroom-cursos": {
