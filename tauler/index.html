@@ -2198,7 +2198,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
         eArea("mat", "…o enganxa aquí fragments o un resum dels capítols", 4) +
         '<div class="alum-eines">' + eBoto("ctlgen", "📗 Genera el control") + "</div>";
       if (e.ctl.length) h += '<div class="fila-as"><label>Controls desats<select data-ei="ctld">' + eOpts(e.ctl.slice().reverse().map(x => [x.id, dma(x.d) + " · " + x.llibre + (x.caps ? " · cap. " + x.caps : "") + " · " + x.curs]), fv("ctld", e.ctl[e.ctl.length - 1].id)) + "</select></label>" +
-        '<span style="align-self:end">' + eBoto("ctlobre", "Obre", true) + " " + eBoto("ctlesb", "Esborra", true) + "</span></div>";
+        '<span style="align-self:end">' + eBoto("ctlobre", "Obre", true) + " " + eBoto("ctlwordd", "⬇️ Word", true) + " " + eBoto("ctlsolwordd", "⬇️ Solucionari en Word", true) + " " + eBoto("ctlesb", "Esborra", true) + "</span></div>";
       return h + (eiRes.ctl || "") + notaModel();
     }
     const desat = e.ctl.some(x => x.id === ctl.id);
@@ -2208,7 +2208,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
         p.o.map((o, j) => '<label class="ctl-op"><input type="radio" name="ctlc' + i + '" data-ctlq="' + i + '" data-ctlc="c" value="' + j + '"' + (p.c === j ? " checked" : "") + "> " + "abcdefgh"[j] + ') <input type="text" data-ctlq="' + i + '" data-ctlc="o' + j + '" value="' + esc(o) + '"></label>').join("") +
         (p.cita ? '<div class="font" style="margin-top:2px">📄 ' + (p.pag ? "p. " + p.pag + " · " : "") + "«" + esc(p.cita) + "»</div>" : "") + "</div>" + eBoto("ctldel", "🗑", true, ' data-i="' + i + '" title="Treu la pregunta"') + "</div>").join("") + "</details>" +
       '<div class="fila-as">' + eSel("vars", "Models", [["1", "Només A"], ["2", "A i B"], ["3", "A, B i C"], ["4", "A, B, C i D"]], String(ctl.vars || 2)) + "</div>" +
-      '<div class="alum-eines">' + eBoto("ctldesa", desat ? "💾 Desa els canvis" : "💾 Desa el control") + eBoto("ctlimp", "🖨️ Imprimeix els models", true) + eBoto("ctlsol", "🖨️ Solucionari", true) + eBoto("ctltanca", "✕ Tanca", true) + "</div>" + msgEi();
+      '<div class="alum-eines">' + eBoto("ctldesa", desat ? "💾 Desa els canvis" : "💾 Desa el control") + eBoto("ctlimp", "🖨️ Imprimeix els models", true) + eBoto("ctlword", "⬇️ Models en Word", true) + eBoto("ctlsol", "🖨️ Solucionari", true) + eBoto("ctlsolword", "⬇️ Solucionari en Word", true) + eBoto("ctltanca", "✕ Tanca", true) + "</div>" + msgEi();
     if (!desat) return h + '<p class="font">Desa el control per poder-lo corregir.</p>';
     // Correcció
     const { g, fila } = triat(), nv = Math.max(1, Number(fv("vars", String(ctl.vars || 2))));
@@ -2230,8 +2230,109 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     return '<h3 style="text-transform:none">Control de lectura · ' + esc(c.llibre) + (c.caps ? " · capítols " + esc(c.caps) : "") + (Number(c.vars) > 1 ? " · Model " + LLETRES[v] : "") + "</h3>" +
       '<p style="margin:0 0 8px">Encercla la resposta correcta. Només n\'hi ha una.</p><ol>' + vr.map(p => '<li style="margin-bottom:8px;break-inside:avoid">' + esc(ctlPr(p.p, c)) + '<div style="margin-left:10px">' + p.o.map((o, j) => "abcdefgh"[j] + ") " + esc(ctlOp(o))).join("<br>") + "</div></li>").join("") + "</ol>";
   }
+  // ---------- ⬇️ Controls de lectura en Word (.docx) ----------
+  // 14.11.2026: el mateix que s'imprimeix (models amb la capçalera del centre i el solucionari), en un .docx editable.
+  // Cada model és una secció del document: comença en una pàgina nova i la numeració del peu (1/2, 2/2…) torna a començar.
+  const xmlEsc = t => String(t == null ? "" : t).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  function wRun(t, o) {
+    o = o || {};
+    return "<w:r><w:rPr>" + (o.b ? "<w:b/>" : "") + (o.sz ? '<w:sz w:val="' + o.sz + '"/><w:szCs w:val="' + o.sz + '"/>' : "") + "</w:rPr>" +
+      String(t).split("\t").map(x => '<w:t xml:space="preserve">' + xmlEsc(x) + "</w:t>").join("<w:tab/>") + "</w:r>";
+  }
+  function wPar(runs, o) {
+    o = o || {};
+    return "<w:p><w:pPr>" + (o.keep ? "<w:keepNext/><w:keepLines/>" : "") + (o.tabs || "") +
+      '<w:spacing w:before="' + (o.antes || 0) + '" w:after="' + (o.despres == null ? 80 : o.despres) + '"/>' +
+      (o.esq || o.penj ? '<w:ind w:left="' + (o.esq || 0) + '"' + (o.penj ? ' w:hanging="' + o.penj + '"' : "") + "/>" : "") +
+      (o.centre ? '<w:jc w:val="center"/>' : "") + "</w:pPr>" + (Array.isArray(runs) ? runs.join("") : wRun(runs, o)) + "</w:p>";
+  }
+  const W_AMPLE = 10092;   // 178 mm útils (A4 amb marges de 16 mm)
+  const wVora = '<w:tcBorders><w:top w:val="single" w:sz="6" w:color="000000"/><w:left w:val="single" w:sz="6" w:color="000000"/><w:bottom w:val="single" w:sz="6" w:color="000000"/><w:right w:val="single" w:sz="6" w:color="000000"/></w:tcBorders>';
+  const wCel = (amp, contingut, centre) => '<w:tc><w:tcPr><w:tcW w:w="' + amp + '" w:type="dxa"/>' + wVora + (centre ? '<w:vAlign w:val="center"/>' : "") + "</w:tcPr>" + contingut + "</w:tc>";
+  function wTaula(amples, files) {
+    return '<w:tbl><w:tblPr><w:tblW w:w="' + amples.reduce((a, b) => a + b, 0) + '" w:type="dxa"/><w:tblLayout w:type="fixed"/><w:tblCellMar><w:left w:w="100" w:type="dxa"/><w:right w:w="100" w:type="dxa"/></w:tblCellMar></w:tblPr>' +
+      "<w:tblGrid>" + amples.map(x => '<w:gridCol w:w="' + x + '"/>').join("") + "</w:tblGrid>" + files.map(f => "<w:tr>" + f + "</w:tr>").join("") + "</w:tbl>";
+  }
+  // Capçalera dels exàmens: logo · Generalitat / Departament / Professor · NOTA, i la línia CURS / GRUP / ALUMNE/A
+  function wCapcalera(informe) {
+    const cx = 684000, cy = Math.round(684000 * 196 / 240);   // logo de 19 mm d'ample
+    const logo = '<w:p><w:pPr><w:spacing w:before="40" w:after="40"/><w:jc w:val="center"/></w:pPr><w:r><w:drawing><wp:inline distT="0" distB="0" distL="0" distR="0"><wp:extent cx="' + cx + '" cy="' + cy + '"/><wp:docPr id="1" name="Logo INS la Bisbal"/>' +
+      '<a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture">' +
+      '<pic:nvPicPr><pic:cNvPr id="1" name="logo.png"/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip r:embed="rIdLogo"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill>' +
+      '<pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="' + cx + '" cy="' + cy + '"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r></w:p>';
+    const dades = wPar([wRun("Generalitat de Catalunya.", { b: true })], { despres: 0, antes: 40 }) + wPar("Departament d’Ensenyament. Curs " + cursActual(), { despres: 0 }) + wPar("Professor: Ignasi Corney Oller", { despres: 40 });
+    const amples = informe ? [1350, W_AMPLE - 1350] : [1350, W_AMPLE - 1350 - 2220, 2220];
+    let h = wTaula(amples, [wCel(amples[0], logo, true) + wCel(amples[1], dades) + (informe ? "" : wCel(amples[2], wPar([wRun("NOTA:", { b: true })], { antes: 40 })))]);
+    if (!informe) h += wPar([wRun(" ", { b: true }), wRun("CURS\t GRUP\t ALUMNE/A\t", { b: true })], { antes: 200, despres: 280,
+      tabs: '<w:tabs><w:tab w:val="left" w:leader="dot" w:pos="1950"/><w:tab w:val="left" w:leader="dot" w:pos="3750"/><w:tab w:val="right" w:leader="dot" w:pos="' + W_AMPLE + '"/></w:tabs>' });
+    else h += wPar("", { despres: 120 });
+    return h;
+  }
+  const wSeccio = darrera => (darrera ? "<w:sectPr>" : '<w:p><w:pPr><w:sectPr>') + '<w:footerReference w:type="default" r:id="rIdPeu"/><w:type w:val="nextPage"/><w:pgSz w:w="11906" w:h="16838"/>' +
+    '<w:pgMar w:top="907" w:right="907" w:bottom="1134" w:left="907" w:header="454" w:footer="454" w:gutter="0"/><w:pgNumType w:start="1"/>' + (darrera ? "</w:sectPr>" : "</w:sectPr></w:pPr></w:p>");
+  async function baixaDocx(nom, seccions) {
+    await carregaScript("https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js", () => window.JSZip);
+    const ns = 'xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"';
+    const cos = seccions.map((s, i) => s + (i < seccions.length - 1 ? wSeccio(false) : "")).join("") + wSeccio(true);
+    const z = new window.JSZip(), cap = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>';
+    z.file("[Content_Types].xml", cap + '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Default Extension="png" ContentType="image/png"/>' +
+      '<Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/><Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/><Override PartName="/word/footer1.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.footer+xml"/></Types>');
+    z.file("_rels/.rels", cap + '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>');
+    z.file("word/_rels/document.xml.rels", cap + '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rIdEstils" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>' +
+      '<Relationship Id="rIdPeu" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/footer" Target="footer1.xml"/><Relationship Id="rIdLogo" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/logo.png"/></Relationships>');
+    z.file("word/media/logo.png", LOGO_INS.split(",")[1], { base64: true });
+    z.file("word/styles.xml", cap + "<w:styles " + ns + '><w:docDefaults><w:rPrDefault><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:eastAsia="Arial" w:cs="Arial"/><w:sz w:val="22"/><w:szCs w:val="22"/><w:lang w:val="es-ES"/></w:rPr></w:rPrDefault><w:pPrDefault><w:pPr><w:spacing w:after="80" w:line="264" w:lineRule="auto"/></w:pPr></w:pPrDefault></w:docDefaults>' +
+      '<w:style w:type="paragraph" w:default="1" w:styleId="Normal"><w:name w:val="Normal"/></w:style></w:styles>');
+    const camp = c => '<w:r><w:fldChar w:fldCharType="begin" w:dirty="true"/></w:r><w:r><w:instrText xml:space="preserve"> ' + c + ' </w:instrText></w:r><w:r><w:fldChar w:fldCharType="separate"/></w:r><w:r><w:t>1</w:t></w:r><w:r><w:fldChar w:fldCharType="end"/></w:r>';
+    z.file("word/footer1.xml", cap + "<w:ftr " + ns + '><w:p><w:pPr><w:pBdr><w:top w:val="single" w:sz="6" w:space="4" w:color="000000"/></w:pBdr><w:jc w:val="center"/><w:rPr><w:sz w:val="20"/></w:rPr></w:pPr>' + camp("PAGE") + "<w:r><w:t>/</w:t></w:r>" + camp("SECTIONPAGES") + "</w:p></w:ftr>");
+    z.file("word/document.xml", cap + "<w:document " + ns + ' xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing"><w:body>' + cos + "</w:body></w:document>");
+    const blob = await z.generateAsync({ type: "blob", mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" });
+    const a = document.createElement("a"); a.href = URL.createObjectURL(blob);
+    a.download = String(nom).replace(/[\\/:*?"<>|]+/g, "-").replace(/\s+/g, " ").trim() + ".docx";
+    document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+  }
+  function ctlWordModel(c, v) {
+    const vr = variantCtl(c, v);
+    return wCapcalera(false) +
+      wPar([wRun("Control de lectura · " + c.llibre + (c.caps ? " · capítols " + c.caps : "") + (Number(c.vars) > 1 ? " · Model " + LLETRES[v] : ""), { b: true })], { antes: 120, despres: 120, keep: true }) +
+      wPar("Encercla la resposta correcta. Només n'hi ha una.", { despres: 200 }) +
+      vr.map((p, i) => wPar((i + 1) + ".\t" + ctlPr(p.p, c), { esq: 400, penj: 400, keep: true, despres: 40 }) +
+        p.o.map((o, j) => wPar("abcdefgh"[j] + ") " + ctlOp(o), { esq: 620, keep: j < p.o.length - 1, despres: j < p.o.length - 1 ? 0 : 200 })).join("")).join("");
+  }
+  function ctlWordSol(c) {
+    const vrs = Array.from({ length: c.vars }, (x, v) => variantCtl(c, v)), tit = c.llibre + (c.caps ? " · capítols " + c.caps : "");
+    // Taula cap avall: blocs de 20 preguntes l'un al costat de l'altre (Núm. i una columna per model)
+    const blocs = Math.ceil(c.preg.length / 20), amples = [];
+    for (let b = 0; b < blocs; b++) { amples.push(820); vrs.forEach(() => amples.push(520)); if (b < blocs - 1) amples.push(300); }
+    const celT = (amp, t, b) => wCel(amp, wPar([wRun(t, { b, sz: 20 })], { centre: true, despres: 0 }));
+    const buida = amp => '<w:tc><w:tcPr><w:tcW w:w="' + amp + '" w:type="dxa"/><w:tcBorders><w:top w:val="nil"/><w:bottom w:val="nil"/></w:tcBorders></w:tcPr><w:p/></w:tc>';
+    const files = [];
+    for (let r = -1; r < Math.min(20, c.preg.length); r++) {
+      let f = "", k = 0;
+      for (let b = 0; b < blocs; b++) {
+        const n = b * 20 + r;
+        if (r < 0) { f += celT(amples[k++], "Núm.", true); vrs.forEach((x, v) => { f += celT(amples[k++], LLETRES[v], true); }); }
+        else if (n < c.preg.length) { f += celT(amples[k++], String(n + 1), true); vrs.forEach(vr => { f += celT(amples[k++], "abcdefgh"[vr[n].c]); }); }
+        else { f += buida(amples[k++]); vrs.forEach(() => { f += buida(amples[k++]); }); }
+        if (b < blocs - 1) f += buida(amples[k++]);
+      }
+      files.push(f);
+    }
+    const primer = wCapcalera(true) + wPar([wRun("Solucionari · " + tit, { b: true })], { despres: 160 }) + wTaula(amples, files);
+    return [primer].concat(vrs.map((vr, v) => wCapcalera(true) + wPar([wRun("Solucionari · " + tit + (c.vars > 1 ? " · Model " + LLETRES[v] : ""), { b: true })], { despres: 160 }) +
+      vr.map((q, i) => { const p = c.preg[q.i];
+        return wPar([wRun((i + 1) + ".\t" + ctlPr(q.p, c) + " → "), wRun("abcdefgh"[q.c] + ") " + ctlOp(q.o[q.c]), { b: true })], { esq: 400, penj: 400, keep: !!(p.pag || p.cita), despres: p.pag || p.cita ? 0 : 120 }) +
+          (p.pag || p.cita ? wPar([wRun((p.pag ? "p. " + p.pag : "") + (p.cita ? (p.pag ? " · " : "") + "«" + p.cita + "»" : ""), { sz: 18 })], { esq: 400, despres: 120 }) : ""); }).join("")));
+  }
+  async function ctlWord(c, sol) {
+    const nom = (sol ? "Solucionari - " : "Control de lectura - ") + c.llibre + (c.caps ? " - cap. " + c.caps : "");
+    try { await baixaDocx(nom, sol ? ctlWordSol(c) : Array.from({ length: Math.max(1, Number(c.vars) || 1) }, (x, v) => ctlWordModel(c, v))); }
+    catch (er) { alert("No s'ha pogut fer el Word: " + er.message); }
+  }
   async function ctlAccio(a, b) {
     const e = EI();
+    // ⬇️ Word d'un control desat, sense haver-lo d'obrir
+    if (a === "ctlwordd" || a === "ctlsolwordd") { const t = e.ctl.find(x => x.id === fv("ctld", "")) || e.ctl[e.ctl.length - 1]; if (t) await ctlWord(Object.assign({}, t, { vars: Number(t.vars) || 2 }), a === "ctlsolwordd"); return; }
     if (a === "ctlll") { const t = String(fv("lt", "")).trim(), au = String(fv("la", "")).trim(); if (!t) { alert("Escriu el títol del llibre."); return; } e.llibres.push({ t, a: au, c: cursCtl() }); desa(); fput("llibre", String(llibresEi().length - 1)); fput("lt", ""); fput("la", ""); return pintaAssistent(); }
     if (a === "ctlgen") {
       const ll = llibresEi()[Number(fv("llibre", "0"))]; if (!ll) { alert("Tria el llibre."); return; }
@@ -2299,6 +2400,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     if (a === "ctldel") { if (ctl.preg.length < 2) return; if (ctl.resp && Object.keys(ctl.resp).length && !confirm("Ja hi ha alumnes corregits; si treus la pregunta, les seves respostes es desquadraran. Vols continuar?")) return; ctl.preg.splice(Number(b.dataset.i), 1); if (e.ctl.includes(ctl)) desa(); return pintaAssistent(); }
     if (a === "ctldesa") { ctl.vars = Number(fv("vars", String(ctl.vars || 2))); if (!e.ctl.includes(ctl)) e.ctl.push(ctl); desa(); eiMsg.ctl = "✓ Control desat."; return pintaAssistent(); }
     if (a === "ctlimp") { ctl.vars = Number(fv("vars", String(ctl.vars || 2))); imprimeix("Control de lectura · " + ctl.llibre, Array.from({ length: ctl.vars }, (x, v) => ctlHTMLModel(ctl, v)), false); return; }
+    if (a === "ctlword" || a === "ctlsolword") { ctl.vars = Number(fv("vars", String(ctl.vars || 2))); await ctlWord(ctl, a === "ctlsolword"); return; }
     if (a === "ctlsol") {
       ctl.vars = Number(fv("vars", String(ctl.vars || 2)));
       // Taula cap avall (una fila per pregunta, una columna per model; en blocs de 20 files l'un al costat de l'altre)
