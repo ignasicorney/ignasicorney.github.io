@@ -2938,7 +2938,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
             ["B. Comprensió oral i audiovisual", "1BLwPKrEpgrQYYi2zy_rrYpR7fhY5WOjQ", "CO «Filosofía viva» (Para todos La 2) i «Fragmento audiovisual 2»."],
             ["C. Comprensió lectora", "1HRQW93FbxeF1IjosFwmh89FaRoSrqedH", "«El fin del capitán Blay» amb respostes i Neruda (CL3)."]] },
         { t: "Altres carpetes", id: "", c: "",
-          f: [["Competències bàsiques (proves oficials)", "1udOZNknf5aTvFAID_RswiFFrSPRlZwhx", "Proves de 2018-19 a 2023-24 per cursos. Ja són a «🧪 Competències bàsiques» per corregir-les."],
+          f: [["Competències bàsiques (proves oficials)", "1udOZNknf5aTvFAID_RswiFFrSPRlZwhx", "Proves de 2018-19 a 2025-26 per cursos. Ja són a «🧪 Competències bàsiques» per corregir-les."],
             ["Avaluació i notes", "1-a-muoDDUENSoD1Kc1EiKq4Bplb-Mb70", "Graelles del company: contenen dades de l'alumnat del 25-26."],
             ["Recursos generals", "1jFlOa2An9fPBqBTqSLTaAFpkm0lKyQ2r", "Llibre «básico de 4º»."],
             ["Duplicats", "1UvrrvvF3Q2CVpHIM_RhwSpeuTkX4IQZT", "Còpies idèntiques, per revisar i esborrar."]] }
@@ -4909,6 +4909,21 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
         ["22", "b", "CL"], ["23", "b", "LL"], ["24", "b", "LL"], ["25", "d", "CL"], ["26", "c", "CL"], ["27", "b", "CL"],
         ["28", "d", "CL"], ["29", "c", "CL"]],
       col2: ["20", "21", "22", "23", "24", "25", "26", "27", "28", "29"],
+      full: { model: "propi" } },
+    { id: "cast-2026", curs: "2025-2026", materia: "Castellà", titol: "Competencias básicas 4.º ESO · Lengua castellana · 2025-2026",
+      quadern: "https://drive.google.com/file/d/1ouQvN6ltU1b1yInfEAuf66DPrIcjrt4h/view",
+      criteris: "https://drive.google.com/file/d/1_TXfnWKJaRbLURjzkxmVKATE7hwE9JoZ/view",
+      audio: "https://drive.google.com/file/d/1gzdJW8T8VwhxUsxEqiqcZwTX7OUx1yr_/view",
+      transcripcio: "https://drive.google.com/file/d/1w3XPpiX8Jwny_yoO4XSm9vnWBDKh4EN_/view",
+      items: [["1", "b", "CL"], ["2", "a", "CL"], ["3", "d", "CL"], ["4", "a", "CL"], ["5", "d", "CL"], ["6.1", "F", "CL"],
+        ["6.2", "V", "CL"], ["6.3", "F", "CL"], ["6.4", "V", "CL"], ["7", "d", "CL"], ["8", "c", "CL"], ["9", "c", "CL"],
+        ["10", "b", "CL"], ["11", "d", "CL"], ["12", "c", "CL"], ["13.1", "V", "CL"], ["13.2", "F", "CL"], ["13.3", "V", "CL"],
+        ["13.4", "F", "CL"], ["14", "a", "CL"], ["15", "c", "CL"], ["16", "d", "CL"], ["17", "b", "CL"], ["18", "d", "CL"],
+        ["19", "a", "CL"], ["20", "b", "CL"], ["21", "d", "CL"], ["22", "a", "CL"], ["23", "c", "CL"], ["24", "a", "CL"],
+        ["25", "c", "CL"], ["26", "c", "CL"], ["27", "c", "CL"], ["28", "b", "CL"], ["29", "d", "CL"], ["30", "d", "CL"],
+        ["31", "a", "CL"], ["32", "b", "CL"], ["33", "c", "CL"], ["34", "b", "CL"], ["35", "d", "CL"], ["36", "a", "CL"],
+        ["37", "b", "CL"], ["38", "c", "CL"]],
+      col2: ["17", "18", "19", "20", "21", "22", "23", "24", "25", "26", "27", "28", "29", "30", "31", "32", "33", "34", "35", "36", "37", "38"],
       full: { model: "propi" } }
   ];
   const cbItems = p => p.items.map(([n, k, d, e, pas, pista]) => ({ n: n, k: k, d: d, t: k === "*" ? "oberta" : /^[VF]$/.test(k) ? "VF" : e === "ab" ? "ab" : "abcd", max: k === "*" ? Number(e) || 1 : 1, pas: Number(pas) || 1, pista: pista || "" }));
@@ -5260,7 +5275,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     let h = '<div class="vistes" role="group" aria-label="Prova" style="flex-wrap:wrap;margin-bottom:8px">' + ps.map((x, i) => [x, i]).sort((u, v) => v[0].curs.localeCompare(u[0].curs)).map(([x, i]) => '<button type="button" data-cbp="' + i + '" aria-pressed="' + (i === cbSel.p) + '">' + esc(x.curs) + (ps.filter(y => y.curs === x.curs).length > 1 ? " · " + esc(x.materia) : "") + "</button>").join("") + "</div>" +
       '<div class="alum-eines">' + nova + (p.propia ? '<button type="button" class="boto clar" data-cb="edita">✏️ Revisa la clau</button>' : "") + '<button type="button" class="boto clar" data-cb="treu">🗑️ Elimina la prova ' + esc(p.curs) + "</button></div>" +
       '<div class="fila-as">' + (q.grups.length ? '<label>Grup<select data-cb="g">' + q.grups.map((x, i) => '<option value="' + i + '"' + (i === cbSel.g ? " selected" : "") + ">" + esc(nomGrup(x.nom)) + "</option>").join("") + "</select></label>" : "") + "</div>";
-    const eines = enl(p.quadern, "📄 Quadern") + enl(p.criteris, "✅ Criteris") +
+    const eines = enl(p.quadern, "📄 Quadern") + enl(p.criteris, "✅ Criteris") + enl(p.audio, "🎧 Àudio") + enl(p.transcripcio, "📝 Transcripció") +
       (propi ? '<button type="button" class="boto clar" data-cb="impgrup"' + (g ? "" : " disabled") + '>🖨️ Fulls del grup (amb nom)</button><button type="button" class="boto clar" data-cb="impbuit">🖨️ Full en blanc</button>' : "");
     if (eines) h += '<div class="alum-eines">' + eines + "</div>";
     if (!g) { cos.innerHTML = h + '<p class="font">Importa o crea primer els grups a «Alumnes i qualificacions».</p>'; return; }
