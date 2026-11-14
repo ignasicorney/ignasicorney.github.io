@@ -4213,9 +4213,10 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     }
     throw new Error("format desconegut");
   }
-  async function pujaPSI(g, fitxers, nomFix, errorsAbans) {
+  async function pujaPSI(g, fitxers, nomFix, op) {
+    op = op || {};   // { errors: [...] d'abans, pendents: [] on van els fitxers sense alumne, silenci: sense avís final }
     const grups = nomFix ? [g] : [g].concat(Q().grups.filter(x => x !== g));
-    const fets = [], dubtes = (errorsAbans || []).slice(), ara = new Set();
+    const fets = [], dubtes = (op.errors || []).slice(), ara = new Set();
     const docDe = (fi, text) => { const o = { fitxer: fi.name, d: avuiISO(), text: text.slice(0, 40000) }; if (fi.drive) { o.drive = fi.drive; o.dm = fi.dm; } return o; };
     for (const fi of fitxers) {
       try {
@@ -4223,7 +4224,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
         let gD = null, nom = nomFix || null;
         if (nomFix) gD = g;
         else for (const gx of grups) { const noms = Array.from(new Set([].concat(...gx.fulls.map(f => f.files.map(r => r.nom))))); const n = alumneDeDoc(noms, fi.name, text); if (n) { gD = gx; nom = n; break; } }
-        if (!nom) { dubtes.push(fi.name + " (no és de cap alumne dels teus grups)"); continue; }
+        if (!nom) { if (op.pendents) op.pendents.push(fi); else dubtes.push(fi.name + " (no és de cap alumne dels teus grups)"); continue; }
         gD.psiDocs = gD.psiDocs || {};
         const clau = gD.nom + "|" + nom, ant = gD.psiDocs[nom];
         if (ara.has(clau) && ant) { if (fi.dm && ant.dm ? fi.dm > ant.dm : text.length > ant.text.length) { gD.psiDocs[nom] = docDe(fi, text); await idbPosaPSI(clauPSI(gD, nom), fi); } }   // el mateix PSI dues vegades: se'n queda un (del Drive, el més recent)
@@ -4236,7 +4237,8 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       } catch (e) { dubtes.push(e.message); }
     }
     desa(); if (fets.length) pintaAlumnes();
-    alert((fets.length ? "PSI desats (" + fets.length + "): " + fets.join(", ") + "." : "No s'ha desat cap PSI.") + (dubtes.length ? "\n\nNo s'han posat:\n" + dubtes.join("\n") + "\n\nSi algun és d'un alumne teu, toca la marca PSI al costat del seu nom i puja-l'hi." : ""));
+    if (op.silenci) return;
+    alert((op.pendents && op.pendents.length ? "Sense alumne (" + op.pendents.length + "): ara els pots assignar tu.\n\n" : "") + (fets.length ? "PSI desats (" + fets.length + "): " + fets.join(", ") + "." : "No s'ha desat cap PSI.") + (dubtes.length ? "\n\nNo s'han posat:\n" + dubtes.join("\n") + "\n\nSi algun és d'un alumne teu, toca la marca PSI al costat del seu nom i puja-l'hi." : ""));
   }
   // ================= PSI des de les carpetes del Drive del centre (14.11.2026) =================
   // Q().psiCarpetes = [{ id, nom }]: carpetes compartides amb el compte d'ieslabisbal.cat (una per grup, p. ex. «4D»).
@@ -4273,8 +4275,43 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       desa();
       if (!baixats.length) { alert((errors.length ? "No s'ha pogut llegir:\n" + errors.join("\n") : "Els PSI de les carpetes (" + fitxers.length + ") ja estan al dia.")); return; }
       boto.textContent = "Aparellant…";
-      await pujaPSI(g, baixats, null, errors);
+      const pendents = [];
+      await pujaPSI(g, baixats, null, { errors, pendents });
+      if (pendents.length) assignaPSI(pendents);
     } finally { boto.disabled = false; boto.innerHTML = txt; }
+  }
+  // PSI del Drive que no s'han pogut aparellar: els assigna l'Ignasi triant l'alumne (o els marca com a no seus)
+  function assignaPSI(pendents) {
+    let dlg = $("dlgPsiAssig");
+    if (!dlg) { dlg = document.createElement("dialog"); dlg.id = "dlgPsiAssig"; document.body.appendChild(dlg); }
+    const grups = Q().grups;
+    const opcions = '<option value="">— Tria l\'alumne —</option>' + grups.map((gx, gi) => {
+      const noms = Array.from(new Set([].concat(...gx.fulls.map(f => f.files.map(r => r.nom))))).sort((a, b) => a.localeCompare(b, "ca"));
+      return '<optgroup label="' + esc(nomGrup(gx.nom)) + '">' + noms.map(n => '<option value="' + gi + "|" + esc(n) + '">' + esc(n.replace(/\s+DIS$/i, "")) + (psiDocDe(gx, n) ? " · ja té PSI" : "") + "</option>").join("") + "</optgroup>";
+    }).join("");
+    const pinta = () => {
+      if (!pendents.length) { dlg.close(); return; }
+      dlg.innerHTML = '<form method="dialog"><h2>PSI per assignar</h2><p class="font">No he sabut de qui són aquests documents del Drive. Tria l\'alumne de cada un.</p>' +
+        pendents.map((fi, i) => '<div style="border-top:1px solid var(--linia);padding:8px 0"><b>' + esc(fi.name) + '</b><div class="botons" style="flex-wrap:wrap;margin-top:4px"><select data-pa="' + i + '" style="font:inherit;max-width:100%">' + opcions + '</select>' +
+          '<button type="button" class="boto" data-pas="' + i + '">Assigna</button><button type="button" class="boto clar" data-pno="' + i + '" title="No tornarà a sortir fins que canviï al Drive">No és de cap alumne meu</button></div></div>').join("") +
+        '<div class="botons"><button type="button" class="boto clar" data-pfet="1">Ho faré més tard</button></div></form>';
+    };
+    pinta();
+    dlg.onclick = async ev => {
+      const b = ev.target.closest("[data-pas],[data-pno],[data-pfet]"); if (!b) return;
+      if (b.dataset.pfet) { dlg.close(); return; }
+      if (b.dataset.pno) { const fi = pendents[Number(b.dataset.pno)]; const q = Q(); q.psiVistos = q.psiVistos || {}; if (fi.drive) q.psiVistos[fi.drive] = fi.dm; pendents.splice(Number(b.dataset.pno), 1); desa(); pinta(); return; }
+      const i = Number(b.dataset.pas), sel = dlg.querySelector('[data-pa="' + i + '"]');
+      if (!sel || !sel.value) { alert("Tria primer l'alumne."); return; }
+      const k = sel.value.indexOf("|"), gx = grups[Number(sel.value.slice(0, k))], nom = sel.value.slice(k + 1);
+      if (psiDocDe(gx, nom) && !confirm(nom.replace(/\s+DIS$/i, "") + " ja té un PSI. Vols substituir-lo per «" + pendents[i].name + "»?")) return;
+      b.disabled = true;
+      await pujaPSI(gx, [pendents[i]], nom, { silenci: true });
+      const d = psiDocDe(gx, nom);
+      if (!d || d.drive !== pendents[i].drive) { b.disabled = false; alert("No s'ha pogut llegir «" + pendents[i].name + "». Torna-ho a provar."); return; }
+      pendents.splice(i, 1); pinta();
+    };
+    dlg.showModal();
   }
   function obrePSI(g, nom) {
     let dlg = $("dlgPsi");
