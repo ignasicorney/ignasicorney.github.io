@@ -339,6 +339,7 @@ a.cons-b{text-decoration:none;color:inherit;font-size:.86rem;line-height:1.3}
 .fila-as label{display:grid;gap:2px;font-size:.8rem;color:var(--suau)}
 #asCos textarea{width:100%;margin:6px 0}
 .as-errs{margin:4px 0 8px;padding-left:20px;font-size:.9rem}
+.as-doc ol.preg>li{margin:0 0 1.2em}
 .as-doc{border:1px solid var(--linia);border-radius:10px;padding:10px 16px;margin-top:8px;max-height:70vh;overflow:auto}
 .as-dis{font-family:Verdana,Arial,sans-serif;line-height:1.9;letter-spacing:.03em}
 .as-butll td{vertical-align:top;padding:6px;border-bottom:1px solid var(--linia)}
@@ -1517,7 +1518,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
         : "@page{size:A4;margin:16mm 16mm 20mm;@bottom-center{content:counter(page) \"/\" counter(pages);font:10px Arial,Helvetica,sans-serif;border-top:1px solid #000;margin:0 0 8mm;padding-top:2mm}}") +
       (dis ? "body{font:18px/1.9 Verdana,Arial,sans-serif;letter-spacing:.04em;word-spacing:.12em;color:#1d1d1b;margin:0}p,li{text-align:left}i,em{font-style:normal;font-weight:700}"
            : "body{font:14px/1.5 Arial,Helvetica,sans-serif;color:#000;margin:0}p{text-align:justify}") +
-      "h3,h4{margin:1.1em 0 .4em}h3{font-size:1.05em;text-transform:uppercase}li{margin:.25em 0}" + CSS_DOC +
+      "h3,h4{margin:1.1em 0 .4em}h3{font-size:1.05em;text-transform:uppercase}li{margin:.25em 0}ol.preg>li{margin:0 0 1.2em;break-inside:avoid;page-break-inside:avoid}" + CSS_DOC +
       "@media screen{body{max-width:180mm;margin:24px auto;padding:0 16px}}</style></head><body>" + (models || senseCap ? "" : capcaleraDoc(informe)) + html +
       "<script>" + (models ? PAGINA_MODELS + "window.onload=()=>{paginaModels();setTimeout(()=>print(),200)}" : "window.onload=()=>setTimeout(()=>print(),200)") + "<\/script></body></html>");
     w.document.close();
@@ -4750,7 +4751,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
         text: titolV + "\n" + enllac + "\n\n" + nivells.map(nv => nv.nom.toUpperCase() + "\n" + txtNiv(nv)).join("\n\n") + "\n\nSOLUCIONARI\n" + nivells.map(nv => nv.nom + ": " + nv.preguntes.map((q, k) => (k + 1) + lletra(q.correctes[0]) + (q.correctes.length > 1 ? "+" + q.correctes.slice(1).map(lletra).join("+") : "")).join(" · ")).join("\n"),
         video: { id: v, inici: i, final: f, enllac: enllac, desc: desc, nivells: nivells, es: es }
       };
-      const htmlNiv = nv => "<h4>" + esc(nv.nom) + "</h4><ol>" + nv.preguntes.map(q => "<li>" + esc(q.enunciat) + (q.moment ? ' <span class="font">[' + esc(q.moment) + "]</span>" : "") + (q.tipus === "multiple" ? ' <span class="font">(pot haver-hi més d\'una resposta)</span>' : "") + '<ol type="a">' + q.opcions.map(o => "<li>" + esc(o) + "</li>").join("") + "</ol></li>").join("") + "</ol>";
+      const htmlNiv = nv => "<h4>" + esc(nv.nom) + "</h4><ol class=\"preg\">" + nv.preguntes.map(q => "<li>" + esc(q.enunciat) + (q.moment ? ' <span class="font">[' + esc(q.moment) + "]</span>" : "") + (q.tipus === "multiple" ? ' <span class="font">(pot haver-hi més d\'una resposta)</span>' : "") + '<ol type="a">' + q.opcions.map(o => "<li>" + esc(o) + "</li>").join("") + "</ol></li>").join("") + "</ol>";
       asDades.html = "<h3>" + esc(titolV) + "</h3><p>Fragment del vídeo del " + mmss(i) + " al " + mmss(f) + ": " + esc(enllac) + "</p>" + (r.resum ? "<p><i>" + esc(String(r.resum)) + "</i></p>" : "") + nivells.map(htmlNiv).join("") +
         "<h4>Solucionari</h4><ul>" + nivells.map(nv => "<li><b>" + esc(nv.nom) + ":</b> " + nv.preguntes.map((q, k) => (k + 1) + " " + q.correctes.map(lletra).join("+")).join(" · ") + "</li>").join("") + "</ul>";
       const sel = '<select id="asQrNiv" aria-label="Nivell del qüestionari">' + nivells.map((nv, k) => "<option" + (k === (nivells.length >= 3 && triats.length > 1 ? 1 : 0) ? " selected" : "") + ">" + esc(nv.nom) + "</option>").join("") + "</select>";
