@@ -967,6 +967,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       if (d.genealogia && typeof d.genealogia === "object") r.genealogia = d.genealogia;
       if (Array.isArray(d.formularis)) r.formularis = d.formularis;
       if (d.eines && typeof d.eines === "object") r.eines = d.eines;   // eines per a l'alumnat (fluïdesa, dictats, controls…)
+      if (Array.isArray(d.matFora)) r.matFora = d.matFora.filter(x => typeof x === "string");   // carpetes del material esborrades des de la Bitàcola
       if (d.cb && typeof d.cb === "object") r.cb = d.cb;   // competències bàsiques: codis dels fulls, columnes CL/EE i respostes   // qüestionaris en línia creats des de l'Assistent   // dades de les persones vives (privades)
     }
     return r;
@@ -2939,7 +2940,6 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
             ["C. Comprensió lectora", "1HRQW93FbxeF1IjosFwmh89FaRoSrqedH", "«El fin del capitán Blay» amb respostes i Neruda (CL3)."]] },
         { t: "Altres carpetes", id: "", c: "",
           f: [["Competències bàsiques (proves oficials)", "1udOZNknf5aTvFAID_RswiFFrSPRlZwhx", "Proves de 2018-19 a 2025-26 per cursos. Ja són a «🧪 Competències bàsiques» per corregir-les."],
-            ["Avaluació i notes", "1-a-muoDDUENSoD1Kc1EiKq4Bplb-Mb70", "Graelles del company: contenen dades de l'alumnat del 25-26."],
             ["Recursos generals", "1jFlOa2An9fPBqBTqSLTaAFpkm0lKyQ2r", "Llibre «básico de 4º»."],
             ["Duplicats", "1UvrrvvF3Q2CVpHIM_RhwSpeuTkX4IQZT", "Còpies idèntiques, per revisar i esborrar."]] }
       ] }
@@ -2949,7 +2949,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
   let matSel = 0, matNav = null;   // matNav: carpeta oberta dins la Bitàcola { id, nom, d, carrega, err }
   const matDesti = m => {   // carpetes de l'índex, per al menú «Mou a…»
     const l = [[m.arrel, "📁 " + m.nivell]];
-    m.blocs.forEach(b => { if (b.id) l.push([b.id, b.t]); b.f.forEach(f => l.push([f[1], (b.id ? b.t + " › " : "") + f[0]])); });
+    m.blocs.forEach(b => { if (b.id) l.push([b.id, b.t]); b.f.filter(f => !matFora().includes(f[1])).forEach(f => l.push([f[1], (b.id ? b.t + " › " : "") + f[0]])); });
     return l;
   };
   async function matCrida(cos) {
@@ -3007,15 +3007,16 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     if (m.origen) h += '<p class="font">' + esc(m.origen) + "</p>";
     h += m.blocs.map(b => '<details class="rub-bloc"><summary><b>' + esc(b.t) + "</b>" + (b.id ? ' <span class="font">· ' + obre(b.id, "obre la carpeta") + "</span>" : "") + "</summary>" +
       (b.c ? '<p class="font">' + esc(b.c) + "</p>" : "") +
-      "<ul>" + b.f.map(f => "<li>" + obre(f[1], "📁 " + f[0]) + drive(f[1]) + (f[2] ? ' <span class="font">— ' + esc(f[2]) + "</span>" : "") + "</li>").join("") + "</ul></details>").join("");
+      "<ul>" + b.f.filter(f => !matFora().includes(f[1])).map(f => "<li>" + obre(f[1], "📁 " + f[0]) + drive(f[1]) + (f[2] ? ' <span class="font">— ' + esc(f[2]) + "</span>" : "") + "</li>").join("") + "</ul></details>").join("");
     return h;
   }
+  const matFora = () => { if (!Array.isArray(dades.matFora)) dades.matFora = []; return dades.matFora; };   // carpetes esborrades des d'aquí: ja no surten a l'índex
   async function matFes(cos) {
     if (!matNav) return;
     const id = matNav.id;
     matNav.carrega = true; matNav.err = ""; pintaAssistent();
     let err = "";
-    try { await matCrida(cos); }
+    try { await matCrida(cos); if (cos.accio === "drive-paperera" && !matFora().includes(cos.id)) { matFora().push(cos.id); desa(); } }
     catch (e) { err = "No s'ha pogut fer: " + e.message; }
     await matObre(id);
     if (err && matNav && matNav.id === id) { matNav.err = err; if (asEina === "mat") pintaAssistent(); }   // l'error es queda a la vista després de tornar a llegir la carpeta
