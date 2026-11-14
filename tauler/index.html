@@ -4346,12 +4346,17 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       (asVid.dis ? " i «Versió adaptada (DIS/PSI)» (enunciats curts d'una sola idea, vocabulari senzill, 3 opcions clares, preguntes més guiades i en l'ordre del vídeo)" : "") + ". " +
       "Totes han de ser tancades: «test» (una sola correcta) o, poques vegades, «multiple» (més d'una de correcta); de 3 a 4 opcions amb distractors versemblants. Pregunta només pel que es veu i se sent dins del fragment, i indica el moment aproximat (m:ss del vídeo) a què es refereix cada pregunta. " +
       "Respon només JSON: {\"titol\": títol curt del fragment, \"resum\": 2 o 3 frases sobre el contingut, \"nivells\": [{\"nom\": un d'aquests: " + JSON.stringify(noms) + ", \"preguntes\": [{\"tipus\": \"test\" o \"multiple\", \"enunciat\": text, \"opcions\": [textos], \"correctes\": [índexs de les correctes, des de 0], \"moment\": \"m:ss\"}]}]}.";
+    // 14.11.2026: les instruccions són en català i la IA tendia a respondre en català; l'ordre de llengua va en la llengua triada, al principi i al final
+    const es = asVid.lleng !== "català";
+    const ordreLl = es ? "MUY IMPORTANTE: escribe TODO el contenido (título, resumen, enunciados y opciones) en castellano (español), aunque estas instrucciones estén en catalán. Solo los nombres de los niveles y las claves del JSON se quedan tal como se indican."
+      : "MOLT IMPORTANT: escriu TOT el contingut (títol, resum, enunciats i opcions) en català, encara que el vídeo sigui en una altra llengua.";
+    const sistemaLl = ordreLl + "\n\n" + sistema + "\n\n" + ordreLl;
     const ind = asVid.ind ? "Indicacions del professor: " + asVid.ind + "\n" : "";
     try {
       let r;
-      if (transcripcio) r = await ia(sistema, ind + "Transcripció del fragment:\n" + transcripcio, { json: true });
+      if (transcripcio) r = await ia(sistemaLl, ind + "Transcripció del fragment:\n" + transcripcio + "\n\n" + ordreLl, { json: true });
       else {
-        const d = await cridaIns({ accio: "video-preguntes", url: "https://www.youtube.com/watch?v=" + v, inici: i, final: f, sistema: sistema, text: ind + "Mira el fragment i prepara les preguntes." });
+        const d = await cridaIns({ accio: "video-preguntes", url: "https://www.youtube.com/watch?v=" + v, inici: i, final: f, sistema: sistemaLl, text: ind + (es ? "Mira el fragmento y prepara las preguntas, todo en castellano." : "Mira el fragment i prepara les preguntes, tot en català.") });
         try { r = JSON.parse(String(d.resposta).replace(/^```(json)?\s*|\s*```$/g, "")); } catch (e) { throw new Error("La IA no ha retornat dades vàlides; torna-ho a provar."); }
       }
       const valida = x => x && x.enunciat && Array.isArray(x.opcions) && x.opcions.length >= 2 && Array.isArray(x.correctes) && x.correctes.length && x.correctes.every(k => Number.isInteger(k) && k >= 0 && k < x.opcions.length);
