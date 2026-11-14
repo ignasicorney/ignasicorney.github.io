@@ -4070,7 +4070,8 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
         const clau = gD.nom + "|" + nom, ant = gD.psiDocs[nom];
         if (ara.has(clau) && ant) { if (text.length > ant.text.length) gD.psiDocs[nom] = { fitxer: fi.name, d: avuiISO(), text: text.slice(0, 40000) }; }   // el mateix PSI baixat dues vegades: se'n queda un
         else { gD.psiDocs[nom] = { fitxer: fi.name, d: avuiISO(), text: text.slice(0, 40000) }; fets.push(nom.replace(/\s+DIS$/i, "") + (gD === g ? "" : " (" + nomGrup(gD.nom) + ")")); }
-        posaOrigen(gD, nom, grupDeFitxer(fi.name), false);
+        const ogF = grupDeFitxer(fi.name);   // només si és del mateix curs (un PSI antic de 1r d'un alumne de 4t no diu el grup d'ara)
+        if (ogF && ogF.charAt(0) === String(nomGrup(gD.nom)).trim().charAt(0)) posaOrigen(gD, nom, ogF, false);
         ara.add(clau);
       } catch (e) { dubtes.push(e.message); }
     }
