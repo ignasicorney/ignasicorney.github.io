@@ -1505,7 +1505,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     "bl.forEach(b=>{const cs=getComputedStyle(b),bh=b.getBoundingClientRect().height+parseFloat(cs.marginTop)+parseFloat(cs.marginBottom);if(cur.length&&h+bh>H){pags.push(cur);cur=[];h=0;}cur.push(b);h+=bh;});" +
     "if(cur.length)pags.push(cur);m.innerHTML='';m.style.width='';" +
     "pags.forEach((p,i)=>{const d=document.createElement('div');d.className='pag';p.forEach(b=>d.appendChild(b));const f=document.createElement('div');f.className='peu';f.textContent=(i+1)+'/'+pags.length;d.appendChild(f);m.appendChild(d);});});}";
-  function imprimeix(titol, html, dis, informe) {
+  function imprimeix(titol, html, dis, informe, senseCap) {   // senseCap: sense la capçalera del centre (p. ex. el full de respostes en blanc)
     const models = Array.isArray(html);
     if (models) html = html.map(x => '<section class="model">' + capcaleraDoc(informe) + x + "</section>").join("");
     const w = window.open("", "_blank");
@@ -1517,7 +1517,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       (dis ? "body{font:18px/1.9 Verdana,Arial,sans-serif;letter-spacing:.04em;word-spacing:.12em;color:#1d1d1b;margin:0}p,li{text-align:left}i,em{font-style:normal;font-weight:700}"
            : "body{font:14px/1.5 Arial,Helvetica,sans-serif;color:#000;margin:0}p{text-align:justify}") +
       "h3,h4{margin:1.1em 0 .4em}h3{font-size:1.05em;text-transform:uppercase}li{margin:.25em 0}" + CSS_DOC +
-      "@media screen{body{max-width:180mm;margin:24px auto;padding:0 16px}}</style></head><body>" + (models ? "" : capcaleraDoc(informe)) + html +
+      "@media screen{body{max-width:180mm;margin:24px auto;padding:0 16px}}</style></head><body>" + (models || senseCap ? "" : capcaleraDoc(informe)) + html +
       "<script>" + (models ? PAGINA_MODELS + "window.onload=()=>{paginaModels();setTimeout(()=>print(),200)}" : "window.onload=()=>setTimeout(()=>print(),200)") + "<\/script></body></html>");
     w.document.close();
   }
@@ -5013,7 +5013,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       html = noms.map((a, i) => (i ? '<div style="break-before:page"></div>' : "") + instr + cbFullHTML(p, a.replace(/\s+DIS$/i, "") + " · " + nomGrup(g.nom), cbCodiDe(g.nom, a)) + red).join("");
       desa();
     } else html = instr + cbFullHTML(p) + red;
-    imprimeix(p.titol, html);
+    imprimeix(p.titol, html, false, false, !g);   // el full en blanc, sense la capçalera del centre
   }
 
   // ---------- Lectura de la foto ----------
