@@ -2954,7 +2954,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     if (MATERIAL.length > 1) h += '<div class="vistes" role="group" aria-label="Nivell" style="flex-wrap:wrap;margin-bottom:8px">' + MATERIAL.map((x, i) => '<button type="button" data-mat="' + i + '" aria-pressed="' + (i === matSel) + '">' + esc(x.nivell) + "</button>").join("") + "</div>";
     h += '<div class="alum-eines"><a class="boto clar" style="text-decoration:none" href="' + matCarpeta(m.arrel) + '" target="_blank" rel="noopener">📁 Carpeta ' + esc(m.nivell) + '</a><a class="boto clar" style="text-decoration:none" href="https://docs.google.com/document/d/' + m.index + "/edit?authuser=" + encodeURIComponent(MAT_COMPTE) + '" target="_blank" rel="noopener">📄 Índex detallat</a></div>';
     if (m.origen) h += '<p class="font">' + esc(m.origen) + "</p>";
-    h += m.blocs.map((b, i) => '<details class="rub-bloc"><summary><b>" + esc(b.t) + "</b>" + (b.id ? ' <span class="font">· ' + enl(b.id, "obre la carpeta") + "</span>" : "") + "</summary>" +
+    h += m.blocs.map(b => '<details class="rub-bloc"><summary><b>' + esc(b.t) + "</b>" + (b.id ? ' <span class="font">· ' + enl(b.id, "obre la carpeta") + "</span>" : "") + "</summary>" +
       (b.c ? '<p class="font">' + esc(b.c) + "</p>" : "") +
       "<ul>" + b.f.map(f => "<li>" + enl(f[1], "📁 " + f[0]) + (f[2] ? ' <span class="font">— ' + esc(f[2]) + "</span>" : "") + "</li>").join("") + "</ul></details>").join("");
     return h;
