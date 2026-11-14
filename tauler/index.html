@@ -83,6 +83,9 @@ h3.bt{margin:0 0 8px;font-size:1rem;text-transform:uppercase}
 .taula td.nomal{cursor:pointer}
 .taula td.psi{color:#c0001a;font-weight:600}
 .mail-al{text-decoration:none;margin-left:4px;font-size:.85em}
+.al-extra{display:block;line-height:1.2;margin-top:1px}
+.al-extra .mail-al:first-child{margin-left:0}
+.orig-al{color:#a8a6a0;font-size:.8em;margin-right:2px;white-space:nowrap}
 .psi-text{white-space:pre-wrap;max-height:55vh;overflow:auto;border:1px solid var(--linia);border-radius:8px;padding:8px 10px;margin-top:6px;font-size:.9rem;line-height:1.45;background:#fff}
 .psi-text mark{background:#fbeeb8}
 .marca-al{display:inline-block;font-size:.68rem;font-weight:700;border:1px solid currentColor;border-radius:4px;padding:0 3px;margin-left:3px;color:#c0001a;vertical-align:1px}
@@ -3115,7 +3118,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       const ombra = (c, v) => { if (!tcol[c.nom]) return ""; if (esExempt(v)) return " n-ex"; const n = numOpcional(v); if (n === null) return ""; if (tcol[c.nom] === "sobre") return " n-sobre"; return tcol[c.nom] === "form" ? (n === 0 ? " f-0" : " f-1") : " " + colorNota(n); };
       const tD = trimDeures(f), dAvui = avuiISO();
       h += '<div class="taula' + (qDeures ? " passa" : "") + '"><table><thead><tr><th>Alumne</th><th class="deu" title="Faltes de deures del ' + tD.nom + ' trimestre. Toca la xifra per afegir-ne o treure\'n.">📕 Deures ' + tD.nom + '</th><th class="pts" title="Faltes de disciplina (sistema de punts del centre). Toca la xifra per apuntar-ne.">⚖️ Punts</th>' + f.columnes.map(c => "<th" + (c.tipus === "calc" ? ' class="calc" title="' + esc(c.formula) + '"' : "") + ">" + esc(c.nom) + (desquadres[c.nom] ? " ⚠️" : "") + "</th>").join("") + "</tr></thead><tbody>" +
-        (files.map(r => { const psi = (g.psi || []).includes(r.nom), dis = /\sDIS$/i.test(r.nom); return '<tr><td class="nomal' + (psi ? " psi" : "") + '" data-alumne="' + esc(r.nom) + '" title="' + (psi ? "PSI" : "") + (psi && dis ? " · " : "") + (dis ? "Dislèxia" : "") + '">' + esc(dis ? r.nom.replace(/\s+DIS$/i, "") : r.nom) + (psi ? ' <span class="marca-al psi">PSI</span>' : "") + (dis ? ' <span class="marca-al">DIS</span>' : "") + (psiDocDe(g, r.nom) ? ' <a href="#" class="mail-al" data-psidoc="' + esc(r.nom) + '" title="Consulta el PSI" aria-label="Consulta el PSI de ' + esc(dis ? r.nom.replace(/\s+DIS$/i, "") : r.nom) + '">📄</a>' : "") + (g.correus && g.correus[r.nom] ? ' <a href="#" class="mail-al" data-mail="' + esc(g.correus[r.nom]) + '" title="Escriu a ' + esc(g.correus[r.nom]) + '" aria-label="Escriu un correu a ' + esc(dis ? r.nom.replace(/\s+DIS$/i, "") : r.nom) + '">✉️</a>' : "") + "</td>" + (() => { const ds = deuresDe(g, r.nom), n = ds.filter(d => d >= tD.de && d <= tD.fins).length, av = ds.includes(dAvui); return '<td class="deu' + (n ? "" : " zero") + (av ? " avui" : "") + '" data-deu="' + esc(r.nom) + '" title="' + n + " falt" + (n === 1 ? "a" : "es") + " de deures al " + tD.nom + " trimestre" + (av ? " (una d'avui)" : "") + '">' + (n || "–") + "</td>"; })() + celaPunts(g, r.nom) + f.columnes.map(c => {
+        (files.map(r => { const psi = (g.psi || []).includes(r.nom), dis = /\sDIS$/i.test(r.nom); return '<tr><td class="nomal' + (psi ? " psi" : "") + '" data-alumne="' + esc(r.nom) + '" title="' + (psi ? "PSI" : "") + (psi && dis ? " · " : "") + (dis ? "Dislèxia" : "") + '">' + esc(dis ? r.nom.replace(/\s+DIS$/i, "") : r.nom) + (psi ? ' <span class="marca-al psi">PSI</span>' : "") + (dis ? ' <span class="marca-al">DIS</span>' : "") + ((origenDe(g, r.nom) || psiDocDe(g, r.nom) || (g.correus && g.correus[r.nom])) ? '<span class="al-extra">' : "") + (origenDe(g, r.nom) ? '<span class="orig-al" title="Grup d\'origen">(' + esc(origenDe(g, r.nom)) + ")</span>" : "") + (psiDocDe(g, r.nom) ? ' <a href="#" class="mail-al" data-psidoc="' + esc(r.nom) + '" title="Consulta el PSI" aria-label="Consulta el PSI de ' + esc(dis ? r.nom.replace(/\s+DIS$/i, "") : r.nom) + '">📄</a>' : "") + (g.correus && g.correus[r.nom] ? ' <a href="#" class="mail-al" data-mail="' + esc(g.correus[r.nom]) + '" title="Escriu a ' + esc(g.correus[r.nom]) + '" aria-label="Escriu un correu a ' + esc(dis ? r.nom.replace(/\s+DIS$/i, "") : r.nom) + '">✉️</a>' : "") + ((origenDe(g, r.nom) || psiDocDe(g, r.nom) || (g.correus && g.correus[r.nom])) ? "</span>" : "") + "</td>" + (() => { const ds = deuresDe(g, r.nom), n = ds.filter(d => d >= tD.de && d <= tD.fins).length, av = ds.includes(dAvui); return '<td class="deu' + (n ? "" : " zero") + (av ? " avui" : "") + '" data-deu="' + esc(r.nom) + '" title="' + n + " falt" + (n === 1 ? "a" : "es") + " de deures al " + tD.nom + " trimestre" + (av ? " (una d'avui)" : "") + '">' + (n || "–") + "</td>"; })() + celaPunts(g, r.nom) + f.columnes.map(c => {
           const v = valor(f, r, c), txt = mostraValor(v);
           if (c.tipus === "calc") {
             const n = numOpcional(v), ok = coincideix(v, r.o && r.o[c.nom]);
@@ -3276,10 +3279,11 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       if (nou === null) return;
       g.psi = g.psi || [];
       if (!nou.trim()) {
-        if (confirm("Vols esborrar «" + vell + "» i totes les seves notes del grup " + g.nom + "?")) { g.fulls.forEach(fu => { fu.files = fu.files.filter(r => r.nom !== vell); }); g.psi = g.psi.filter(n => n !== vell); if (g.deures) delete g.deures[vell]; if (g.sancions) delete g.sancions[vell]; if (g.correus) delete g.correus[vell]; if (g.psiDocs) delete g.psiDocs[vell]; }
+        if (confirm("Vols esborrar «" + vell + "» i totes les seves notes del grup " + g.nom + "?")) { g.fulls.forEach(fu => { fu.files = fu.files.filter(r => r.nom !== vell); }); g.psi = g.psi.filter(n => n !== vell); if (g.deures) delete g.deures[vell]; if (g.sancions) delete g.sancions[vell]; if (g.correus) delete g.correus[vell]; if (g.psiDocs) delete g.psiDocs[vell]; if (g.origen) delete g.origen[vell]; }
       } else {
         const net = nou.trim().replace(/\s+dis$/i, " DIS");
         g.fulls.forEach(fu => fu.files.forEach(r => { if (r.nom === vell) r.nom = net; }));
+        if (g.origen && g.origen[vell] && net !== vell) { g.origen[net] = g.origen[vell]; delete g.origen[vell]; }
         if (g.psiDocs && g.psiDocs[vell] && net !== vell) { g.psiDocs[net] = g.psiDocs[vell]; delete g.psiDocs[vell]; }
         if (g.sancions && g.sancions[vell] && net !== vell) { g.sancions[net] = sancionsDe(g, net).concat(g.sancions[vell]); delete g.sancions[vell]; }
         if (g.correus && g.correus[vell] && net !== vell) { g.correus[net] = g.correus[vell]; delete g.correus[vell]; }
@@ -4008,6 +4012,13 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       if (auto) carregaTasques();
     }).catch(e => { $("clsCurs").innerHTML = '<option value="">—</option>'; avis(e.message); });
   }
+  // ================= Grup d'origen de l'alumne (14.11.2026) =================
+  // g.origen = { "Nom de l'alumne": "1r F" }: el grup del centre d'on ve (llistes de correus «ESO LOEM106» o nom del fitxer del PSI «1rF_…»)
+  const ORD_CURS = ["1r", "2n", "3r", "4t"];
+  const grupDeCodi = c => { const m = String(c || "").match(/LOE\w*?\s*([1-4])0([1-9])\b/i); return m ? ORD_CURS[Number(m[1]) - 1] + " " + "ABCDEFGHI"[Number(m[2]) - 1] : ""; };
+  const grupDeFitxer = nf => { const m = String(nf || "").match(/^([1-4])(?:r|n|t)?[_\s]?([A-I])[_\s]/i); return m ? ORD_CURS[Number(m[1]) - 1] + " " + m[2].toUpperCase() : ""; };
+  function posaOrigen(g, nom, og, mana) { if (!og) return; g.origen = g.origen || {}; if (mana || !g.origen[nom]) g.origen[nom] = og; }
+  const origenDe = (g, nom) => { const o = g.origen && g.origen[nom]; return o && o.replace(/\s+/g, "").toLowerCase() !== nomGrup(g.nom).replace(/\s+/g, "").toLowerCase() ? o : ""; };
   // ================= Documents de PSI per alumne (14.11.2026) =================
   // g.psiDocs = { "Nom de l'alumne": { fitxer, d, text } }: el text del PSI, per consultar-lo des del nom (es desa amb les dades privades)
   const psiDocDe = (g, nom) => (g.psiDocs && g.psiDocs[nom]) || null;
@@ -4044,7 +4055,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
   }
   // Sense «nomFix», cada document es busca entre els alumnes de tots els grups (primer, el grup obert):
   // un PSI d'un altre grup del centre (1r C) va a l'alumne si ara és en un grup teu (1r I). Si en un mateix enviament
-  // hi ha dos documents del mateix alumne, s'ajunten.
+  // hi ha dos documents del mateix alumne (el mateix PSI baixat dues vegades), se'n queda un.
   async function pujaPSI(g, fitxers, nomFix) {
     const grups = nomFix ? [g] : [g].concat(Q().grups.filter(x => x !== g));
     const fets = [], dubtes = [], ara = new Set();
@@ -4057,8 +4068,9 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
         if (!nom) { dubtes.push(fi.name + " (no és de cap alumne dels teus grups)"); continue; }
         gD.psiDocs = gD.psiDocs || {};
         const clau = gD.nom + "|" + nom, ant = gD.psiDocs[nom];
-        if (ara.has(clau) && ant) gD.psiDocs[nom] = { fitxer: ant.fitxer + " + " + fi.name, d: avuiISO(), text: (ant.text + "\n\n———— " + fi.name + " ————\n" + text).slice(0, 60000) };
+        if (ara.has(clau) && ant) { if (text.length > ant.text.length) gD.psiDocs[nom] = { fitxer: fi.name, d: avuiISO(), text: text.slice(0, 40000) }; }   // el mateix PSI baixat dues vegades: se'n queda un
         else { gD.psiDocs[nom] = { fitxer: fi.name, d: avuiISO(), text: text.slice(0, 40000) }; fets.push(nom.replace(/\s+DIS$/i, "") + (gD === g ? "" : " (" + nomGrup(gD.nom) + ")")); }
+        posaOrigen(gD, nom, grupDeFitxer(fi.name), false);
         ara.add(clau);
       } catch (e) { dubtes.push(e.message); }
     }
@@ -4128,7 +4140,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
           const cel = fila.map(x => String(x == null ? "" : x).trim());
           const email = cel.find(x => /^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i.test(x)); if (!email) return;
           const nom = cel.filter(x => x && x !== email && /\p{L}{2}/u.test(x) && !/^ESO\b|^BAT|^LOE/i.test(x)).sort((a, b) => b.length - a.length)[0];
-          if (nom) alumnes.push({ email: email.toLowerCase(), nom: nom.replace(/\s*,\s*/, " "), cognoms: "", complet: nom });
+          if (nom) alumnes.push({ email: email.toLowerCase(), nom: nom.replace(/\s*,\s*/, " "), cognoms: "", complet: nom, origen: grupDeCodi(cel.find(x => /LOE/i.test(x)) || "") });
         }));
       }
       if (!alumnes.length) { alert("No hi trobo cap fila amb un nom i una adreça de correu."); return; }
@@ -4139,7 +4151,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
         const { m } = aparella(noms, alumnes);
         if (m.size < noms.length / 2) return;   // aquesta llista no és d'aquest grup
         g.correus = g.correus || {};
-        m.forEach((a, nom) => { g.correus[nom] = a.email; });
+        m.forEach((a, nom) => { g.correus[nom] = a.email; posaOrigen(g, nom, a.origen, true); });
         const sense = noms.filter(x => !g.correus[x.nom]).map(x => x.nom.replace(/\s+DIS$/i, ""));
         res.push(nomGrup(g.nom) + ": " + m.size + " de " + noms.length + (sense.length ? " (sense correu: " + sense.join(", ") + ")" : ""));
       });
