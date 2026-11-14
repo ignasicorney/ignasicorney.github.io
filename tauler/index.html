@@ -3092,7 +3092,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       '<input type="search" id="alumCerca" placeholder="Cerca alumne…" value="' + esc(cerca) + '" style="flex:1 1 140px"></div>' +
       '<div class="alum-eines"><button type="button" class="boto clar" data-q="formules">⚙️ ' + (qFormules ? "Amaga les fórmules" : "Columnes i fórmules") + "</button>" +
       ('<span class="boto-grup"><button type="button" class="boto clar" data-q="classroom" title="Omple una columna amb els lliuraments o les notes d\'una tasca del Classroom o d\'un formulari"><img src="https://www.gstatic.com/classroom/logo_square_rounded.svg" alt="" class="ico-cls"> Classroom</button>' + (f && Array.isArray(f.desfes) && f.desfes.length ? '<button type="button" class="boto clar boto-ico" data-q="clsdesfes" title="Desfés l\'última càrrega del Classroom (' + esc(f.desfes.map(x => x.col).join(", ")) + ')" aria-label="Desfés l\'última càrrega del Classroom">↶</button>' : "") + (f && f.columnes.some(c => c.classroom) ? '<button type="button" class="boto clar boto-ico" data-q="clsact" title="Actualitza del Classroom les columnes enllaçades d\'aquest full (' + esc(f.columnes.filter(c => c.classroom).map(c => c.nom).join(", ")) + ')" aria-label="Actualitza del Classroom">🔄</button>' : "") + "</span>") +
-      '<label class="boto clar" title="Puja els PSI (Word o PDF): cada un va a l\'alumne que surt al nom del fitxer o al document">📄 PSI<input type="file" id="psiMolts" accept=".docx,.pdf,.txt" multiple hidden></label>' +
+      '<label class="boto clar" title="Puja els PSI (Word, Excel o PDF): cada un va a l\'alumne que surt al nom del fitxer o al document">📄 PSI<input type="file" id="psiMolts" accept=".docx,.xlsx,.xls,.ods,.pdf,.txt" multiple hidden></label>' +
       '<button type="button" class="boto clar" data-q="correus" title="Posa el correu de cada alumne (del Classroom o d\'un Excel del centre) amb una icona ✉️ al costat del nom">✉️ Correus</button>' +
       '<span class="boto-grup"><button type="button" class="boto clar' + (qDeures ? " actiu" : "") + '" data-q="passadeures" title="Mode ràpid: cada toc a la columna de deures posa o treu la falta d\'avui">📕 ' + (qDeures ? "Prou deures" : "Passa deures") + '</button><button type="button" class="boto clar boto-ico" data-q="deuimp" title="Imprimeix les faltes de deures del grup" aria-label="Imprimeix les faltes de deures del grup">🖨️</button></span><button type="button" class="boto clar" data-q="alumne">+ Alumne</button><button type="button" class="boto clar" data-q="banc">📋 ' + (rubObert ? "Amaga les rúbriques" : "Rúbriques") + "</button>" + importa + "</div>" + (clsMsg && f && g && clsMsg.clau === g.nom + "|" + f.nom ? '<p class="cls-msg ' + (clsMsg.err ? "avis" : "font") + '">' + esc(clsMsg.t) + "</p>" : "") + (rubObert ? htmlBanc() : "");
     if (f && qFormules) {
@@ -4019,11 +4019,21 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     return xml.replace(/<w:tab\/>/g, "\t").replace(/<w:br[^>]*\/>/g, "\n").replace(/<\/w:p>/g, "\n").replace(/<\/w:tc>/g, " · ").replace(/<[^>]+>/g, "")
       .replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&apos;/g, "'").replace(/&amp;/g, "&").replace(/[ \t]+\n/g, "\n").replace(/\n{3,}/g, "\n\n").trim();
   }
+  // PSI en full de càlcul (model del centre): només el full omplert («PSI»); els altres són les llistes dels desplegables
+  async function textXlsx(file) {
+    await carregaScript("https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js", () => window.XLSX);
+    const XLSX = window.XLSX, wb = XLSX.read(await file.arrayBuffer(), { type: "array" });
+    const nf = wb.SheetNames.find(n => /^\s*PSI\s*$/i.test(n)) || wb.SheetNames[0];
+    return XLSX.utils.sheet_to_json(wb.Sheets[nf], { header: 1, raw: false, defval: "" })
+      .map(f => f.map(x => String(x == null ? "" : x).replace(/\s+/g, " ").trim()).filter((x, i, a) => x && x !== a[i - 1]).join(" · "))
+      .filter(Boolean).join("\n").trim();
+  }
   async function textDoc(file) {
     if (/\.docx$/i.test(file.name)) return textDocx(file);
+    if (/\.(xlsx|xls|ods)$/i.test(file.name)) return textXlsx(file);
     if (/\.(txt|md)$/i.test(file.name) || /^text\//.test(file.type)) return (await file.text()).trim();
     if (/\.pdf$/i.test(file.name) || file.type === "application/pdf") { const r = await cbLlegeixDoc(file); if (!r.text.trim()) throw new Error("«" + file.name + "» és un PDF escanejat (sense text)."); return r.text.replace(/--- Pàgina \d+ ---\n?/g, "").trim(); }
-    throw new Error("«" + file.name + "»: només llegeixo Word (.docx), PDF amb text i .txt.");
+    throw new Error("«" + file.name + "»: només llegeixo Word (.docx), Excel (.xlsx), PDF amb text i .txt.");
   }
   // Busca de quin alumne és cada document: pel nom del fitxer i, si no, pel principi del text
   function alumneDeDoc(noms, nomFitxer, text) {
@@ -4053,7 +4063,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       const d = psiDocDe(g, nom);
       dlg.innerHTML = '<form method="dialog"><h2>📄 PSI</h2><p style="margin:0"><b>' + esc(nom.replace(/\s+DIS$/i, "")) + "</b> · " + esc(nomGrup(g.nom)) + (d ? ' <span class="font">· ' + esc(d.fitxer) + " · " + dma(d.d) + "</span>" : "") + "</p>" +
         (d ? '<input type="search" id="psiCerca" placeholder="Cerca dins del PSI (p. ex. examen, temps, lectura…)" style="width:100%;box-sizing:border-box;font:inherit;padding:6px 8px;border:1px solid var(--linia);border-radius:8px"><div class="psi-text" id="psiText">' + esc(d.text) + "</div>" : '<p class="font">Encara no hi ha cap PSI per a aquest alumne.</p>') +
-        '<div class="botons" style="flex-wrap:wrap"><label class="boto clar">' + (d ? "Substitueix el document" : "📎 Puja el PSI (Word, PDF o .txt)") + '<input type="file" id="psiFitxer" accept=".docx,.pdf,.txt" hidden></label>' +
+        '<div class="botons" style="flex-wrap:wrap"><label class="boto clar">' + (d ? "Substitueix el document" : "📎 Puja el PSI (Word, Excel o PDF)") + '<input type="file" id="psiFitxer" accept=".docx,.xlsx,.xls,.ods,.pdf,.txt" hidden></label>' +
         (d ? '<button type="button" class="boto clar" data-psi="treu">Treu-lo</button>' : "") + '<button type="button" class="boto" data-psi="tanca">Fet</button></div></form>';
     };
     pinta();
