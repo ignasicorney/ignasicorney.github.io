@@ -257,6 +257,7 @@ dialog#dlgCBN{width:min(860px,calc(100vw - 24px))}
 .imp-ops .boto{display:block;text-align:left}
 .ico-cls{width:18px;height:18px;vertical-align:-3px}
 .ico-cls.gran{width:26px;height:26px;vertical-align:-5px}
+a.cons-b{text-decoration:none;color:inherit;font-size:.86rem;line-height:1.3}
 .cons-b .ini{width:28px;height:28px;flex:none;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;font-weight:700;font-size:.75rem;color:#fff}
 .cons-b small{display:block;color:var(--suau);font-size:.75rem}
 .rub-taula{border-collapse:collapse;width:100%;font-size:.88rem}
@@ -596,6 +597,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       <button type="button" data-as="seg">📈 Seguiment</button>
       <button type="button" data-as="exp">🎤 Exposicions</button>
       <button type="button" data-as="pau">🧩 Sintaxi i selectivitat</button>
+      <button type="button" data-as="cur">📘 Currículum</button>
     </div>
     <div id="asCos"></div>
   </div>
@@ -2623,6 +2625,52 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     }
   }
   EINES.pau = pintaPau;
+  // ---------- 📘 Currículum (secundària): decret, orientacions, situacions d'aprenentatge i avaluació ----------
+  const CURRICULUM = [
+    ["Decret i elements curriculars (ESO)", [
+      ["Decret 175/2022 d'educació bàsica (text oficial)", "https://portaljuridic.gencat.cat/ca/document-del-pjur/?documentId=938401"],
+      ["Annex 1: competències clau i perfil de sortida", "https://portaldogc.gencat.cat/utilsEADOP/PDF/8762/1928585.pdf#page=33"],
+      ["Annex 3: matèries d'ESO (inclou Llengua castellana i literatura)", "https://portaldogc.gencat.cat/utilsEADOP/PDF/8762/1928585.pdf#page=194"],
+      ["Annex 4: competències transversals", "https://portaldogc.gencat.cat/utilsEADOP/PDF/8762/1928585.pdf#page=453"],
+      ["Annex 5: aprenentatge a partir de situacions", "https://portaldogc.gencat.cat/utilsEADOP/PDF/8762/1928585.pdf#page=456"],
+      ["Decret 175/2022: capítol d'avaluació", "https://portaldogc.gencat.cat/utilsEADOP/PDF/8762/2116761.pdf#page=36"],
+      ["Competències específiques", "https://projectes.xtec.cat/nou-curriculum/educacio-basica/competencies-especifiques/"],
+      ["Sabers de l'educació bàsica", "https://projectes.xtec.cat/nou-curriculum/sabers-de-leducacio-basica/"],
+      ["Els sis vectors", "https://projectes.xtec.cat/nou-curriculum/educacio-basica/els-sis-vectors/"],
+      ["Modificació d'aspectes de 4t d'ESO (curs 2026-2027)", "https://projectes.xtec.cat/nou-curriculum/educacio-basica/modificacio-daspectes-de-4t-deso-curs-26-27/"],
+      ["Guia de l'educació bàsica", "https://projectes.xtec.cat/nou-curriculum/educacio-basica/guia-de-leducacio-basica/"]
+    ]],
+    ["Orientacions de llengua", [
+      ["Orientacions de les matèries de llengües de l'ESO", "https://projectes.xtec.cat/nou-curriculum/orientacions-curriculars/orientacions-de-les-materies-de-llengues-de-leso/"],
+      ["Orientacions curriculars de llengua (secundària)", "https://projectes.xtec.cat/nou-curriculum/orientacions-curriculars/orientacions-curriculars-llengua-secundaria/"],
+      ["Orientacions de lectura literària", "https://projectes.xtec.cat/nou-curriculum/orientacions-de-lectura-literaria/"],
+      ["Batxillerat: orientacions de llengua i literatura", "https://projectes.xtec.cat/nou-curriculum/batxillerat/orientacions/"],
+      ["Batxillerat: decret", "https://projectes.xtec.cat/nou-curriculum/batxillerat/decret-batxillerat/"]
+    ]],
+    ["Programar i situacions d'aprenentatge", [
+      ["Eines per programar (ESO)", "https://projectes.xtec.cat/nou-curriculum/educacio-basica/eines-per-programar/"],
+      ["Mapa curricular (ESO)", "https://projectes.xtec.cat/nou-curriculum/mapa-curricular/"],
+      ["Model de situació d'aprenentatge (graella)", "https://projectes.xtec.cat/nou-curriculum/wp-content/uploads/usu2072/2023/01/grid-3.png"],
+      ["Document d'orientacions per redactar situacions (PDF)", "https://projectes.xtec.cat/nou-curriculum/wp-content/uploads/usu2072/2023/01/Orientacions-situacions-daprenentatge.pdf"],
+      ["ESO · Castellà: «Con flow. Un acercamiento a la poesía a través del rap»", "https://drive.google.com/file/d/1v9uSe7A9vZOn-IOIjpub__CW5n99feFa/view?usp=sharing"],
+      ["Batxillerat · Castellà: «Viajeros en el tiempo: ¿podemos describir nuestro hoy?»", "https://drive.google.com/file/d/1MR0jA1H6Mc1KTybAZNYv4_zzbvZEUMne/view?usp=drive_link"],
+      ["Batxillerat · Literatura castellana: «El amargo sabor de la traición»", "https://drive.google.com/file/d/1ZeQ-UpBsX_bGAPwhHbEVAZyDI_ga5xOi/view?usp=sharing"],
+      ["Batxillerat · Situacions de llengua i literatura catalana i castellana (carpeta)", "https://drive.google.com/drive/folders/1-POzdt4_v2h8lZ1cmNu6kaKNKGYCzFi9?usp=drive_link"],
+      ["Totes les situacions d'aprenentatge d'ESO", "https://projectes.xtec.cat/nou-curriculum/educacio-basica/situacions-aprenentatge/"],
+      ["Cercador de situacions d'aprenentatge", "https://projectes.xtec.cat/nou-curriculum/situacions-daprenentatge/"],
+      ["Pla de suport individualitzat (model)", "https://projectes.xtec.cat/nou-curriculum/educacio-basica/pla-individualitzat/"]
+    ]],
+    ["Avaluació", [
+      ["Avaluació de final d'etapa de 4t d'ESO (A4S)", "https://projectes.xtec.cat/nou-curriculum/avaluacio-de-final-detapa-de-quart-deso-a4s/"],
+      ["Cercador de proves d'avaluació", "https://projectes.xtec.cat/nou-curriculum/cercador-de-proves-davaluacio/"],
+      ["Batxillerat: activitats d'avaluació", "https://projectes.xtec.cat/nou-curriculum/batxillerat/activitats-avaluacio/"]
+    ]]
+  ];
+  function pintaCur() {
+    return '<p class="font">El currículum de secundària de projectes.xtec.cat i els documents oficials, ordenats. S\'obren en una pestanya nova.</p>' +
+      CURRICULUM.map(s => "<h4>" + esc(s[0]) + '</h4><div class="cons-llista">' + s[1].map(x => '<a class="cons-b" href="' + esc(x[1]) + '" target="_blank" rel="noopener"><span class="ini" style="background:#4a6b3a;font-size:.56rem">' + (/drive\.google/.test(x[1]) ? "SA" : /portal(dogc|juridic)/.test(x[1]) ? "DOGC" : "XTEC") + "</span><span>" + esc(x[0]) + "</span></a>").join("") + "</div>").join("");
+  }
+  EINES.cur = pintaCur;
   ACCIONS_EI.pa = pauAccio;
 
   // ================= Qualificacions =================
