@@ -4037,24 +4037,33 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
   }
   // Busca de quin alumne és cada document: pel nom del fitxer i, si no, pel principi del text
   function alumneDeDoc(noms, nomFitxer, text) {
-    const prova = t => { const w = motsNom(t); let millor = null, pm = 0, empat = false; noms.forEach(n => { const u = motsNom(n), p = u.filter(x => w.includes(x)).length; if (p > pm) { pm = p; millor = n; empat = false; } else if (p && p === pm) empat = true; }); return pm >= 2 && !empat ? millor : null; };
+    // paraules iguals o, si són llargues, amb una lletra de diferència (Lluch / Lluc)
+    const quasi = (a, b) => { if (a === b) return true; if (a.length < 4 || b.length < 4 || Math.abs(a.length - b.length) > 1) return false; let i = 0, j = 0, d = 0; while (i < a.length && j < b.length) { if (a[i] === b[j]) { i++; j++; continue; } if (++d > 1) return false; if (a.length > b.length) i++; else if (b.length > a.length) j++; else { i++; j++; } } return d + (a.length - i) + (b.length - j) <= 1; };
+    const prova = t => { const w = motsNom(t.replace(/([a-zà-ÿ])([A-ZÀ-Ý])/g, "$1 $2")); let millor = null, pm = 0, empat = false; noms.forEach(n => { const u = motsNom(n), p = u.filter(x => w.some(y => quasi(x, y))).length; if (p > pm) { pm = p; millor = n; empat = false; } else if (p && p === pm) empat = true; }); return pm >= 2 && !empat ? millor : null; };
     return prova(nomFitxer.replace(/\.[a-z0-9]+$/i, "").replace(/[_\-.]+/g, " ")) || prova(text.slice(0, 1500));
   }
+  // Sense «nomFix», cada document es busca entre els alumnes de tots els grups (primer, el grup obert):
+  // un PSI d'un altre grup del centre (1r C) va a l'alumne si ara és en un grup teu (1r I). Si en un mateix enviament
+  // hi ha dos documents del mateix alumne, s'ajunten.
   async function pujaPSI(g, fitxers, nomFix) {
-    const noms = Array.from(new Set([].concat(...g.fulls.map(f => f.files.map(r => r.nom)))));
-    const fets = [], dubtes = [];
+    const grups = nomFix ? [g] : [g].concat(Q().grups.filter(x => x !== g));
+    const fets = [], dubtes = [], ara = new Set();
     for (const fi of fitxers) {
       try {
         const text = await textDoc(fi);
-        const nom = nomFix || alumneDeDoc(noms, fi.name, text);
-        if (!nom) { dubtes.push(fi.name + " (no sé de quin alumne és)"); continue; }
-        g.psiDocs = g.psiDocs || {};
-        g.psiDocs[nom] = { fitxer: fi.name, d: avuiISO(), text: text.slice(0, 40000) };
-        fets.push(nom.replace(/\s+DIS$/i, ""));
+        let gD = null, nom = nomFix || null;
+        if (nomFix) gD = g;
+        else for (const gx of grups) { const noms = Array.from(new Set([].concat(...gx.fulls.map(f => f.files.map(r => r.nom))))); const n = alumneDeDoc(noms, fi.name, text); if (n) { gD = gx; nom = n; break; } }
+        if (!nom) { dubtes.push(fi.name + " (no és de cap alumne dels teus grups)"); continue; }
+        gD.psiDocs = gD.psiDocs || {};
+        const clau = gD.nom + "|" + nom, ant = gD.psiDocs[nom];
+        if (ara.has(clau) && ant) gD.psiDocs[nom] = { fitxer: ant.fitxer + " + " + fi.name, d: avuiISO(), text: (ant.text + "\n\n———— " + fi.name + " ————\n" + text).slice(0, 60000) };
+        else { gD.psiDocs[nom] = { fitxer: fi.name, d: avuiISO(), text: text.slice(0, 40000) }; fets.push(nom.replace(/\s+DIS$/i, "") + (gD === g ? "" : " (" + nomGrup(gD.nom) + ")")); }
+        ara.add(clau);
       } catch (e) { dubtes.push(e.message); }
     }
     if (fets.length) { desa(); pintaAlumnes(); }
-    alert((fets.length ? "PSI desats (" + fets.length + "): " + fets.join(", ") + "." : "No s'ha desat cap PSI.") + (dubtes.length ? "\n\nNo s'han pogut posar:\n" + dubtes.join("\n") + "\n\nPer a aquests, toca el nom de l'alumne > 📄 i puja-hi el document." : ""));
+    alert((fets.length ? "PSI desats (" + fets.length + "): " + fets.join(", ") + "." : "No s'ha desat cap PSI.") + (dubtes.length ? "\n\nNo s'han posat:\n" + dubtes.join("\n") + "\n\nSi algun és d'un alumne teu, toca el seu nom > 📄 i puja-l'hi." : ""));
   }
   function obrePSI(g, nom) {
     let dlg = $("dlgPsi");
