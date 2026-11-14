@@ -5044,7 +5044,8 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     let foto = "", llegint = false, avis = "";
     let dlg = $("dlgCB"); if (!dlg) { dlg = document.createElement("dialog"); dlg.id = "dlgCB"; document.body.appendChild(dlg); }
     const tancats = it.map((x, i) => i).filter(i => it[i].t !== "oberta");
-    const disF = cbDisposicio(p), colDe = i => disF.pos[it[i].n] ? disF.pos[it[i].n].col : 0;
+    // Dues columnes correlatives: l'esquerra amb la primera meitat de les preguntes tancades i la dreta amb la resta
+    const meitat = Math.ceil(tancats.length / 2), colDe = i => tancats.indexOf(i) < meitat ? 0 : 1;
     const pinta = () => {
       const pt = cbPuntua(p, r.r, r.red), st = dlg.scrollTop;
       setTimeout(() => { dlg.scrollTop = st; }, 0);
@@ -5053,7 +5054,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
         (llegint ? '<span class="font">Llegint el full…</span>' : "") + "</div>" + (avis ? '<p class="avis">' + esc(avis) + "</p>" : "") +
         (foto ? '<img src="' + foto + '" alt="Foto del full" style="max-width:100%;max-height:260px;object-fit:contain;border:1px solid var(--linia);border-radius:8px">' : "") +
         '<label>Respostes seguides (una lletra per casella; punt = en blanc)<input type="text" data-seq autocomplete="off" spellcheck="false" style="font-family:monospace;letter-spacing:.15em" value="' + esc(tancats.map(i => r.r[i] || ".").join("")) + '"></label>' +
-        // Mateixa disposició que el full de respostes: columna esquerra i columna dreta, cadascuna en ordre correlatiu
+        // Columna esquerra i columna dreta, cadascuna en ordre correlatiu
         '<div class="cb-resp">' + [0, 1].map(cc => '<div class="cb-col">' + it.map((x, i) => {
           if (x.t === "oberta" || colDe(i) !== cc) return "";
           const v = r.r[i], cls = !v ? "buida" : v === x.k ? "be" : "malament";
