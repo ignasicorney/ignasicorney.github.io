@@ -86,6 +86,13 @@ h3.bt{margin:0 0 8px;font-size:1rem;text-transform:uppercase}
 .al-extra{display:block;line-height:1.2;margin-top:1px}
 .al-extra .mail-al:first-child{margin-left:0}
 .orig-al{color:#a8a6a0;font-size:.8em;margin-right:2px;white-space:nowrap}
+#dlgPsi{width:min(980px,calc(100vw - 12px))}
+.psi-orig{max-height:68vh;overflow:auto;border:1px solid var(--linia);border-radius:8px;background:#fff;margin-top:6px;-webkit-overflow-scrolling:touch}
+.psi-pag{display:block;width:calc(var(--z,1) * 100%);max-width:none;height:auto;border-bottom:1px solid var(--linia)}
+.psi-zoom{display:flex;gap:6px;align-items:center;margin-top:4px}
+.psi-xl table{border-collapse:collapse;font-size:calc(var(--z,1) * 12px);min-width:100%}
+.psi-xl td{border:1px solid #c9c6bd;padding:3px 5px;vertical-align:top;white-space:pre-wrap;min-width:40px}
+.psi-orig .docx{padding:10px !important;background:#fff}
 .psi-text{white-space:pre-wrap;max-height:55vh;overflow:auto;border:1px solid var(--linia);border-radius:8px;padding:8px 10px;margin-top:6px;font-size:.9rem;line-height:1.45;background:#fff}
 .psi-text mark{background:#fbeeb8}
 .marca-al.psi{cursor:pointer}
@@ -3305,7 +3312,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
         const net = nou.trim().replace(/\s+dis$/i, " DIS");
         g.fulls.forEach(fu => fu.files.forEach(r => { if (r.nom === vell) r.nom = net; }));
         if (g.origen && g.origen[vell] && net !== vell) { g.origen[net] = g.origen[vell]; delete g.origen[vell]; }
-        if (g.psiDocs && g.psiDocs[vell] && net !== vell) { g.psiDocs[net] = g.psiDocs[vell]; delete g.psiDocs[vell]; }
+        if (g.psiDocs && g.psiDocs[vell] && net !== vell) { g.psiDocs[net] = g.psiDocs[vell]; delete g.psiDocs[vell]; idbMouPSI(clauPSI(g, vell), clauPSI(g, net)); }
         if (g.sancions && g.sancions[vell] && net !== vell) { g.sancions[net] = sancionsDe(g, net).concat(g.sancions[vell]); delete g.sancions[vell]; }
         if (g.correus && g.correus[vell] && net !== vell) { g.correus[net] = g.correus[vell]; delete g.correus[vell]; }
         if (g.deures && g.deures[vell] && net !== vell) { posaDeures(g, net, deuresDe(g, net).concat(g.deures[vell])); delete g.deures[vell]; }
@@ -4086,6 +4093,54 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
   // Sense «nomFix», cada document es busca entre els alumnes de tots els grups (primer, el grup obert):
   // un PSI d'un altre grup del centre (1r C) va a l'alumne si ara és en un grup teu (1r I). Si en un mateix enviament
   // hi ha dos documents del mateix alumne (el mateix PSI baixat dues vegades), se'n queda un.
+  // Documents originals dels PSI (14.11.2026): es guarden en aquest aparell (IndexedDB), no a les dades sincronitzades,
+  // perquè ocupen massa. A les dades hi va el text (per cercar i per a la resta d'aparells).
+  const idbPSI = () => new Promise((ok, ko) => { const r = indexedDB.open("bitacola-psi", 1); r.onupgradeneeded = () => r.result.createObjectStore("fitxers"); r.onsuccess = () => ok(r.result); r.onerror = () => ko(r.error); });
+  async function idbFes(mode, f) { const db = await idbPSI(); return new Promise((ok, ko) => { const tx = db.transaction("fitxers", mode), st = tx.objectStore("fitxers"), r = f(st); tx.oncomplete = () => ok(r && r.result); tx.onerror = () => ko(tx.error); }); }
+  const idbPosaPSI = (k, file) => file.arrayBuffer().then(buf => idbFes("readwrite", st => st.put({ nom: file.name, tipus: file.type, buf: buf }, k))).catch(() => null);
+  const idbLlegeixPSI = k => idbFes("readonly", st => st.get(k)).catch(() => null);
+  const idbTreuPSI = k => idbFes("readwrite", st => st.delete(k)).catch(() => null);
+  async function idbMouPSI(a, b) { const v = await idbLlegeixPSI(a); if (v) { await idbFes("readwrite", st => st.put(v, b)); await idbTreuPSI(a); } }
+  const clauPSI = (g, nom) => g.nom + "|" + nom;
+  // Mostra l'original: PDF amb les pàgines, Excel amb la graella (cel·les combinades incloses), Word amb el format
+  async function pintaOriginalPSI(cont, v) {
+    const buf = v.buf, cap = String.fromCharCode.apply(null, new Uint8Array(buf.slice(0, 4)));
+    cont.innerHTML = '<p class="font">Carregant el document…</p>';
+    if (cap === "%PDF") {
+      const pdf = await (await cbPdf()).getDocument({ data: new Uint8Array(buf.slice(0)) }).promise;
+      cont.innerHTML = "";
+      for (let n = 1; n <= pdf.numPages; n++) {
+        const pg = await pdf.getPage(n), v0 = pg.getViewport({ scale: 1 }), vp = pg.getViewport({ scale: Math.min(2.2, 1400 / v0.width) });
+        const c = document.createElement("canvas"); c.width = vp.width; c.height = vp.height; c.className = "psi-pag";
+        await pg.render({ canvasContext: c.getContext("2d"), viewport: vp }).promise;
+        cont.appendChild(c);
+      }
+      return;
+    }
+    if (cap.slice(0, 2) === "PK") {
+      await carregaScript("https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js", () => window.JSZip);
+      const zip = await window.JSZip.loadAsync(buf.slice(0));
+      if (zip.file("word/document.xml")) {
+        await carregaScript("https://cdn.jsdelivr.net/npm/docx-preview@0.3.5/dist/docx-preview.min.js", () => window.docx);
+        cont.innerHTML = "";
+        await window.docx.renderAsync(new Blob([buf]), cont, null, { inWrapper: false, ignoreWidth: true, ignoreHeight: true });
+        return;
+      }
+      await carregaScript("https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js", () => window.XLSX);
+      const wb = window.XLSX.read(buf.slice(0), { type: "array" }), nf = wb.SheetNames.find(n => /^\s*PSI\s*$/i.test(n)) || wb.SheetNames[0];
+      const ws = wb.Sheets[nf];
+      // treu les files i columnes buides del final (els models solen tenir el rang molt més gran)
+      if (ws["!ref"]) {
+        const rg = window.XLSX.utils.decode_range(ws["!ref"]); let maxR = rg.s.r, maxC = rg.s.c;
+        Object.keys(ws).forEach(k => { if (k[0] === "!") return; const c = ws[k]; if (c && c.v != null && String(c.v).trim() !== "") { const a = window.XLSX.utils.decode_cell(k); maxR = Math.max(maxR, a.r); maxC = Math.max(maxC, a.c); } });
+        (ws["!merges"] || []).forEach(m => { if (m.s.r <= maxR) maxC = Math.max(maxC, Math.min(m.e.c, maxC + 3)); });
+        ws["!ref"] = window.XLSX.utils.encode_range({ s: rg.s, e: { r: maxR, c: maxC } });
+      }
+      cont.innerHTML = '<div class="psi-xl">' + window.XLSX.utils.sheet_to_html(ws, { header: "", footer: "" }).replace(/<\/?(html|head|body|meta|title)[^>]*>/gi, "") + "</div>";
+      return;
+    }
+    throw new Error("format desconegut");
+  }
   async function pujaPSI(g, fitxers, nomFix) {
     const grups = nomFix ? [g] : [g].concat(Q().grups.filter(x => x !== g));
     const fets = [], dubtes = [], ara = new Set();
@@ -4098,8 +4153,9 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
         if (!nom) { dubtes.push(fi.name + " (no és de cap alumne dels teus grups)"); continue; }
         gD.psiDocs = gD.psiDocs || {};
         const clau = gD.nom + "|" + nom, ant = gD.psiDocs[nom];
-        if (ara.has(clau) && ant) { if (text.length > ant.text.length) gD.psiDocs[nom] = { fitxer: fi.name, d: avuiISO(), text: text.slice(0, 40000) }; }   // el mateix PSI baixat dues vegades: se'n queda un
-        else { gD.psiDocs[nom] = { fitxer: fi.name, d: avuiISO(), text: text.slice(0, 40000) }; fets.push(nom.replace(/\s+DIS$/i, "") + (gD === g ? "" : " (" + nomGrup(gD.nom) + ")")); }
+        if (ara.has(clau) && ant) { if (text.length > ant.text.length) { gD.psiDocs[nom] = { fitxer: fi.name, d: avuiISO(), text: text.slice(0, 40000) }; await idbPosaPSI(clauPSI(gD, nom), fi); } }   // el mateix PSI baixat dues vegades: se'n queda un
+        else {
+          await idbPosaPSI(clauPSI(gD, nom), fi); gD.psiDocs[nom] = { fitxer: fi.name, d: avuiISO(), text: text.slice(0, 40000) }; fets.push(nom.replace(/\s+DIS$/i, "") + (gD === g ? "" : " (" + nomGrup(gD.nom) + ")")); }
         const ogF = grupDeFitxer(fi.name);   // només si és del mateix curs (un PSI antic de 1r d'un alumne de 4t no diu el grup d'ara)
         if (ogF && ogF.charAt(0) === String(nomGrup(gD.nom)).trim().charAt(0)) posaOrigen(gD, nom, ogF, false);
         ara.add(clau);
@@ -4111,12 +4167,25 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
   function obrePSI(g, nom) {
     let dlg = $("dlgPsi");
     if (!dlg) { dlg = document.createElement("dialog"); dlg.id = "dlgPsi"; document.body.appendChild(dlg); }
-    const pinta = () => {
+    let vista = "orig", orig, zoom = 0;
+    const pinta = async () => {
       const d = psiDocDe(g, nom);
+      orig = d ? await idbLlegeixPSI(clauPSI(g, nom)) : null;
+      if (!orig && vista === "orig") vista = "text";
       dlg.innerHTML = '<form method="dialog"><h2>📄 PSI</h2><p style="margin:0"><b>' + esc(nom.replace(/\s+DIS$/i, "")) + "</b> · " + esc(nomGrup(g.nom)) + (d ? ' <span class="font">· ' + esc(d.fitxer) + " · " + dma(d.d) + "</span>" : "") + "</p>" +
-        (d ? '<input type="search" id="psiCerca" placeholder="Cerca dins del PSI (p. ex. examen, temps, lectura…)" style="width:100%;box-sizing:border-box;font:inherit;padding:6px 8px;border:1px solid var(--linia);border-radius:8px"><div class="psi-text" id="psiText">' + esc(d.text) + "</div>" : '<p class="font">Encara no hi ha cap PSI per a aquest alumne.</p>') +
+        (d ? '<div class="vistes" role="group" aria-label="Com es mostra" style="margin:6px 0"><button type="button" data-psi="v-orig" aria-pressed="' + (vista === "orig") + '"' + (orig ? "" : " disabled") + '>Document original</button><button type="button" data-psi="v-text" aria-pressed="' + (vista === "text") + '">Text i cerca</button></div>' +
+          (!orig ? '<p class="font">L\'original no és en aquest aparell (es guarda només on el vas pujar). Pots consultar-ne el text, o tornar-lo a pujar aquí amb el botó de sota.</p>' : "") +
+          (vista === "orig" ? '<div class="psi-zoom"><button type="button" class="boto clar boto-ico" data-psi="z-" aria-label="Més petit">−</button><button type="button" class="boto clar boto-ico" data-psi="z+" aria-label="Més gran">+</button><span class="font">Mida</span></div><div class="psi-orig" id="psiOrig" style="--z:' + zoom + '"></div>' :
+            '<input type="search" id="psiCerca" placeholder="Cerca dins del PSI (p. ex. examen, temps, lectura…)" style="width:100%;box-sizing:border-box;font:inherit;padding:6px 8px;border:1px solid var(--linia);border-radius:8px"><div class="psi-text" id="psiText">' + esc(d.text) + "</div>")
+          : '<p class="font">Encara no hi ha cap PSI per a aquest alumne.</p>') +
         '<div class="botons" style="flex-wrap:wrap"><label class="boto clar">' + (d ? "Substitueix el document" : "📎 Puja el PSI (Word, Excel o PDF)") + '<input type="file" id="psiFitxer" accept=".docx,.xlsx,.xls,.ods,.pdf,.txt" hidden></label>' +
+        (orig ? '<button type="button" class="boto clar" data-psi="baixa">⬇️ Baixa l\'original</button>' : "") +
         (d ? '<button type="button" class="boto clar" data-psi="treu">Treu-lo</button>' : "") + '<button type="button" class="boto" data-psi="tanca">Fet</button></div></form>';
+      if (vista === "orig" && orig) pintaOriginalPSI($("psiOrig"), orig).then(() => {
+        // la primera vegada, en una pantalla estreta el PDF es mostra més gran (es mou amb el dit; − i + per canviar-ho)
+        const el = $("psiOrig"), c = el && el.querySelector("canvas");
+        if (!zoom) { zoom = c && el.clientWidth < 700 ? 2 : 1; if (el) el.style.setProperty("--z", zoom); }
+      }).catch(() => { const el = $("psiOrig"); if (el) el.innerHTML = '<p class="avis">No s\'ha pogut mostrar l\'original. Mira\'n el text o baixa\'l.</p>'; });
     };
     pinta();
     dlg.oninput = ev => {
@@ -4125,11 +4194,15 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       $("psiText").innerHTML = q.length < 2 ? esc(d.text) : esc(d.text).replace(new RegExp("(" + esc(q).replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + ")", "gi"), "<mark>$1</mark>");
       const m = $("psiText").querySelector("mark"); if (m) m.scrollIntoView({ block: "center" });
     };
-    dlg.onchange = async ev => { if (ev.target.id === "psiFitxer" && ev.target.files[0]) { await pujaPSI(g, [ev.target.files[0]], nom); pinta(); } };
-    dlg.onclick = ev => {
+    dlg.onchange = async ev => { if (ev.target.id === "psiFitxer" && ev.target.files[0]) { await pujaPSI(g, [ev.target.files[0]], nom); vista = "orig"; pinta(); } };
+    dlg.onclick = async ev => {
       const b = ev.target.closest("[data-psi]"); if (!b) return;
-      if (b.dataset.psi === "tanca") { dlg.close(); return; }
-      if (b.dataset.psi === "treu" && confirm("Vols treure el PSI de " + nom.replace(/\s+DIS$/i, "") + "?")) { delete g.psiDocs[nom]; desa(); pintaAlumnes(); pinta(); }
+      const a = b.dataset.psi;
+      if (a === "tanca") { dlg.close(); return; }
+      if (a === "v-orig" || a === "v-text") { vista = a.slice(2); pinta(); return; }
+      if (a === "z-" || a === "z+") { zoom = Math.max(0.6, Math.min(4, Math.round(((zoom || 1) * (a === "z+" ? 1.3 : 1 / 1.3)) * 100) / 100)); const el = $("psiOrig"); if (el) el.style.setProperty("--z", zoom); return; }
+      if (a === "baixa" && orig) { const u = URL.createObjectURL(new Blob([orig.buf], { type: orig.tipus || "application/octet-stream" })); const el = document.createElement("a"); el.href = u; el.download = orig.nom || "PSI"; document.body.appendChild(el); el.click(); el.remove(); setTimeout(() => URL.revokeObjectURL(u), 4000); return; }
+      if (a === "treu" && confirm("Vols treure el PSI de " + nom.replace(/\s+DIS$/i, "") + "?")) { delete g.psiDocs[nom]; await idbTreuPSI(clauPSI(g, nom)); desa(); pintaAlumnes(); pinta(); }
     };
     dlg.showModal();
   }
