@@ -1489,16 +1489,30 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
   const CSS_DOC = ".cap-doc{width:100%;border-collapse:collapse;margin:0 0 14px;font:14px/1.35 Arial,Helvetica,sans-serif;letter-spacing:0;word-spacing:0}" +
     ".cap-doc td{border:1px solid #000;padding:4px 8px;vertical-align:top}.cap-doc td.logo{width:90px;text-align:center;vertical-align:middle}.cap-doc td.logo img{width:72px;display:block;margin:auto}" +
     ".cap-doc td.nota{width:22%}.linia-al{font:bold 14px Arial,Helvetica,sans-serif;letter-spacing:0;word-spacing:0;margin:0 0 16px;display:flex;white-space:nowrap}.linia-al .pt{flex-basis:0;min-width:0;overflow:hidden;margin:0 5px 0 4px}.linia-al .pt:last-child{margin-right:0}";
+  // 14.11.2026: si «html» és una llista, cada element és un model d'examen (A, B, C…): cada model comença amb la capçalera
+  // i la numeració del peu torna a començar (1/2, 2/2 del model A; 1/2, 2/2 del model B…). Les pàgines es fan a mà a la finestra d'impressió.
+  const PAGINA_MODELS = "function paginaModels(){const ms=[].slice.call(document.querySelectorAll('section.model'));if(!ms.length)return;" +
+    "const r=document.createElement('div');r.style.height='100mm';document.body.appendChild(r);const mm=r.getBoundingClientRect().height/100;r.remove();" +
+    "const H=244*mm;" +   // 261 mm útils de l'A4 − peu − marge de seguretat
+    "ms.forEach(m=>{m.style.width='178mm';const bl=[];[].slice.call(m.children).forEach(c=>{if(/^(OL|UL)$/.test(c.tagName)&&c.children.length>1){const ini=c.start||1;[].slice.call(c.children).forEach((li,i)=>{const o=c.cloneNode(false);o.style.margin='0';if(c.tagName==='OL')o.start=ini+i;o.appendChild(li);bl.push(o);});}else bl.push(c);});" +
+    "m.innerHTML='';bl.forEach(b=>m.appendChild(b));const pags=[];let cur=[],h=0;" +
+    "bl.forEach(b=>{const cs=getComputedStyle(b),bh=b.getBoundingClientRect().height+parseFloat(cs.marginTop)+parseFloat(cs.marginBottom);if(cur.length&&h+bh>H){pags.push(cur);cur=[];h=0;}cur.push(b);h+=bh;});" +
+    "if(cur.length)pags.push(cur);m.innerHTML='';m.style.width='';" +
+    "pags.forEach((p,i)=>{const d=document.createElement('div');d.className='pag';p.forEach(b=>d.appendChild(b));const f=document.createElement('div');f.className='peu';f.textContent=(i+1)+'/'+pags.length;d.appendChild(f);m.appendChild(d);});});}";
   function imprimeix(titol, html, dis, informe) {
+    const models = Array.isArray(html);
+    if (models) html = html.map(x => '<section class="model">' + capcaleraDoc(informe) + x + "</section>").join("");
     const w = window.open("", "_blank");
     if (!w) { alert("El navegador ha bloquejat la finestra. Permet les finestres emergents per a aquesta pàgina."); return; }
     w.document.write('<!doctype html><html lang="ca"><head><meta charset="utf-8"><title>' + esc(titol) + "</title><style>" +
-      "@page{size:A4;margin:16mm 16mm 20mm;@bottom-center{content:counter(page) \"/\" counter(pages);font:10px Arial,Helvetica,sans-serif;border-top:1px solid #000;margin:0 0 8mm;padding-top:2mm}}" +
+      (models ? "@page{size:A4;margin:16mm 16mm 20mm}.pag{min-height:259mm;display:flex;flex-direction:column;break-after:page;page-break-after:always}.model:last-child .pag:last-child{break-after:auto;page-break-after:auto}" +
+        ".peu{margin-top:auto;padding-top:2mm;border-top:1px solid #000;text-align:center;font:10px Arial,Helvetica,sans-serif}@media screen{.pag{min-height:0;border-bottom:1px dashed #999;margin-bottom:12px}}"
+        : "@page{size:A4;margin:16mm 16mm 20mm;@bottom-center{content:counter(page) \"/\" counter(pages);font:10px Arial,Helvetica,sans-serif;border-top:1px solid #000;margin:0 0 8mm;padding-top:2mm}}") +
       (dis ? "body{font:18px/1.9 Verdana,Arial,sans-serif;letter-spacing:.04em;word-spacing:.12em;color:#1d1d1b;margin:0}p,li{text-align:left}i,em{font-style:normal;font-weight:700}"
            : "body{font:14px/1.5 Arial,Helvetica,sans-serif;color:#000;margin:0}p{text-align:justify}") +
       "h3,h4{margin:1.1em 0 .4em}h3{font-size:1.05em;text-transform:uppercase}li{margin:.25em 0}" + CSS_DOC +
-      "@media screen{body{max-width:180mm;margin:24px auto;padding:0 16px}}</style></head><body>" + capcaleraDoc(informe) + html +
-      "<script>window.onload=()=>setTimeout(()=>print(),200)<\/script></body></html>");
+      "@media screen{body{max-width:180mm;margin:24px auto;padding:0 16px}}</style></head><body>" + (models ? "" : capcaleraDoc(informe)) + html +
+      "<script>" + (models ? PAGINA_MODELS + "window.onload=()=>{paginaModels();setTimeout(()=>print(),200)}" : "window.onload=()=>setTimeout(()=>print(),200)") + "<\/script></body></html>");
     w.document.close();
   }
   const fitxerABase64 = f => new Promise((ok, ko) => {
@@ -2240,7 +2254,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     if (a === "ctltanca") { ctl = null; ctlCorr = null; eiMsg.ctl = ""; return pintaAssistent(); }
     if (a === "ctldel") { if (ctl.preg.length < 2) return; if (ctl.resp && Object.keys(ctl.resp).length && !confirm("Ja hi ha alumnes corregits; si treus la pregunta, les seves respostes es desquadraran. Vols continuar?")) return; ctl.preg.splice(Number(b.dataset.i), 1); if (e.ctl.includes(ctl)) desa(); return pintaAssistent(); }
     if (a === "ctldesa") { ctl.vars = Number(fv("vars", String(ctl.vars || 2))); if (!e.ctl.includes(ctl)) e.ctl.push(ctl); desa(); eiMsg.ctl = "✓ Control desat."; return pintaAssistent(); }
-    if (a === "ctlimp") { ctl.vars = Number(fv("vars", String(ctl.vars || 2))); imprimeix("Control de lectura · " + ctl.llibre, Array.from({ length: ctl.vars }, (x, v) => (v ? '<div style="break-before:page;page-break-before:always"></div>' + capcaleraDoc() : "") + ctlHTMLModel(ctl, v)).join(""), false); return; }
+    if (a === "ctlimp") { ctl.vars = Number(fv("vars", String(ctl.vars || 2))); imprimeix("Control de lectura · " + ctl.llibre, Array.from({ length: ctl.vars }, (x, v) => ctlHTMLModel(ctl, v)), false); return; }
     if (a === "ctlsol") {
       ctl.vars = Number(fv("vars", String(ctl.vars || 2)));
       imprimeix("Solucionari · " + ctl.llibre, '<h3 style="text-transform:none">Solucionari · ' + esc(ctl.llibre) + (ctl.caps ? " · capítols " + esc(ctl.caps) : "") + '</h3><table style="border-collapse:collapse;font-size:13px">' +
@@ -2292,7 +2306,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
   }
   async function varAccio(a) {
     if (a === "varagafa") { fput("ex", asDades.text); return pintaAssistent(); }
-    if (a === "varimp") { imprimeix(vari.titol, vari.models.map((m, i) => (i ? '<div style="break-before:page;page-break-before:always"></div>' + capcaleraDoc() : "") + '<p style="text-align:right;font-weight:700;margin:0">MODEL ' + LLETRES[i] + "</p>" + textExamen(m.text)).join(""), false); return; }
+    if (a === "varimp") { imprimeix(vari.titol, vari.models.map((m, i) => '<p style="text-align:right;font-weight:700;margin:0">MODEL ' + LLETRES[i] + "</p>" + textExamen(m.text)), false); return; }
     if (a === "varsol") { imprimeix("Solucionaris · " + vari.titol, vari.models.map((m, i) => "<h3>Model " + LLETRES[i] + "</h3>" + (m.sol ? md(m.sol) : "<p>(sense solucionari)</p>")).join(""), false, true); return; }
     if (a === "vargen") {
       const file = varFitxer, n = Number(fv("n", "1")), mode = fv("mode", "ia");
