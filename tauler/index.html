@@ -1454,7 +1454,8 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
 
   // ================= Assistent (IA i corrector) =================
   // Passa pel Worker (clau de Gemini guardada allà). Mai s'hi envien noms d'alumnes.
-  let asEina = "corregir", asResultat = "", asOcupat = false, asDades = null, asModel = "";
+  let asEina = "corregir", asResultat = "", asOcupat = false, asDades = null, asModel = "", asInici = null, asProgres = "";
+  const progres = t => { asProgres = t; const o = document.querySelector("#asSortida .cr-buit"); if (o && asOcupat) o.textContent = "Treballant… (començat a les " + (asInici ? asInici.toLocaleTimeString("ca-ES", { hour: "2-digit", minute: "2-digit", second: "2-digit" }) : "") + ")" + (t ? " · " + t : ""); };
   const BOTO_QR = '<select id="asQrNiv" aria-label="Nivell del qüestionari"><option>Nivell bàsic</option><option selected>Nivell mitjà</option><option>Nivell avançat</option></select><button type="button" class="boto" data-asb="qr">📱 Versió en línia (QR)</button>';
   async function ia(sistema, text, opcions) {
     const cos = Object.assign({ sistema: sistema, text: text, json: !!(opcions && opcions.json) }, opcions && opcions.imatge ? { imatge: opcions.imatge } : {});
@@ -1614,7 +1615,11 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
           '<div class="alum-eines"><button type="button" class="boto" data-asb="butlleti">💬 Proposa els comentaris</button></div>' : '<p class="buit">Primer cal tenir algun grup amb notes.</p>');
     }
     if (asEina === "corregir") h += selectorsAlumne(asSel);
-    h += '<div id="asSortida">' + (asOcupat ? '<p class="cr-buit">Treballant… pot trigar uns segons.</p>' : asResultat + (asResultat && asModel ? '<p class="font">Fet amb el model de reserva (' + esc(asModel) + ') perquè Gemini estava saturat.</p>' : "")) + "</div>";
+    // 14.11.2026: mentre treballa, es veu a quina hora ha començat i, si n'hi ha, per on va
+    if (asOcupat && !asInici) asInici = new Date();
+    if (!asOcupat) { asInici = null; asProgres = ""; }
+    const hInici = asInici ? asInici.toLocaleTimeString("ca-ES", { hour: "2-digit", minute: "2-digit", second: "2-digit" }) : "";
+    h += '<div id="asSortida">' + (asOcupat ? '<p class="cr-buit">Treballant… (començat a les ' + hInici + ')' + (asProgres ? " · " + esc(asProgres) : "") + '</p>' : asResultat + (asResultat && asModel ? '<p class="font">Fet amb el model de reserva (' + esc(asModel) + ') perquè Gemini estava saturat.</p>' : "")) + "</div>";
     cos.innerHTML = h;
     if (asEina === "cb") pintaCB();
     if (EINES_DESPRES[asEina]) EINES_DESPRES[asEina]();
@@ -4842,6 +4847,54 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     setTimeout(() => { const f = document.querySelector('#correuCos [data-cr-form="redacta"]'); if (f) { f.scrollIntoView({ behavior: "smooth", block: "start" }); const as = f.querySelector(".cr-as"); if (as) as.focus({ preventScroll: true }); } }, 60);
   }
   // ================= Comprensió audiovisual (vídeo) =================
+  // Transcripció comprovada d'un tros: la IA només transcriu (no rep cap altra instrucció) i els temps han de caure dins del tros
+  async function transcriuTros(clau, model, v, inici, final) {
+    const NO_VIST = "La IA no ha pogut veure el vídeo (del " + mmss(inici) + " al " + mmss(final) + ") i no se'n fan preguntes inventades. Comprova que el vídeo sigui públic a YouTube i torna-ho a provar, o enganxa'n la transcripció.";
+    const cos = {
+      systemInstruction: { parts: [{ text: "Ets un transcriptor. Transcrius literalment el que es diu en un tros de vídeo de YouTube, paraula per paraula, en la llengua en què es parla. No resumeixes, no comentes i no inventes res. Si no pots veure ni sentir el vídeo, o no s'hi sent ningú parlar, ho dius posant \"accessible\": false o deixant la llista buida." }] },
+      contents: [{ role: "user", parts: [
+        { fileData: { fileUri: "https://www.youtube.com/watch?v=" + v }, videoMetadata: { startOffset: inici + "s", endOffset: final + "s" } },
+        { text: "Transcriu literalment tot el que es diu en aquest tros del vídeo (del " + mmss(inici) + " al " + mmss(final) + " del vídeo complet). Fes una entrada per frase o tros de frase, amb el moment en què comença en m:ss del vídeo complet. Respon només JSON: {\"accessible\": true o false, \"segments\": [{\"t\": \"m:ss\", \"text\": \"el que es diu, literal\"}]}" }
+      ] }],
+      generationConfig: { responseMimeType: "application/json", temperature: 0, mediaResolution: "MEDIA_RESOLUTION_LOW" }
+    };
+    const models = [model || "gemini-flash-latest"].concat(["gemini-flash-latest", "gemini-3.8-flash", "gemini-flash-lite-latest"].filter(x => x !== model));
+    let d = null, msg = "", codi = 0;
+    fora:
+    for (const m of models) {
+      for (let intent = 0; intent < 2; intent++) {
+        if (intent) await new Promise(ok => setTimeout(ok, 4000));
+        let r;
+        try { r = await fetch("https://generativelanguage.googleapis.com/v1beta/models/" + m + ":generateContent", { method: "POST", headers: { "Content-Type": "application/json", "x-goog-api-key": clau }, body: JSON.stringify(cos) }); }
+        catch (e) { msg = "no s'ha pogut connectar amb Gemini"; codi = 0; continue; }
+        codi = r.status; const j = await r.json().catch(() => ({}));
+        if (r.ok) { d = j; break fora; }
+        msg = (j.error && j.error.message) || ("error " + r.status);
+        if (/no longer available|not found|not supported|deprecated|retired/i.test(msg)) continue fora;
+        if (/mediaResolution|media_resolution/i.test(msg)) { delete cos.generationConfig.mediaResolution; intent--; continue; }
+        if ([429, 500, 503].indexOf(r.status) < 0) break fora;
+      }
+    }
+    if (!d) {
+      if (/api key|api_key/i.test(msg)) throw new Error("La clau GEMINI_KEY no és vàlida; revisa-la a les propietats de l'script del compte d'ieslabisbal.cat.");
+      if ([429, 500, 503].indexOf(codi) >= 0) throw new Error("Els models de Gemini estan saturats ara mateix i només Gemini pot mirar vídeos. Torna-ho a provar d'aquí a uns minuts o enganxa la transcripció del fragment.");
+      if (/youtube|video|file/i.test(msg)) throw new Error("La IA no ha pogut obrir el vídeo: ha de ser públic a YouTube (els ocults o privats no hi van). També pots enganxar-ne la transcripció.");
+      throw new Error("Gemini: " + msg);
+    }
+    const parts = (((d.candidates || [])[0] || {}).content || {}).parts || [];
+    let res = {};
+    try { res = JSON.parse(parts.map(p => p.text || "").join("").trim().replace(/^```(json)?\s*|\s*```$/g, "")); } catch (e) {}
+    if (res.accessible === false) throw new Error(NO_VIST);
+    const seg = (Array.isArray(res.segments) ? res.segments : []).map(x => ({ s: segons(String((x && x.t) || "").replace(/\.\d+$/, "")), text: String((x && x.text) || "").replace(/\s+/g, " ").trim() })).filter(x => x.text);
+    if (!seg.length) return { transcripcio: "", paraules: 0 };
+    const dur = final - inici, marge = 8;
+    const dinsAbs = seg.filter(x => x.s != null && x.s >= inici - marge && x.s <= final + marge).length;
+    const dinsRel = seg.filter(x => x.s != null && x.s <= dur + marge).length;
+    const rel = inici > dur + marge && dinsRel > dinsAbs;
+    if ((rel ? dinsRel : dinsAbs) < Math.ceil(seg.length * 0.7)) throw new Error(NO_VIST);
+    const txt = seg.map(x => "[" + (x.s == null ? "?" : mmss(rel ? x.s + inici : x.s)) + "] " + x.text).join("\n");
+    return { transcripcio: txt, paraules: txt.replace(/\[[^\]]*\]/g, " ").split(/\s+/).filter(Boolean).length };
+  }
   async function preparaVideo(transcripcio) {
     const fet = html => { asOcupat = false; asResultat = html; pintaAssistent(); };
     const v = idYoutube(asVid.url), i = segons(asVid.i), f = segons(asVid.f), n = Math.max(3, Math.min(20, parseInt(asVid.n, 10) || 8));
@@ -4879,8 +4932,12 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
         // trossos de 50 segons com a molt, de tres en tres; si un no respon, es torna a provar una vegada
         const tr = Math.ceil((f - i) / 50), pas = (f - i) / tr, trossos = [];
         for (let k = 0; k < tr; k++) trossos.push([Math.round(i + k * pas), Math.round(i + (k + 1) * pas)]);
-        const unTros = t => cridaIns({ accio: "video-transcripcio", url: "https://www.youtube.com/watch?v=" + v, inici: t[0], final: t[1] })
-          .catch(e => /no respon/.test(e.message) ? new Promise(ok => setTimeout(ok, 3000)).then(() => cridaIns({ accio: "video-transcripcio", url: "https://www.youtube.com/watch?v=" + v, inici: t[0], final: t[1] })) : Promise.reject(e));
+        // 14.11.2026 (nit): l'script de Google talla les crides que passen d'un minut i Gemini triga més a mirar un vídeo;
+        // ara el navegador crida Gemini directament (la clau la dona l'script del compte d'ieslabisbal.cat, amb la clau del tauler)
+        progres("Preparant la transcripció…");
+        const g = await cridaIns({ accio: "gemini-clau" });
+        let fets = 0; progres("Transcrivint el vídeo: 0 de " + trossos.length + " trossos");
+        const unTros = t => transcriuTros(g.clau, g.model, v, t[0], t[1]).then(x => { fets++; progres("Transcrivint el vídeo: " + fets + " de " + trossos.length + " trossos"); return x; });
         const rs = [];
         for (let k = 0; k < trossos.length; k += 3) rs.push(...await Promise.all(trossos.slice(k, k + 3).map(unTros)));
         transcripcio = rs.map(x => x.transcripcio || "").filter(Boolean).join("\n");
@@ -4888,6 +4945,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
         // la transcripció queda al quadre: es pot revisar i, si es torna a prémer el botó, ja no cal tornar a mirar el vídeo
         if ($("asText")) $("asText").value = transcripcio;
       }
+      progres("Preparant les preguntes a partir de la transcripció…");
       r = await ia(sistemaLl, ind + "Transcripció del fragment (amb el moment de cada frase):\n" + transcripcio + "\n\n" + ordreLl, { json: true });
       // Comprovació: les paraules de completar i les cites de les obertes han de ser a la transcripció
       const norm = t => String(t || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/\[[^\]]*\]/g, " ").replace(/[^a-zñç0-9]+/g, " ").trim();

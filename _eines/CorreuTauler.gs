@@ -69,7 +69,9 @@
 //   Opcional: GEMINI_MODEL (per defecte, gemini-flash-latest).
 //   { accio: "video-preguntes", url, inici, final, sistema, text } → { resposta }: inici i final en segons
 //   «classroom-publica» accepta també «video»: l'enllaç del fragment, que s'afegeix com a material de la tasca
-//   { accio: "video-transcripcio", url, inici, final } → { transcripcio, paraules } (14.11.2026)
+//   { accio: "gemini-clau" } → { clau, model }: el tauler crida Gemini des del navegador per transcriure el vídeo,
+//     perquè aquí les crides es tallen al cap d'un minut i Gemini en triga més a mirar un vídeo (14.11.2026, nit)
+//   { accio: "video-transcripcio", url, inici, final } → { transcripcio, paraules } (14.11.2026; ja no el fa servir el tauler)
 //     La IA NOMÉS transcriu el tros (sense cap altra instrucció, perquè no s'inventi res) i l'script comprova
 //     que els temps de la transcripció caiguin dins del tros; si no, és que no ha vist el vídeo i dona error.
 //     El tauler la fa a trossos de poc més d'un minut (així no s'esgota el temps d'espera) i amb la
@@ -458,6 +460,13 @@ function doPost(e) {
         const text = parts.map(function (p) { return p.text || ""; }).join("").trim();
         if (!text) throw new Error("La IA no ha retornat cap resposta; torna-ho a provar.");
         return json_({ ok: true, resposta: text });
+      }
+
+      // 14.11.2026 (nit): el tauler crida Gemini directament per transcriure vídeos (aquí les crides es tallen al minut)
+      case "gemini-clau": {
+        const pr = PropertiesService.getScriptProperties();
+        if (!pr.getProperty("GEMINI_KEY")) throw new Error("Falta la propietat GEMINI_KEY a l'script del compte d'ieslabisbal.cat (Configuració del projecte > Propietats de l'script).");
+        return json_({ ok: true, clau: pr.getProperty("GEMINI_KEY"), model: pr.getProperty("GEMINI_MODEL") || "gemini-flash-latest" });
       }
 
       case "video-transcripcio": {
