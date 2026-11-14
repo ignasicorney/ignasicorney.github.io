@@ -968,6 +968,9 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       }
       if (d.genealogia && typeof d.genealogia === "object") r.genealogia = d.genealogia;
       if (Array.isArray(d.formularis)) r.formularis = d.formularis;
+      // 15.11.2026: també els qüestionaris de vídeo i les transcripcions desades (abans es perdien en tornar a obrir la Bitàcola)
+      if (Array.isArray(d.videos)) r.videos = d.videos.filter(x => x && x.id);
+      if (d.transcripcions && typeof d.transcripcions === "object") r.transcripcions = d.transcripcions;
       if (d.eines && typeof d.eines === "object") r.eines = d.eines;   // eines per a l'alumnat (fluïdesa, dictats, controls…)
       if (Array.isArray(d.matFora)) r.matFora = d.matFora.filter(x => typeof x === "string");   // carpetes del material esborrades des de la Bitàcola
       if (d.cb && typeof d.cb === "object") r.cb = d.cb;   // competències bàsiques: codis dels fulls, columnes CL/EE i respostes   // qüestionaris en línia creats des de l'Assistent   // dades de les persones vives (privades)
