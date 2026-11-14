@@ -1587,13 +1587,15 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     } else if (asEina === "video") {
       const vo = (llista, v) => llista.map(o => "<option" + (o === v ? " selected" : "") + ">" + o + "</option>").join("");
       h = '<p class="font">Comprensió audiovisual: un fragment de 4 a 5 minuts d\'un vídeo de YouTube, amb preguntes de diversos tipus (test, vertader o fals, completar amb les paraules exactes del fragment i alguna d\'oberta sobre una cita textual) en el nivell que triïs o en tots tres (i, si vols, la versió DIS/PSI). Se\'n fa un qüestionari que es corregeix sol, es publica al Classroom i la nota va a la columna EO1.</p>' +
+        // 15.11.2026: el que ja hi ha fet (transcripcions i qüestionaris) es veu a dalt de tot, abans de demanar res de nou
+        llistaTranscripcions() + llistaVideos() +
         '<div class="fila-as"><label style="flex:1 1 100%">Enllaç de YouTube<input type="url" id="vUrl" value="' + esc(asVid.url) + '" placeholder="https://www.youtube.com/watch?v=…"></label></div>' +
         '<div class="fila-as"><label>Inici (m:ss)<input type="text" id="vIni" value="' + esc(asVid.i) + '" placeholder="0:00" style="width:5em"></label><label>Final (m:ss)<input type="text" id="vFi" value="' + esc(asVid.f) + '" placeholder="4:30" style="width:5em"></label><span class="font" id="vDur" style="align-self:end"></span></div>' +
         '<div class="fila-as"><label>Curs<select id="asCurs">' + vo(["1r d'ESO", "2n d'ESO", "3r d'ESO", "4t d'ESO", "1r de batxillerat", "2n de batxillerat"], asVid.curs) + '</select></label><label>Llengua<select id="asLleng">' + vo(["castellà", "català"], asVid.lleng) + '</select></label><label>Nivell<select id="vNiv">' + vo(["Tots tres", "Nivell bàsic", "Nivell mitjà", "Nivell mitjà-alt", "Nivell avançat"], asVid.niv) + '</select></label><label>Preguntes per nivell<input type="text" id="asN" value="' + esc(asVid.n) + '" inputmode="numeric" style="width:4em"></label></div>' +
         '<label class="font"><input type="checkbox" id="asDisAct"' + (asVid.dis ? " checked" : "") + '> Afegeix també una versió adaptada DIS/PSI</label>' +
         '<input type="text" id="vInd" value="' + esc(asVid.ind) + '" placeholder="Indicacions (opcional): què vols treballar, vocabulari, tipus de preguntes…">' +
         '<textarea id="asText" placeholder="Transcripció del fragment (opcional). Si la deixes buida, la IA transcriu el vídeo (ha de ser públic a YouTube), la transcripció apareix aquí perquè la revisis i les preguntes es fan a partir d\'ella." rows="4"></textarea>' +
-        '<div class="alum-eines"><button type="button" class="boto" data-asb="video">🎬 Prepara les preguntes</button></div>' + llistaVideos();
+        '<div class="alum-eines"><button type="button" class="boto" data-asb="video">🎬 Prepara les preguntes</button></div>';
     } else if (asEina === "adaptar") {
       h = '<p class="font">Enganxa un text o uns enunciats i en tens la versió per a alumnat amb dislèxia (DIS) o amb pla de suport (PSI).</p>' +
         '<div class="fila-as"><label>Adaptació<select id="asAdap"><option value="DIS">DIS (dislèxia)</option><option value="PSI">PSI (simplificada, amb glossari)</option><option value="totes">Totes dues</option></select></label></div>' +
@@ -1659,6 +1661,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     }
     if (a === "qrimp") { const q = asDades && asDades.qr; if (q) imprimeix(q.titol, '<div style="text-align:center"><h3>' + esc(q.titol) + '</h3><p>Escaneja el codi amb el mòbil i entra amb el compte de l\'institut.</p><div style="width:110mm;margin:8mm auto">' + q.svg + '</div><p style="font-size:16px">' + esc(q.url) + "</p></div>", false); return; }
     if (a === "copia") { navigator.clipboard && navigator.clipboard.writeText(asDades && asDades.text || ""); b.textContent = "Copiat ✓"; return; }
+    if (a === "trusa" || a === "trdel") { accioTranscripcio(a, b.dataset.k); return; }
     if (a === "vdobre" || a === "vdesb") { accioVideoDesat(a, b.dataset.id); return; }
     if (a === "videoword" || a === "videosolword") { videoWord(a === "videosolword"); return; }
     if (a === "imprimeixsol") { if (asDades && asDades.sol) imprimeix(asDades.titol + " · Solucionari", asDades.sol, false, false, true); return; }
@@ -2342,11 +2345,32 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     asDades.desatId = id;
     desa();
   }
+  // 15.11.2026: transcripcions de vídeo desades, per fer-les servir sense tornar a mirar el vídeo
+  function llistaTranscripcions() {
+    const TR = dades.transcripcions || {};
+    const l = Object.keys(TR).filter(k => TR[k] && TR[k].text).map(k => { const p = k.split("|"); return { k: k, v: p[0], i: Number(p[1]), f: Number(p[2]), x: TR[k] }; })
+      .sort((a, b) => String(b.x.data).localeCompare(String(a.x.data)));
+    if (!l.length) return "";
+    const titol = e => e.x.titol || ((dades.videos || []).find(y => idYoutube((y.params || {}).url) === e.v) || {}).titol || "Vídeo de YouTube (" + e.v + ")";
+    return '<details class="vd-desats" open style="margin:8px 0"><summary><b>🎞️ Transcripcions desades</b> <span class="font">(' + l.length + ') · no cal tornar a mirar el vídeo</span></summary><ul style="margin:6px 0 0;padding-left:1.2em">' +
+      l.map(e => '<li style="margin:4px 0">' + esc(titol(e)) + ' <span class="font">· del ' + mmss(e.i) + " al " + mmss(e.f) + " · " + esc(String(e.x.data || "").split("-").reverse().join(".")) + "</span> " +
+        '<button type="button" class="boto clar" data-asb="trusa" data-k="' + esc(e.k) + '">Fes-la servir</button> <button type="button" class="boto perill" data-asb="trdel" data-k="' + esc(e.k) + '">✕</button></li>').join("") + "</ul></details>";
+  }
+  function accioTranscripcio(a, k) {
+    const TR = dades.transcripcions || {}, x = TR[k]; if (!x) return;
+    const p = k.split("|");
+    if (a === "trdel") { if (!confirm("Vols esborrar aquesta transcripció desada? Si la tornes a necessitar, s'haurà de tornar a mirar el vídeo.")) return; delete TR[k]; desa(); pintaAssistent(); return; }
+    asVid = Object.assign({}, asVid, { url: "https://www.youtube.com/watch?v=" + p[0], i: mmss(Number(p[1])), f: mmss(Number(p[2])) });
+    asResultat = '<p class="avis" style="background:#e8f5e9;color:#1b5e20;border-color:#a5d6a7">🎞️ Transcripció carregada. Tria el curs, la llengua i el nivell i prem «Prepara les preguntes»: no es tornarà a mirar el vídeo.</p>';
+    asDades = null; pintaAssistent();
+    if ($("asText")) $("asText").value = x.text;
+    const b = document.querySelector('[data-asb="video"]'); if (b) b.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
   function llistaVideos() {
     const l = dades.videos || [];
     if (!l.length) return "";
     const data = iso => { const m = String(iso || "").match(/^(\d{4})-(\d{2})-(\d{2})/); return m ? m[3] + "." + m[2] + "." + m[1] : ""; };
-    return '<details class="vd-desats" style="margin-top:12px"' + (asResultat ? "" : " open") + '><summary><b>📂 Qüestionaris desats</b> <span class="font">(' + l.length + ')</span></summary><ul style="margin:6px 0 0;padding-left:1.2em">' +
+    return '<details class="vd-desats" open style="margin:8px 0"><summary><b>📂 Qüestionaris desats</b> <span class="font">(' + l.length + ')</span></summary><ul style="margin:6px 0 0;padding-left:1.2em">' +
       l.map(x => '<li style="margin:4px 0">' + esc(x.titol) + ' <span class="font">· ' + esc(x.curs || "") + (x.nivell ? " · " + esc(x.nivell) : "") + " · " + data(x.data) + (x.formulari ? " · amb formulari" : "") + "</span> " +
         (asDades && asDades.desatId === x.id ? '<b class="font" style="color:#2e7d32">✓ és el que tens obert a sota</b>' : '<button type="button" class="boto clar" data-asb="vdobre" data-id="' + esc(x.id) + '">Obre</button>') + ' <button type="button" class="boto perill" data-asb="vdesb" data-id="' + esc(x.id) + '">✕</button></li>').join("") + "</ul></details>";
   }
@@ -5075,7 +5099,8 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
         if ($("asText")) $("asText").value = transcripcio;
       }
       // es desa la del fragment sencer (també si l'has enganxada o corregida tu) i ja no calen els trossos
-      TR[clauTr(i, f)] = { text: transcripcio, data: avuiISO() };
+      TR[clauTr(i, f)] = Object.assign({}, TR[clauTr(i, f)], { text: transcripcio, data: avuiISO() });
+      if (!TR[clauTr(i, f)].titol) fetch("https://www.youtube.com/oembed?format=json&url=" + encodeURIComponent("https://www.youtube.com/watch?v=" + v)).then(x => x.json()).then(x => { if (x && x.title && TR[clauTr(i, f)]) { TR[clauTr(i, f)].titol = String(x.title); desa(); } }).catch(() => {});
       Object.keys(TR).forEach(k => { const p = k.split("|"); if (p[0] === v && TR[k].tros && Number(p[1]) >= i && Number(p[2]) <= f) delete TR[k]; });
       desa();
       progres("Preparant les preguntes a partir de la transcripció…");
