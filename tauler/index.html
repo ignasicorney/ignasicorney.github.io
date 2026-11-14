@@ -4876,9 +4876,13 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       // Ara primer el transcriu (a trossos de poc més d'un minut, sense cap altra instrucció) i l'script comprova
       // que la transcripció sigui del fragment; les preguntes es fan després sobre aquesta transcripció.
       if (!transcripcio) {
-        const tr = Math.ceil((f - i) / 75), pas = (f - i) / tr, trossos = [];
+        // trossos de 50 segons com a molt, de tres en tres; si un no respon, es torna a provar una vegada
+        const tr = Math.ceil((f - i) / 50), pas = (f - i) / tr, trossos = [];
         for (let k = 0; k < tr; k++) trossos.push([Math.round(i + k * pas), Math.round(i + (k + 1) * pas)]);
-        const rs = await Promise.all(trossos.map(t => cridaIns({ accio: "video-transcripcio", url: "https://www.youtube.com/watch?v=" + v, inici: t[0], final: t[1] })));
+        const unTros = t => cridaIns({ accio: "video-transcripcio", url: "https://www.youtube.com/watch?v=" + v, inici: t[0], final: t[1] })
+          .catch(e => /no respon/.test(e.message) ? new Promise(ok => setTimeout(ok, 3000)).then(() => cridaIns({ accio: "video-transcripcio", url: "https://www.youtube.com/watch?v=" + v, inici: t[0], final: t[1] })) : Promise.reject(e));
+        const rs = [];
+        for (let k = 0; k < trossos.length; k += 3) rs.push(...await Promise.all(trossos.slice(k, k + 3).map(unTros)));
         transcripcio = rs.map(x => x.transcripcio || "").filter(Boolean).join("\n");
         if (rs.reduce((a, x) => a + (Number(x.paraules) || 0), 0) < 60) throw new Error("Al fragment gairebé no s'hi sent ningú parlar (o la IA no l'ha pogut sentir bé). Tria un altre tros o enganxa'n la transcripció.");
         // la transcripció queda al quadre: es pot revisar i, si es torna a prémer el botó, ja no cal tornar a mirar el vídeo

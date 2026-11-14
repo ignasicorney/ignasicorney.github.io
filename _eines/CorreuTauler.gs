@@ -701,9 +701,12 @@ function transcripcioVideo_(cos) {
   };
   const models = [model].concat(["gemini-flash-latest", "gemini-3.8-flash", "gemini-flash-lite-latest"].filter(function (x) { return x !== model; }));
   let r = null, d = {}, msg = "", temps = false;
+  // 14.11.2026: límit de temps total, perquè l'script no passi del màxim de Google i el tauler rebi un error clar
+  const t0 = Date.now();
   fora:
   for (let i = 0; i < models.length; i++) {
     for (let intent = 0; intent < 2; intent++) {
+      if (Date.now() - t0 > 150000) { if (!r) temps = true; break fora; }
       if (intent) Utilities.sleep(4000);
       try {
         r = UrlFetchApp.fetch("https://generativelanguage.googleapis.com/v1beta/models/" + models[i] + ":generateContent", {
