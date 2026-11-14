@@ -56,6 +56,9 @@
 //                                                       (en lloc d'«id» es pot passar «url», p. ex. el d'un qüestionari d'una tasca del Classroom)
 //   { accio: "formulari-obre", id }                   → torna a acceptar respostes i anul·la el tancament programat
 //   { accio: "formulari-estat", id }                  → { obert, tancament }
+//   { accio: "formulari-esborra", id, curs, tasca }   → envia el formulari a la paperera del Drive (14.11.2026)
+//                                                       i, si hi ha «curs» i «tasca», esborra també la tasca del Classroom
+//   «formulari-crea» accepta també «confirmacio»: el missatge en enviar (p. ex. en castellà)
 //
 // VÍDEOS (13.11.2026): la IA mira un fragment d'un vídeo públic de YouTube i en fa les preguntes.
 //   Cal la propietat de l'script GEMINI_KEY (la mateixa clau de Gemini de l'assistent).
@@ -271,6 +274,19 @@ function doPost(e) {
         PropertiesService.getScriptProperties().deleteProperty("tanca_" + f.getId());
         f.setAcceptingResponses(true);
         return json_({ ok: true, obert: true, tancament: "" });
+      }
+
+      case "formulari-esborra": {
+        const id = String(cos.id || "");
+        if (!id) throw new Error("Falta el formulari.");
+        let tasca = false;
+        if (cos.curs && cos.tasca) {
+          try { Classroom.Courses.CourseWork.remove(String(cos.curs), String(cos.tasca)); tasca = true; } catch (e) {}
+        }
+        PropertiesService.getScriptProperties().deleteProperty("tanca_" + id);
+        try { DriveApp.getFileById(id).setTrashed(true); }
+        catch (e) { throw new Error("No s'ha pogut esborrar el formulari: potser ja no existeix o no en ets el propietari."); }
+        return json_({ ok: true, tasca: tasca });
       }
 
       case "formulari-estat": {

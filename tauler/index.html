@@ -1629,6 +1629,11 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       preparaVideo(txt); return;
     }
     if (a === "clspub") { publicaClassroom(b); return; }
+    if (a === "qresb") {
+      const q = asDades && asDades.qr; if (!q) return;
+      esborraFormulari(q.id, b).then(fet => { if (!fet) return; asDades.qr = null; asResultat = asResultat.replace(/<div class="qr-bloc">[\s\S]*?(?=<div class="as-doc">)/, ""); pintaAssistent(); });
+      return;
+    }
     if (a === "qrimp") { const q = asDades && asDades.qr; if (q) imprimeix(q.titol, '<div style="text-align:center"><h3>' + esc(q.titol) + '</h3><p>Escaneja el codi amb el mòbil i entra amb el compte de l\'institut.</p><div style="width:110mm;margin:8mm auto">' + q.svg + '</div><p style="font-size:16px">' + esc(q.url) + "</p></div>", false); return; }
     if (a === "copia") { navigator.clipboard && navigator.clipboard.writeText(asDades && asDades.text || ""); b.textContent = "Copiat ✓"; return; }
     if (a === "imprimeix") { imprimeix(asDades.titol, asDades.html, false); return; }
@@ -4037,7 +4042,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       box.innerHTML = '<div class="tanca-cap"><span>Respostes del formulari</span><span class="tanca-estat ' + (e.obert ? "obert" : "tancat") + '">' + (e.obert ? "● Obertes" : "● Tancades") + "</span></div>" +
         (e.obert && e.tancament ? '<p class="tanca-prog">🕒 Es tancaran ' + art(dataHora(e.tancament)) + dataHora(e.tancament) + "</p>" : "") +
         '<div class="tanca-fila">' + (e.obert ? '<input type="datetime-local" id="clsTancaQuan" class="tanca-quan" aria-label="Dia i hora del tancament"><button type="button" class="boto clar" data-cls="tprog">🕒 ' + (e.tancament ? "Canvia el tancament" : "Programa el tancament") + '</button><button type="button" class="boto" data-cls="tara">🔒 Tanca ara</button>'
-          : '<button type="button" class="boto clar" data-cls="tobre">🔓 Torna a obrir</button>') + "</div>";
+          : '<button type="button" class="boto clar" data-cls="tobre">🔓 Torna a obrir</button>') + ($("clsTasca").value.charAt(0) === "f" ? '<button type="button" class="boto clar" data-cls="tesb">🗑️ Esborra el formulari</button>' : "") + "</div>";
       box.hidden = false;
     }
     // El formulari de l'opció triada: un del tauler (per id) o el qüestionari adjunt a una tasca del Classroom (per url)
@@ -4053,6 +4058,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     dlg.onclick = async ev => {
       const b = ev.target.closest("[data-cls]"); if (!b) return;
       if (b.dataset.cls === "tanca") { dlg.close(); return; }
+      if (b.dataset.cls === "tesb") { const fm = formTriat(); if (fm && fm.id && await esborraFormulari(fm.id, b)) carregaTasques(); return; }
       if (/^t(prog|ara|obre)$/.test(b.dataset.cls)) {
         const fm = formTriat(), id = fm && fm.id, v = ($("clsTancaQuan") || {}).value || "";
         if (!fm) return;
@@ -4427,10 +4433,23 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
         '<label class="font" title="Data de lliurament (opcional)">Lliurament <input type="date" id="pubData"></label><label class="font"><input type="checkbox" id="pubEsb"> En esborrany</label><label class="font" title="Les respostes del formulari es tanquen a les 23:59 del dia de lliurament"><input type="checkbox" id="pubTanca" checked> Tanca el formulari en acabar el termini</label>' +
         '<button type="button" class="boto" data-asb="clspub"><img src="https://www.gstatic.com/classroom/logo_square_rounded.svg" alt="" class="ico-cls"> Publica-la al Classroom</button></div>' : "";
       const bloc = '<div class="qr-bloc"><div class="qr">' + svg + '</div><div><b>' + esc(titol) + '</b><br><a href="' + esc(d.url) + '" target="_blank" rel="noopener">' + esc(d.url) + '</a><p class="font" style="margin:6px 0">' + pr.length + (pr.length === 1 ? " pregunta que es corregeix sola." : " preguntes que es corregeixen soles.") + " L'alumnat hi entra amb el compte de l'institut i les notes es poden passar a una columna amb el botó «Classroom».</p>" +
-        '<div class="alum-eines" style="margin:0"><button type="button" class="boto" data-asb="qrimp">🖨️ Imprimeix el QR</button><a class="boto clar" href="' + esc(d.edita) + '" target="_blank" rel="noopener">✏️ Revisa el formulari</a></div>' + pub + "</div></div>";
+        '<div class="alum-eines" style="margin:0"><button type="button" class="boto" data-asb="qrimp">🖨️ Imprimeix el QR</button><a class="boto clar" href="' + esc(d.edita) + '" target="_blank" rel="noopener">✏️ Revisa el formulari</a><button type="button" class="boto clar" data-asb="qresb">🗑️ Esborra el formulari</button></div>' + pub + "</div></div>";
       asResultat = asResultat.replace('<div class="as-doc">', bloc + '<div class="as-doc">');
       pintaAssistent();
     } catch (e) { b.disabled = false; b.textContent = asDades && asDades.video ? "📱 Qüestionari en línia" : "📱 Versió en línia (QR)"; alert(e.message); }
+  }
+
+  // 14.11.2026: esborra un formulari creat des del tauler (al Drive va a la paperera) i la tasca del Classroom si s'hi havia publicat
+  async function esborraFormulari(id, b) {
+    const fm = (dades.formularis || []).find(x => x.id === id), cls = fm && fm.classroom;
+    if (!confirm("Vols esborrar aquest formulari" + (fm ? " («" + fm.titol + "»)" : "") + "?" + (cls ? " També se n'esborrarà la tasca del Classroom." : "") + " Les respostes que tingui es perdran (al Drive anirà a la paperera).")) return false;
+    const txt = b ? b.textContent : ""; if (b) { b.disabled = true; b.textContent = "Esborrant…"; }
+    try {
+      const r = await cridaIns(Object.assign({ accio: "formulari-esborra", id: id }, cls ? { curs: cls.curs, tasca: cls.tasca } : {}));
+      dades.formularis = (dades.formularis || []).filter(x => x.id !== id); desa();
+      if (cls && !r.tasca) alert("El formulari s'ha esborrat, però la tasca del Classroom no: esborra-la des del Classroom.");
+      return true;
+    } catch (e) { if (b) { b.disabled = false; b.textContent = txt; } alert(/acci[oó]/i.test(e.message) ? "Cal actualitzar l'script del compte d'ieslabisbal.cat perquè pugui esborrar formularis." : e.message); return false; }
   }
 
   // Publica el qüestionari com a tasca d'una classe del Classroom (amb el formulari enllaçat)
