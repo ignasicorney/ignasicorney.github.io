@@ -4294,7 +4294,9 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       q.psiFitxers = fitxers.filter(x => /\.(xlsx?|ods|docx|pdf)$/i.test(x.nom) || /spreadsheet|wordprocessing|ms-excel|google-apps\.(document|spreadsheet)|pdf/i.test(x.tipus))
         .map(x => ({ id: x.id, nom: x.nom, data: x.data, carpeta: x.carpeta }));
       // nous o canviats: es baixen i s'aparellen sols; un per un, perquè cada document vagi al seu alumne
-      const cal = q.psiFitxers.filter(x => q.psiVistos[x.id] !== x.data || (assignatDe(x.id) && (assignatDe(x.id).gx.psiDocs[assignatDe(x.id).n].dm !== x.data))).sort((a, b) => String(a.data).localeCompare(String(b.data)));   // del més antic al més recent: si un alumne en té dos, es queda el darrer
+      // q.psiIgnora: els que has deixat «sense alumne» a mà (no es tornen a provar fins que canviïn al Drive)
+      q.psiIgnora = q.psiIgnora || {};
+      const cal = q.psiFitxers.filter(x => { const a = assignatDe(x.id); return a ? a.gx.psiDocs[a.n].dm !== x.data : q.psiIgnora[x.id] !== x.data; }).sort((a, b) => String(a.data).localeCompare(String(b.data)));   // del més antic al més recent: si un alumne en té dos, es queda el darrer
       let fets = 0;
       for (let i = 0; i < cal.length; i++) {
         ocupat = "Llegint els PSI: " + (i + 1) + " de " + cal.length + "…"; pinta();
@@ -4304,7 +4306,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
           if (a) await pujaPSI(a.gx, [fi], a.n, { silenci: true });   // ja tenia alumne: s'hi queda (actualitzat)
           else await pujaPSI(g, [fi], null, { pendents, silenci: true });
           if (assignatDe(cal[i].id)) fets++;
-          else { q.psiVistos[cal[i].id] = cal[i].data; if (!pendents.length) errors.push(cal[i].nom + ": l'alumne ja tenia un PSI més recent; si és d'un altre alumne, assigna'l a sota."); }
+          else { if (!pendents.length) errors.push(cal[i].nom + ": l'alumne ja tenia un PSI més recent; si és d'un altre alumne, assigna'l a sota."); }
         } catch (e) { errors.push(cal[i].nom + ": " + e.message); }
       }
       desa(); pintaAlumnes();
@@ -4339,7 +4341,8 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
           if (!d || d.drive !== id) throw new Error("No s'ha pogut llegir «" + f.nom + "».");
         }
         if (ant && !(sel.value && q.grups[Number(sel.value.split("|")[0])] === ant.gx && sel.value.slice(sel.value.indexOf("|") + 1) === ant.n)) { delete ant.gx.psiDocs[ant.n]; await idbTreuPSI(clauPSI(ant.gx, ant.n)); }
-        q.psiVistos[id] = f.data;
+        q.psiIgnora = q.psiIgnora || {};
+        if (sel.value) delete q.psiIgnora[id]; else q.psiIgnora[id] = f.data;
         desa(); pintaAlumnes(); avis = "";
       } catch (e) { avis = e.message; }
       ocupat = ""; pinta();
