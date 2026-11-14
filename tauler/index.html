@@ -2105,8 +2105,23 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
   }
 
   // ---------- 📗 Controls de lectura ----------
-  const LLIBRES_INI = [{ t: "La hija de la noche", a: "Laura Gallego García" }, { t: "El bosque de los corazones dormidos", a: "Esther Sanz" }];
-  const llibresEi = () => LLIBRES_INI.concat(EI().llibres);
+  // Lectures de cada curs segons els criteris del departament (curs 2026-2027); «q» = quan es llegeix / data de l'examen
+  const LLIBRES_INI = [
+    { c: "1r d'ESO", t: "Las lágrimas de Shiva", a: "César Mallorquí", q: "1r trimestre" },
+    { c: "1r d'ESO", t: "Invisible", a: "Eloy Moreno", q: "2n i 3r trimestre" },
+    { c: "2n d'ESO", t: "Redes", a: "Eloy Moreno" },
+    { c: "2n d'ESO", t: "La hija de la noche", a: "Laura Gallego" },
+    { c: "3r d'ESO", t: "Lazarillo de Tormes", a: "Anònim (ed. Vicens Vives)" },
+    { c: "3r d'ESO", t: "Mentira", a: "Care Santos" },
+    { c: "4t d'ESO", t: "Tristes armas", a: "Marina Mayoral", q: "1r trimestre · examen setmana del 30.11.2026 al 04.12.2026" },
+    { c: "4t d'ESO", t: "Historia de una escalera", a: "Antonio Buero Vallejo", q: "2n trimestre · examen setmana del 22.02.2027 al 27.02.2027" },
+    { c: "4t d'ESO", t: "El bosque de los corazones dormidos", a: "Esther Sanz", q: "3r trimestre · examen setmana del 03.05.2027 al 07.05.2027" },
+    { c: "1r de batxillerat", t: "La sombra del viento", a: "Carlos Ruiz Zafón" },
+    { c: "1r de batxillerat", t: "Yerma", a: "Federico García Lorca" },
+    { c: "2n de batxillerat", t: "Crónica de una muerte anunciada", a: "Gabriel García Márquez", q: "examen setmana del 15.03 al 19.03.2027" }
+  ];
+  const cursCtl = () => fv("curs", cursPau());
+  const llibresEi = () => { const c = cursCtl(); return LLIBRES_INI.concat(EI().llibres).filter(x => !x.c || x.c === c); };
   let ctl = null, ctlCorr = null;   // ctl = control obert (s'edita aquí); ctlCorr = respostes de l'alumne que es corregeix
   function variantCtl(c, v) {
     if (!v) return c.preg.map(p => ({ p: p.p, o: p.o.slice(), c: p.c }));
@@ -2117,11 +2132,14 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
   }
   function pintaCtl() {
     const e = EI(), ll = llibresEi();
-    let h = '<p class="font">Controls tipus test (a, b, c, d) dels llibres de lectura, amb models A, B, C i D (mateixes preguntes, en un altre ordre) i el solucionari. Per corregir, toca la lletra que ha marcat cada alumne i la nota va sola a la columna.</p>';
+    let h = '<p class="font">Controls tipus test (a, b, c, d) de les lectures de cada curs (les dels criteris del departament), amb models A, B, C i D (mateixes preguntes, en un altre ordre) i el solucionari. Per corregir, toca la lletra que ha marcat cada alumne i la nota va sola a la columna.</p>';
     if (!ctl) {
-      h += '<div class="fila-as">' + eSel("llibre", "Llibre", ll.map((x, i) => [String(i), x.t + " (" + x.a + ")"]).concat([["nou", "➕ Un altre llibre…"]]), "0", true) + "</div>";
+      if (fv("llibre", "0") !== "nou" && !ll[Number(fv("llibre", "0"))]) fput("llibre", "0");
+      const llT = ll[Number(fv("llibre", "0"))];
+      h += '<div class="fila-as">' + eSel("curs", "Curs", CURSOS_EI, cursCtl(), true) + eSel("llibre", "Llibre", ll.map((x, i) => [String(i), x.t + " (" + x.a + ")"]).concat([["nou", "➕ Un altre llibre…"]]), "0", true) + "</div>" +
+        (llT && llT.q && fv("llibre", "0") !== "nou" ? '<p class="font">📅 ' + esc(llT.q) + "</p>" : "");
       if (fv("llibre", "0") === "nou") h += '<div class="fila-as">' + eInp("lt", "Títol", "", "min-width:14em") + eInp("la", "Autor/a", "", "min-width:12em") + '<span style="align-self:end">' + eBoto("ctlll", "Afegeix el llibre", true) + "</span></div>";
-      h += '<div class="fila-as">' + eInp("caps", "Capítols (buit = tot el llibre)", "", "width:12em") + eSel("curs", "Curs", CURSOS_EI, cursDeGrup(triat().g)) + eSel("lleng", "Llengua", ["castellà", "català"], "castellà") +
+      h += '<div class="fila-as">' + eInp("caps", "Capítols (buit = tot el llibre)", "", "width:12em") + eSel("lleng", "Llengua", ["castellà", "català"], "castellà") +
         eInp("n", "Preguntes", "10", "width:4em") + eSel("k", "Opcions", [["4", "a, b, c, d"], ["3", "a, b, c"]], "4") + eSel("vars", "Models", [["1", "Només A"], ["2", "A i B"], ["3", "A, B i C"], ["4", "A, B, C i D"]], "2") + "</div>" +
         '<p class="font">⚠️ Perquè no s\'inventi res, puja els capítols (PDF o foto) o enganxa\'n un resum. Si no, la IA es basa en el que sap del llibre i pot equivocar-se: repassa les preguntes abans d\'imprimir-les (es poden editar).</p>' +
         '<div class="alum-eines"><label class="boto clar" style="display:inline-block">📄 Capítols (PDF o foto)<input type="file" id="ctlDoc" accept="application/pdf,image/*" hidden></label><span class="font" id="ctlDocNom"></span></div>' +
@@ -2159,20 +2177,20 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
   }
   async function ctlAccio(a, b) {
     const e = EI();
-    if (a === "ctlll") { const t = String(fv("lt", "")).trim(), au = String(fv("la", "")).trim(); if (!t) { alert("Escriu el títol del llibre."); return; } e.llibres.push({ t, a: au }); desa(); fput("llibre", String(llibresEi().length - 1)); fput("lt", ""); fput("la", ""); return pintaAssistent(); }
+    if (a === "ctlll") { const t = String(fv("lt", "")).trim(), au = String(fv("la", "")).trim(); if (!t) { alert("Escriu el títol del llibre."); return; } e.llibres.push({ t, a: au, c: cursCtl() }); desa(); fput("llibre", String(llibresEi().length - 1)); fput("lt", ""); fput("la", ""); return pintaAssistent(); }
     if (a === "ctlgen") {
       const ll = llibresEi()[Number(fv("llibre", "0"))]; if (!ll) { alert("Tria el llibre."); return; }
       const file = $("ctlDoc") && $("ctlDoc").files[0];
       return eiIA(async () => {
         const doc = await llegeixDocEi(file), mat = (String(fv("mat", "")).trim() + "\n" + doc.text).trim();
         const n = Math.max(3, Math.min(40, Number(fv("n", "10")) || 10)), k = Number(fv("k", "4")), caps = String(fv("caps", "")).trim(), lleng = fv("lleng", "castellà");
-        const r = await ia("Ets professor de llengua " + lleng + " de secundària. Fes un control de lectura del llibre «" + ll.t + "»" + (ll.a ? " de " + ll.a : "") + (caps ? ", capítols " + caps : ", de tot el llibre") + ", per a " + fv("curs", "1r d'ESO") + ": " + n + " preguntes tipus test amb " + k + " opcions i una sola de correcta. " +
+        const r = await ia("Ets professor de llengua " + lleng + " de secundària. Fes un control de lectura del llibre «" + ll.t + "»" + (ll.a ? " de " + ll.a : "") + (caps ? ", capítols " + caps : ", de tot el llibre") + ", per a " + cursCtl() + ": " + n + " preguntes tipus test amb " + k + " opcions i una sola de correcta. " +
           "Preguntes sobre fets concrets de la trama, personatges, llocs i alguna d'inferència senzilla; opcions plausibles i de llargada semblant, sense «totes les anteriors» ni «cap de les anteriors». Reparteix la posició de la correcta. " +
           (mat || doc.imatge ? "Basa't NOMÉS en el material que t'envio; no preguntis res que no hi surti. " : "Basa't en el que saps del llibre; si no estàs segur d'un fet, no el preguntis. ") +
           "Redacta-ho en " + lleng + ". Respon només JSON: {\"preguntes\": [{\"p\": enunciat, \"o\": [opcions sense lletra], \"c\": índex de la correcta (0 = la primera)}]}.", mat || "Fes el control.", { json: true, imatge: doc.imatge });
         const preg = (r && Array.isArray(r.preguntes) ? r.preguntes : []).filter(p => p && p.p && Array.isArray(p.o) && p.o.length === k && Number.isInteger(Number(p.c)) && Number(p.c) >= 0 && Number(p.c) < k).map(p => ({ p: String(p.p), o: p.o.map(String), c: Number(p.c) }));
         if (!preg.length) throw new Error("La IA no ha retornat preguntes vàlides; torna-ho a provar.");
-        ctl = { id: nouId(), d: avuiISO(), llibre: ll.t, caps, curs: fv("curs", "1r d'ESO"), k, vars: Number(fv("vars", "2")), preg, resp: {} };
+        ctl = { id: nouId(), d: avuiISO(), llibre: ll.t, caps, curs: cursCtl(), k, vars: Number(fv("vars", "2")), preg, resp: {} };
         eiRes.ctl = ""; eiMsg.ctl = preg.length < n ? "La IA n'ha fet " + preg.length + " de vàlides." : "";
       });
     }
