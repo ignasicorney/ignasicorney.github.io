@@ -4989,6 +4989,15 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       // 14.11.2026: abans la IA mirava el vídeo i feia les preguntes alhora, i si no el podia veure se les inventava.
       // Ara primer el transcriu (a trossos de poc més d'un minut, sense cap altra instrucció) i l'script comprova
       // que la transcripció sigui del fragment; les preguntes es fan després sobre aquesta transcripció.
+      // 14.11.2026: les transcripcions es desen (amb les dades del tauler, a tots dos portàtils): la del fragment sencer
+      // i la de cada tros a mesura que es fa. Si després falla alguna cosa, no es torna a mirar el que ja s'ha transcrit.
+      dades.transcripcions = dades.transcripcions || {};
+      const TR = dades.transcripcions, clauTr = (a, b) => v + "|" + a + "|" + b;
+      if (!transcripcio && TR[clauTr(i, f)] && TR[clauTr(i, f)].text) {
+        transcripcio = TR[clauTr(i, f)].text;
+        if ($("asText")) $("asText").value = transcripcio;
+        progres("Transcripció desada d'aquest fragment (" + TR[clauTr(i, f)].data.split("-").reverse().join(".") + ")");
+      }
       if (!transcripcio) {
         // trossos de 50 segons com a molt, de tres en tres; si un no respon, es torna a provar una vegada
         const tr = Math.ceil((f - i) / 50), pas = (f - i) / tr, trossos = [];
@@ -4996,9 +5005,18 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
         // 14.11.2026 (nit): l'script de Google talla les crides que passen d'un minut i Gemini triga més a mirar un vídeo;
         // ara el navegador crida Gemini directament (la clau la dona l'script del compte d'ieslabisbal.cat, amb la clau del tauler)
         progres("Preparant la transcripció…");
-        const g = await cridaIns({ accio: "gemini-clau" });
+        let g = null;
         let fets = 0; progres("Transcrivint el vídeo: 0 de " + trossos.length + " trossos");
-        const unTros = t => transcriuTros(g.clau, g.model, v, t[0], t[1]).then(x => { fets++; progres("Transcrivint el vídeo: " + fets + " de " + trossos.length + " trossos"); return x; });
+        const unTros = async t => {
+          const k = clauTr(t[0], t[1]);
+          let x = TR[k] && TR[k].tros;
+          if (!x) {
+            if (!g) g = await cridaIns({ accio: "gemini-clau" });
+            x = await transcriuTros(g.clau, g.model, v, t[0], t[1]);
+            TR[k] = { tros: x, data: avuiISO() }; desa();   // cada tros es desa en acabar
+          }
+          fets++; progres("Transcrivint el vídeo: " + fets + " de " + trossos.length + " trossos"); return x;
+        };
         const rs = [];
         for (const t of trossos) rs.push(await unTros(t));   // d'un en un, per no topar amb el límit per minut de Gemini
         transcripcio = rs.map(x => x.transcripcio || "").filter(Boolean).join("\n");
@@ -5006,6 +5024,10 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
         // la transcripció queda al quadre: es pot revisar i, si es torna a prémer el botó, ja no cal tornar a mirar el vídeo
         if ($("asText")) $("asText").value = transcripcio;
       }
+      // es desa la del fragment sencer (també si l'has enganxada o corregida tu) i ja no calen els trossos
+      TR[clauTr(i, f)] = { text: transcripcio, data: avuiISO() };
+      Object.keys(TR).forEach(k => { const p = k.split("|"); if (p[0] === v && TR[k].tros && Number(p[1]) >= i && Number(p[2]) <= f) delete TR[k]; });
+      desa();
       progres("Preparant les preguntes a partir de la transcripció…");
       r = await ia(sistemaLl, ind + "Transcripció del fragment (amb el moment de cada frase):\n" + transcripcio + "\n\n" + ordreLl, { json: true });
       // 14.11.2026: si l'activitat és en castellà i la IA ha escrit en català (les instruccions són en català), es tradueix
