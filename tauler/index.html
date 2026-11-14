@@ -4227,6 +4227,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
         if (!nom) { if (op.pendents) op.pendents.push(fi); else dubtes.push(fi.name + " (no és de cap alumne dels teus grups)"); continue; }
         gD.psiDocs = gD.psiDocs || {};
         const clau = gD.nom + "|" + nom, ant = gD.psiDocs[nom];
+        if (!nomFix && fi.drive && ant && ant.drive && ant.drive !== fi.drive && ant.dm && fi.dm && ant.dm > fi.dm) continue;   // ja té un PSI del Drive més recent: no el trepitja (es pot assignar a mà)
         if (ara.has(clau) && ant) { if (fi.dm && ant.dm ? fi.dm > ant.dm : text.length > ant.text.length) { gD.psiDocs[nom] = docDe(fi, text); await idbPosaPSI(clauPSI(gD, nom), fi); } }   // el mateix PSI dues vegades: se'n queda un (del Drive, el més recent)
         else {
           await idbPosaPSI(clauPSI(gD, nom), fi); gD.psiDocs[nom] = docDe(fi, text); fets.push(nom.replace(/\s+DIS$/i, "") + (gD === g ? "" : " (" + nomGrup(gD.nom) + ")")); }
@@ -4306,7 +4307,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
           if (a) await pujaPSI(a.gx, [fi], a.n, { silenci: true });   // ja tenia alumne: s'hi queda (actualitzat)
           else await pujaPSI(g, [fi], null, { pendents, silenci: true });
           if (assignatDe(cal[i].id)) fets++;
-          else { if (!pendents.length) errors.push(cal[i].nom + ": l'alumne ja tenia un PSI més recent; si és d'un altre alumne, assigna'l a sota."); }
+          else { if (!pendents.length) errors.push(cal[i].nom + ": l'alumne que diu ja té un PSI més recent; si és d'un altre alumne, assigna'l a sota."); }
         } catch (e) { errors.push(cal[i].nom + ": " + e.message); }
       }
       desa(); pintaAlumnes();
