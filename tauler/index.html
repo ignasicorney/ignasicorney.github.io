@@ -3068,7 +3068,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       '<input type="search" id="alumCerca" placeholder="Cerca alumne…" value="' + esc(cerca) + '" style="flex:1 1 140px"></div>' +
       '<div class="alum-eines"><button type="button" class="boto clar" data-q="formules">⚙️ ' + (qFormules ? "Amaga les fórmules" : "Columnes i fórmules") + "</button>" +
       ('<span class="boto-grup"><button type="button" class="boto clar" data-q="classroom" title="Omple una columna amb els lliuraments o les notes d\'una tasca del Classroom o d\'un formulari"><img src="https://www.gstatic.com/classroom/logo_square_rounded.svg" alt="" class="ico-cls"> Classroom</button>' + (f && Array.isArray(f.desfes) && f.desfes.length ? '<button type="button" class="boto clar boto-ico" data-q="clsdesfes" title="Desfés l\'última càrrega del Classroom (' + esc(f.desfes.map(x => x.col).join(", ")) + ')" aria-label="Desfés l\'última càrrega del Classroom">↶</button>' : "") + (f && f.columnes.some(c => c.classroom) ? '<button type="button" class="boto clar boto-ico" data-q="clsact" title="Actualitza del Classroom les columnes enllaçades d\'aquest full (' + esc(f.columnes.filter(c => c.classroom).map(c => c.nom).join(", ")) + ')" aria-label="Actualitza del Classroom">🔄</button>' : "") + "</span>") +
-      '<button type="button" class="boto clar" data-q="correus" title="Posa el correu de cada alumne (de la classe del Classroom) amb una icona ✉️ al costat del nom">✉️ Correus</button>' +
+      '<button type="button" class="boto clar" data-q="correus" title="Posa el correu de cada alumne (del Classroom o d\'un Excel del centre) amb una icona ✉️ al costat del nom">✉️ Correus</button>' +
       '<span class="boto-grup"><button type="button" class="boto clar' + (qDeures ? " actiu" : "") + '" data-q="passadeures" title="Mode ràpid: cada toc a la columna de deures posa o treu la falta d\'avui">📕 ' + (qDeures ? "Prou deures" : "Passa deures") + '</button><button type="button" class="boto clar boto-ico" data-q="deuimp" title="Imprimeix les faltes de deures del grup" aria-label="Imprimeix les faltes de deures del grup">🖨️</button></span><button type="button" class="boto clar" data-q="alumne">+ Alumne</button><button type="button" class="boto clar" data-q="banc">📋 ' + (rubObert ? "Amaga les rúbriques" : "Rúbriques") + "</button>" + importa + "</div>" + (clsMsg && f && g && clsMsg.clau === g.nom + "|" + f.nom ? '<p class="cls-msg ' + (clsMsg.err ? "avis" : "font") + '">' + esc(clsMsg.t) + "</p>" : "") + (rubObert ? htmlBanc() : "");
     if (f && qFormules) {
       h += '<div class="formules"><p class="font" style="margin:0 0 8px">Fórmules com a l\'Excel. <b>{EX1}</b> és una columna d\'aquest full i <b>{1R TRIM|NOTA FINAL TRIM}</b> una columna d\'un altre full. Funcions: SUM, AVERAGE, MIN, MAX, IF, ROUND… Els buits compten com a 0 a les operacions i AVERAGE se\'ls salta. <b>MITJANAFETS({DIC1};{DIC2})</b> fa la mitjana de les proves fetes: si a una nota hi escrius <b>EX</b> (o x, o -), no compta; un buit compta com a 0.</p>' +
@@ -3265,7 +3265,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     }
     const q = ev.target.closest("[data-q]"); if (!q) return;
     if (q.dataset.q === "drive") { importaDeDrive(q); return; }
-    if (q.dataset.q === "correus") { if (g) carregaCorreus(g, q); return; }
+    if (q.dataset.q === "correus") { if (g) triaCorreus(g, q); return; }
     if (!f) return;
     if (q.dataset.q === "formules") { qFormules = !qFormules; pintaAlumnes(); }
     else if (q.dataset.q === "passadeures") { qDeures = !qDeures; pintaAlumnes(); }
@@ -4004,6 +4004,50 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       alert("Correus de " + nomGrup(g.nom) + " (classe «" + curs.nom + "»): " + m.size + " de " + noms.length + " alumnes." + (sense.length ? "\n\nSense correu (no els trobo al Classroom): " + sense.join(", ") : ""));
     } catch (e) { alert("No s'han pogut carregar els correus: " + e.message); }
     finally { boto.disabled = false; boto.textContent = txt; }
+  }
+  // Correus des d'un Excel del centre (14.11.2026): una fila per alumne amb el nom («Cognoms , Nom») i l'adreça.
+  // Una sola llista pot ser de tot un nivell: s'aplica a tots els grups on hi coincideixen la majoria d'alumnes.
+  async function correusExcel(fitxers) {
+    try {
+      await carregaScript("https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js", () => window.XLSX);
+      const XLSX = window.XLSX, alumnes = [];
+      for (const fi of fitxers) {
+        const wb = XLSX.read(await fi.arrayBuffer(), { type: "array" });
+        wb.SheetNames.forEach(nf => XLSX.utils.sheet_to_json(wb.Sheets[nf], { header: 1, raw: false, defval: "" }).forEach(fila => {
+          const cel = fila.map(x => String(x == null ? "" : x).trim());
+          const email = cel.find(x => /^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i.test(x)); if (!email) return;
+          const nom = cel.filter(x => x && x !== email && /\p{L}{2}/u.test(x) && !/^ESO\b|^BAT|^LOE/i.test(x)).sort((a, b) => b.length - a.length)[0];
+          if (nom) alumnes.push({ email: email.toLowerCase(), nom: nom.replace(/\s*,\s*/, " "), cognoms: "", complet: nom });
+        }));
+      }
+      if (!alumnes.length) { alert("No hi trobo cap fila amb un nom i una adreça de correu."); return; }
+      const res = [];
+      Q().grups.forEach(g => {
+        const noms = Array.from(new Set([].concat(...g.fulls.map(f => f.files.map(r => r.nom))))).map(n => ({ nom: n }));
+        if (!noms.length) return;
+        const { m } = aparella(noms, alumnes);
+        if (m.size < noms.length / 2) return;   // aquesta llista no és d'aquest grup
+        g.correus = g.correus || {};
+        m.forEach((a, nom) => { g.correus[nom] = a.email; });
+        const sense = noms.filter(x => !g.correus[x.nom]).map(x => x.nom.replace(/\s+DIS$/i, ""));
+        res.push(nomGrup(g.nom) + ": " + m.size + " de " + noms.length + (sense.length ? " (sense correu: " + sense.join(", ") + ")" : ""));
+      });
+      if (!res.length) { alert("He llegit " + alumnes.length + " alumnes, però no coincideixen amb cap grup teu. No he canviat res."); return; }
+      desa(); pintaAlumnes();
+      alert("Correus posats a partir de l'Excel (" + alumnes.length + " alumnes a la llista):\n\n" + res.join("\n"));
+    } catch (e) { alert("No s'ha pogut llegir l'Excel: " + e.message); }
+  }
+  function triaCorreus(g, boto) {
+    let dlg = $("dlgMail");
+    if (!dlg) { dlg = document.createElement("dialog"); dlg.id = "dlgMail"; document.body.appendChild(dlg); }
+    dlg.innerHTML = '<form method="dialog"><h2>✉️ Correus de l\'alumnat</h2><p class="font" style="margin:0">D\'on els agafo? Al costat de cada nom sortirà una icona ✉️ per escriure-li.</p>' +
+      '<div class="botons" style="flex-direction:column;align-items:stretch">' +
+      '<button type="button" class="boto" data-ml="cls">Del Classroom de ' + esc(nomGrup(g.nom)) + "</button>" +
+      '<label class="boto clar" style="text-align:center">D\'un Excel del centre (pot ser de tot un nivell)<input type="file" id="mlFitxer" accept=".xlsx,.xls,.ods,.csv" multiple hidden></label>' +
+      '<button type="button" class="boto clar" data-ml="tanca">Cancel·la</button></div></form>';
+    dlg.onclick = ev => { const b = ev.target.closest("[data-ml]"); if (!b) return; dlg.close(); if (b.dataset.ml === "cls") carregaCorreus(g, boto); };
+    dlg.onchange = ev => { if (ev.target.id === "mlFitxer" && ev.target.files.length) { const fs = Array.from(ev.target.files); dlg.close(); correusExcel(fs); } };
+    dlg.showModal();
   }
   // Obre un correu nou per a l'alumne, des del compte d'ieslabisbal.cat si hi és
   function escriuA(email) {
