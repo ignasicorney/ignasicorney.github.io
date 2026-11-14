@@ -66,6 +66,13 @@
 .cr-fil .fr{grid-column:1 / -1;color:var(--suau,#6b6b66);font-size:.85rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .cr-fil.nou .de,.cr-fil.nou .as{font-weight:700}
 .cr-fil.nou{border-left:3px solid var(--accent,#b4462c)}
+.cr-fil.amb{grid-template-columns:auto minmax(0,1fr) auto}
+.cr-fil.amb .as,.cr-fil.amb .fr{grid-column:2 / -1}
+.cr-fil .tr{grid-row:1 / span 3;display:flex;align-items:flex-start;padding:2px 4px 0 0;cursor:pointer}
+.cr-fil .tr input,.cr-sel input{width:18px;height:18px;margin:0;cursor:pointer;accent-color:var(--accent,#b4462c)}
+.cr-fil.triat{background:#f6ece8}
+.cr-sel{display:flex;gap:6px;flex-wrap:wrap;align-items:center;padding:4px 6px 8px;border-bottom:1px solid var(--linia,#e3e1db)}
+.cr-sel label{display:flex;gap:8px;align-items:center;font-size:.85rem;color:var(--suau,#6b6b66);cursor:pointer;margin-right:auto}
 .cr-msg{border:1px solid var(--linia,#e3e1db);border-radius:10px;padding:10px 12px;margin:8px 0}
 .cr-msg .cap{display:flex;gap:6px 12px;flex-wrap:wrap;color:var(--suau,#6b6b66);font-size:.85rem;margin-bottom:6px}
 .cr-msg .cap b{color:var(--text,#1d1d1b)}
@@ -135,7 +142,61 @@
     let desfer = null;   // l'últim correu arxivat, per poder-lo tornar a la safata
     const diu = (t, err, d) => { avis = t || ""; avisErr = !!err; desfer = d || null; pinta(); };
 
+    // 14.11.2026: selecció múltiple a la llista per arxivar, esborrar o marcar molts correus de cop
+    const sel = new Set(); let darrerTriat = -1, lot = false;
+    const clauSel = f => (f.ci != null ? f.ci : compte) + "|" + f.id;
+    const compteDe = f => (f.ci != null ? comptes()[f.ci] : null) || actual();
+    const triats = () => fils.filter(f => sel.has(clauSel(f)));
+    const nCorreus = x => x + (x === 1 ? " correu" : " correus");
+    // Fa la feina de 4 en 4 perquè l'Apps Script no rebi totes les peticions alhora
+    async function perTandes(llista, fn) {
+      const cua = llista.slice(), fets = [], errors = [];
+      const treballa = async () => { while (cua.length) { const x = cua.shift(); try { await fn(x); fets.push(x); } catch (e) { errors.push(e.message); } } };
+      await Promise.all([0, 1, 2, 3].map(treballa));
+      return { fets: fets, errors: errors };
+    }
+    function triaClic(t, shift) {
+      if (t.dataset.cr === "triatot") { if (t.checked) fils.forEach(f => sel.add(clauSel(f))); else sel.clear(); darrerTriat = -1; }
+      else {
+        const i = fils.findIndex(f => clauSel(f) === t.dataset.k); if (i < 0) return;
+        if (shift && darrerTriat >= 0 && darrerTriat !== i) {
+          for (let k = Math.min(i, darrerTriat); k <= Math.max(i, darrerTriat); k++) { if (t.checked) sel.add(clauSel(fils[k])); else sel.delete(clauSel(fils[k])); }
+        } else if (t.checked) sel.add(t.dataset.k); else sel.delete(t.dataset.k);
+        darrerTriat = i;
+      }
+      pinta();
+    }
+    async function enLot(nom, llegit) {
+      const llista = triats(); if (!llista.length || lot) return;
+      const v = nom === "llegit" ? (llegit ? ["Marcant com a llegits", "Marcats com a llegits", "marcar com a llegits"] : ["Marcant com a no llegits", "Marcats com a no llegits", "marcar com a no llegits"])
+        : ({ arxiva: ["Arxivant", "Arxivats", "arxivar"], esborra: ["Enviant a la paperera", "A la paperera", "enviar a la paperera"], desarxiva: ["Tornant a la safata", "Tornats a la safata d'entrada", "tornar a la safata"] })[nom];
+      lot = true; diu(v[0] + " " + nCorreus(llista.length) + "…");
+      const pos = new Map(fils.map((f, i) => [f, i]));
+      const r = await perTandes(llista, f => crida({ accio: nom, id: f.id, llegit: !!llegit }, compteDe(f)));
+      r.fets.forEach(f => memo.delete(clauFil(f.id, f.ci)));
+      if (nom === "llegit") r.fets.forEach(f => { f.noLlegit = !llegit; });
+      else { const fora = new Set(r.fets); fils = fils.filter(f => !fora.has(f)); r.fets.forEach(f => sel.delete(clauSel(f))); darrerTriat = -1; }
+      lot = false;
+      let t = r.fets.length ? v[1] + ": " + nCorreus(r.fets.length) + "." : "";
+      if (r.errors.length) t += (t ? " " : "") + "No s'han pogut " + v[2] + " " + nCorreus(r.errors.length) + " (" + r.errors[0] + ").";
+      diu(t, r.errors.length > 0, nom === "arxiva" && r.fets.length ? { llista: r.fets.map(f => ({ id: f.id, c: compteDe(f), item: f, idx: pos.get(f) })) } : null);
+    }
+    function barraSel() {
+      const t = triats(), n = t.length, safata = !(filtre === ARXIU || filtre === "in:trash"), dis = lot ? " disabled" : "";
+      let h = '<div class="cr-sel"><label data-cr="triazona"><input type="checkbox" data-cr="triatot"' + (n && n === fils.length ? " checked" : "") + (lot ? " disabled" : "") + ' aria-label="Selecciona-ho tot">' + (n ? n + (n === 1 ? " seleccionat" : " seleccionats") : "Selecciona") + "</label>";
+      if (n) {
+        if (t.some(f => f.noLlegit)) h += '<button type="button" class="boto clar" data-cr="lot" data-nom="llegit" data-llegit="1"' + dis + ">✓ Llegits</button>";
+        if (t.some(f => !f.noLlegit)) h += '<button type="button" class="boto clar" data-cr="lot" data-nom="llegit" data-llegit="0"' + dis + ">No llegits</button>";
+        h += safata ? '<button type="button" class="boto" data-cr="lot" data-nom="arxiva"' + dis + ' title="Treu els correus seleccionats de la safata d\'entrada">🗄 Arxiva</button>'
+          : '<button type="button" class="boto" data-cr="lot" data-nom="desarxiva"' + dis + ' title="Torna els correus seleccionats a la safata d\'entrada">📥 A la safata</button>';
+        if (filtre !== "in:trash") h += '<button type="button" class="boto perill" data-cr="lot" data-nom="esborra"' + dis + ' title="A la paperera del compte (30 dies per recuperar-los)">🗑 Esborra</button>';
+        h += '<button type="button" class="boto clar" data-cr="triacap"' + dis + ' title="Treu la selecció">✕</button>';
+      }
+      return h + "</div>";
+    }
+
     async function carrega() {
+      sel.clear(); darrerTriat = -1;
       if (!actual() && !tots()) { pinta(); return; }
       carregant = true; pinta();
       const l = comptes(), quins = tots() ? l.map((c, i) => i) : [compte];
@@ -324,9 +385,10 @@
       } else if (vista === "programats") {
         h += programats.length ? programats.map(p => '<div class="cr-fil" style="cursor:default"><span class="de">' + (tots() ? '<span class="cr-compte-et">' + esc((l[p.ci] || {}).nom || "") + "</span> " : "") + esc(p.id ? "Resposta" : p.a) + '</span><span class="dt">' + dataLlarga(p.quan) + '</span><span class="as">' + esc(p.assumpte || "(resposta)") + '</span><span class="fr"><button type="button" class="boto perill" data-cr="anulla" data-ci="' + p.ci + '" data-clau="' + esc(p.clau) + '">Anul·la</button></span></div>').join("") : '<p class="cr-buit">No hi ha cap correu programat.</p>';
       } else {
-        h += fils.length ? fils.map(f => '<div class="cr-fil' + (f.noLlegit ? " nou" : "") + '" data-cr="obre" data-id="' + esc(f.id) + '" data-ci="' + f.ci + '"><span class="de">' + (tots() ? '<span class="cr-compte-et">' + esc((l[f.ci] || {}).nom || "") + "</span> " : "") + esc(nomDe(f.de)) + (f.n > 1 ? " (" + f.n + ")" : "") + '</span><span class="dt">' + (f.adjunts ? "📎 " : "") + dataCurta(f.data) + '</span><span class="as">' + esc(f.assumpte) + '</span><span class="fr">' + esc(f.fragment) + "</span></div>").join("") : '<p class="cr-buit">' + (filtre.indexOf("is:unread") >= 0 && !cerca ? "Cap correu per llegir. Tot al dia! ✓" : "No hi ha cap correu.") + "</p>";
+        h += fils.length ? barraSel() + fils.map(f => '<div class="cr-fil amb' + (f.noLlegit ? " nou" : "") + (sel.has(clauSel(f)) ? " triat" : "") + '" data-cr="obre" data-id="' + esc(f.id) + '" data-ci="' + f.ci + '"><label class="tr" data-cr="triazona"><input type="checkbox" data-cr="tria" data-k="' + esc(clauSel(f)) + '"' + (sel.has(clauSel(f)) ? " checked" : "") + ' aria-label="Selecciona"></label><span class="de">' + (tots() ? '<span class="cr-compte-et">' + esc((l[f.ci] || {}).nom || "") + "</span> " : "") + esc(nomDe(f.de)) + (f.n > 1 ? " (" + f.n + ")" : "") + '</span><span class="dt">' + (f.adjunts ? "📎 " : "") + dataCurta(f.data) + '</span><span class="as">' + esc(f.assumpte) + '</span><span class="fr">' + esc(f.fragment) + "</span></div>").join("") : '<p class="cr-buit">' + (filtre.indexOf("is:unread") >= 0 && !cerca ? "Cap correu per llegir. Tot al dia! ✓" : "No hi ha cap correu.") + "</p>";
       }
       arrel.innerHTML = h;
+      const tt = arrel.querySelector('input[data-cr="triatot"]'); if (tt) { const n = triats().length; tt.indeterminate = n > 0 && n < fils.length; }
     }
 
     function llegeixFormulari() {
@@ -339,6 +401,7 @@
     }
 
     arrel.addEventListener("click", async ev => {
+      if (ev.target.matches && ev.target.matches('input[data-cr="tria"],input[data-cr="triatot"]')) { triaClic(ev.target, ev.shiftKey); return; }
       const b = ev.target.closest("[data-cr]"); if (!b || b.tagName === "SELECT" || b.tagName === "INPUT") return;
       const a = b.dataset.cr;
       if (a === "compte") { compte = Number(b.dataset.i); vista = vista === "programats" ? "programats" : "llista"; fil = null; carrega(); }
@@ -351,6 +414,21 @@
       else if (a === "tasca" && fil && op.tasca) { op.tasca({ text: fil.assumpte, enllac: fil.enllac, compte: (deFil(fil) || {}).nom }); diu("Afegit a les tasques: «" + fil.assumpte + "»."); vista = "fil"; pinta(); }
       else if (a === "adjunt" && fil) obreAdjunt(Number(b.dataset.m), Number(b.dataset.a));
       else if (a === "desarxiva" && fil) accio("desarxiva", fil.id, "«" + fil.assumpte + "» torna a la safata d'entrada.");
+      else if (a === "triazona") return;
+      else if (a === "triacap") { sel.clear(); darrerTriat = -1; pinta(); }
+      else if (a === "lot") {
+        const n = triats().length;
+        if (b.dataset.nom === "esborra" && !confirm("Vols enviar " + (n === 1 ? "el correu seleccionat" : "els " + n + " correus seleccionats") + " a la paperera del compte? (S'hi podran recuperar durant 30 dies.)")) return;
+        enLot(b.dataset.nom, b.dataset.llegit === "1");
+      }
+      else if (a === "desfes" && desfer && desfer.llista) {
+        const d = desfer; b.disabled = true;
+        const r = await perTandes(d.llista, x => crida({ accio: "desarxiva", id: x.id }, x.c));
+        r.fets.slice().sort((p, q) => p.idx - q.idx).forEach(x => { if (fils.indexOf(x.item) < 0) fils.splice(Math.min(x.idx, fils.length), 0, x.item); });
+        const no = d.llista.filter(x => r.fets.indexOf(x) < 0);
+        if (no.length) diu((r.fets.length ? "Desfet en part: " + nCorreus(r.fets.length) + " a la safata. " : "") + "No s'han pogut tornar " + nCorreus(no.length) + " (" + r.errors[0] + ").", true, { llista: no });
+        else diu("Desfet: " + nCorreus(r.fets.length) + " de nou a la safata d'entrada.");
+      }
       else if (a === "desfes" && desfer) {
         const d = desfer; b.disabled = true;
         try {
