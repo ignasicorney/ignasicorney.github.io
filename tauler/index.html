@@ -4039,9 +4039,18 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       .map(f => f.map(x => String(x == null ? "" : x).replace(/\s+/g, " ").trim()).filter((x, i, a) => x && x !== a[i - 1]).join(" · "))
       .filter(Boolean).join("\n").trim();
   }
+  // El tipus es mira pel contingut, no només per l'extensió: des del selector del Drive del mòbil els fitxers poden arribar sense extensió
   async function textDoc(file) {
+    const cap = new Uint8Array(await file.slice(0, 4).arrayBuffer()), sig = String.fromCharCode.apply(null, cap);
+    if (sig === "%PDF") { const r = await cbLlegeixDoc(new File([file], (file.name || "psi") + (/\.pdf$/i.test(file.name) ? "" : ".pdf"), { type: "application/pdf" })); if (!r.text.trim()) throw new Error("«" + file.name + "» és un PDF escanejat (sense text)."); return r.text.replace(/--- Pàgina \d+ ---\n?/g, "").trim(); }
+    if (sig.slice(0, 2) === "PK") {
+      await carregaScript("https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js", () => window.JSZip);
+      const zip = await window.JSZip.loadAsync(await file.arrayBuffer());
+      if (zip.file("word/document.xml")) return textDocx(file);
+      if (zip.file("xl/workbook.xml") || zip.file("content.xml")) return textXlsx(file);
+    }
     if (/\.docx$/i.test(file.name)) return textDocx(file);
-    if (/\.(xlsx|xls|ods)$/i.test(file.name)) return textXlsx(file);
+    if (/\.(xlsx|xls|ods)$/i.test(file.name) || /spreadsheet|excel/i.test(file.type)) return textXlsx(file);
     if (/\.(txt|md)$/i.test(file.name) || /^text\//.test(file.type)) return (await file.text()).trim();
     if (/\.pdf$/i.test(file.name) || file.type === "application/pdf") { const r = await cbLlegeixDoc(file); if (!r.text.trim()) throw new Error("«" + file.name + "» és un PDF escanejat (sense text)."); return r.text.replace(/--- Pàgina \d+ ---\n?/g, "").trim(); }
     throw new Error("«" + file.name + "»: només llegeixo Word (.docx), Excel (.xlsx), PDF amb text i .txt.");
