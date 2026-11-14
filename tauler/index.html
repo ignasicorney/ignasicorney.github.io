@@ -2956,7 +2956,9 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     const c = compteDrive(); if (!c) throw new Error("Cal tenir el compte de l'XTEC a ⚙️ Comptes.");
     const r = await fetch(c.url, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(Object.assign({ pin: clau }, cos)) });
     const d = await r.json();
-    if (!d.ok) throw new Error(/desconeguda/i.test(d.error || "") ? "Cal actualitzar l'Apps Script de l'XTEC amb la versió nova (CorreuTauler.gs)." : (d.error || "Error de l'Apps Script"));
+    if (!d.ok) throw new Error(/desconeguda/i.test(d.error || "") ? "Cal actualitzar l'Apps Script de l'XTEC amb la versió nova (CorreuTauler.gs)."
+      : /permission|permís|permis|authoriz|autoritz|scope/i.test(d.error || "") ? "L'script de l'XTEC només té permís per llegir el Drive, no per modificar-lo. (" + d.error + ")"
+      : (d.error || "Error de l'Apps Script"));
     return d;
   }
   async function matObre(id) {
@@ -3008,12 +3010,15 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       "<ul>" + b.f.map(f => "<li>" + obre(f[1], "📁 " + f[0]) + drive(f[1]) + (f[2] ? ' <span class="font">— ' + esc(f[2]) + "</span>" : "") + "</li>").join("") + "</ul></details>").join("");
     return h;
   }
-  async function matFes(cos, avis) {
+  async function matFes(cos) {
     if (!matNav) return;
+    const id = matNav.id;
     matNav.carrega = true; matNav.err = ""; pintaAssistent();
-    try { await matCrida(cos); if (avis) matNav.err = ""; }
-    catch (e) { matNav.err = e.message; }
-    await matObre(matNav.id);
+    let err = "";
+    try { await matCrida(cos); }
+    catch (e) { err = "No s'ha pogut fer: " + e.message; }
+    await matObre(id);
+    if (err && matNav && matNav.id === id) { matNav.err = err; if (asEina === "mat") pintaAssistent(); }   // l'error es queda a la vista després de tornar a llegir la carpeta
   }
   document.addEventListener("click", e => {
     const t = e.target.closest("[data-mat]");
