@@ -4836,7 +4836,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
   // ================= Competències bàsiques (proves en paper corregides amb una foto) =================
   // Cada prova: la clau de respostes i a quina part compta cada pregunta (CL: comprensió lectora · LL: preguntes
   // de llengua, que la prova oficial compta a l'expressió escrita). Per afegir una prova n'hi ha prou amb un objecte nou.
-  // Ítems: [número, resposta, part, extra]. Part: CL (comprensió lectora) o LL (preguntes de llengua, que compten a l'EE).
+  // Ítems: [número, resposta, part, extra]. Part: CL (comprensió lectora), LL (preguntes de llengua, que compten a l'EE) o CO (comprensió oral, des del 2025-2026).
   // Resposta «*» = pregunta oberta (extra = punts màxims). Extra «ab» = pregunta de dues caselles a/b.
   // full: model del full de respostes. «propi» = el que imprimeix la Bitàcola (amb codi de l'alumne);
   // «oficial» = el full oficial de la prova, amb les coordenades (en punts del PDF) dels quadrats negres i de les caselles.
@@ -4915,9 +4915,9 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       criteris: "https://drive.google.com/file/d/1_TXfnWKJaRbLURjzkxmVKATE7hwE9JoZ/view",
       audio: "https://drive.google.com/file/d/1gzdJW8T8VwhxUsxEqiqcZwTX7OUx1yr_/view",
       transcripcio: "https://drive.google.com/file/d/1w3XPpiX8Jwny_yoO4XSm9vnWBDKh4EN_/view",
-      items: [["1", "b", "CL"], ["2", "a", "CL"], ["3", "d", "CL"], ["4", "a", "CL"], ["5", "d", "CL"], ["6.1", "F", "CL"],
-        ["6.2", "V", "CL"], ["6.3", "F", "CL"], ["6.4", "V", "CL"], ["7", "d", "CL"], ["8", "c", "CL"], ["9", "c", "CL"],
-        ["10", "b", "CL"], ["11", "d", "CL"], ["12", "c", "CL"], ["13.1", "V", "CL"], ["13.2", "F", "CL"], ["13.3", "V", "CL"],
+      items: [["1", "b", "CO"], ["2", "a", "CO"], ["3", "d", "CO"], ["4", "a", "CO"], ["5", "d", "CO"], ["6.1", "F", "CO"],
+        ["6.2", "V", "CO"], ["6.3", "F", "CO"], ["6.4", "V", "CO"], ["7", "d", "CO"], ["8", "c", "CO"], ["9", "c", "CO"],
+        ["10", "b", "CO"], ["11", "d", "CL"], ["12", "c", "CL"], ["13.1", "V", "CL"], ["13.2", "F", "CL"], ["13.3", "V", "CL"],
         ["13.4", "F", "CL"], ["14", "a", "CL"], ["15", "c", "CL"], ["16", "d", "CL"], ["17", "b", "CL"], ["18", "d", "CL"],
         ["19", "a", "CL"], ["20", "b", "CL"], ["21", "d", "CL"], ["22", "a", "CL"], ["23", "c", "CL"], ["24", "a", "CL"],
         ["25", "c", "CL"], ["26", "c", "CL"], ["27", "c", "CL"], ["28", "b", "CL"], ["29", "d", "CL"], ["30", "d", "CL"],
@@ -5234,15 +5234,16 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     return arr(CB_APARTATS.reduce((s, [k, , mx]) => s + Math.min(mx, Number(String(r[k]).replace(",", ".")) || 0), 0));
   }
   function cbPuntua(p, resp, red) {
-    const it = cbItems(p); let cl = 0, ncl = 0, ll = 0, nll = 0;
+    const it = cbItems(p); let cl = 0, ncl = 0, ll = 0, nll = 0, co = 0, nco = 0;
     it.forEach((x, i) => { if (x.t === "oberta" && (resp[i] === "" || resp[i] == null)) return;   // pregunta oberta sense corregir: no compta
       const ok = x.t === "oberta" ? Math.min(x.max, Number(String(resp[i] || 0).replace(",", ".")) || 0) : resp[i] === x.k ? 1 : 0;
-      if (x.d === "CL") { cl += ok; ncl += x.max; } else { ll += ok; nll += x.max; } });
+      if (x.d === "CL") { cl += ok; ncl += x.max; } else if (x.d === "CO") { co += ok; nco += x.max; } else { ll += ok; nll += x.max; } });
     const rd = cbRedaccio(red);
-    cl = arr(cl); ll = arr(ll);
-    return { cl, ncl, ll, nll, rd, notaCL: arr(cl / ncl * 10), notaEE: rd == null ? (nll ? arr(ll / nll * 10) : null) : arr((ll + rd / CB_RED_MAX * CB_RED_PES) / (nll + CB_RED_PES) * 10) };   // sense redacció: només les preguntes de llengua
+    cl = arr(cl); ll = arr(ll); co = arr(co);
+    return { cl, ncl, ll, nll, co, nco, notaCO: nco ? arr(co / nco * 10) : null, rd, notaCL: arr(cl / ncl * 10), notaEE: rd == null ? (nll ? arr(ll / nll * 10) : null) : arr((ll + rd / CB_RED_MAX * CB_RED_PES) / (nll + CB_RED_PES) * 10) };   // sense redacció: només les preguntes de llengua
   }
   const cbNum = v => v == null ? "—" : String(v).replace(".", ",");
+  const cbTeCO = p => !!(p && p.items && p.items.some(x => x[2] === "CO"));
   const cbPts = (a, b) => cbNum(a) + "/" + b;
   // Escriu les notes a les columnes CL i EE triades per a aquest grup
   function cbDesaNotes(p, gNom, alumne) {
@@ -5253,6 +5254,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     const pt = cbPuntua(p, r.r, r.red);
     if (cols.cl) fila.v[cols.cl] = pt.notaCL;
     if (cols.ee && pt.notaEE != null) fila.v[cols.ee] = pt.notaEE;
+    if (cols.co && pt.notaCO != null) fila.v[cols.co] = pt.notaCO;   // comprensió oral (proves amb àudio, des del 2025-2026)
     oblidaExcel(fila);
     return "";
   }
@@ -5285,18 +5287,20 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     h += '<div class="fila-as"><label>Full<select data-cb="f">' + g.fulls.map(x => "<option" + (x === f ? " selected" : "") + ">" + esc(x.nom) + "</option>").join("") + "</select></label>" +
       '<label>Columna CL (comprensió lectora)<select data-cb="cl">' + opc(cols.cl) + "</select></label>" +
       '<label>Columna EE (expressió escrita)<select data-cb="ee">' + opc(cols.ee) + "</select></label>" +
+      (cbTeCO(p) ? '<label>Columna CO (comprensió oral)<select data-cb="co">' + opc(cols.co) + "</select></label>" : "") +
       '<button type="button" class="boto clar" data-cb="reposa" style="align-self:end" title="Torna a escriure a les columnes les notes de tots els alumnes ja corregits">↻ Posa totes les notes</button></div>' +
       (propi ? '<div class="alum-eines"><label class="boto" style="display:inline-block">📷 Fotografia fulls<input type="file" id="cbFoto" accept="image/*" capture="environment" multiple hidden></label>' +
         '<span class="font">Pots triar diverses fotos alhora: cada full es reconeix pel codi i la nota va sola a la fila de l\'alumne.</span></div>'
         : '<p class="font" style="margin:4px 0">Full de respostes oficial: toca ✏️ al costat de l\'alumne i fotografia-hi el seu full.</p>') +
       (cbMsg ? '<p class="font">' + cbMsg + "</p>" : "");
     const rs = (c.res[p.id] && c.res[p.id][g.nom]) || {}, fl = f ? f.files.map(r => r.nom).sort(cbOrdre) : [];
-    h += '<table class="cb-taula"><thead><tr><th>Alumne/a</th><th>CL</th><th>Llengua</th><th>Redacció</th><th>EE</th><th></th></tr></thead><tbody>' +
+    const teCO = cbTeCO(p);
+    h += '<table class="cb-taula"><thead><tr><th>Alumne/a</th>' + (teCO ? "<th>CO</th>" : "") + "<th>CL</th><th>Llengua</th><th>Redacció</th><th>EE</th><th></th></tr></thead><tbody>" +
       fl.map(a => {
         const r = rs[a], bt = '<td><button type="button" class="boto clar" data-cb="obre" data-a="' + esc(a) + '" aria-label="Fitxa de ' + esc(cbNet(a)) + '">' + (propi ? "✏️" : "📷 ✏️") + "</button></td>";
-        if (!r) return '<tr class="cb-buit"><td>' + esc(cbNet(a)) + '</td><td colspan="4">—</td>' + bt + "</tr>";
+        if (!r) return '<tr class="cb-buit"><td>' + esc(cbNet(a)) + '</td><td colspan="' + (teCO ? 5 : 4) + '">—</td>' + bt + "</tr>";
         const pt = cbPuntua(p, r.r, r.red), dub = r.dubtes && r.dubtes.length;
-        return "<tr" + (dub ? ' class="cb-dubte"' : "") + "><td>" + esc(cbNet(a)) + (dub ? ' <span title="Caselles per revisar">⚠️</span>' : "") + "</td><td>" + cbPts(pt.cl, pt.ncl) + " · <b>" + cbNum(pt.notaCL) + "</b></td><td>" + cbPts(pt.ll, pt.nll) + "</td><td>" + (pt.rd == null ? "—" : cbNum(pt.rd) + "/" + CB_RED_MAX) + "</td><td><b>" + cbNum(pt.notaEE) + "</b></td>" + bt + "</tr>";
+        return "<tr" + (dub ? ' class="cb-dubte"' : "") + "><td>" + esc(cbNet(a)) + (dub ? ' <span title="Caselles per revisar">⚠️</span>' : "") + "</td>" + (teCO ? "<td>" + cbPts(pt.co, pt.nco) + " · <b>" + cbNum(pt.notaCO) + "</b></td>" : "") + "<td>" + cbPts(pt.cl, pt.ncl) + " · <b>" + cbNum(pt.notaCL) + "</b></td><td>" + cbPts(pt.ll, pt.nll) + "</td><td>" + (pt.rd == null ? "—" : cbNum(pt.rd) + "/" + CB_RED_MAX) + "</td><td><b>" + cbNum(pt.notaEE) + "</b></td>" + bt + "</tr>";
       }).join("") + "</tbody></table>";
     cos.innerHTML = h;
   }
@@ -5332,7 +5336,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
         '<div class="cb-resp">' + [0, 1].map(cc => '<div class="cb-col">' + it.map((x, i) => {
           if (x.t === "oberta" || colDe(i) !== cc) return "";
           const v = r.r[i], cls = !v ? "buida" : v === x.k ? "be" : "malament";
-          return (abans[i] ? buit(abans[i]) : "") + '<div class="cb-it ' + cls + (r.dubtes.includes(i) ? " dubte" : "") + '"><span>' + esc(x.n) + (x.d === "LL" ? "ᴸ" : "") + '</span><span class="cb-ops">' + cbOpcions(x).map(l => '<button type="button" data-i="' + i + '" data-v="' + l + '" aria-pressed="' + (l === v) + '">' + l + "</button>").join("") + "</span></div>";
+          return (abans[i] ? buit(abans[i]) : "") + '<div class="cb-it ' + cls + (r.dubtes.includes(i) ? " dubte" : "") + '"><span>' + esc(x.n) + (x.d === "LL" ? "ᴸ" : x.d === "CO" ? "ᴼ" : "") + '</span><span class="cb-ops">' + cbOpcions(x).map(l => '<button type="button" data-i="' + i + '" data-v="' + l + '" aria-pressed="' + (l === v) + '">' + l + "</button>").join("") + "</span></div>";
         }).join("") + "</div>").join("") + "</div>" +
         '<p class="font" style="margin:0">Verd: correcta · vermell: errada · gris: en blanc · requadre groc: comprova-la al full. ᴸ: pregunta de llengua (compta a l\'EE).</p>' +
         it.map((x, i) => {
@@ -5341,7 +5345,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
           return '<label>Pregunta ' + esc(x.n) + " (oberta, 0-" + cbNum(x.max) + "; sense corregir, no compta)" + (x.pista ? '<span class="font">' + esc(x.pista) + "</span>" : "") +
             '<select data-i="' + i + '"><option value="">Sense corregir</option>' + vs.map(v => '<option value="' + v + '"' + (r.r[i] !== "" && r.r[i] != null && Number(r.r[i]) === v ? " selected" : "") + ">" + cbNum(v) + "</option>").join("") + "</select></label>";
         }).join("") +
-        "<p style=\"margin:0\"><b>CL</b> " + cbPts(pt.cl, pt.ncl) + " → " + cbNum(pt.notaCL) + " · <b>Llengua</b> " + cbPts(pt.ll, pt.nll) + "</p>" +
+        "<p style=\"margin:0\">" + (pt.nco ? "<b>CO</b> " + cbPts(pt.co, pt.nco) + " → " + cbNum(pt.notaCO) + " · " : "") + "<b>CL</b> " + cbPts(pt.cl, pt.ncl) + " → " + cbNum(pt.notaCL) + " · <b>Llengua</b> " + cbPts(pt.ll, pt.nll) + "</p>" +
         '<h3 style="margin:4px 0 0;font-size:.95rem">Redacció (sobre ' + CB_RED_MAX + ')</h3><div class="fila">' + CB_APARTATS.map(([k, t, mx]) => {
           const vs = []; for (let v = 0; v <= mx + 1e-9; v += .5) vs.push(v);
           return "<label>" + t + " (0-" + mx + ')<select data-red="' + k + '"><option value="">—</option>' + vs.map(v => '<option value="' + v + '"' + (r.red[k] !== "" && r.red[k] != null && Number(r.red[k]) === v ? " selected" : "") + ">" + cbNum(v) + "</option>").join("") + "</select></label>"; }).join("") + "</div>" +
@@ -5614,11 +5618,11 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       if (s.id === "cbFoto") { const fs = Array.from(s.files || []); s.value = ""; if (fs.length) cbFotos(fs); return; }
       if (k === "p") { cbSel.p = Number(s.value); cbMsg = ""; pintaCB(); return; }
       if (k === "g") { cbSel.g = Number(s.value); cbMsg = ""; pintaCB(); return; }
-      if (k === "f" || k === "cl" || k === "ee") {
+      if (k === "f" || k === "cl" || k === "ee" || k === "co") {
         const p = cbProva(), g = Q().grups[cbSel.g], c = CB();
         c.cols[p.id] = c.cols[p.id] || {};
         const cols = c.cols[p.id][g.nom] = c.cols[p.id][g.nom] || {};
-        if (k === "f") { cols.f = s.value; delete cols.cl; delete cols.ee; } else { cols.f = cols.f || (g.fulls[0] || {}).nom; cols[k] = s.value; }
+        if (k === "f") { cols.f = s.value; delete cols.cl; delete cols.ee; delete cols.co; } else { cols.f = cols.f || (g.fulls[0] || {}).nom; cols[k] = s.value; }
         // Les notes que ja estaven corregides van soles a la columna que s'acaba de triar
         let n = 0; const rs = (c.res[p.id] && c.res[p.id][g.nom]) || {};
         if (k !== "f" && s.value) Object.keys(rs).forEach(a => { if (!cbDesaNotes(p, g.nom, a)) n++; });
