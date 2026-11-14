@@ -2946,22 +2946,93 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
   ];
   const MAT_COMPTE = "icorney@xtec.cat";
   const matCarpeta = id => "https://drive.google.com/drive/folders/" + id + "?authuser=" + encodeURIComponent(MAT_COMPTE);
-  let matSel = 0;
-  function pintaMat() {
-    const m = MATERIAL[Math.min(matSel, MATERIAL.length - 1)];
-    const enl = (id, t) => '<a href="' + matCarpeta(id) + '" target="_blank" rel="noopener">' + esc(t) + "</a>";
-    let h = '<p class="font">El material de cada nivell, ordenat per trimestres i temes. Cada enllaç obre la carpeta al Drive de l\'XTEC (' + esc(MAT_COMPTE) + ").</p>";
-    if (MATERIAL.length > 1) h += '<div class="vistes" role="group" aria-label="Nivell" style="flex-wrap:wrap;margin-bottom:8px">' + MATERIAL.map((x, i) => '<button type="button" data-mat="' + i + '" aria-pressed="' + (i === matSel) + '">' + esc(x.nivell) + "</button>").join("") + "</div>";
-    h += '<div class="alum-eines"><a class="boto clar" style="text-decoration:none" href="' + matCarpeta(m.arrel) + '" target="_blank" rel="noopener">📁 Carpeta ' + esc(m.nivell) + '</a><a class="boto clar" style="text-decoration:none" href="https://docs.google.com/document/d/' + m.index + "/edit?authuser=" + encodeURIComponent(MAT_COMPTE) + '" target="_blank" rel="noopener">📄 Índex detallat</a></div>';
-    if (m.origen) h += '<p class="font">' + esc(m.origen) + "</p>";
-    h += m.blocs.map(b => '<details class="rub-bloc"><summary><b>' + esc(b.t) + "</b>" + (b.id ? ' <span class="font">· ' + enl(b.id, "obre la carpeta") + "</span>" : "") + "</summary>" +
-      (b.c ? '<p class="font">' + esc(b.c) + "</p>" : "") +
-      "<ul>" + b.f.map(f => "<li>" + enl(f[1], "📁 " + f[0]) + (f[2] ? ' <span class="font">— ' + esc(f[2]) + "</span>" : "") + "</li>").join("") + "</ul></details>").join("");
+  let matSel = 0, matNav = null;   // matNav: carpeta oberta dins la Bitàcola { id, nom, d, carrega, err }
+  const matDesti = m => {   // carpetes de l'índex, per al menú «Mou a…»
+    const l = [[m.arrel, "📁 " + m.nivell]];
+    m.blocs.forEach(b => { if (b.id) l.push([b.id, b.t]); b.f.forEach(f => l.push([f[1], (b.id ? b.t + " › " : "") + f[0]])); });
+    return l;
+  };
+  async function matCrida(cos) {
+    const c = compteDrive(); if (!c) throw new Error("Cal tenir el compte de l'XTEC a ⚙️ Comptes.");
+    const r = await fetch(c.url, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(Object.assign({ pin: clau }, cos)) });
+    const d = await r.json();
+    if (!d.ok) throw new Error(/desconeguda/i.test(d.error || "") ? "Cal actualitzar l'Apps Script de l'XTEC amb la versió nova (CorreuTauler.gs)." : (d.error || "Error de l'Apps Script"));
+    return d;
+  }
+  async function matObre(id) {
+    matNav = { id: id, nom: (matNav && matNav.id === id && matNav.nom) || "", d: matNav && matNav.id === id ? matNav.d : null, carrega: true, err: "" };
+    pintaAssistent();
+    try { const d = await matCrida({ accio: "drive-carpeta", carpeta: id }); if (!matNav || matNav.id !== id) return; matNav.d = d; matNav.nom = d.nom; }
+    catch (e) { if (matNav && matNav.id === id) matNav.err = e.message; }
+    if (matNav && matNav.id === id) { matNav.carrega = false; if (asEina === "mat") pintaAssistent(); }
+  }
+  function pintaMatCarpeta(m) {
+    const n = matNav, d = n.d, mida = b => b > 1048576 ? (b / 1048576).toFixed(1).replace(".", ",") + " MB" : Math.max(1, Math.round(b / 1024)) + " kB";
+    const dt = iso => { const x = new Date(iso); return String(x.getDate()).padStart(2, "0") + "." + String(x.getMonth() + 1).padStart(2, "0") + "." + x.getFullYear(); };
+    const ico = t => /folder/.test(t) ? "📁" : /pdf/.test(t) ? "📕" : /word|document/.test(t) ? "📄" : /sheet|excel/.test(t) ? "📊" : /presentation|powerpoint/.test(t) ? "📽️" : /video/.test(t) ? "🎬" : /audio/.test(t) ? "🎧" : /image/.test(t) ? "🖼️" : "📎";
+    let h = '<div class="alum-eines"><button type="button" class="boto clar" data-matb="index">⬅️ Índex</button>' +
+      (d && d.pare && n.id !== m.arrel ? '<button type="button" class="boto clar" data-matb="amunt" data-id="' + esc(d.pare) + '">⬆️ Carpeta superior</button>' : "") +
+      '<button type="button" class="boto clar" data-matb="nova">➕ Carpeta nova</button>' +
+      '<button type="button" class="boto clar" data-matb="refresca">↻</button>' +
+      '<a class="boto clar" style="text-decoration:none" href="' + matCarpeta(n.id) + '" target="_blank" rel="noopener">↗ Obre al Drive</a></div>';
+    h += "<h4>📁 " + esc(n.nom || "Carpeta") + "</h4>";
+    if (n.err) h += '<p class="avis">' + esc(n.err) + "</p>";
+    if (n.carrega && !d) return h + '<p class="cr-buit">Llegint la carpeta…</p>';
+    if (!d) return h;
+    if (n.carrega) h += '<p class="font">Actualitzant…</p>';
+    const dest = matDesti(m).filter(x => x[0] !== n.id).concat(d.carpetes.map(c => [c.id, "↳ " + c.nom])).concat(d.pare && n.id !== m.arrel ? [[d.pare, "⬆️ Carpeta superior"]] : []);
+    const mou = id => '<select data-matmou="' + esc(id) + '" title="Mou a una altra carpeta" style="max-width:11em"><option value="">➡️ Mou a…</option>' +
+      dest.filter(x => x[0] !== id).map(x => '<option value="' + esc(x[0]) + '">' + esc(x[1]) + "</option>").join("") + "</select>";
+    const eines = (id, nom) => '<span class="mat-eines" style="white-space:nowrap">' + mou(id) +
+      '<button type="button" class="boto clar" data-matb="nom" data-id="' + esc(id) + '" data-nom="' + esc(nom) + '" title="Canvia el nom">✏️</button>' +
+      '<button type="button" class="boto clar" data-matb="esborra" data-id="' + esc(id) + '" data-nom="' + esc(nom) + '" title="Envia a la paperera">🗑️</button></span>';
+    const fila = (cap, info, id, nom) => '<li style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;justify-content:space-between;padding:4px 0;border-top:1px solid var(--linia)"><span style="flex:1 1 14em;min-width:0;overflow-wrap:anywhere">' + cap + (info ? ' <span class="font">' + info + "</span>" : "") + "</span>" + eines(id, nom) + "</li>";
+    if (!d.carpetes.length && !d.fitxers.length) return h + '<p class="buit">La carpeta és buida.</p>';
+    h += '<ul style="list-style:none;padding:0;margin:0">' +
+      d.carpetes.sort((a, b) => a.nom.localeCompare(b.nom, "ca")).map(c => fila('<a href="#" data-matb="obre" data-id="' + esc(c.id) + '">📁 ' + esc(c.nom) + "</a>", "", c.id, c.nom)).join("") +
+      d.fitxers.sort((a, b) => a.nom.localeCompare(b.nom, "ca", { numeric: true })).map(f => fila('<a href="' + esc(f.url) + '" target="_blank" rel="noopener">' + ico(f.tipus) + " " + esc(f.nom) + "</a>", "· " + mida(f.mida) + " · " + dt(f.data), f.id, f.nom)).join("") + "</ul>";
+    h += '<p class="font">🗑️ envia a la paperera del Drive (es pot recuperar durant 30 dies). Els canvis es fan amb el compte de l\'XTEC.</p>';
     return h;
   }
+  function pintaMat() {
+    const m = MATERIAL[Math.min(matSel, MATERIAL.length - 1)];
+    if (matNav) return pintaMatCarpeta(m);
+    const obre = (id, t) => '<a href="#" data-matb="obre" data-id="' + esc(id) + '">' + esc(t) + "</a>";
+    const drive = id => ' <a class="font" href="' + matCarpeta(id) + '" target="_blank" rel="noopener" title="Obre al Drive">↗</a>';
+    let h = '<p class="font">El material de cada nivell, per trimestres i temes. Toca una carpeta per veure-la aquí i moure, reanomenar o esborrar-ne el contingut; ↗ l\'obre al Drive de l\'XTEC (' + esc(MAT_COMPTE) + ").</p>";
+    if (MATERIAL.length > 1) h += '<div class="vistes" role="group" aria-label="Nivell" style="flex-wrap:wrap;margin-bottom:8px">' + MATERIAL.map((x, i) => '<button type="button" data-mat="' + i + '" aria-pressed="' + (i === matSel) + '">' + esc(x.nivell) + "</button>").join("") + "</div>";
+    h += '<div class="alum-eines"><button type="button" class="boto clar" data-matb="obre" data-id="' + m.arrel + '">📁 Carpeta ' + esc(m.nivell) + '</button><a class="boto clar" style="text-decoration:none" href="https://docs.google.com/document/d/' + m.index + "/edit?authuser=" + encodeURIComponent(MAT_COMPTE) + '" target="_blank" rel="noopener">📄 Índex detallat</a></div>';
+    if (m.origen) h += '<p class="font">' + esc(m.origen) + "</p>";
+    h += m.blocs.map(b => '<details class="rub-bloc"><summary><b>' + esc(b.t) + "</b>" + (b.id ? ' <span class="font">· ' + obre(b.id, "obre la carpeta") + "</span>" : "") + "</summary>" +
+      (b.c ? '<p class="font">' + esc(b.c) + "</p>" : "") +
+      "<ul>" + b.f.map(f => "<li>" + obre(f[1], "📁 " + f[0]) + drive(f[1]) + (f[2] ? ' <span class="font">— ' + esc(f[2]) + "</span>" : "") + "</li>").join("") + "</ul></details>").join("");
+    return h;
+  }
+  async function matFes(cos, avis) {
+    if (!matNav) return;
+    matNav.carrega = true; matNav.err = ""; pintaAssistent();
+    try { await matCrida(cos); if (avis) matNav.err = ""; }
+    catch (e) { matNav.err = e.message; }
+    await matObre(matNav.id);
+  }
   document.addEventListener("click", e => {
-    const b = e.target.closest("[data-mat]"); if (!b) return;
-    matSel = Number(b.dataset.mat) || 0; pintaAssistent();
+    const t = e.target.closest("[data-mat]");
+    if (t) { matSel = Number(t.dataset.mat) || 0; matNav = null; pintaAssistent(); return; }
+    const b = e.target.closest("[data-matb]"); if (!b) return;
+    e.preventDefault();
+    const a = b.dataset.matb, id = b.dataset.id;
+    if (a === "index") { matNav = null; pintaAssistent(); }
+    else if (a === "obre" || a === "amunt") matObre(id);
+    else if (a === "refresca" && matNav) matObre(matNav.id);
+    else if (a === "nova" && matNav) { const nom = prompt("Nom de la carpeta nova:"); if (nom && nom.trim()) matFes({ accio: "drive-nova", carpeta: matNav.id, nom: nom.trim() }); }
+    else if (a === "nom") { const nom = prompt("Nom nou:", b.dataset.nom || ""); if (nom && nom.trim() && nom.trim() !== b.dataset.nom) matFes({ accio: "drive-reanomena", id: id, nom: nom.trim() }); }
+    else if (a === "esborra") { if (confirm("Vols enviar «" + (b.dataset.nom || "") + "» a la paperera del Drive?\nEs pot recuperar durant 30 dies.")) matFes({ accio: "drive-paperera", id: id, carpeta: matNav && matNav.id }); }
+  });
+  document.addEventListener("change", e => {
+    const s = e.target.closest("[data-matmou]"); if (!s || !s.value) return;
+    const desti = s.value, nom = s.options[s.selectedIndex].text;
+    if (confirm("Vols moure-ho a «" + nom.replace(/^[^\wÀ-ÿ]+/, "") + "»?")) matFes({ accio: "drive-mou", id: s.dataset.matmou, desti: desti });
+    else s.value = "";
   });
   EINES.mat = pintaMat;
   EINES_DESPRES.crit = critDespres;

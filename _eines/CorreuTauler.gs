@@ -222,6 +222,48 @@ function doPost(e) {
         return json_({ ok: true, nom: nom, tipus: blob.getContentType(), b64: Utilities.base64Encode(bytes) });
       }
 
+      // 14.11.2026: gestor de carpetes del material (Bitàcola > Assistent > Material): llista, mou, reanomena, crea i envia a la paperera
+      case "drive-carpeta": {
+        const c = DriveApp.getFolderById(String(cos.carpeta)), carpetes = [], fitxers = [];
+        const sc = c.getFolders();
+        while (sc.hasNext()) { const x = sc.next(); carpetes.push({ id: x.getId(), nom: x.getName() }); }
+        const it = c.getFiles();
+        while (it.hasNext() && fitxers.length < 500) {
+          const f = it.next();
+          fitxers.push({ id: f.getId(), nom: f.getName(), tipus: f.getMimeType(), mida: f.getSize(), data: f.getLastUpdated().toISOString(), url: f.getUrl() });
+        }
+        const pares = c.getParents();
+        return json_({ ok: true, id: c.getId(), nom: c.getName(), pare: pares.hasNext() ? pares.next().getId() : "", carpetes: carpetes, fitxers: fitxers });
+      }
+      case "drive-mou": {
+        const desti = DriveApp.getFolderById(String(cos.desti));
+        elementDrive_(String(cos.id)).moveTo(desti);
+        return json_({ ok: true });
+      }
+      case "drive-reanomena": {
+        const nom = String(cos.nom || "").trim();
+        if (!nom) return json_({ ok: false, error: "Falta el nom nou." });
+        elementDrive_(String(cos.id)).setName(nom);
+        return json_({ ok: true });
+      }
+      case "drive-nova": {
+        const nom = String(cos.nom || "").trim();
+        if (!nom) return json_({ ok: false, error: "Falta el nom de la carpeta." });
+        const n = DriveApp.getFolderById(String(cos.carpeta)).createFolder(nom);
+        return json_({ ok: true, id: n.getId() });
+      }
+      case "drive-paperera": {
+        // Va a la paperera (es pot recuperar durant 30 dies). Si l'element és d'un altre compte, només se'l treu d'aquesta carpeta.
+        const x = elementDrive_(String(cos.id));
+        try { x.setTrashed(true); return json_({ ok: true, paperera: true }); }
+        catch (err) {
+          if (!cos.carpeta) throw err;
+          const pare = DriveApp.getFolderById(String(cos.carpeta));
+          if (typeof x.getMimeType === "function") pare.removeFile(x); else pare.removeFolder(x);
+          return json_({ ok: true, paperera: false });
+        }
+      }
+
       case "classroom-cursos": {
         const cursos = [];
         let pg;
@@ -426,6 +468,14 @@ function doPost(e) {
   } catch (err) {
     return json_({ ok: false, error: String(err && err.message || err) });
   }
+}
+
+// Fitxer o carpeta del Drive a partir de l'identificador
+function elementDrive_(id) {
+  let f = null;
+  try { f = DriveApp.getFileById(id); } catch (err) { f = null; }
+  if (f && f.getMimeType() !== MimeType.FOLDER) return f;
+  return DriveApp.getFolderById(id);
 }
 
 // S'executa sola cada 5 minuts mentre hi hagi correus programats.
