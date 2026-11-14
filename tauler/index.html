@@ -594,7 +594,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       <button type="button" data-as="ref">🩹 Reforç</button>
       <button type="button" data-as="seg">📈 Seguiment</button>
       <button type="button" data-as="exp">🎤 Exposicions</button>
-      <button type="button" data-as="pau">🎓 Selectivitat</button>
+      <button type="button" data-as="pau">🧩 Sintaxi i selectivitat</button>
     </div>
     <div id="asCos"></div>
   </div>
@@ -2525,29 +2525,61 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     ["betevé: correccions de la selectivitat 2026", "https://beteve.cat/societat/correccions-selectivitat-2026-solucions-pau-pdf/"],
     ["3Cat: exàmens i correccions del 2025", "https://www.3cat.cat/3catinfo/correccions-de-la-selectivitat-2025-examens-solucions-en-pdf-i-resultats-de-les-pau-a-catalunya/noticia-amp/3353316/"],
     ["VilaWeb: exàmens i correccions del 2024", "https://www.vilaweb.cat/noticies/correccions-selectivitat-2024-examens-pau-catalunya-pais-valencia/"],
-    ["El Velero Digital: oraciones compuestas analizadas (bachillerato)", "https://elvelerodigital.com/apuntes/lyl/sintaxis_oc4.htm"],
-    ["El Velero Digital: apunts, sintaxi i exercicis de llengua", "https://www.elvelerodigital.com/"],
     ["Editorial Text: orientacions de la PAU de castellà (pares mínims, anàlisi inversa…)", "https://educadors.text.cat/interact/public/guiesBAT2022/BAT_CAST_PAU25.pdf"]
+  ];
+  // Oracions analitzades d'El Velero Digital, per nivells (el nivell és el que indica el web)
+  const VELERO = [
+    ["ESO", "Teoría de la oración simple", "https://elvelerodigital.com/apuntes/lyl/os.htm"],
+    ["ESO", "La oración simple en una hoja (resumen)", "https://elvelerodigital.com/apuntes/lyl/OS_Resumen_2eso.pdf"],
+    ["ESO", "Cuestiones sobre oraciones simples resueltas", "https://elvelerodigital.com/apuntes/lyl/ejercicios_os.htm"],
+    ["ESO", "120 oraciones simples analizadas", "https://elvelerodigital.com/apuntes/lyl/ejercicios_os2.htm"],
+    ["ESO", "30 oraciones simples más", "https://elvelerodigital.com/apuntes/lyl/ejercicios_os3.htm"],
+    ["ESO", "Análisis de oraciones simples: 50 ejercicios resueltos", "https://elvelerodigital.com/apuntes/lyl/sintaxis_os.htm"],
+    ["Batx", "Teoría de la oración simple", "https://elvelerodigital.com/apuntes/lyl/os.htm"],
+    ["Batx", "56 cuestiones básicas sobre sintaxis", "https://elvelerodigital.com/apuntes/lyl/os-faq.htm"],
+    ["Batx", "Cuestiones sobre oraciones simples resueltas", "https://elvelerodigital.com/apuntes/lyl/ejercicios_os.htm"],
+    ["Batx", "120 oraciones simples analizadas", "https://elvelerodigital.com/apuntes/lyl/ejercicios_os2.htm"],
+    ["Batx", "30 oraciones simples más", "https://elvelerodigital.com/apuntes/lyl/ejercicios_os3.htm"],
+    ["Batx", "Análisis de oraciones simples: 50 ejercicios", "https://elvelerodigital.com/apuntes/lyl/sintaxis_os.htm"],
+    ["Batx", "Las oraciones impersonales", "https://elvelerodigital.com/apuntes/lyl/impersonales.htm"],
+    ["Batx", "Valores de «que»", "https://elvelerodigital.com/apuntes/lyl/que.htm"],
+    ["Batx", "Valores de «se»", "https://elvelerodigital.com/apuntes/lyl/se.htm"],
+    ["Batx", "Clasificación de las oraciones", "https://elvelerodigital.com/apuntes/lyl/clasificacion.htm"],
+    ["Batx", "Teoría de la oración compuesta", "https://elvelerodigital.com/apuntes/lyl/oc.htm"],
+    ["Batx", "Clasificación de las oraciones compuestas (esquema)", "https://elvelerodigital.com/apuntes/lyl/EsquemaOC.pdf"],
+    ["Batx", "Oraciones simples y compuestas resueltas", "https://elvelerodigital.com/apuntes/lyl/sintaxis_os_oc.htm"],
+    ["Batx", "Ejercicios de oraciones compuestas resueltos", "https://elvelerodigital.com/apuntes/lyl/sintaxis_oc2.htm"],
+    ["Batx", "Análisis de oraciones compuestas resueltas", "https://elvelerodigital.com/apuntes/lyl/sintaxis_oc.htm"],
+    ["Batx", "100 oraciones compuestas resueltas", "https://elvelerodigital.com/apuntes/lyl/sintaxis_oc3.htm"],
+    ["Batx", "144 oraciones compuestas resueltas", "https://elvelerodigital.com/apuntes/lyl/sintaxis_oc4.htm"],
+    ["Batx", "20 oraciones según la gramática tradicional", "https://elvelerodigital.com/apuntes/lyl/sintaxis_oc1.htm"],
+    ["Batx", "El sustantivo y el sintagma nominal", "https://elvelerodigital.com/apuntes/lyl/sustantivo.htm"],
+    ["Batx", "Índex de tots els apunts de lengua", "https://elvelerodigital.com/apuntes/lyl/index.html"]
   ];
   const PAU_FOCUS = {
     pm: ["Barreja de fenòmens (com a la PAU)", "CD / C. de régimen", "Atributo / C. predicativo", "Valores de «se»", "Pasiva refleja / impersonal con «se»", "Subordinada de relativo / sustantiva", "Especificativa / explicativa", "Perífrasis / verbo + infinitivo", "Locución / combinación libre", "Modo verbal (indicativo / subjuntivo)", "Morfología: derivación / composición", "Ambigüedad sintáctica"],
     ai: ["Barreja (com a la PAU)", "Oración simple", "Subordinadas sustantivas", "Subordinadas de relativo", "Subordinadas adverbiales", "Coordinación y yuxtaposición", "Valores de «se»", "Perífrasis verbales", "Complementos verbales (CD, CI, CRég, CPred, CC)"]
   };
+  const cursPau = () => { const g = triat().g; return g && /batx/i.test(g.nom) ? (/^\s*1/.test(g.nom) ? "1r de batxillerat" : "2n de batxillerat") : g ? cursDeGrup(g) : "2n de batxillerat"; };
   function pintaPau() {
     const sub = fv("sub", "pm");
-    let h = '<div class="vistes" role="group" aria-label="Selectivitat" style="margin-bottom:8px">' +
-      [["pm", "⚖️ Pares mínims"], ["ai", "🔁 Anàlisi inversa"], ["ex", "📚 Exàmens i recursos"]].map(x => '<button type="button" data-asb="ei-pausub" data-s="' + x[0] + '" aria-pressed="' + (sub === x[0]) + '">' + x[1] + "</button>").join("") + "</div>";
+    let h = '<div class="vistes" role="group" aria-label="Sintaxi i selectivitat" style="margin-bottom:8px">' +
+      [["pm", "⚖️ Pares mínims"], ["ai", "🔁 Anàlisi inversa"], ["ex", "📚 Oracions analitzades i exàmens"]].map(x => '<button type="button" data-asb="ei-pausub" data-s="' + x[0] + '" aria-pressed="' + (sub === x[0]) + '">' + x[1] + "</button>").join("") + "</div>";
     if (sub === "ex") {
       const e = EI(); e.pau = Array.isArray(e.pau) ? e.pau : [];
-      h += '<p class="font">Exàmens de selectivitat d\'anys anteriors amb les correccions, i oracions analitzades d\'El Velero Digital. S\'obren en una pestanya nova. Pots afegir-hi els enllaços que facis servir.</p><div class="cons-llista">' +
+      const enll = (l, ini, col) => '<div class="cons-llista">' + l.map(x => '<a class="cons-b" href="' + esc(x[1]) + '" target="_blank" rel="noopener"><span class="ini" style="background:' + col + '">' + ini + "</span><span>" + esc(x[0]) + "</span></a>").join("") + "</div>";
+      h += '<p class="font">S\'obren en una pestanya nova.</p>' +
+        "<h4>El Velero Digital · 4t d'ESO: oracions simples</h4>" + enll(VELERO.filter(x => x[0] === "ESO").map(x => [x[1], x[2]]), "EVD", "#2f6f8f") +
+        "<h4>El Velero Digital · 2n de batxillerat: tots els recursos</h4>" + enll(VELERO.filter(x => x[0] === "Batx").map(x => [x[1], x[2]]), "EVD", "#2f6f8f") +
+        '<h4>Exàmens de selectivitat</h4><p class="font">Exàmens d\'anys anteriors amb les correccions. Pots afegir-hi els enllaços que facis servir.</p><div class="cons-llista">' +
         PAU_ENLLACOS.concat(e.pau.map(x => [x.t, x.u])).map((x, i) => '<a class="cons-b" href="' + esc(x[1]) + '" target="_blank" rel="noopener"><span class="ini" style="background:#5b6e8c">PAU</span><span>' + esc(x[0]) + (i >= PAU_ENLLACOS.length ? ' <small>afegit per tu · <span data-asb="ei-pauesb" data-i="' + (i - PAU_ENLLACOS.length) + '" style="text-decoration:underline">treu</span></small>' : "") + "</span></a>").join("") + "</div>" +
         '<div class="fila-as" style="margin-top:10px">' + eInp("lt", "Nom de l'enllaç", "", "min-width:14em") + eInp("lu", "Adreça", "", "min-width:16em") + '<span style="align-self:end">' + eBoto("pauaf", "Afegeix", true) + "</span></div>";
       return h;
     }
     const pm = sub === "pm";
-    h += '<p class="font">' + (pm ? "Pares mínims com els de la selectivitat: dues oracions que només es diferencien en un element i que cal explicar (funció, categoria, valor o significat). Surten amb el solucionari i es poden imprimir." :
+    h += '<p class="font">' + (pm ? "Pares mínims (com els de la selectivitat, i també per a l\'ESO segons el curs que triïs): dues oracions que només es diferencien en un element i que cal explicar (funció, categoria, valor o significat). Surten amb el solucionari i es poden imprimir." :
       "Anàlisi inversa: a partir d'una descripció sintàctica, l'alumne ha de construir una oració que s'hi ajusti. Surten amb una oració model; amb «Comprova una oració» la IA et diu si la d'un alumne compleix la descripció.") + "</p>" +
-      '<div class="fila-as">' + eSel("curs", "Curs", CURSOS_EI, "2n de batxillerat") + eSel("lleng" + sub, "Llengua", ["castellà", "català"], "castellà") + eSel("foc" + sub, "Què treballa", PAU_FOCUS[sub], PAU_FOCUS[sub][0]) + eInp("n" + sub, "Quants", "6", "width:4em") + eSel("dif" + sub, "Dificultat", ["Iniciació", "Nivell selectivitat", "Repte"], "Nivell selectivitat") + "</div>" +
+      '<div class="fila-as">' + eSel("curs", "Curs", CURSOS_EI, cursPau()) + eSel("lleng" + sub, "Llengua", ["castellà", "català"], "castellà") + eSel("foc" + sub, "Què treballa", PAU_FOCUS[sub], PAU_FOCUS[sub][0]) + eInp("n" + sub, "Quants", "6", "width:4em") + eSel("dif" + sub, "Dificultat", ["Iniciació", "Nivell del curs", "Nivell selectivitat", "Repte"], "Nivell del curs") + "</div>" +
       '<div class="alum-eines">' + eBoto("paugen", pm ? "⚖️ Genera els pares mínims" : "🔁 Genera les descripcions") + "</div>";
     if (!pm) h += '<details class="rub-bloc"' + (fv("obreComp", false) ? " open" : "") + '><summary>✅ Comprova una oració</summary>' + eArea("desc", "Descripció (enganxa'n una de les generades o de la PAU)", 2) + eArea("frase", "Oració de l'alumne", 2) +
       '<div class="alum-eines">' + eBoto("paucomp", "✅ Comprova-la", true) + "</div>" + (eiRes.pauComp || "") + "</details>";
@@ -2561,11 +2593,11 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     if (a === "pauimp" || a === "pauimpsol") { const d = asDades && asDades.pau; if (!d) return; imprimeix(d.titol, "<h3 style=\"text-transform:none\">" + esc(d.titol) + "</h3>" + (a === "pauimp" ? d.html : d.sol), false, a === "pauimpsol"); return; }
     const sub = fv("sub", "pm");
     if (a === "paugen") {
-      const pm = sub === "pm", lleng = fv("lleng" + sub, "castellà"), foc = fv("foc" + sub, PAU_FOCUS[sub][0]), n = Math.max(1, Math.min(15, Number(fv("n" + sub, "6")) || 6)), dif = fv("dif" + sub, "Nivell selectivitat");
+      const pm = sub === "pm", curs = fv("curs", cursPau()), batx = /batx/.test(curs), lleng = fv("lleng" + sub, "castellà"), foc = fv("foc" + sub, PAU_FOCUS[sub][0]), n = Math.max(1, Math.min(15, Number(fv("n" + sub, "6")) || 6)), dif = fv("dif" + sub, "Nivell del curs");
       return eiIA(async () => {
         const sist = pm
-          ? "Ets professor de llengua " + lleng + " de 2n de batxillerat a Catalunya i prepares l'alumnat per a la selectivitat. Crea " + n + " exercicis de pares mínims (" + foc + "), dificultat «" + dif + "»: per a cada exercici, dues oracions (a i b) que només es diferencien en un element mínim (una paraula, l'ordre, un signe, el mode verbal…) i un enunciat com els de la PAU (p. ex. «Explica la diferencia sintáctica entre…»). Les oracions han de ser naturals i gramaticalment correctes, i la diferència, real i inequívoca. Redacta en " + lleng + ". Respon només JSON: {\"titol\": text curt, \"items\": [{\"enunciat\": text, \"a\": oració, \"b\": oració, \"solucio\": explicació clara i precisa de la diferència, amb la terminologia de la Llista PAU}]}."
-          : "Ets professor de llengua " + lleng + " de 2n de batxillerat a Catalunya i prepares l'alumnat per a la selectivitat. Crea " + n + " exercicis d'anàlisi sintàctica inversa (" + foc + "), dificultat «" + dif + "»: per a cada exercici, una descripció sintàctica precisa com les de la PAU (p. ex. «Escribe una oración compuesta que contenga una subordinada sustantiva de CD con el verbo en subjuntivo y un complemento predicativo»), amb indicació de punts, i una oració model que la compleixi exactament, amb la justificació breu. Redacta en " + lleng + ". Respon només JSON: {\"titol\": text curt, \"items\": [{\"descripcio\": text, \"model\": oració, \"justificacio\": text}]}.";
+          ? "Ets professor de llengua " + lleng + " a Catalunya, amb alumnat de " + curs + (batx ? ", i el prepares per a la selectivitat" : "") + ". Crea " + n + " exercicis de pares mínims (" + foc + "), dificultat «" + dif + "», adequats al nivell de " + curs + ": per a cada exercici, dues oracions (a i b) que només es diferencien en un element mínim (una paraula, l'ordre, un signe, el mode verbal…) i un enunciat com els de la PAU (p. ex. «Explica la diferencia sintáctica entre…»). Les oracions han de ser naturals i gramaticalment correctes, i la diferència, real i inequívoca. Redacta en " + lleng + ". Respon només JSON: {\"titol\": text curt, \"items\": [{\"enunciat\": text, \"a\": oració, \"b\": oració, \"solucio\": explicació clara i precisa de la diferència, amb la terminologia de la Llista PAU}]}."
+          : "Ets professor de llengua " + lleng + " a Catalunya, amb alumnat de " + curs + (batx ? ", i el prepares per a la selectivitat" : "") + ". Crea " + n + " exercicis d'anàlisi sintàctica inversa (" + foc + "), dificultat «" + dif + "», adequats al nivell de " + curs + ": per a cada exercici, una descripció sintàctica precisa com les de la PAU (p. ex. «Escribe una oración compuesta que contenga una subordinada sustantiva de CD con el verbo en subjuntivo y un complemento predicativo»), amb indicació de punts, i una oració model que la compleixi exactament, amb la justificació breu. Redacta en " + lleng + ". Respon només JSON: {\"titol\": text curt, \"items\": [{\"descripcio\": text, \"model\": oració, \"justificacio\": text}]}.";
         const r = await ia(sist, "Genera els exercicis.", { json: true });
         const items = (r && Array.isArray(r.items) ? r.items : []).filter(x => x && (pm ? x.a && x.b : x.descripcio));
         if (!items.length) throw new Error("La IA no ha retornat exercicis; torna-ho a provar.");
