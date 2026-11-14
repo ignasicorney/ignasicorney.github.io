@@ -511,9 +511,40 @@ function formulari_(cos) {
   catch (err) { throw new Error("No es pot obrir el formulari: cal que en siguis el propietari o editor."); }
 }
 
+// 14.11.2026: «S'han trobat dades no vàlides en actualitzar el formulari» sortia en desar alhora el tancament i el
+// missatge de tancat. Ara es tanca primer sol; el missatge va a part (si falla, el formulari ja queda tancat) i, si
+// FormApp no pot tancar-lo, es prova per l'API de Google Forms (setPublishSettings).
 function tancaFormulari_(id) {
-  FormApp.openById(id).setAcceptingResponses(false).setCustomClosedFormMessage("Aquest qüestionari ja està tancat.");
+  const f = FormApp.openById(id);
+  let tancat = false, error = "";
+  try { f.setAcceptingResponses(false); tancat = true; } catch (err) { error = String(err && err.message || err); }
+  if (!tancat) {
+    const r = UrlFetchApp.fetch("https://forms.googleapis.com/v1/forms/" + id + ":setPublishSettings", {
+      method: "post", contentType: "application/json", muteHttpExceptions: true,
+      headers: { Authorization: "Bearer " + ScriptApp.getOAuthToken() },
+      payload: JSON.stringify({ publishSettings: { publishState: { isPublished: true, isAcceptingResponses: false } }, updateMask: "publishState" })
+    });
+    if (r.getResponseCode() !== 200) throw new Error("No s'ha pogut tancar el formulari (" + error + "). Tanca'l des de Google Forms: pestanya Respostes > «Accepta respostes».");
+  }
+  try { f.setCustomClosedFormMessage("Aquest qüestionari ja està tancat."); } catch (err) { console.warn("Formulari " + id + " tancat sense missatge personalitzat: " + err); }
   PropertiesService.getScriptProperties().deleteProperty("tanca_" + id);
+}
+
+// 14.11.2026: tanca d'un cop tots els formularis teus del Drive que encara accepten respostes.
+// Executa-la a mà des de l'editor (tria «tancaTotsElsFormularis» i prem ▶ Executa); el resultat surt al registre.
+function tancaTotsElsFormularis() {
+  const fitxers = DriveApp.searchFiles("mimeType = 'application/vnd.google-apps.form' and 'me' in owners and trashed = false");
+  const tancats = [], fallits = [];
+  while (fitxers.hasNext()) {
+    const fx = fitxers.next();
+    try {
+      if (!FormApp.openById(fx.getId()).isAcceptingResponses()) continue;
+      tancaFormulari_(fx.getId());
+      tancats.push(fx.getName());
+    } catch (err) { fallits.push(fx.getName() + " → " + (err && err.message || err)); }
+  }
+  console.log("Tancats (" + tancats.length + "):\n" + (tancats.join("\n") || "cap"));
+  if (fallits.length) console.log("No s'han pogut tancar (" + fallits.length + "):\n" + fallits.join("\n"));
 }
 
 function valida_(c) {

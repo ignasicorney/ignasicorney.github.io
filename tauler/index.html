@@ -4247,12 +4247,18 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     };
     dlg.showModal();
     cridaIns({ accio: "classroom-cursos" }).then(d => {
+      d.cursos = ordenaCursos(d.cursos);
       const c = cols.find(x => x.nom === $("clsCol").value), ant = c && c.classroom && c.classroom.curs;
       // Primer, la classe que porta el nom del grup obert (1r A → «LE 1rA»); si no n'hi ha cap, la de l'enllaç anterior de la columna
       const auto = (d.cursos.find(x => x.nom.replace(/\s+/g, "").toLowerCase().endsWith(clauG)) || d.cursos.find(x => (x.nom + x.seccio).replace(/\s+/g, "").toLowerCase().endsWith(clauG)) || d.cursos.find(x => (x.nom + " " + x.seccio).replace(/\s+/g, "").toLowerCase().includes(clauG)) || d.cursos.find(x => x.id === ant) || {}).id;
       $("clsCurs").innerHTML = '<option value="">Tria la classe…</option>' + d.cursos.map(x => '<option value="' + x.id + '"' + (x.id === auto ? " selected" : "") + ">" + esc(x.nom + (x.seccio ? " · " + x.seccio : "")) + "</option>").join("");
       if (auto) carregaTasques();
     }).catch(e => { $("clsCurs").innerHTML = '<option value="">—</option>'; avis(e.message); });
+  }
+  // 14.11.2026: classes del Classroom per curs i grup (1r A, 1r I, 1r J, 4t B…); les que no tenen grup, al final
+  function ordenaCursos(cs) {
+    const clau = x => { const m = String(x.nom + " " + (x.seccio || "")).replace(/^\s*LE\b[\s·-]*/i, "").match(/([1-4])\s*(?:r|n|t)?\s*([A-L])\b/i); return m ? m[1] + m[2].toUpperCase() : "9"; };
+    return (cs || []).slice().sort((a, b) => clau(a).localeCompare(clau(b)) || a.nom.localeCompare(b.nom, "ca"));
   }
   // ================= Grup d'origen de l'alumne (14.11.2026) =================
   // g.origen = { "Nom de l'alumne": "1r F" }: el grup del centre d'on ve (llistes de correus «ESO LOEM106» o nom del fitxer del PSI «1rF_…»)
@@ -4622,7 +4628,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     const txt = boto.textContent; boto.disabled = true; boto.textContent = "✉️ Carregant…";
     try {
       const clauG = nomGrup(g.nom).replace(/\s+/g, "").toLowerCase();
-      const cs = (await cridaIns({ accio: "classroom-cursos" })).cursos;
+      const cs = ordenaCursos((await cridaIns({ accio: "classroom-cursos" })).cursos);
       let curs = cs.find(x => x.nom.replace(/\s+/g, "").toLowerCase().endsWith(clauG)) || cs.find(x => (x.nom + x.seccio).replace(/\s+/g, "").toLowerCase().endsWith(clauG)) || cs.find(x => (x.nom + " " + x.seccio).replace(/\s+/g, "").toLowerCase().includes(clauG));
       if (!curs) {
         const t = prompt("No trobo cap classe del Classroom que acabi en «" + nomGrup(g.nom) + "». Escriu el número de la classe:\n\n" + cs.map((x, i) => (i + 1) + ". " + x.nom + (x.seccio ? " · " + x.seccio : "")).join("\n"));
@@ -4777,7 +4783,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       const pr = (q && Array.isArray(q.preguntes) ? q.preguntes : []).filter(x => x && x.enunciat && Array.isArray(x.opcions) && x.opcions.length >= 2 && Array.isArray(x.correctes) && x.correctes.length && x.correctes.every(i => i >= 0 && i < x.opcions.length));
       if (!pr.length) throw new Error("No s'han pogut preparar preguntes tancades d'aquesta activitat; torna-ho a provar.");
       b.textContent = "Creant el formulari…";
-      const [d, cs] = await Promise.all([cridaIns({ accio: "formulari-crea", titol: titol, text: q.text || "", preguntes: pr, confirmacio: esV ? "Respuestas enviadas. ¡Gracias!" : "" }), cridaIns({ accio: "classroom-cursos" }).catch(() => ({ cursos: [] }))]);
+      const [d, cs] = await Promise.all([cridaIns({ accio: "formulari-crea", titol: titol, text: q.text || "", preguntes: pr, confirmacio: esV ? "Respuestas enviadas. ¡Gracias!" : "" }), cridaIns({ accio: "classroom-cursos" }).then(x => ({ cursos: ordenaCursos(x.cursos) })).catch(() => ({ cursos: [] }))]);
       dades.formularis = dades.formularis || [];
       dades.formularis.unshift({ id: d.id, titol: titol, url: d.url, edita: d.edita, data: avuiISO() });
       desa();
