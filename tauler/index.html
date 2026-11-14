@@ -2135,7 +2135,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
   ];
   const cursCtl = () => fv("curs", cursPau());
   const llibresEi = () => { const c = cursCtl(); return LLIBRES_INI.concat(EI().llibres).filter(x => !x.c || x.c === c); };
-  let ctl = null, ctlCorr = null;   // ctl = control obert (s'edita aquí); ctlCorr = respostes de l'alumne que es corregeix
+  let ctl = null, ctlCorr = null, ctlFitxer = null, varFitxer = null;   // fitxers triats (es guarden fora del camp: en tornar del selector del mòbil la pàgina es redibuixa)   // ctl = control obert (s'edita aquí); ctlCorr = respostes de l'alumne que es corregeix
   function variantCtl(c, v) {
     if (!v) return c.preg.map(p => ({ p: p.p, o: p.o.slice(), c: p.c }));
     return barreja(c.preg.map((p, i) => i), c.id + "-" + v).map(i => {
@@ -2155,7 +2155,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       h += '<div class="fila-as">' + eInp("caps", "Capítols (buit = tot el llibre)", "", "width:12em") + eSel("lleng", "Llengua", ["castellà", "català"], "castellà") +
         eInp("n", "Preguntes", "10", "width:4em") + eSel("k", "Opcions", [["4", "a, b, c, d"], ["3", "a, b, c"]], "4") + eSel("vars", "Models", [["1", "Només A"], ["2", "A i B"], ["3", "A, B i C"], ["4", "A, B, C i D"]], "2") + "</div>" +
         '<p class="font">⚠️ Cal pujar el PDF del llibre (o dels capítols). La IA només pot fer preguntes que surtin al text, i cada pregunta ha de dur la pàgina i la frase literal on és la resposta; el tauler comprova que la frase hi és de debò i descarta les que no hi siguin. Sense PDF no es genera cap control.</p>' +
-        '<div class="alum-eines"><label class="boto clar" style="display:inline-block">📄 Capítols (PDF o foto)<input type="file" id="ctlDoc" accept="application/pdf,image/*" hidden></label><span class="font" id="ctlDocNom"></span></div>' +
+        '<div class="alum-eines"><label class="boto clar" style="display:inline-block">📄 Capítols (PDF o foto)<input type="file" id="ctlDoc" accept="application/pdf,image/*" hidden></label><span class="font" id="ctlDocNom">' + (ctlFitxer ? "✓ " + esc(ctlFitxer.name) : "") + '</span></div>' +
         eArea("mat", "…o enganxa aquí fragments o un resum dels capítols", 4) +
         '<div class="alum-eines">' + eBoto("ctlgen", "📗 Genera el control") + "</div>";
       if (e.ctl.length) h += '<div class="fila-as"><label>Controls desats<select data-ei="ctld">' + eOpts(e.ctl.slice().reverse().map(x => [x.id, dma(x.d) + " · " + x.llibre + (x.caps ? " · cap. " + x.caps : "") + " · " + x.curs]), fv("ctld", e.ctl[e.ctl.length - 1].id)) + "</select></label>" +
@@ -2193,7 +2193,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     if (a === "ctlll") { const t = String(fv("lt", "")).trim(), au = String(fv("la", "")).trim(); if (!t) { alert("Escriu el títol del llibre."); return; } e.llibres.push({ t, a: au, c: cursCtl() }); desa(); fput("llibre", String(llibresEi().length - 1)); fput("lt", ""); fput("la", ""); return pintaAssistent(); }
     if (a === "ctlgen") {
       const ll = llibresEi()[Number(fv("llibre", "0"))]; if (!ll) { alert("Tria el llibre."); return; }
-      const file = $("ctlDoc") && $("ctlDoc").files[0];
+      const file = ctlFitxer;
       return eiIA(async () => {
         const doc = await llegeixDocEi(file, 900000), mat = (String(fv("mat", "")).trim() + "\n" + doc.text).trim();
         if (!mat && !doc.imatge) throw new Error("Puja el PDF del llibre (o dels capítols): sense el text, no es pot fer el control.");
@@ -2276,7 +2276,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
   const textExamen = t => esc(t).split("\n").map(l => (/^\s*#{1,4}\s/.test(l) ? "<h4>" + l.replace(/^\s*#+\s*/, "") + "</h4>" : /^\s*[a-hA-H]\s*[.)]\s/.test(l) ? '<div style="margin-left:18px">' + l.trim() + "</div>" : l.trim() ? "<p style=\"margin:4px 0\">" + l.replace(/\*\*(.+?)\*\*/g, "<b>$1</b>") + "</p>" : "")).join("");
   function pintaVar() {
     let h = '<p class="font">Puja un examen teu (PDF, foto o Word desat com a PDF) o enganxa\'l, i en surten models equivalents: amb IA canvia dades, frases i exemples mantenint l\'estructura, la dificultat i la puntuació, i fa el solucionari de cada model. Sense IA, només barreja l\'ordre de les preguntes i de les opcions.</p>' +
-      '<div class="alum-eines"><label class="boto clar" style="display:inline-block">📄 Puja l\'examen (PDF o foto)<input type="file" id="varDoc" accept="application/pdf,image/*" hidden></label><span class="font" id="varDocNom"></span>' +
+      '<div class="alum-eines"><label class="boto clar" style="display:inline-block">📄 Puja l\'examen (PDF o foto)<input type="file" id="varDoc" accept="application/pdf,image/*" hidden></label><span class="font" id="varDocNom">' + (varFitxer ? "✓ " + esc(varFitxer.name) : "") + '</span>' +
       (asDades && asDades.text && asDades.titol ? eBoto("varagafa", "📚 Agafa l'última activitat generada", true) : "") + "</div>" +
       eArea("ex", "…o enganxa aquí l'examen", 8) +
       '<div class="fila-as">' + eSel("n", "Models nous", [["1", "1 (B)"], ["2", "2 (B i C)"], ["3", "3 (B, C i D)"]], "1") + eSel("mode", "Com", [["ia", "Amb IA: canvia el contingut i fa el solucionari"], ["ordre", "Sense IA: només barreja l'ordre"]], "ia") + "</div>" +
@@ -2292,7 +2292,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     if (a === "varimp") { imprimeix(vari.titol, vari.models.map((m, i) => (i ? '<div style="break-before:page;page-break-before:always"></div>' + capcaleraDoc() : "") + '<p style="text-align:right;font-weight:700;margin:0">MODEL ' + LLETRES[i] + "</p>" + textExamen(m.text)).join(""), false); return; }
     if (a === "varsol") { imprimeix("Solucionaris · " + vari.titol, vari.models.map((m, i) => "<h3>Model " + LLETRES[i] + "</h3>" + (m.sol ? md(m.sol) : "<p>(sense solucionari)</p>")).join(""), false, true); return; }
     if (a === "vargen") {
-      const file = $("varDoc") && $("varDoc").files[0], n = Number(fv("n", "1")), mode = fv("mode", "ia");
+      const file = varFitxer, n = Number(fv("n", "1")), mode = fv("mode", "ia");
       return eiIA(async () => {
         let text = String(fv("ex", "")).trim(), imatge = null;
         if (file) { const d = await llegeixDocEi(file); if (d.text) text = (text ? text + "\n" : "") + d.text.replace(/--- Pàgina \d+ ---\n?/g, ""); imatge = d.imatge; }
@@ -2551,8 +2551,8 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
   const EINES_DESPRES = {
     seg: segDespres,
     dic: () => { if (window.speechSynthesis && !veusDe("castellà").length && !veusDe("català").length) speechSynthesis.onvoiceschanged = () => { speechSynthesis.onvoiceschanged = null; if (asEina === "dic" && !$("asCos").contains(document.activeElement)) pintaAssistent(); }; },
-    ctl: () => { const i = $("ctlDoc"); if (i) i.addEventListener("change", () => { $("ctlDocNom").textContent = i.files[0] ? i.files[0].name : ""; }); },
-    "var": () => { const i = $("varDoc"); if (i) i.addEventListener("change", () => { $("varDocNom").textContent = i.files[0] ? i.files[0].name : ""; }); }
+    ctl: () => { const i = $("ctlDoc"); if (i) i.addEventListener("change", () => { if (i.files[0]) ctlFitxer = i.files[0]; if ($("ctlDocNom")) $("ctlDocNom").textContent = ctlFitxer ? "✓ " + ctlFitxer.name : ""; }); },
+    "var": () => { const i = $("varDoc"); if (i) i.addEventListener("change", () => { if (i.files[0]) varFitxer = i.files[0]; if ($("varDocNom")) $("varDocNom").textContent = varFitxer ? "✓ " + varFitxer.name : ""; }); }
   };
   const ACCIONS_EI = { fl: fluAccio, di: dicAccio, ct: ctlAccio, va: varAccio, re: refAccio, se: segAccio, ex: expAccio };
   function eiAccio(a, b) {
