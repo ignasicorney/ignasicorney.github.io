@@ -4363,14 +4363,16 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       const nivells = noms.map(nom => { const nv = (r && Array.isArray(r.nivells) ? r.nivells : []).find(x => x && String(x.nom).trim().toLowerCase() === nom.toLowerCase()); return { nom: nom, preguntes: nv && Array.isArray(nv.preguntes) ? nv.preguntes.filter(valida).map(x => ({ tipus: x.correctes.length > 1 ? "multiple" : "test", enunciat: String(x.enunciat), opcions: x.opcions.map(String), correctes: x.correctes, moment: String(x.moment || "") })) : [] }; }).filter(x => x.preguntes.length);
       if (!nivells.length) throw new Error("La IA no ha preparat preguntes vàlides; torna-ho a provar.");
       const titolV = String(r.titol || "Fragment de vídeo").trim();
-      const enllac = location.origin + location.pathname.replace(/[^/]*$/, "") + "video.html?v=" + v + "&i=" + i + "&f=" + f + "&t=" + encodeURIComponent(titolV);
-      const desc = "Mira el fragment del vídeo (del " + mmss(i) + " al " + mmss(f) + "): " + enllac + "\n\nDesprés respon les preguntes. Pots tornar a mirar el vídeo mentre respons.";
+      const enllac = location.origin + location.pathname.replace(/[^/]*$/, "") + "video.html?v=" + v + "&i=" + i + "&f=" + f + (es ? "&l=es" : "") + "&t=" + encodeURIComponent(titolV);
+      // 14.11.2026: el que veu l'alumnat (formulari, pàgina del vídeo, Classroom) va en la llengua de l'activitat
+      const desc = es ? "Mira el fragmento del vídeo (del " + mmss(i) + " al " + mmss(f) + "): " + enllac + "\n\nDespués responde las preguntas. Puedes volver a mirar el vídeo mientras respondes."
+        : "Mira el fragment del vídeo (del " + mmss(i) + " al " + mmss(f) + "): " + enllac + "\n\nDesprés respon les preguntes. Pots tornar a mirar el vídeo mentre respons.";
       const lletra = k => String.fromCharCode(97 + k);
       const txtNiv = nv => nv.preguntes.map((q, k) => (k + 1) + ". " + q.enunciat + (q.moment ? " [" + q.moment + "]" : "") + "\n" + q.opcions.map((o, j) => "   " + lletra(j) + ") " + o).join("\n")).join("\n");
       asDades = {
-        titol: "Comprensió audiovisual · " + titolV,
+        titol: (es ? "Comprensión audiovisual · " : "Comprensió audiovisual · ") + titolV,
         text: titolV + "\n" + enllac + "\n\n" + nivells.map(nv => nv.nom.toUpperCase() + "\n" + txtNiv(nv)).join("\n\n") + "\n\nSOLUCIONARI\n" + nivells.map(nv => nv.nom + ": " + nv.preguntes.map((q, k) => (k + 1) + lletra(q.correctes[0]) + (q.correctes.length > 1 ? "+" + q.correctes.slice(1).map(lletra).join("+") : "")).join(" · ")).join("\n"),
-        video: { id: v, inici: i, final: f, enllac: enllac, desc: desc, nivells: nivells }
+        video: { id: v, inici: i, final: f, enllac: enllac, desc: desc, nivells: nivells, es: es }
       };
       const htmlNiv = nv => "<h4>" + esc(nv.nom) + "</h4><ol>" + nv.preguntes.map(q => "<li>" + esc(q.enunciat) + (q.moment ? ' <span class="font">[' + esc(q.moment) + "]</span>" : "") + (q.tipus === "multiple" ? ' <span class="font">(pot haver-hi més d\'una resposta)</span>' : "") + '<ol type="a">' + q.opcions.map(o => "<li>" + esc(o) + "</li>").join("") + "</ol></li>").join("") + "</ol>";
       asDades.html = "<h3>" + esc(titolV) + "</h3><p>Fragment del vídeo del " + mmss(i) + " al " + mmss(f) + ": " + esc(enllac) + "</p>" + (r.resum ? "<p><i>" + esc(String(r.resum)) + "</i></p>" : "") + nivells.map(htmlNiv).join("") +
@@ -4403,7 +4405,9 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
   async function creaQuestionari(b) {
     if (!asDades || !asDades.text) return;
     const niv = ($("asQrNiv") || {}).value || "Nivell mitjà";
-    const titol = asDades.titol + " · " + niv.replace(/^Nivell /, "nivell ");
+    const esV = !!(asDades.video && asDades.video.es);
+    const NIV_ES = { "Nivell bàsic": "nivel básico", "Nivell mitjà": "nivel medio", "Nivell avançat": "nivel avanzado", "Versió adaptada (DIS/PSI)": "versión adaptada" };
+    const titol = asDades.titol + " · " + (esV ? (NIV_ES[niv] || niv) : niv.replace(/^Nivell /, "nivell "));
     b.disabled = true; b.textContent = "Preparant les preguntes…";
     try {
       const nvV = asDades.video && (asDades.video.nivells.find(x => x.nom === niv) || asDades.video.nivells[0]);
@@ -4411,7 +4415,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       const pr = (q && Array.isArray(q.preguntes) ? q.preguntes : []).filter(x => x && x.enunciat && Array.isArray(x.opcions) && x.opcions.length >= 2 && Array.isArray(x.correctes) && x.correctes.length && x.correctes.every(i => i >= 0 && i < x.opcions.length));
       if (!pr.length) throw new Error("No s'han pogut preparar preguntes tancades d'aquesta activitat; torna-ho a provar.");
       b.textContent = "Creant el formulari…";
-      const [d, cs] = await Promise.all([cridaIns({ accio: "formulari-crea", titol: titol, text: q.text || "", preguntes: pr }), cridaIns({ accio: "classroom-cursos" }).catch(() => ({ cursos: [] }))]);
+      const [d, cs] = await Promise.all([cridaIns({ accio: "formulari-crea", titol: titol, text: q.text || "", preguntes: pr, confirmacio: esV ? "Respuestas enviadas. ¡Gracias!" : "" }), cridaIns({ accio: "classroom-cursos" }).catch(() => ({ cursos: [] }))]);
       dades.formularis = dades.formularis || [];
       dades.formularis.unshift({ id: d.id, titol: titol, url: d.url, edita: d.edita, data: avuiISO() });
       desa();
@@ -4439,7 +4443,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     b.disabled = true; b.lastChild.textContent = " Publicant…";
     try {
       const vid = asDades.video;
-      const r = await cridaIns({ accio: "classroom-publica", curs: sel.value, titol: q.titol, descripcio: vid ? "Mira el fragment del vídeo (del " + mmss(vid.inici) + " al " + mmss(vid.final) + ") i respon el qüestionari amb el compte de l'institut. Quan acabis, prem «Marca com a fet»." : "Respon el qüestionari de l'enllaç amb el compte de l'institut i, quan acabis, prem «Marca com a fet».", url: q.url, video: vid ? vid.enllac : "", data: data, esborrany: esb });
+      const r = await cridaIns({ accio: "classroom-publica", curs: sel.value, titol: q.titol, descripcio: vid && vid.es ? "Mira el fragmento del vídeo (del " + mmss(vid.inici) + " al " + mmss(vid.final) + ") y responde el cuestionario con la cuenta del instituto. Cuando acabes, pulsa «Marcar como completado»." : vid ? "Mira el fragment del vídeo (del " + mmss(vid.inici) + " al " + mmss(vid.final) + ") i respon el qüestionari amb el compte de l'institut. Quan acabis, prem «Marca com a fet»." : "Respon el qüestionari de l'enllaç amb el compte de l'institut i, quan acabis, prem «Marca com a fet».", url: q.url, video: vid ? vid.enllac : "", data: data, esborrany: esb });
       const fm = (dades.formularis || []).find(x => x.id === q.id); if (fm) { fm.classroom = { curs: sel.value, tasca: r.id }; desa(); }
       let tancat = "";
       if (data && ($("pubTanca") || {}).checked) {

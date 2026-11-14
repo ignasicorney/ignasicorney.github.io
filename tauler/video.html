@@ -30,15 +30,18 @@
     const v = (p.get("v") || "").match(/^[\w-]{11}$/) ? p.get("v") : "";
     const i = Math.max(0, parseInt(p.get("i"), 10) || 0), f = parseInt(p.get("f"), 10) || 0;
     const t = p.get("t") || "";
+    // 14.11.2026: amb l=es, la pàgina surt en castellà (activitats de llengua castellana)
+    const es = p.get("l") === "es";
+    if (es) { document.documentElement.lang = "es"; document.getElementById("titol").textContent = document.title = "Fragmento de vídeo"; }
     const mmss = s => Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0");
     const cos = document.getElementById("cos");
     if (t) { document.getElementById("titol").textContent = t; document.title = t; }
-    if (!v || !(f > i)) { cos.innerHTML = '<p class="error">Aquest enllaç no és correcte. Demana\'l de nou al professor.</p>'; return; }
-    document.getElementById("franja").textContent = "Fragment del " + mmss(i) + " al " + mmss(f) + " (" + mmss(f - i) + ")";
+    if (!v || !(f > i)) { cos.innerHTML = '<p class="error">' + (es ? "Este enlace no es correcto. Pídeselo de nuevo al profesor." : "Aquest enllaç no és correcte. Demana'l de nou al professor.") + '</p>'; return; }
+    document.getElementById("franja").textContent = (es ? "Fragmento del " : "Fragment del ") + mmss(i) + " al " + mmss(f) + " (" + mmss(f - i) + ")";
     const src = () => "https://www.youtube-nocookie.com/embed/" + v + "?start=" + i + "&end=" + f + "&rel=0&modestbranding=1&playsinline=1";
     cos.innerHTML = '<div class="video"><iframe id="yt" src="' + src() + '" title="Vídeo" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe></div>' +
-      '<button type="button" id="reinicia">↺ Torna a començar el fragment</button>' +
-      '<p class="ajuda">Mira el fragment amb atenció (el pots tornar a veure tantes vegades com vulguis) i després respon el qüestionari.</p>';
+      '<button type="button" id="reinicia">↺ ' + (es ? "Vuelve a empezar el fragmento" : "Torna a començar el fragment") + '</button>' +
+      '<p class="ajuda">' + (es ? "Mira el fragmento con atención (puedes volver a verlo tantas veces como quieras) y después responde el cuestionario." : "Mira el fragment amb atenció (el pots tornar a veure tantes vegades com vulguis) i després respon el qüestionari.") + '</p>';
     document.getElementById("reinicia").addEventListener("click", () => { document.getElementById("yt").src = src() + "&autoplay=1"; });
   })();
 </script>

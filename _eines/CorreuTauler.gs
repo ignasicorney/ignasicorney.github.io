@@ -286,7 +286,7 @@ function doPost(e) {
         form.setCollectEmail(true);
         try { form.setRequireLogin(true); form.setLimitOneResponsePerUser(true); } catch (e) {}
         form.setShowLinkToRespondAgain(false);
-        form.setConfirmationMessage("Respostes enviades. Gràcies!");
+        form.setConfirmationMessage(String(cos.confirmacio || "Respostes enviades. Gràcies!"));
         if (cos.text) form.setDescription(String(cos.text).slice(0, 4000));
         pr.forEach(function (q) {
           const opcions = (q.opcions || []).map(String);
