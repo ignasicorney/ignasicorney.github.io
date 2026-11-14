@@ -2634,7 +2634,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
   // Els enllaços de l'Assistent que fan d'acció no han de moure la pàgina
   $("asCos").addEventListener("click", ev => { const t = ev.target.closest("[data-asb]"); if (t && t.closest("a")) ev.preventDefault(); }, true);
 
-  // ---------- 🎓 Selectivitat (2n de batxillerat): pares mínims, anàlisi inversa i exàmens d'altres anys ----------
+  // ---------- 🎓 Selectivitat (2n de batxillerat): pares mínimos, anàlisi inversa i exàmens d'altres anys ----------
   const PAU_ENLLACOS = [
     ["Canal Universitats: prepara't la PAU (models i exàmens d'anys anteriors per matèries)", "https://universitats.gencat.cat/ca/proves-acces-PAU-PAP/preparat-PAU/"],
     ["Llista PAU de Llengua castellana (termes que cal saber)", "https://universitats.gencat.cat/web/.content/01_acces_i_admissio/proves-acces-PAU-PAP/ambits/llengua-castellana-i-literatura/02_PAU25_Castella_LlistaPAU.pdf"],
@@ -2643,7 +2643,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     ["betevé: correccions de la selectivitat 2026", "https://beteve.cat/societat/correccions-selectivitat-2026-solucions-pau-pdf/"],
     ["3Cat: exàmens i correccions del 2025", "https://www.3cat.cat/3catinfo/correccions-de-la-selectivitat-2025-examens-solucions-en-pdf-i-resultats-de-les-pau-a-catalunya/noticia-amp/3353316/"],
     ["VilaWeb: exàmens i correccions del 2024", "https://www.vilaweb.cat/noticies/correccions-selectivitat-2024-examens-pau-catalunya-pais-valencia/"],
-    ["Editorial Text: orientacions de la PAU de castellà (pares mínims, anàlisi inversa…)", "https://educadors.text.cat/interact/public/guiesBAT2022/BAT_CAST_PAU25.pdf"]
+    ["Editorial Text: orientacions de la PAU de castellà (pares mínimos, anàlisi inversa…)", "https://educadors.text.cat/interact/public/guiesBAT2022/BAT_CAST_PAU25.pdf"]
   ];
   // Oracions analitzades d'El Velero Digital, per nivells (el nivell és el que indica el web)
   const VELERO = [
@@ -2683,7 +2683,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
   function pintaPau() {
     const sub = fv("sub", "pm");
     let h = '<div class="vistes" role="group" aria-label="Sintaxi i selectivitat" style="margin-bottom:8px">' +
-      [["pm", "⚖️ Pares mínims"], ["ai", "🔁 Anàlisi inversa"], ["ex", "📚 Oracions analitzades i exàmens"]].map(x => '<button type="button" data-asb="ei-pausub" data-s="' + x[0] + '" aria-pressed="' + (sub === x[0]) + '">' + x[1] + "</button>").join("") + "</div>";
+      [["pm", "⚖️ Pares mínimos"], ["ai", "🔁 Anàlisi inversa"], ["ex", "📚 Oracions analitzades i exàmens"]].map(x => '<button type="button" data-asb="ei-pausub" data-s="' + x[0] + '" aria-pressed="' + (sub === x[0]) + '">' + x[1] + "</button>").join("") + "</div>";
     if (sub === "ex") {
       const e = EI(); e.pau = Array.isArray(e.pau) ? e.pau : [];
       const enll = (l, ini, col) => '<div class="cons-llista">' + l.map(x => '<a class="cons-b" href="' + esc(x[1]) + '" target="_blank" rel="noopener"><span class="ini" style="background:' + col + '">' + ini + "</span><span>" + esc(x[0]) + "</span></a>").join("") + "</div>";
@@ -2696,10 +2696,10 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       return h;
     }
     const pm = sub === "pm";
-    h += '<p class="font">' + (pm ? "Pares mínims (com els de la selectivitat, i també per a l\'ESO segons el curs que triïs): dues oracions que només es diferencien en un element i que cal explicar (funció, categoria, valor o significat). Surten amb el solucionari i es poden imprimir." :
+    h += '<p class="font">' + (pm ? "Pares mínimos (com els de la selectivitat, i també per a l\'ESO segons el curs que triïs): dues oracions que només es diferencien en un element i que cal explicar (funció, categoria, valor o significat). Surten amb el solucionari i es poden imprimir." :
       "Anàlisi inversa: a partir d'una descripció sintàctica, l'alumne ha de construir una oració que s'hi ajusti. Surten amb una oració model; amb «Comprova una oració» la IA et diu si la d'un alumne compleix la descripció.") + "</p>" +
       '<div class="fila-as">' + eSel("curs", "Curs", CURSOS_EI, cursPau()) + eSel("lleng" + sub, "Llengua", ["castellà", "català"], "castellà") + eSel("foc" + sub, "Què treballa", PAU_FOCUS[sub], PAU_FOCUS[sub][0]) + eInp("n" + sub, "Quants", "6", "width:4em") + eSel("dif" + sub, "Dificultat", ["Iniciació", "Nivell del curs", "Nivell selectivitat", "Repte"], "Nivell del curs") + "</div>" +
-      '<div class="alum-eines">' + eBoto("paugen", pm ? "⚖️ Genera els pares mínims" : "🔁 Genera les descripcions") + "</div>";
+      '<div class="alum-eines">' + eBoto("paugen", pm ? "⚖️ Genera els pares mínimos" : "🔁 Genera les descripcions") + "</div>";
     if (!pm) h += '<details class="rub-bloc"' + (fv("obreComp", false) ? " open" : "") + '><summary>✅ Comprova una oració</summary>' + eArea("desc", "Descripció (enganxa'n una de les generades o de la PAU)", 2) + eArea("frase", "Oració de l'alumne", 2) +
       '<div class="alum-eines">' + eBoto("paucomp", "✅ Comprova-la", true) + "</div>" + (eiRes.pauComp || "") + "</details>";
     return h + (eiRes["pau" + sub] || "") + notaModel();
@@ -2715,7 +2715,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       const pm = sub === "pm", curs = fv("curs", cursPau()), batx = /batx/.test(curs), lleng = fv("lleng" + sub, "castellà"), foc = fv("foc" + sub, PAU_FOCUS[sub][0]), n = Math.max(1, Math.min(15, Number(fv("n" + sub, "6")) || 6)), dif = fv("dif" + sub, "Nivell del curs");
       return eiIA(async () => {
         const sist = pm
-          ? "Ets professor de llengua " + lleng + " a Catalunya, amb alumnat de " + curs + (batx ? ", i el prepares per a la selectivitat" : "") + ". Crea " + n + " exercicis de pares mínims (" + foc + "), dificultat «" + dif + "», adequats al nivell de " + curs + ": per a cada exercici, dues oracions (a i b) que només es diferencien en un element mínim (una paraula, l'ordre, un signe, el mode verbal…) i un enunciat com els de la PAU (p. ex. «Explica la diferencia sintáctica entre…»). Les oracions han de ser naturals i gramaticalment correctes, i la diferència, real i inequívoca. Redacta en " + lleng + ". Respon només JSON: {\"titol\": text curt, \"items\": [{\"enunciat\": text, \"a\": oració, \"b\": oració, \"solucio\": explicació clara i precisa de la diferència, amb la terminologia de la Llista PAU}]}."
+          ? "Ets professor de llengua " + lleng + " a Catalunya, amb alumnat de " + curs + (batx ? ", i el prepares per a la selectivitat" : "") + ". Crea " + n + " exercicis de pares mínimos (" + foc + "), dificultat «" + dif + "», adequats al nivell de " + curs + ": per a cada exercici, dues oracions (a i b) que només es diferencien en un element mínim (una paraula, l'ordre, un signe, el mode verbal…) i un enunciat com els de la PAU (p. ex. «Explica la diferencia sintáctica entre…»). Les oracions han de ser naturals i gramaticalment correctes, i la diferència, real i inequívoca. Redacta en " + lleng + ". Respon només JSON: {\"titol\": text curt, \"items\": [{\"enunciat\": text, \"a\": oració, \"b\": oració, \"solucio\": explicació clara i precisa de la diferència, amb la terminologia de la Llista PAU}]}."
           : "Ets professor de llengua " + lleng + " a Catalunya, amb alumnat de " + curs + (batx ? ", i el prepares per a la selectivitat" : "") + ". Crea " + n + " exercicis d'anàlisi sintàctica inversa (" + foc + "), dificultat «" + dif + "», adequats al nivell de " + curs + ": per a cada exercici, una descripció sintàctica precisa com les de la PAU (p. ex. «Escribe una oración compuesta que contenga una subordinada sustantiva de CD con el verbo en subjuntivo y un complemento predicativo»), amb indicació de punts, i una oració model que la compleixi exactament, amb la justificació breu. Redacta en " + lleng + ". Respon només JSON: {\"titol\": text curt, \"items\": [{\"descripcio\": text, \"model\": oració, \"justificacio\": text}]}.";
         const r = await ia(sist, "Genera els exercicis.", { json: true });
         const items = (r && Array.isArray(r.items) ? r.items : []).filter(x => x && (pm ? x.a && x.b : x.descripcio));
