@@ -4268,37 +4268,47 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       const fi = new File([b64aBuf(r.b64)], r.nom, { type: r.tipus || "" }); fi.drive = f.id; fi.dm = f.data;
       return (enMemoria[f.id] = fi);
     };
+    const urlCarpeta = id => "https://drive.google.com/drive/folders/" + id;
+    const urlFitxer = id => "https://drive.google.com/file/d/" + id + "/view";
+    const filaDoc = f => { const a = assignatDe(f.id), v = a ? q.grups.indexOf(a.gx) + "|" + a.n : "";
+      return '<div style="border-top:1px solid var(--linia);padding:6px 0"><b' + (a ? "" : ' style="color:#c0001a"') + ">" + esc(f.nom) + "</b>" +
+        ' <a href="' + urlFitxer(f.id) + '" target="_blank" rel="noopener" class="font" style="word-break:break-all">' + esc(urlFitxer(f.id)) + "</a>" +
+        '<div class="botons" style="flex-wrap:wrap;margin-top:3px"><select data-ps="' + esc(f.id) + '" data-ara="' + esc(v) + '" style="font:inherit;max-width:100%">' + opcions(v) + "</select>" +
+        '<button type="button" class="boto clar" data-pdesa="' + esc(f.id) + '"' + (ocupat ? " disabled" : "") + ">Desa</button></div></div>"; };
+    let obertes = null;   // carpetes desplegades (es mantenen en tornar a pintar)
     const pinta = () => {
-      const fs = q.psiFitxers.slice().sort((a, b) => { const x = assignatDe(a.id) ? 1 : 0, y = assignatDe(b.id) ? 1 : 0; return x - y || a.nom.localeCompare(b.nom, "ca"); });
-      const sense = fs.filter(f => !assignatDe(f.id)).length;
+      const dets = Array.from(dlg.querySelectorAll("details[data-c]"));
+      if (dets.length) obertes = { totes: new Set(dets.map(d => d.dataset.c)), obertes: new Set(dets.filter(d => d.open).map(d => d.dataset.c)) };
+      const ordena = l => l.slice().sort((a, b) => { const x = assignatDe(a.id) ? 1 : 0, y = assignatDe(b.id) ? 1 : 0; return x - y || a.nom.localeCompare(b.nom, "ca"); });
+      const sense = q.psiFitxers.filter(f => !assignatDe(f.id)).length;
       dlg.innerHTML = '<form method="dialog"><h2><img src="https://ssl.gstatic.com/images/branding/product/1x/drive_2020q4_32dp.png" alt="" class="ico-cls"> PSI del Drive</h2>' +
-        '<p class="font" style="margin:0">' + (q.psiCarpetes.length ? "Carpetes: " + q.psiCarpetes.map(c => esc(c.nom || "(sense llegir)")).join(", ") : "Encara no hi ha cap carpeta.") + "</p>" +
-        '<div class="botons" style="flex-wrap:wrap;margin:6px 0"><button type="button" class="boto" data-pd="afegeix"' + (ocupat ? " disabled" : "") + ">+ Afegeix carpetes</button>" +
-        (q.psiCarpetes.length ? '<button type="button" class="boto clar" data-pd="llegeix"' + (ocupat ? " disabled" : "") + ">🔄 Torna a llegir les carpetes</button>" : "") + "</div>" +
+        '<div class="botons" style="flex-wrap:wrap;margin:6px 0"><button type="button" class="boto" data-pd="afegeix"' + (ocupat ? " disabled" : "") + ">+ Afegeix carpetes</button></div>" +
         (ocupat ? '<p class="font"><b>' + esc(ocupat) + "</b></p>" : "") + (avis ? '<p class="avis" style="white-space:pre-wrap">' + esc(avis) + "</p>" : "") +
-        (fs.length ? '<p class="font">' + fs.length + " documents · " + (fs.length - sense) + " assignats · " + sense + " sense alumne. Per canviar-ne l'alumne, tria'l i toca «Desa».</p>" +
-          fs.map(f => { const a = assignatDe(f.id), v = a ? q.grups.indexOf(a.gx) + "|" + a.n : "";
-            return '<div style="border-top:1px solid var(--linia);padding:6px 0"><b' + (a ? "" : ' style="color:#c0001a"') + ">" + esc(f.nom) + "</b>" +
-              '<div class="botons" style="flex-wrap:wrap;margin-top:3px"><select data-ps="' + esc(f.id) + '" data-ara="' + esc(v) + '" style="font:inherit;max-width:100%">' + opcions(v) + "</select>" +
-              '<button type="button" class="boto clar" data-pdesa="' + esc(f.id) + '"' + (ocupat ? " disabled" : "") + ">Desa</button></div></div>"; }).join("") : "") +
+        (q.psiCarpetes.length ? '<p class="font">' + q.psiFitxers.length + " documents · " + (q.psiFitxers.length - sense) + " assignats · " + sense + " sense alumne. Les assignacions es mantenen: 🔄 només llegeix aquella carpeta i només hi baixa els documents nous o canviats. Per canviar l'alumne d'un document, tria'l i toca «Desa».</p>" : '<p class="font">Encara no hi ha cap carpeta.</p>') +
+        q.psiCarpetes.map(c => { const fs = ordena(q.psiFitxers.filter(f => f.carpeta === c.id)), sn = fs.filter(f => !assignatDe(f.id)).length;
+          return '<details class="rub-bloc" data-c="' + esc(c.id) + '"' + ((obertes && obertes.totes.has(c.id) ? obertes.obertes.has(c.id) : sn) ? " open" : "") + '><summary><b>' + esc(c.nom || "(sense llegir)") + '</b> <span class="font">· ' + fs.length + " documents" + (sn ? " · " + sn + " sense alumne" : "") + "</span></summary>" +
+            '<div class="botons" style="flex-wrap:wrap;align-items:center;margin:4px 0"><a href="' + urlCarpeta(c.id) + '" target="_blank" rel="noopener" style="word-break:break-all">' + esc(urlCarpeta(c.id)) + "</a>" +
+            '<button type="button" class="boto clar" data-pdc="' + esc(c.id) + '" title="Llegeix només aquesta carpeta (documents nous o canviats)"' + (ocupat ? " disabled" : "") + ">🔄 Actualitza</button></div>" +
+            fs.map(filaDoc).join("") + "</details>"; }).join("") +
         '<div class="botons"><button type="button" class="boto" data-pd="tanca">Fet</button></div></form>';
     };
-    const llegeix = async () => {
+    // Només es llegeixen les carpetes indicades; les altres (i les seves assignacions) no es toquen
+    const llegeix = async ids => {
       if (!compteIns()) await detectaIns(true);
       if (!compteIns()) { avis = "No trobo el compte d'ieslabisbal.cat al correu de la Bitàcola (📬 Correu > ⚙️). Els PSI es llegeixen amb aquell compte."; pinta(); return; }
       const fitxers = [], errors = [];
       avis = "";
-      for (const c of q.psiCarpetes) {
+      for (const c of q.psiCarpetes.filter(x => ids.includes(x.id))) {
         ocupat = "Llegint " + (c.nom || "la carpeta") + "…"; pinta();
         try { const r = await cridaIns({ accio: "drive-llista", carpeta: c.id }); c.nom = r.nom; r.fitxers.forEach(x => { x.carpeta = c.id; fitxers.push(x); }); }
         catch (e) { errors.push("Carpeta " + (c.nom || c.id) + ": " + (/Acció desconeguda/i.test(e.message) ? "cal posar al dia l'script d'ieslabisbal.cat" : e.message)); fitxers.push(...q.psiFitxers.filter(x => x.carpeta === c.id)); }
       }
-      q.psiFitxers = fitxers.filter(x => /\.(xlsx?|ods|docx|pdf)$/i.test(x.nom) || /spreadsheet|wordprocessing|ms-excel|google-apps\.(document|spreadsheet)|pdf/i.test(x.tipus))
-        .map(x => ({ id: x.id, nom: x.nom, data: x.data, carpeta: x.carpeta }));
+      q.psiFitxers = q.psiFitxers.filter(x => !ids.includes(x.carpeta)).concat(fitxers.filter(x => /\.(xlsx?|ods|docx|pdf)$/i.test(x.nom) || /spreadsheet|wordprocessing|ms-excel|google-apps\.(document|spreadsheet)|pdf/i.test(x.tipus))
+        .map(x => ({ id: x.id, nom: x.nom, data: x.data, carpeta: x.carpeta })));
       // nous o canviats: es baixen i s'aparellen sols; un per un, perquè cada document vagi al seu alumne
       // q.psiIgnora: els que has deixat «sense alumne» a mà (no es tornen a provar fins que canviïn al Drive)
       q.psiIgnora = q.psiIgnora || {};
-      const cal = q.psiFitxers.filter(x => { const a = assignatDe(x.id); return a ? a.gx.psiDocs[a.n].dm !== x.data : q.psiIgnora[x.id] !== x.data; }).sort((a, b) => String(a.data).localeCompare(String(b.data)));   // del més antic al més recent: si un alumne en té dos, es queda el darrer
+      const cal = q.psiFitxers.filter(x => ids.includes(x.carpeta)).filter(x => { const a = assignatDe(x.id); return a ? a.gx.psiDocs[a.n].dm !== x.data : q.psiIgnora[x.id] !== x.data; }).sort((a, b) => String(a.data).localeCompare(String(b.data)));   // del més antic al més recent: si un alumne en té dos, es queda el darrer
       let fets = 0;
       for (let i = 0; i < cal.length; i++) {
         ocupat = "Llegint els PSI: " + (i + 1) + " de " + cal.length + "…"; pinta();
@@ -4317,17 +4327,19 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       pinta();
     };
     dlg.onclick = async ev => {
-      const b = ev.target.closest("[data-pd],[data-pdesa]"); if (!b || ocupat) return;
+      const b = ev.target.closest("[data-pd],[data-pdesa],[data-pdc]"); if (!b || ocupat) return;
+      if (b.dataset.pdc) { await llegeix([b.dataset.pdc]); return; }
       if (b.dataset.pd === "tanca") { dlg.close(); return; }
       if (b.dataset.pd === "afegeix") {
         const t = prompt("Enganxa l'enllaç de la carpeta del Drive amb els PSI (o diversos enllaços, separats per espais):", "");
         if (!t) return;
         const nous = (t.match(/\S+/g) || []).map(idCarpeta).filter(Boolean);
         if (!nous.length) { alert("Això no sembla l'enllaç d'una carpeta del Drive (ha de contenir «/folders/…»)."); return; }
-        nous.forEach(id => { if (!q.psiCarpetes.some(c => c.id === id)) q.psiCarpetes.push({ id }); });
-        desa(); await llegeix(); return;
+        const afegides = nous.filter((id, i) => nous.indexOf(id) === i && !q.psiCarpetes.some(c => c.id === id));
+        afegides.forEach(id => q.psiCarpetes.push({ id }));
+        if (!afegides.length) { avis = "Aquestes carpetes ja hi són: toca 🔄 Actualitza a la que vulguis."; pinta(); return; }
+        desa(); await llegeix(afegides); return;
       }
-      if (b.dataset.pd === "llegeix") { await llegeix(); return; }
       const id = b.dataset.pdesa, sel = dlg.querySelector('select[data-ps="' + CSS.escape(id) + '"]'), f = q.psiFitxers.find(x => x.id === id);
       if (!sel || !f || sel.value === sel.dataset.ara) return;
       const ant = assignatDe(id);
