@@ -1547,7 +1547,14 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
   }
   let asSel = { g: 0, f: 0, a: "", c: "" };
   // Comprensió audiovisual (13.11.2026): fragments de 4 a 5 minuts d'un vídeo de YouTube
-  let asVid = { url: "", i: "", f: "", curs: "1r d'ESO", lleng: "castellà", n: "8", dis: false, ind: "" };
+  let asVid = { url: "", i: "", f: "", curs: "1r d'ESO", lleng: "castellà", niv: "Tots tres", n: "8", dis: false, ind: "" };
+  // 14.11.2026: es pot triar un sol nivell (menys feina per a la IA: es poden demanar més preguntes sense que es talli)
+  const VID_NIVELLS = {
+    "Nivell bàsic": "informació explícita i literal, ordre dels fets",
+    "Nivell mitjà": "idea principal, relacions entre idees, vocabulari en context",
+    "Nivell mitjà-alt": "idea principal i relacions entre idees, vocabulari en context, i també inferències i intenció de qui parla",
+    "Nivell avançat": "inferències, intenció de qui parla, to, recursos expressius, valoració"
+  };
   const VID_MIN = 240, VID_MAX = 300;
   const idYoutube = u => { const m = String(u || "").match(/(?:youtu\.be\/|[?&]v=|\/(?:embed|shorts|live)\/)([\w-]{11})/); return m ? m[1] : ""; };
   const tYoutube = u => { const m = String(u || "").match(/[?&](?:t|start)=(?:(\d+)h)?(?:(\d+)m)?(\d+)s?\b/); return m ? (Number(m[1] || 0) * 3600 + Number(m[2] || 0) * 60 + Number(m[3])) : null; };
@@ -1574,10 +1581,10 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
         '<div class="alum-eines"><button type="button" class="boto" data-asb="activitat">📚 Genera l\'activitat</button></div>';
     } else if (asEina === "video") {
       const vo = (llista, v) => llista.map(o => "<option" + (o === v ? " selected" : "") + ">" + o + "</option>").join("");
-      h = '<p class="font">Comprensió audiovisual: un fragment de 4 a 5 minuts d\'un vídeo de YouTube, amb preguntes tancades en tres nivells (i, si vols, la versió DIS/PSI). Se\'n fa un qüestionari que es corregeix sol, es publica al Classroom i la nota va a la columna EO1.</p>' +
+      h = '<p class="font">Comprensió audiovisual: un fragment de 4 a 5 minuts d\'un vídeo de YouTube, amb preguntes tancades en el nivell que triïs o en tots tres (i, si vols, la versió DIS/PSI). Se\'n fa un qüestionari que es corregeix sol, es publica al Classroom i la nota va a la columna EO1.</p>' +
         '<div class="fila-as"><label style="flex:1 1 100%">Enllaç de YouTube<input type="url" id="vUrl" value="' + esc(asVid.url) + '" placeholder="https://www.youtube.com/watch?v=…"></label></div>' +
         '<div class="fila-as"><label>Inici (m:ss)<input type="text" id="vIni" value="' + esc(asVid.i) + '" placeholder="0:00" style="width:5em"></label><label>Final (m:ss)<input type="text" id="vFi" value="' + esc(asVid.f) + '" placeholder="4:30" style="width:5em"></label><span class="font" id="vDur" style="align-self:end"></span></div>' +
-        '<div class="fila-as"><label>Curs<select id="asCurs">' + vo(["1r d'ESO", "2n d'ESO", "3r d'ESO", "4t d'ESO", "1r de batxillerat", "2n de batxillerat"], asVid.curs) + '</select></label><label>Llengua<select id="asLleng">' + vo(["castellà", "català"], asVid.lleng) + '</select></label><label>Preguntes per nivell<input type="text" id="asN" value="' + esc(asVid.n) + '" inputmode="numeric" style="width:4em"></label></div>' +
+        '<div class="fila-as"><label>Curs<select id="asCurs">' + vo(["1r d'ESO", "2n d'ESO", "3r d'ESO", "4t d'ESO", "1r de batxillerat", "2n de batxillerat"], asVid.curs) + '</select></label><label>Llengua<select id="asLleng">' + vo(["castellà", "català"], asVid.lleng) + '</select></label><label>Nivell<select id="vNiv">' + vo(["Tots tres", "Nivell bàsic", "Nivell mitjà", "Nivell mitjà-alt", "Nivell avançat"], asVid.niv) + '</select></label><label>Preguntes per nivell<input type="text" id="asN" value="' + esc(asVid.n) + '" inputmode="numeric" style="width:4em"></label></div>' +
         '<label class="font"><input type="checkbox" id="asDisAct"' + (asVid.dis ? " checked" : "") + '> Afegeix també una versió adaptada DIS/PSI</label>' +
         '<input type="text" id="vInd" value="' + esc(asVid.ind) + '" placeholder="Indicacions (opcional): què vols treballar, vocabulari, tipus de preguntes…">' +
         '<textarea id="asText" placeholder="Transcripció del fragment (opcional). Si la deixes buida, la IA mira el vídeo directament (ha de ser públic a YouTube)." rows="4"></textarea>' +
@@ -1632,7 +1639,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     const err = e => fet('<p class="avis">' + esc(e.message) + "</p>");
     if (a === "qr") { creaQuestionari(b); return; }
     if (a === "video") {
-      asVid = { url: $("vUrl").value.trim(), i: $("vIni").value.trim(), f: $("vFi").value.trim(), curs: $("asCurs").value, lleng: $("asLleng").value, n: $("asN").value.trim(), dis: $("asDisAct").checked, ind: $("vInd").value.trim() };
+      asVid = { url: $("vUrl").value.trim(), i: $("vIni").value.trim(), f: $("vFi").value.trim(), curs: $("asCurs").value, lleng: $("asLleng").value, niv: $("vNiv").value, n: $("asN").value.trim(), dis: $("asDisAct").checked, ind: $("vInd").value.trim() };
       preparaVideo(txt); return;
     }
     if (a === "clspub") { publicaClassroom(b); return; }
@@ -4708,9 +4715,10 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     if (f - i < VID_MIN || f - i > VID_MAX) return fet('<p class="avis">El fragment ha de durar entre 4 i 5 minuts; ara en fa ' + (f > i ? mmss(f - i) : "0:00") + ".</p>");
     if (!transcripcio && !compteIns()) return fet('<p class="avis">Perquè la IA miri el vídeo cal el compte d\'ieslabisbal.cat connectat al correu (📬 Correu &gt; ⚙️). Si no, enganxa\'n la transcripció.</p>');
     asOcupat = true; asResultat = ""; asModel = ""; pintaAssistent();
-    const noms = ["Nivell bàsic", "Nivell mitjà", "Nivell avançat"].concat(asVid.dis ? ["Versió adaptada (DIS/PSI)"] : []);
+    const triats = VID_NIVELLS[asVid.niv] ? [asVid.niv] : ["Nivell bàsic", "Nivell mitjà", "Nivell avançat"];
+    const noms = triats.concat(asVid.dis ? ["Versió adaptada (DIS/PSI)"] : []);
     const sistema = "Ets un professor de llengua " + (asVid.lleng === "català" ? "catalana" : "castellana") + " de secundària a Catalunya. Prepara preguntes de comprensió audiovisual d'un fragment de vídeo (del " + mmss(i) + " al " + mmss(f) + ") per a alumnat de " + asVid.curs + ", redactades en " + asVid.lleng + ". " +
-      "Fes aquests nivells, cadascun amb " + n + " preguntes: «Nivell bàsic» (informació explícita i literal, ordre dels fets), «Nivell mitjà» (idea principal, relacions entre idees, vocabulari en context), «Nivell avançat» (inferències, intenció de qui parla, to, recursos expressius, valoració)" +
+      (triats.length > 1 || asVid.dis ? "Fes aquests nivells, cadascun amb " + n + " preguntes: " : "Fes només aquest nivell, amb " + n + " preguntes: ") + triats.map(x => "«" + x + "» (" + VID_NIVELLS[x] + ")").join(", ") +
       (asVid.dis ? " i «Versió adaptada (DIS/PSI)» (enunciats curts d'una sola idea, vocabulari senzill, 3 opcions clares, preguntes més guiades i en l'ordre del vídeo)" : "") + ". " +
       "Totes han de ser tancades: «test» (una sola correcta) o, poques vegades, «multiple» (més d'una de correcta); de 3 a 4 opcions amb distractors versemblants. Pregunta només pel que es veu i se sent dins del fragment, i indica el moment aproximat (m:ss del vídeo) a què es refereix cada pregunta. " +
       "Respon només JSON: {\"titol\": títol curt del fragment, \"resum\": 2 o 3 frases sobre el contingut, \"nivells\": [{\"nom\": un d'aquests: " + JSON.stringify(noms) + ", \"preguntes\": [{\"tipus\": \"test\" o \"multiple\", \"enunciat\": text, \"opcions\": [textos], \"correctes\": [índexs de les correctes, des de 0], \"moment\": \"m:ss\"}]}]}.";
@@ -4745,7 +4753,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       const htmlNiv = nv => "<h4>" + esc(nv.nom) + "</h4><ol>" + nv.preguntes.map(q => "<li>" + esc(q.enunciat) + (q.moment ? ' <span class="font">[' + esc(q.moment) + "]</span>" : "") + (q.tipus === "multiple" ? ' <span class="font">(pot haver-hi més d\'una resposta)</span>' : "") + '<ol type="a">' + q.opcions.map(o => "<li>" + esc(o) + "</li>").join("") + "</ol></li>").join("") + "</ol>";
       asDades.html = "<h3>" + esc(titolV) + "</h3><p>Fragment del vídeo del " + mmss(i) + " al " + mmss(f) + ": " + esc(enllac) + "</p>" + (r.resum ? "<p><i>" + esc(String(r.resum)) + "</i></p>" : "") + nivells.map(htmlNiv).join("") +
         "<h4>Solucionari</h4><ul>" + nivells.map(nv => "<li><b>" + esc(nv.nom) + ":</b> " + nv.preguntes.map((q, k) => (k + 1) + " " + q.correctes.map(lletra).join("+")).join(" · ") + "</li>").join("") + "</ul>";
-      const sel = '<select id="asQrNiv" aria-label="Nivell del qüestionari">' + nivells.map((nv, k) => "<option" + (k === 1 || (nivells.length === 1 && !k) ? " selected" : "") + ">" + esc(nv.nom) + "</option>").join("") + "</select>";
+      const sel = '<select id="asQrNiv" aria-label="Nivell del qüestionari">' + nivells.map((nv, k) => "<option" + (k === (nivells.length >= 3 && triats.length > 1 ? 1 : 0) ? " selected" : "") + ">" + esc(nv.nom) + "</option>").join("") + "</select>";
       fet('<div class="alum-eines"><a class="boto clar" href="' + esc(enllac) + '" target="_blank" rel="noopener">▶️ Mira el fragment</a><button type="button" class="boto clar" data-asb="copia">Copia</button><button type="button" class="boto clar" data-asb="imprimeix">🖨️ Imprimeix / PDF</button>' + (compteIns() ? sel + '<button type="button" class="boto" data-asb="qr">📱 Qüestionari en línia</button>' : "") + '</div><div class="as-doc">' + capcaleraDoc() + asDades.html + "</div>");
     } catch (e) { fet('<p class="avis">' + esc(e.message) + "</p>"); }
   }
@@ -4774,7 +4782,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     if (!asDades || !asDades.text) return;
     const niv = ($("asQrNiv") || {}).value || "Nivell mitjà";
     const esV = !!(asDades.video && asDades.video.es);
-    const NIV_ES = { "Nivell bàsic": "nivel básico", "Nivell mitjà": "nivel medio", "Nivell avançat": "nivel avanzado", "Versió adaptada (DIS/PSI)": "versión adaptada" };
+    const NIV_ES = { "Nivell bàsic": "nivel básico", "Nivell mitjà": "nivel medio", "Nivell mitjà-alt": "nivel medio-alto", "Nivell avançat": "nivel avanzado", "Versió adaptada (DIS/PSI)": "versión adaptada" };
     const titol = asDades.titol + " · " + (esV ? (NIV_ES[niv] || niv) : niv.replace(/^Nivell /, "nivell "));
     b.disabled = true; b.textContent = "Preparant les preguntes…";
     try {
