@@ -215,6 +215,9 @@ dialog#dlgRub{width:min(760px,calc(100vw - 24px))}
 .taula td.pts.p27{background:#f8d0cf;color:#a3161b}
 .taula td.pts:hover{outline:1px solid var(--accent);outline-offset:-1px}
 .crit-doc{overflow-x:auto}
+.crit-orig{max-height:75vh;overflow:auto;border:1px solid var(--linia);border-radius:8px;background:#f3f1ec;margin-top:6px;-webkit-overflow-scrolling:touch}
+.crit-orig .docx-wrapper{zoom:var(--z,1);padding:10px!important;background:transparent!important}
+.crit-orig .docx-wrapper>section.docx{margin-bottom:10px!important}
 .crit-doc table{width:100%;border-collapse:collapse;font-size:.9rem;background:#fff}
 .crit-doc th,.crit-doc td{border:1px solid var(--linia);padding:6px 8px;text-align:left;vertical-align:top;font-weight:400}
 .crit-doc p{margin:2px 0}
@@ -2809,26 +2812,52 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
   const CRITERIS = [["1r-eso", "1r d'ESO"], ["2n-eso", "2n d'ESO"], ["3r-eso", "3r d'ESO"], ["4t-eso", "4t d'ESO"], ["1r-batx", "1r de batxillerat"], ["2n-batx", "2n de batxillerat"]];
   const critCache = {};
   const critDeGrup = g => { if (!g) return "1r-eso"; const n = String(g.nom), m = n.match(/^\s*([1-4])/); if (/batx/i.test(n)) return (m && m[1] === "2" ? "2n" : "1r") + "-batx"; return m ? ["1r", "2n", "3r", "4t"][Number(m[1]) - 1] + "-eso" : "1r-eso"; };
+  // Es mostra el Word original (amb el format del departament); si no es pot, la versió en HTML
+  const critDocx = {};
   function pintaCrit() {
     const c = fv("c", critDeGrup(triat().g)), nom = (CRITERIS.find(x => x[0] === c) || CRITERIS[0])[1];
-    let h = '<p class="font">Criteris d\'avaluació del departament de Llengua castellana i literatura (curs 2026-2027): continguts, material, temporització i avaluació de cada curs.</p>' +
+    let h = '<p class="font">Criteris d\'avaluació del departament de Llengua castellana i literatura (curs 2026-2027), tal com és el document de cada curs.</p>' +
       '<div class="vistes" role="group" aria-label="Curs" style="margin-bottom:8px;flex-wrap:wrap">' + CRITERIS.map(x => '<button type="button" data-asb="ei-crc" data-c="' + x[0] + '" aria-pressed="' + (x[0] === c) + '">' + esc(x[1]) + "</button>").join("") + "</div>";
     if (critCache[c] == null) {
       critCache[c] = "";
-      fetch("criteris/" + c + ".html", { cache: "no-cache" }).then(r => { if (!r.ok) throw new Error(r.status); return r.text(); })
-        .then(t => { critCache[c] = t; }, () => { critCache[c] = false; })
+      Promise.all([
+        fetch("criteris/" + c + ".docx", { cache: "no-cache" }).then(r => (r.ok ? r.arrayBuffer() : null)).catch(() => null),
+        fetch("criteris/" + c + ".html", { cache: "no-cache" }).then(r => (r.ok ? r.text() : "")).catch(() => "")
+      ]).then(([buf, t]) => { critDocx[c] = buf; critCache[c] = t || (buf ? " " : false); })
         .then(() => { if (asEina === "crit") pintaAssistent(); });
     }
     if (critCache[c] === false) return h + '<p class="avis">No s\'han pogut carregar els criteris de ' + esc(nom) + '.</p><div class="alum-eines">' + eBoto("crretry", "Torna-ho a provar", true) + "</div>";
     if (!critCache[c]) return h + '<p class="font">Carregant…</p>';
-    return h + '<div class="alum-eines">' + eBoto("crimp", "🖨️ Imprimeix / PDF", true) + '</div><div class="crit-doc">' + critCache[c] + "</div>";
+    return h + '<div class="alum-eines">' + eBoto("crimp", "🖨️ Imprimeix / PDF", true) + (critDocx[c] ? '<a class="boto clar" style="text-decoration:none" href="criteris/' + c + '.docx" download="Criteris_castella_' + c + '.docx">⬇️ Baixa el Word</a>' : "") +
+      '</div><div class="psi-zoom"><button type="button" class="boto clar boto-ico" data-asb="ei-crz" data-z="-" aria-label="Més petit">−</button><button type="button" class="boto clar boto-ico" data-asb="ei-crz" data-z="+" aria-label="Més gran">+</button><span class="font">Mida</span></div>' +
+      '<div class="crit-orig" id="critDoc" style="--z:' + (critZoom || 1) + '">' + (critDocx[c] ? '<p class="font">Carregant el document…</p>' : '<div class="crit-doc">' + critCache[c] + "</div>") + "</div>";
+  }
+  let critZoom = null;
+  async function critDespres() {
+    const c = fv("c", critDeGrup(triat().g)), el = $("critDoc"); if (!el || !critDocx[c]) return;
+    try {
+      await carregaScript("https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js", () => window.JSZip);
+      await carregaScript("docx-preview.min.js", () => window.docx);
+      el.innerHTML = "";
+      await window.docx.renderAsync(new Blob([critDocx[c]]), el, null, { inWrapper: true, ignoreWidth: false, ignoreHeight: true, breakPages: true });
+      // la primera vegada, la pàgina s'ajusta a l'amplada de la pantalla (després es pot canviar amb − i +)
+      const sec = el.querySelector("section.docx");
+      if (critZoom === null && sec) { critZoom = Math.max(0.4, Math.min(1, Math.floor((el.clientWidth - 24) / sec.offsetWidth * 100) / 100)); el.style.setProperty("--z", critZoom); }
+    } catch (e) { el.innerHTML = '<div class="crit-doc">' + (critCache[c] || "") + "</div>"; }
   }
   async function critAccio(a, b) {
     if (a === "crc") { fput("c", b.dataset.c); return pintaAssistent(); }
     if (a === "crretry") { delete critCache[fv("c", critDeGrup(triat().g))]; return pintaAssistent(); }
-    if (a === "crimp") { const c = fv("c", critDeGrup(triat().g)); if (critCache[c]) imprimeix("Criteris d'avaluació · " + (CRITERIS.find(x => x[0] === c) || [0, ""])[1], '<div class="crit-doc">' + critCache[c] + "</div><style>.crit-doc table{width:100%;border-collapse:collapse}.crit-doc th,.crit-doc td{border:1px solid #999;padding:4px 6px;text-align:left;vertical-align:top;font-weight:400}.crit-doc p{margin:2px 0}</style>", false, true); }
+    if (a === "crz") { critZoom = Math.max(0.4, Math.min(2.5, Math.round((critZoom || 1) * (b.dataset.z === "+" ? 1.25 : 0.8) * 100) / 100)); const el = $("critDoc"); if (el) el.style.setProperty("--z", critZoom); return; }
+    if (a === "crimp") {
+      const c = fv("c", critDeGrup(triat().g)), el = $("critDoc"); if (!el) return;
+      const w = window.open("", "_blank"); if (!w) return;
+      w.document.write('<!DOCTYPE html><html lang="ca"><head><meta charset="utf-8"><title>Criteris d\'avaluació · ' + esc((CRITERIS.find(x => x[0] === c) || [0, ""])[1]) + '</title><style>body{margin:0}.docx-wrapper{background:#fff!important;padding:0!important}.docx-wrapper>section.docx{box-shadow:none!important;margin:0 auto!important}.crit-doc table{width:100%;border-collapse:collapse}.crit-doc th,.crit-doc td{border:1px solid #999;padding:4px 6px;text-align:left;vertical-align:top;font-weight:400}</style></head><body>' + el.innerHTML + "<script>window.onload=function(){setTimeout(function(){window.print()},300)}<\/script></body></html>");
+      w.document.close();
+    }
   }
   EINES.crit = pintaCrit;
+  EINES_DESPRES.crit = critDespres;
   ACCIONS_EI.cr = critAccio;
   ACCIONS_EI.pa = pauAccio;
 
@@ -4121,7 +4150,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       await carregaScript("https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js", () => window.JSZip);
       const zip = await window.JSZip.loadAsync(buf.slice(0));
       if (zip.file("word/document.xml")) {
-        await carregaScript("https://cdn.jsdelivr.net/npm/docx-preview@0.3.5/dist/docx-preview.min.js", () => window.docx);
+        await carregaScript("docx-preview.min.js", () => window.docx);
         cont.innerHTML = "";
         await window.docx.renderAsync(new Blob([buf]), cont, null, { inWrapper: false, ignoreWidth: true, ignoreHeight: true });
         return;
