@@ -2358,6 +2358,10 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     }
     asVid = Object.assign({}, asVid, x.params || {});
     asDades = Object.assign({}, x.dades, { desatId: x.id }); asModel = "";
+    // 15.11.2026: els desats abans d'avui portaven el moment del vídeo a les preguntes; es treu (el solucionari el manté)
+    if (asDades.html) asDades.html = asDades.html.replace(/ <span class="font">\[\d+:\d{2}\]<\/span>/g, "");
+    if (asDades.text) asDades.text = asDades.text.replace(/^(\d+\. .*?) \[\d+:\d{2}\]$/gm, "$1");
+    x.html = String(x.html || "").replace(/(<ol class="preg">[\s\S]*?)<\/ol>/g, m => m.replace(/ <span class="font">\[\d+:\d{2}\]<\/span>/g, ""));
     // avís a dalt del resultat, perquè es vegi que s'ha obert el desat (i no el que hi havia abans)
     asResultat = '<p class="avis" style="background:#e8f5e9;color:#1b5e20;border-color:#a5d6a7">📂 Obert el qüestionari desat «' + esc(x.titol) + "» (" + esc(x.data.split("-").reverse().join(".")) + ")" + (x.formulari ? ", amb el seu formulari" : "") + ".</p>" + (x.html || "");
     pintaAssistent();
@@ -2384,7 +2388,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       nv.preguntes.map(preg).join("");
     const solucio = () => wCapcalera(true) + wPar([wRun((es ? "Solucionario · " : "Solucionari · ") + tit, { b: true })], { despres: 160 }) +
       vd.nivells.map(nv => (vd.nivells.length > 1 ? wPar([wRun(nv.nom, { b: true })], { antes: 160, despres: 80, keep: true }) : "") +
-        nv.preguntes.map((q, i) => wPar([wRun((i + 1) + ".\t"), wRun(q.tipus === "completa" ? q.respostes.join(" / ") : q.tipus === "oberta" ? (es ? "(abierta) " : "(oberta) ") + q.resposta : q.correctes.map(k => lletra(k) + ") " + q.opcions[k]).join(" · "), { b: q.tipus !== "oberta" })], { esq: 400, penj: 400, despres: 80 })).join("")).join("");
+        nv.preguntes.map((q, i) => wPar([wRun((i + 1) + ".\t" + (q.moment ? "[" + q.moment + "] " : "")), wRun(q.tipus === "completa" ? q.respostes.join(" / ") : q.tipus === "oberta" ? (es ? "(abierta) " : "(oberta) ") + q.resposta : q.correctes.map(k => lletra(k) + ") " + q.opcions[k]).join(" · "), { b: q.tipus !== "oberta" })], { esq: 400, penj: 400, despres: 80 })).join("")).join("");
     try { await baixaDocx((sol ? (es ? "Solucionario - " : "Solucionari - ") : "") + tit, sol ? [solucio()] : vd.nivells.map(nivell)); }
     catch (er) { alert("No s'ha pogut fer el Word: " + er.message); }
   }
@@ -5121,14 +5125,14 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       const desc = es ? "Mira el fragmento del vídeo (del " + mmss(i) + " al " + mmss(f) + "): " + enllac + "\n\nDespués responde las preguntas. Puedes volver a mirar el vídeo mientras respondes."
         : "Mira el fragment del vídeo (del " + mmss(i) + " al " + mmss(f) + "): " + enllac + "\n\nDesprés respon les preguntes. Pots tornar a mirar el vídeo mentre respons.";
       const lletra = k => String.fromCharCode(97 + k);
-      const txtNiv = nv => nv.preguntes.map((q, k) => (k + 1) + ". " + q.enunciat + (q.moment ? " [" + q.moment + "]" : "") + "\n" + (q.opcions ? q.opcions.map((o, j) => "   " + lletra(j) + ") " + o).join("\n") : q.tipus === "oberta" ? "   ______________________________\n   ______________________________" : "")).join("\n\n");
-      const solQ = (q, k) => (k + 1) + (q.tipus === "completa" ? " " + q.respostes.join(" / ") : q.tipus === "oberta" ? " (oberta) " + q.resposta : lletra(q.correctes[0]) + (q.correctes.length > 1 ? "+" + q.correctes.slice(1).map(lletra).join("+") : ""));
+      const txtNiv = nv => nv.preguntes.map((q, k) => (k + 1) + ". " + q.enunciat + "\n" + (q.opcions ? q.opcions.map((o, j) => "   " + lletra(j) + ") " + o).join("\n") : q.tipus === "oberta" ? "   ______________________________\n   ______________________________" : "")).join("\n\n");
+      const solQ = (q, k) => (k + 1) + (q.tipus === "completa" ? " " + q.respostes.join(" / ") : q.tipus === "oberta" ? " (oberta) " + q.resposta : lletra(q.correctes[0]) + (q.correctes.length > 1 ? "+" + q.correctes.slice(1).map(lletra).join("+") : "")) + (q.moment ? " [" + q.moment + "]" : "");
       asDades = {
         titol: (es ? "Comprensión audiovisual · " : "Comprensió audiovisual · ") + titolV,
         text: titolV + "\n" + enllac + "\n\n" + nivells.map(nv => nv.nom.toUpperCase() + "\n" + txtNiv(nv)).join("\n\n") + "\n\nSOLUCIONARI\n" + nivells.map(nv => nv.nom + ": " + nv.preguntes.map(solQ).join(" · ")).join("\n"),
         video: { id: v, inici: i, final: f, enllac: enllac, desc: desc, nivells: nivells, es: es }
       };
-      const htmlNiv = nv => "<h4>" + esc(nv.nom) + "</h4><ol class=\"preg\">" + nv.preguntes.map(q => "<li>" + esc(q.enunciat) + (q.moment ? ' <span class="font">[' + esc(q.moment) + "]</span>" : "") + (q.tipus === "multiple" ? ' <span class="font">(pot haver-hi més d\'una resposta)</span>' : "") + (q.opcions ? '<ol type="a">' + q.opcions.map(o => "<li>" + esc(o) + "</li>").join("") + "</ol>" : q.tipus === "oberta" ? '<div style="border-bottom:1px solid #999;height:1.8em"></div><div style="border-bottom:1px solid #999;height:1.8em"></div><div style="border-bottom:1px solid #999;height:1.8em"></div>' : "") + "</li>").join("") + "</ol>";
+      const htmlNiv = nv => "<h4>" + esc(nv.nom) + "</h4><ol class=\"preg\">" + nv.preguntes.map(q => "<li>" + esc(q.enunciat) + (q.tipus === "multiple" ? ' <span class="font">(pot haver-hi més d\'una resposta)</span>' : "") + (q.opcions ? '<ol type="a">' + q.opcions.map(o => "<li>" + esc(o) + "</li>").join("") + "</ol>" : q.tipus === "oberta" ? '<div style="border-bottom:1px solid #999;height:1.8em"></div><div style="border-bottom:1px solid #999;height:1.8em"></div><div style="border-bottom:1px solid #999;height:1.8em"></div>' : "") + "</li>").join("") + "</ol>";
       asDades.html = "<h3>" + esc(titolV) + "</h3><p>" + (es ? "Fragmento del vídeo del " : "Fragment del vídeo del ") + mmss(i) + " al " + mmss(f) + ": " + esc(enllac) + "</p>" + (r.resum ? "<p><i>" + esc(String(r.resum)) + "</i></p>" : "") + nivells.map(htmlNiv).join("");
       // 14.11.2026: el solucionari va a part (es veu i s'imprimeix separat de les preguntes)
       asDades.sol = "<h3>" + esc(titolV) + "</h3><h4>Solucionari</h4><ul>" + nivells.map(nv => "<li><b>" + esc(nv.nom) + ":</b> " + nv.preguntes.map((q, k) => esc(solQ(q, k))).join(" · ") + "</li>").join("") + "</ul>";
