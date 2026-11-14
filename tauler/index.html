@@ -1657,6 +1657,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     }
     if (a === "qrimp") { const q = asDades && asDades.qr; if (q) imprimeix(q.titol, '<div style="text-align:center"><h3>' + esc(q.titol) + '</h3><p>Escaneja el codi amb el mòbil i entra amb el compte de l\'institut.</p><div style="width:110mm;margin:8mm auto">' + q.svg + '</div><p style="font-size:16px">' + esc(q.url) + "</p></div>", false); return; }
     if (a === "copia") { navigator.clipboard && navigator.clipboard.writeText(asDades && asDades.text || ""); b.textContent = "Copiat ✓"; return; }
+    if (a === "videoword" || a === "videosolword") { videoWord(a === "videosolword"); return; }
     if (a === "imprimeixsol") { if (asDades && asDades.sol) imprimeix(asDades.titol + " · Solucionari", asDades.sol, false, false, true); return; }
     if (a === "imprimeix") { imprimeix(asDades.titol, asDades.html, false); return; }
     if (a === "imprimeixdis") { imprimeix(asDades.titol, asDades.htmlDis || asDades.html, true); return; }
@@ -2328,6 +2329,30 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       vr.map((q, i) => { const p = c.preg[q.i];
         return wPar([wRun((i + 1) + ".\t" + ctlPr(q.p, c) + " → "), wRun("abcdefgh"[q.c] + ") " + ctlOp(q.o[q.c]), { b: true })], { esq: 400, penj: 400, keep: !!(p.pag || p.cita), despres: p.pag || p.cita ? 0 : 120 }) +
           (p.pag || p.cita ? wPar([wRun((p.pag ? "p. " + p.pag : "") + (p.cita ? (p.pag ? " · " : "") + "«" + p.cita + "»" : ""), { sz: 18 })], { esq: 400, despres: 120 }) : ""); }).join("")));
+  }
+  // 14.11.2026: el qüestionari del vídeo en Word editable (un nivell per secció, amb la capçalera del centre) i el solucionari a part
+  async function videoWord(sol) {
+    const vd = asDades && asDades.video; if (!vd) return;
+    const es = vd.es, tit = asDades.titol, lletra = k => "abcdefgh"[k];
+    const frag = (es ? "Fragmento del vídeo del " : "Fragment del vídeo del ") + mmss(vd.inici) + " al " + mmss(vd.final) + ": " + vd.enllac;
+    const ratlla = '<w:pBdr><w:bottom w:val="single" w:sz="4" w:space="1" w:color="999999"/></w:pBdr>';
+    const linia = () => "<w:p><w:pPr>" + ratlla + '<w:spacing w:before="160" w:after="0"/><w:ind w:left="400"/></w:pPr></w:p>';
+    const preg = (q, i) => {
+      const enun = (i + 1) + ".\t" + q.enunciat + (q.tipus === "multiple" ? (es ? " (puede haber más de una respuesta)" : " (pot haver-hi més d'una resposta)") : "");
+      if (q.opcions) return wPar(enun, { esq: 400, penj: 400, keep: true, despres: 40 }) + q.opcions.map((o, j) => wPar(lletra(j) + ") " + o, { esq: 620, keep: j < q.opcions.length - 1, despres: j < q.opcions.length - 1 ? 0 : 240 })).join("");
+      if (q.tipus === "oberta") return wPar(enun, { esq: 400, penj: 400, keep: true, despres: 0 }) + linia() + linia() + linia() + wPar("", { despres: 160 });
+      return wPar(enun, { esq: 400, penj: 400, despres: 240 });
+    };
+    const nivell = nv => wCapcalera(false) +
+      wPar([wRun(tit + (vd.nivells.length > 1 ? " · " + nv.nom : ""), { b: true })], { antes: 120, despres: 80, keep: true }) +
+      wPar([wRun(frag, { sz: 18 })], { despres: 80 }) +
+      wPar(es ? "Mira el fragmento y responde las preguntas. En las de test, rodea la respuesta correcta; en las de completar, escribe las palabras exactas que se dicen." : "Mira el fragment i respon les preguntes. A les de test, encercla la resposta correcta; a les de completar, escriu les paraules exactes que es diuen.", { despres: 200 }) +
+      nv.preguntes.map(preg).join("");
+    const solucio = () => wCapcalera(true) + wPar([wRun((es ? "Solucionario · " : "Solucionari · ") + tit, { b: true })], { despres: 160 }) +
+      vd.nivells.map(nv => (vd.nivells.length > 1 ? wPar([wRun(nv.nom, { b: true })], { antes: 160, despres: 80, keep: true }) : "") +
+        nv.preguntes.map((q, i) => wPar([wRun((i + 1) + ".\t"), wRun(q.tipus === "completa" ? q.respostes.join(" / ") : q.tipus === "oberta" ? (es ? "(abierta) " : "(oberta) ") + q.resposta : q.correctes.map(k => lletra(k) + ") " + q.opcions[k]).join(" · "), { b: q.tipus !== "oberta" })], { esq: 400, penj: 400, despres: 80 })).join("")).join("");
+    try { await baixaDocx((sol ? (es ? "Solucionario - " : "Solucionari - ") : "") + tit, sol ? [solucio()] : vd.nivells.map(nivell)); }
+    catch (er) { alert("No s'ha pogut fer el Word: " + er.message); }
   }
   async function ctlWord(c, sol) {
     const nom = (sol ? "Solucionari - " : "Control de lectura - ") + c.llibre + (c.caps ? " - cap. " + c.caps : "");
@@ -4993,7 +5018,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       // 14.11.2026: el solucionari va a part (es veu i s'imprimeix separat de les preguntes)
       asDades.sol = "<h3>" + esc(titolV) + "</h3><h4>Solucionari</h4><ul>" + nivells.map(nv => "<li><b>" + esc(nv.nom) + ":</b> " + nv.preguntes.map((q, k) => esc(solQ(q, k))).join(" · ") + "</li>").join("") + "</ul>";
       const sel = '<select id="asQrNiv" aria-label="Nivell del qüestionari">' + nivells.map((nv, k) => "<option" + (k === (nivells.length >= 3 && triats.length > 1 ? 1 : 0) ? " selected" : "") + ">" + esc(nv.nom) + "</option>").join("") + "</select>";
-      fet('<div class="alum-eines"><a class="boto clar" href="' + esc(enllac) + '" target="_blank" rel="noopener">▶️ Mira el fragment</a><button type="button" class="boto clar" data-asb="copia">Copia</button><button type="button" class="boto clar" data-asb="imprimeix">🖨️ Imprimeix / PDF</button><button type="button" class="boto clar" data-asb="imprimeixsol">🔑 Solucionari</button>' + (compteIns() ? sel + '<button type="button" class="boto" data-asb="qr">📱 Qüestionari en línia</button>' : "") + '</div><div class="as-doc">' + capcaleraDoc() + asDades.html + '</div><div class="as-doc as-sol">' + asDades.sol + "</div>");
+      fet('<div class="alum-eines"><a class="boto clar" href="' + esc(enllac) + '" target="_blank" rel="noopener">▶️ Mira el fragment</a><button type="button" class="boto clar" data-asb="copia">Copia</button><button type="button" class="boto clar" data-asb="imprimeix">🖨️ Imprimeix / PDF</button><button type="button" class="boto clar" data-asb="imprimeixsol">🔑 Solucionari</button><button type="button" class="boto clar" data-asb="videoword">⬇️ Word</button><button type="button" class="boto clar" data-asb="videosolword">⬇️ Solucionari en Word</button>' + (compteIns() ? sel + '<button type="button" class="boto" data-asb="qr">📱 Qüestionari en línia</button>' : "") + '</div><div class="as-doc">' + capcaleraDoc() + asDades.html + '</div><div class="as-doc as-sol">' + asDades.sol + "</div>");
     } catch (e) { fet('<p class="avis">' + esc(e.message) + "</p>"); }
   }
   // Enllaça el qüestionari del vídeo a la columna EO1 del grup de la classe del Classroom (full del trimestre actual).
