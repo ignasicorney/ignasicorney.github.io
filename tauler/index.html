@@ -4248,6 +4248,35 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
   // altre grup teu) i l'original s'obre des del Drive a qualsevol aparell. Només es baixen els nous o els que han canviat.
   const b64aBuf = b64 => Uint8Array.from(atob(String(b64).replace(/\n/g, "")), c => c.charCodeAt(0));
   const idCarpeta = t => { t = String(t || "").trim(); const m = t.match(/folders\/([\w-]{10,})/) || t.match(/[?&]id=([\w-]{10,})/) || t.match(/^([\w-]{20,})$/); return m ? m[1] : null; };
+  // Enllaç del document d'un PSI (14.11.2026): es pot canviar el document d'un alumne concret enganxant-ne l'enllaç del Drive.
+  // L'anterior queda «sense alumne» i no es torna a aparellar sol (fins que canviï al Drive).
+  const idFitxerDrive = t => { t = String(t || "").trim(); const m = t.match(/\/(?:file|document|spreadsheets|presentation)\/d\/([\w-]{10,})/) || t.match(/[?&]id=([\w-]{10,})/) || t.match(/^([\w-]{20,})$/); return m ? m[1] : null; };
+  const urlFitxerDrive = id => "https://drive.google.com/file/d/" + id + "/view";
+  async function canviaEnllacPSI(gx, nom) {
+    const q = Q(), ant = psiDocDe(gx, nom), net = nom.replace(/\s+DIS$/i, "");
+    const t = prompt("Enllaç del Drive del PSI de " + net + ":", ant && ant.drive ? urlFitxerDrive(ant.drive) : "");
+    if (t == null) return false;
+    const id = idFitxerDrive(t);
+    if (!id) { alert("Això no sembla l'enllaç d'un document del Drive (ha de contenir «/file/d/…», «/document/d/…» o «/spreadsheets/d/…»)."); return false; }
+    if (ant && ant.drive === id) return false;
+    if (!compteIns()) await detectaIns(true);
+    if (!compteIns()) { alert("No trobo el compte d'ieslabisbal.cat al correu de la Bitàcola (📬 Correu > ⚙️). Els PSI es llegeixen amb aquell compte."); return false; }
+    q.psiFitxers = Array.isArray(q.psiFitxers) ? q.psiFitxers : []; q.psiIgnora = q.psiIgnora || {};
+    for (const gy of q.grups) for (const [n, d] of Object.entries(gy.psiDocs || {})) if (d && d.drive === id && !(gy === gx && n === nom)) {
+      if (!confirm("Aquest document ara és el PSI de " + n.replace(/\s+DIS$/i, "") + " (" + nomGrup(gy.nom) + "). Vols passar-lo a " + net + "?")) return false;
+      delete gy.psiDocs[n]; await idbTreuPSI(clauPSI(gy, n));
+    }
+    const r = await cridaIns({ accio: "drive-fitxer", id });
+    const llistat = q.psiFitxers.find(x => x.id === id);
+    const fi = new File([b64aBuf(r.b64)], r.nom, { type: r.tipus || "" }); fi.drive = id; fi.dm = llistat ? llistat.data : null;
+    const dub = await pujaPSI(gx, [fi], nom, { silenci: true });
+    const d = psiDocDe(gx, nom);
+    if (!d || d.drive !== id) throw new Error((dub && dub[0]) || "No s'ha pogut llegir «" + r.nom + "».");
+    if (ant && ant.drive) { const v = q.psiFitxers.find(x => x.id === ant.drive); q.psiIgnora[ant.drive] = v ? v.data : (ant.dm || "*"); if (!llistat && v) q.psiFitxers.push({ id, nom: r.nom, data: null, carpeta: v.carpeta }); }
+    delete q.psiIgnora[id];
+    desa(); pintaAlumnes();
+    return true;
+  }
   // Gestor dels PSI del Drive (14.11.2026): una finestra amb totes les carpetes i tots els documents que s'hi han
   // trobat, amb l'alumne a qui ha anat cada un. Es pot canviar o posar l'alumne de qualsevol document.
   // Q().psiFitxers = [{ id, nom, data, carpeta }]: la darrera lectura de les carpetes.
@@ -4274,7 +4303,8 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       return '<div style="border-top:1px solid var(--linia);padding:6px 0"><b' + (a ? "" : ' style="color:#c0001a"') + ">" + esc(f.nom) + "</b>" +
         ' <a href="' + urlFitxer(f.id) + '" target="_blank" rel="noopener" class="font" style="word-break:break-all">' + esc(urlFitxer(f.id)) + "</a>" +
         '<div class="botons" style="flex-wrap:wrap;margin-top:3px"><select data-ps="' + esc(f.id) + '" data-ara="' + esc(v) + '" style="font:inherit;max-width:100%">' + opcions(v) + "</select>" +
-        '<button type="button" class="boto clar" data-pdesa="' + esc(f.id) + '"' + (ocupat ? " disabled" : "") + ">Desa</button></div></div>"; };
+        '<button type="button" class="boto clar" data-pdesa="' + esc(f.id) + '"' + (ocupat ? " disabled" : "") + ">Desa</button>" +
+        (a ? '<button type="button" class="boto clar" data-pdenl="' + esc(f.id) + '" title="Posa a aquest alumne un altre document del Drive"' + (ocupat ? " disabled" : "") + ">✏️ Canvia l'enllaç</button>" : "") + "</div></div>"; };
     let obertes = null;   // carpetes desplegades (es mantenen en tornar a pintar)
     const pinta = () => {
       const dets = Array.from(dlg.querySelectorAll("details[data-c]"));
@@ -4328,7 +4358,13 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       pinta();
     };
     dlg.onclick = async ev => {
-      const b = ev.target.closest("[data-pd],[data-pdesa],[data-pdc],[data-pdedit]"); if (!b || ocupat) return;
+      const b = ev.target.closest("[data-pd],[data-pdesa],[data-pdc],[data-pdedit],[data-pdenl]"); if (!b || ocupat) return;
+      if (b.dataset.pdenl) {
+        const a = assignatDe(b.dataset.pdenl); if (!a) return;
+        try { ocupat = "Canviant el document de " + a.n.replace(/\s+DIS$/i, "") + "…"; const fet = await canviaEnllacPSI(a.gx, a.n); avis = fet ? "✓ Document canviat." : ""; }
+        catch (e) { avis = e.message; }
+        ocupat = ""; pinta(); return;
+      }
       if (b.dataset.pdc) { await llegeix([b.dataset.pdc]); return; }
       // Canviar l'enllaç d'una carpeta: només es llegeix la nova; els PSI ja assignats es queden amb el seu alumne
       if (b.dataset.pdedit) {
@@ -4397,12 +4433,14 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       }
       if (!orig && vista === "orig") vista = "text";
       dlg.innerHTML = '<form method="dialog"><h2>📄 PSI</h2><p style="margin:0"><b>' + esc(nom.replace(/\s+DIS$/i, "")) + "</b> · " + esc(nomGrup(g.nom)) + (d ? ' <span class="font">· ' + esc(d.fitxer) + " · " + dma(d.d) + "</span>" : "") + "</p>" +
+        (d && d.drive ? '<p class="font" style="margin:2px 0 0"><a href="' + urlFitxerDrive(d.drive) + '" target="_blank" rel="noopener" style="word-break:break-all">' + esc(urlFitxerDrive(d.drive)) + "</a></p>" : "") +
         (d ? '<div class="vistes" role="group" aria-label="Com es mostra" style="margin:6px 0"><button type="button" data-psi="v-orig" aria-pressed="' + (vista === "orig") + '"' + (orig ? "" : " disabled") + '>Document original</button><button type="button" data-psi="v-text" aria-pressed="' + (vista === "text") + '">Text i cerca</button></div>' +
           (!orig ? (d.drive ? '<p class="font">No s\'ha pogut obrir l\'original del Drive del centre' + (errDrive ? " (" + esc(errDrive) + ")" : "") + '. Mentrestant en tens el text.</p>' : '<p class="font">L\'original no és en aquest aparell (es guarda només on el vas pujar). Pots consultar-ne el text, o tornar-lo a pujar aquí amb el botó de sota, o assignar-li el del Drive amb el botó «PSI» de la icona del Drive.</p>') : "") +
           (vista === "orig" ? '<div class="psi-zoom"><button type="button" class="boto clar boto-ico" data-psi="z-" aria-label="Més petit">−</button><button type="button" class="boto clar boto-ico" data-psi="z+" aria-label="Més gran">+</button><span class="font">Mida</span></div><div class="psi-orig" id="psiOrig" style="--z:' + zoom + '"></div>' :
             '<input type="search" id="psiCerca" placeholder="Cerca dins del PSI (p. ex. examen, temps, lectura…)" style="width:100%;box-sizing:border-box;font:inherit;padding:6px 8px;border:1px solid var(--linia);border-radius:8px"><div class="psi-text" id="psiText">' + esc(d.text) + "</div>")
           : '<p class="font">Encara no hi ha cap PSI per a aquest alumne.</p>') +
         '<div class="botons" style="flex-wrap:wrap"><label class="boto clar">' + (d ? "Substitueix el document" : "📎 Puja el PSI (Word, Excel o PDF)") + '<input type="file" id="psiFitxer" accept=".docx,.xlsx,.xls,.ods,.pdf,.txt" hidden></label>' +
+        '<button type="button" class="boto clar" data-psi="enllac">✏️ ' + (d && d.drive ? "Canvia l'enllaç" : "Enllaç del Drive") + "</button>" +
         (orig ? '<button type="button" class="boto clar" data-psi="baixa">⬇️ Baixa l\'original</button>' : "") +
         (d ? '<button type="button" class="boto clar" data-psi="treu">Treu-lo</button>' : "") + '<button type="button" class="boto" data-psi="tanca">Fet</button></div></form>';
       if (vista === "orig" && orig) pintaOriginalPSI($("psiOrig"), orig).then(() => {
@@ -4423,6 +4461,11 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       const b = ev.target.closest("[data-psi]"); if (!b) return;
       const a = b.dataset.psi;
       if (a === "tanca") { dlg.close(); return; }
+      if (a === "enllac") {
+        try { if (await canviaEnllacPSI(g, nom)) { provatDrive = false; vista = "orig"; pinta(); } }
+        catch (e) { alert(e.message); }
+        return;
+      }
       if (a === "v-orig" || a === "v-text") { vista = a.slice(2); pinta(); return; }
       if (a === "z-" || a === "z+") { zoom = Math.max(0.6, Math.min(4, Math.round(((zoom || 1) * (a === "z+" ? 1.3 : 1 / 1.3)) * 100) / 100)); const el = $("psiOrig"); if (el) el.style.setProperty("--z", zoom); return; }
       if (a === "baixa" && orig) { const u = URL.createObjectURL(new Blob([orig.buf], { type: orig.tipus || "application/octet-stream" })); const el = document.createElement("a"); el.href = u; el.download = orig.nom || "PSI"; document.body.appendChild(el); el.click(); el.remove(); setTimeout(() => URL.revokeObjectURL(u), 4000); return; }
