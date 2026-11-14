@@ -2200,10 +2200,13 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
         '<div class="alum-eines">' + eBoto("ctlnota", "💾 Desa la nota i passa al següent alumne") + "</div>" : '<p class="font">Tria l\'alumne.</p>');
     return h;
   }
+  // Ortografia en imprimir: les opcions acaben amb punt; en castellà, les preguntes duen «¿» si acaben amb «?»
+  const ctlOp = o => { o = String(o).trim(); return /[.!?…]$/.test(o) ? o : o + "."; };
+  const ctlPr = (t, c) => { t = String(t).trim(); return c.lleng !== "català" && /\?$/.test(t) && !t.includes("¿") ? "¿" + t : t; };
   function ctlHTMLModel(c, v) {
     const vr = variantCtl(c, v);
     return '<h3 style="text-transform:none">Control de lectura · ' + esc(c.llibre) + (c.caps ? " · capítols " + esc(c.caps) : "") + (Number(c.vars) > 1 ? " · Model " + LLETRES[v] : "") + "</h3>" +
-      '<p style="margin:0 0 8px">Encercla la resposta correcta. Només n\'hi ha una.</p><ol>' + vr.map(p => '<li style="margin-bottom:8px;break-inside:avoid">' + esc(p.p) + '<div style="margin-left:10px">' + p.o.map((o, j) => "abcdefgh"[j] + ") " + esc(o)).join("<br>") + "</div></li>").join("") + "</ol>";
+      '<p style="margin:0 0 8px">Encercla la resposta correcta. Només n\'hi ha una.</p><ol>' + vr.map(p => '<li style="margin-bottom:8px;break-inside:avoid">' + esc(ctlPr(p.p, c)) + '<div style="margin-left:10px">' + p.o.map((o, j) => "abcdefgh"[j] + ") " + esc(ctlOp(o))).join("<br>") + "</div></li>").join("") + "</ol>";
   }
   async function ctlAccio(a, b) {
     const e = EI();
@@ -2223,7 +2226,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
           "3) Cada pregunta ha de dur la JUSTIFICACIÓ: «pag» = número de la pàgina (el de la marca «--- Pàgina N ---») on hi ha la resposta, i «cita» = una frase COPIADA LITERALMENT del text (entre 6 i 25 paraules seguides, sense canviar ni una lletra, en la llengua original del llibre) que demostri que la resposta correcta ho és.\n" +
           "4) Es comprovarà automàticament que cada cita és al text: la pregunta amb una cita que no hi sigui literalment es descartarà.\n" +
           "5) Preguntes sobre fets concrets de la trama, personatges, llocs i alguna d'inferència senzilla, repartides per tot el llibre" + (caps ? " (dels capítols indicats)" : " (del principi, del mig i del final)") + ". Opcions plausibles i de llargada semblant, sense «totes les anteriors» ni «cap de les anteriors». Reparteix la posició de la correcta.\n\n" +
-          "Redacta les preguntes i les opcions en " + lleng + ". Respon només JSON: {\"preguntes\": [{\"p\": enunciat, \"o\": [opcions sense lletra], \"c\": índex de la correcta (0 = la primera), \"pag\": número de pàgina, \"cita\": frase literal del text}]}.", mat, { json: true, imatge: doc.imatge });
+          "Redacta les preguntes i les opcions en " + lleng + ", amb bona ortografia: cada opció acaba amb punt" + (lleng === "castellà" ? " i les preguntes porten «¿» i «?»" : "") + ". Respon només JSON: {\"preguntes\": [{\"p\": enunciat, \"o\": [opcions sense lletra], \"c\": índex de la correcta (0 = la primera), \"pag\": número de pàgina, \"cita\": frase literal del text}]}.", mat, { json: true, imatge: doc.imatge });
         // Comprovació: la cita ha de ser literalment al text (sense comptar majúscules, accents, signes ni salts de línia)
         const normCtl = t => String(t).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9ñ]+/g, " ").trim();
         const pagines = [];
@@ -2240,7 +2243,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
           return q;
         }).filter(Boolean).slice(0, n);
         if (!preg.length) throw new Error("La IA no ha fet cap pregunta amb una cita que es trobi al llibre" + (descartades ? " (n'ha fet " + descartades + " amb cites inventades)" : "") + "; torna-ho a provar.");
-        ctl = { id: nouId(), d: avuiISO(), llibre: ll.t, caps, curs: cursCtl(), k, vars: Number(fv("vars", "2")), preg, resp: {} };
+        ctl = { id: nouId(), d: avuiISO(), llibre: ll.t, caps, curs: cursCtl(), lleng, k, vars: Number(fv("vars", "2")), preg, resp: {} };
         eiRes.ctl = ""; eiMsg.ctl = (preg.length < n ? "Només n'hi ha " + preg.length + " de comprovades (de " + n + " demanades)." : "✓ " + preg.length + " preguntes, totes amb la cita trobada al llibre.") + (descartades ? " S'han descartat " + descartades + " preguntes amb cites que no són al text." : "") + (!mat ? " ⚠️ Amb una foto no es poden comprovar les cites: revisa-les." : "");
       });
     }
@@ -2260,7 +2263,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       imprimeix("Solucionari · " + ctl.llibre, '<h3 style="text-transform:none">Solucionari · ' + esc(ctl.llibre) + (ctl.caps ? " · capítols " + esc(ctl.caps) : "") + '</h3><table style="border-collapse:collapse;font-size:13px">' +
         '<tr><th style="border:1px solid #000;padding:4px 8px">Model</th>' + ctl.preg.map((p, i) => '<th style="border:1px solid #000;padding:4px 6px">' + (i + 1) + "</th>").join("") + "</tr>" +
         Array.from({ length: ctl.vars }, (x, v) => '<tr><td style="border:1px solid #000;padding:4px 8px"><b>' + LLETRES[v] + "</b></td>" + variantCtl(ctl, v).map(p => '<td style="border:1px solid #000;padding:4px 6px;text-align:center">' + "abcdefgh"[p.c] + "</td>").join("") + "</tr>").join("") + "</table>" +
-        "<h4>Preguntes (model A)</h4><ol>" + ctl.preg.map(p => "<li>" + esc(p.p) + " → <b>" + esc(p.o[p.c]) + "</b>" + (p.pag || p.cita ? '<br><span style="font-size:12px">' + (p.pag ? "p. " + p.pag : "") + (p.cita ? (p.pag ? " · " : "") + "«" + esc(p.cita) + "»" : "") + "</span>" : "") + "</li>").join("") + "</ol>", false, true);
+        "<h4>Preguntes (model A)</h4><ol>" + ctl.preg.map(p => "<li>" + esc(ctlPr(p.p, ctl)) + " → <b>" + esc(ctlOp(p.o[p.c])) + "</b>" + (p.pag || p.cita ? '<br><span style="font-size:12px">' + (p.pag ? "p. " + p.pag : "") + (p.cita ? (p.pag ? " · " : "") + "«" + esc(p.cita) + "»" : "") + "</span>" : "") + "</li>").join("") + "</ol>", false, true);
       return;
     }
     if (a === "ctlv") { ctlCorr.v = Number(b.dataset.v); ctlCorr.r = []; return pintaAssistent(); }
