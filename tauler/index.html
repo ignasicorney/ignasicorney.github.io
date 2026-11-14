@@ -240,6 +240,7 @@ dialog#dlgCBN{width:min(860px,calc(100vw - 24px))}
 .cbn-taula tr.cbn-mal td{background:#fde2e2}
 .cb-taula tr.cb-dubte td:first-child{background:#fff4c2}
 .cb-resp{display:flex;gap:6px;flex-wrap:wrap;align-items:flex-start}
+.cb-resp.cb-cols{display:grid;grid-template-rows:repeat(8,auto);grid-auto-flow:column;grid-auto-columns:max-content;justify-content:start;overflow-x:auto}
 .cb-col{flex:1 1 260px;display:flex;flex-direction:column;gap:4px}
 .cb-it{flex-wrap:wrap}
 .cb-ops{display:flex;gap:3px}
@@ -2200,7 +2201,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     const vr = variantCtl(ctl, ctlCorr.v), encerts = ctlCorr.r.filter((x, i) => x != null && vr[i] && x === vr[i].c).length;
     h += "<h4>✅ Correcció</h4>" + selectorsAlumne(asSel) +
       '<div class="vistes" role="group" aria-label="Model" style="margin:6px 0">' + Array.from({ length: nv }, (x, v) => '<button type="button" data-asb="ei-ctlv" data-v="' + v + '" aria-pressed="' + (ctlCorr.v === v) + '">Model ' + LLETRES[v] + "</button>").join("") + "</div>" +
-      (k ? '<div class="cb-resp">' + vr.map((p, i) => '<div class="cb-it ' + (ctlCorr.r[i] == null ? "buida" : ctlCorr.r[i] === p.c ? "be" : "malament") + '"><span>' + (i + 1) + '</span><span class="cb-ops">' + p.o.map((o, j) => '<button type="button" data-asb="ei-ctlr" data-q="' + i + '" data-l="' + j + '" aria-pressed="' + (ctlCorr.r[i] === j) + '">' + "abcdefgh"[j] + "</button>").join("") + "</span></div>").join("") + "</div>" +
+      (k ? '<div class="cb-resp cb-cols">' + vr.map((p, i) => '<div class="cb-it ' + (ctlCorr.r[i] == null ? "buida" : ctlCorr.r[i] === p.c ? "be" : "malament") + '"><span>' + (i + 1) + '</span><span class="cb-ops">' + p.o.map((o, j) => '<button type="button" data-asb="ei-ctlr" data-q="' + i + '" data-l="' + j + '" aria-pressed="' + (ctlCorr.r[i] === j) + '">' + "abcdefgh"[j] + "</button>").join("") + "</span></div>").join("") + "</div>" +
         '<div class="fila-as"><div class="xifra" style="min-width:140px"><b style="font-size:1.8rem">' + coma(Math.round(encerts / vr.length * 100) / 10) + "</b><span>" + encerts + " encerts de " + vr.length + "</span></div></div>" +
         '<div class="alum-eines">' + eBoto("ctlnota", "💾 Desa la nota i passa al següent alumne") + "</div>" : '<p class="font">Tria l\'alumne.</p>');
     return h;
