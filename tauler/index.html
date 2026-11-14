@@ -2348,7 +2348,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     const data = iso => { const m = String(iso || "").match(/^(\d{4})-(\d{2})-(\d{2})/); return m ? m[3] + "." + m[2] + "." + m[1] : ""; };
     return '<details class="vd-desats" style="margin-top:12px"' + (asResultat ? "" : " open") + '><summary><b>📂 Qüestionaris desats</b> <span class="font">(' + l.length + ')</span></summary><ul style="margin:6px 0 0;padding-left:1.2em">' +
       l.map(x => '<li style="margin:4px 0">' + esc(x.titol) + ' <span class="font">· ' + esc(x.curs || "") + (x.nivell ? " · " + esc(x.nivell) : "") + " · " + data(x.data) + (x.formulari ? " · amb formulari" : "") + "</span> " +
-        '<button type="button" class="boto clar" data-asb="vdobre" data-id="' + esc(x.id) + '">Obre</button> <button type="button" class="boto perill" data-asb="vdesb" data-id="' + esc(x.id) + '">✕</button></li>').join("") + "</ul></details>";
+        (asDades && asDades.desatId === x.id ? '<b class="font" style="color:#2e7d32">✓ és el que tens obert a sota</b>' : '<button type="button" class="boto clar" data-asb="vdobre" data-id="' + esc(x.id) + '">Obre</button>') + ' <button type="button" class="boto perill" data-asb="vdesb" data-id="' + esc(x.id) + '">✕</button></li>').join("") + "</ul></details>";
   }
   function accioVideoDesat(a, id) {
     const l = dades.videos || [], x = l.find(y => y.id === id); if (!x) return;
@@ -2357,7 +2357,9 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       dades.videos = l.filter(y => y !== x); desa(); pintaAssistent(); return;
     }
     asVid = Object.assign({}, asVid, x.params || {});
-    asDades = Object.assign({}, x.dades, { desatId: x.id }); asResultat = x.html || ""; asModel = "";
+    asDades = Object.assign({}, x.dades, { desatId: x.id }); asModel = "";
+    // avís a dalt del resultat, perquè es vegi que s'ha obert el desat (i no el que hi havia abans)
+    asResultat = '<p class="avis" style="background:#e8f5e9;color:#1b5e20;border-color:#a5d6a7">📂 Obert el qüestionari desat «' + esc(x.titol) + "» (" + esc(x.data.split("-").reverse().join(".")) + ")" + (x.formulari ? ", amb el seu formulari" : "") + ".</p>" + (x.html || "");
     pintaAssistent();
     if ($("asText")) $("asText").value = x.transcripcio || "";
     const o = $("asSortida"); if (o) o.scrollIntoView({ behavior: "smooth", block: "start" });
