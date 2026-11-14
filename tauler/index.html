@@ -266,6 +266,40 @@ dialog#dlgCBN{width:min(860px,calc(100vw - 24px))}
 .rub-niv input{accent-color:#fff;margin:0;cursor:pointer}
 .rub-nota{font-size:1.1rem;margin:4px 0}
 .taula td.rub{cursor:pointer;background:#fbf6ea}
+/* Eines per a l'alumnat */
+.fl-barra{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:8px 0}
+.fl-temps,.exp-temps{font:700 1.8rem/1 ui-monospace,Menlo,Consolas,monospace;min-width:4.5em}
+.fl-text{font-size:1.25rem;line-height:2.1;border:1px solid var(--linia);border-radius:10px;padding:10px 14px;background:#fff;-webkit-user-select:none;user-select:none}
+.fl-w{cursor:pointer;border-radius:4px;padding:1px 2px}
+.fl-w:hover{background:#f1efe9}
+.fl-w.err{background:#f8d0cf;color:#a3161b;text-decoration:line-through}
+.fl-w.fi{outline:2px solid #2f6fb5;background:#d4e4f7}
+.fl-w.fora{color:#b5b3ac}
+.fl-preg li{margin:4px 0}
+.dic-text{max-height:none;line-height:1.9}
+.dic-fr{cursor:pointer;border-radius:4px;padding:1px 2px}
+.dic-fr.act{background:#fbeeb8}
+.dic-xips{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}
+.dic-xips button,.exp-rub button{margin:2px;padding:6px 10px;border:1px solid var(--linia);border-radius:999px;background:var(--targeta);font:inherit;color:inherit;cursor:pointer}
+.dic-xips button[aria-pressed=true]{background:#a3161b;border-color:#a3161b;color:#fff;text-decoration:line-through}
+.ctl-q{display:flex;gap:6px;align-items:flex-start;padding:6px 0;border-bottom:1px solid var(--linia)}
+.ctl-qn{font-weight:700;min-width:1.8em;padding-top:4px}
+.ctl-q input[type=text]{width:100%;box-sizing:border-box;font:inherit}
+.ctl-op{display:flex;align-items:center;gap:4px;margin-top:3px;font-size:.9rem}
+.exp-cap{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:10px 0;font-size:1.1rem}
+.exp-temps{color:var(--suau)}.exp-temps.be{color:#1f6b2a}.exp-temps.llarg{color:#a3161b}
+.exp-rub{width:100%;border-collapse:collapse}
+.exp-rub tr{display:block;padding:6px 0;border-bottom:1px solid var(--linia)}
+.exp-rub th,.exp-rub td{display:block;text-align:left;padding:2px 0;border:0}
+.exp-rub th{font-weight:600}
+.exp-rub td{white-space:normal}
+.exp-rub button[aria-pressed=true]{background:var(--accent);border-color:var(--accent);color:#fff}
+.seg-graf{position:relative;margin:6px 0}
+.seg-svg{width:100%;height:auto;display:block}
+.seg-tip{position:absolute;width:200px;background:#1d1d1b;color:#fff;font-size:.8rem;padding:5px 8px;border-radius:6px;pointer-events:none}
+.seg-llegenda{display:flex;gap:14px;font-size:.85rem;margin-top:8px}
+.seg-llegenda i{display:inline-block;width:18px;height:3px;border-radius:2px;vertical-align:middle;margin-right:6px}
+.seg-llegenda i.ratllat{background:repeating-linear-gradient(90deg,#77776f 0 5px,transparent 5px 9px)}
 /* Assistent */
 .as-doc .cap-doc{width:100%;border-collapse:collapse;margin:0 0 12px;font:13px/1.35 Arial,Helvetica,sans-serif;letter-spacing:0}.as-doc .cap-doc td{border:1px solid #000;padding:4px 8px;vertical-align:top}.as-doc .cap-doc td.logo{width:80px;text-align:center;vertical-align:middle}.as-doc .cap-doc td.logo img{width:64px}.as-doc .cap-doc td.nota{width:22%}.as-doc .linia-al{font:bold 13px Arial,sans-serif;letter-spacing:0;margin:0 0 14px;display:flex;white-space:nowrap}.as-doc .linia-al .pt{flex-basis:0;min-width:0;overflow:hidden;margin:0 5px 0 4px}.linia-al .pt:last-child{margin-right:0}
 .fila-as{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0}
@@ -553,6 +587,14 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       <button type="button" data-as="adaptar">🧩 Adaptar</button>
       <button type="button" data-as="rubrica">📋 Rúbrica</button>
       <button type="button" data-as="butlleti">💬 Butlletí</button>
+      <button type="button" data-as="flu">📖 Fluïdesa lectora</button>
+      <button type="button" data-as="dic">✏️ Dictats</button>
+      <button type="button" data-as="ctl">📗 Controls de lectura</button>
+      <button type="button" data-as="var">🔀 Variants d'examen</button>
+      <button type="button" data-as="ref">🩹 Reforç</button>
+      <button type="button" data-as="seg">📈 Seguiment</button>
+      <button type="button" data-as="exp">🎤 Exposicions</button>
+      <button type="button" data-as="pau">🎓 Selectivitat</button>
     </div>
     <div id="asCos"></div>
   </div>
@@ -888,6 +930,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       }
       if (d.genealogia && typeof d.genealogia === "object") r.genealogia = d.genealogia;
       if (Array.isArray(d.formularis)) r.formularis = d.formularis;
+      if (d.eines && typeof d.eines === "object") r.eines = d.eines;   // eines per a l'alumnat (fluïdesa, dictats, controls…)
       if (d.cb && typeof d.cb === "object") r.cb = d.cb;   // competències bàsiques: codis dels fulls, columnes CL/EE i respostes   // qüestionaris en línia creats des de l'Assistent   // dades de les persones vives (privades)
     }
     return r;
@@ -1499,6 +1542,8 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       h = '<p class="font">Descriu què vols avaluar i en surt una rúbrica que pots afegir al banc i vincular a una columna.</p>' +
         '<textarea id="asText" placeholder="Ex.: rúbrica per avaluar un comentari de text de 4t d\'ESO: comprensió, estructura, adequació, correcció lingüística…" rows="5"></textarea>' +
         '<div class="alum-eines"><button type="button" class="boto" data-asb="rubrica">📋 Crea la rúbrica</button></div>';
+    } else if (EINES[asEina]) {
+      h = EINES[asEina]();
     } else {
       const q = Q(); const g = q.grups[Math.min(asSel.g, Math.max(q.grups.length - 1, 0))];
       h = '<p class="font">Proposa un comentari per a cada alumne a partir de les notes del full i de les marques PSI i DIS. S\'envien les notes sense noms.</p>' +
@@ -1512,6 +1557,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     h += '<div id="asSortida">' + (asOcupat ? '<p class="cr-buit">Treballant… pot trigar uns segons.</p>' : asResultat + (asResultat && asModel ? '<p class="font">Fet amb el model de reserva (' + esc(asModel) + ') perquè Gemini estava saturat.</p>' : "")) + "</div>";
     cos.innerHTML = h;
     if (asEina === "cb") pintaCB();
+    if (EINES_DESPRES[asEina]) EINES_DESPRES[asEina]();
     if ($("asText") && textAbans) $("asText").value = textAbans;
     if (asEina === "video") {
       const dur = () => {
@@ -1530,6 +1576,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
   }
   async function executa(b) {
     const a = b.dataset.asb, txt = (($("asText") || {}).value || "").trim();
+    if (a.indexOf("ei-") === 0) { eiAccio(a.slice(3), b); return; }
     const fet = html => { asOcupat = false; asResultat = html; pintaAssistent(); };
     const err = e => fet('<p class="avis">' + esc(e.message) + "</p>");
     if (a === "qr") { creaQuestionari(b); return; }
@@ -1648,6 +1695,901 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     else if (el.dataset.as === "c") asSel.c = el.value;
     else if (el.id === "asFoto") $("asFotoNom").textContent = el.files[0] ? el.files[0].name : "";
   });
+
+  // ================= Eines per a l'alumnat (14.11.2026) =================
+  // Fluïdesa lectora, dictats, controls de lectura, variants d'exàmens, fitxes de reforç, seguiment i exposicions en directe.
+  // Dades a dades.eines: flu (lectures), ftx (textos de lectura), dic (dictats), ctl (controls), exp (exposicions),
+  // err (errors per alumne, clau «grup|nom»), llibres (llibres afegits), obj (objectiu de PCM per curs).
+  const EI = () => {
+    if (!dades.eines || typeof dades.eines !== "object") dades.eines = {};
+    const e = dades.eines;
+    ["flu", "ftx", "dic", "ctl", "exp", "llibres", "pau"].forEach(k => { if (!Array.isArray(e[k])) e[k] = []; });
+    ["err", "obj"].forEach(k => { if (!e[k] || typeof e[k] !== "object" || Array.isArray(e[k])) e[k] = {}; });
+    return e;
+  };
+  const eiF = {}, eiRes = {}, eiMsg = {}, eiCalc = {};
+  const fv = (camp, def) => { const o = eiF[asEina] = eiF[asEina] || {}; return o[camp] != null ? o[camp] : def; };
+  const fput = (camp, v) => { (eiF[asEina] = eiF[asEina] || {})[camp] = v; };
+  const CURSOS_EI = ["1r d'ESO", "2n d'ESO", "3r d'ESO", "4t d'ESO", "1r de batxillerat", "2n de batxillerat"];
+  const LLETRES = "ABCDEFGH";
+  const eOpts = (llista, v) => llista.map(o => { const val = Array.isArray(o) ? o[0] : o, txt = Array.isArray(o) ? o[1] : o; return '<option value="' + esc(val) + '"' + (String(val) === String(v) ? " selected" : "") + ">" + esc(txt) + "</option>"; }).join("");
+  const eSel = (camp, etiq, llista, def, re) => "<label>" + etiq + '<select data-ei="' + camp + '"' + (re ? ' data-eire="1"' : "") + ">" + eOpts(llista, fv(camp, def)) + "</select></label>";
+  const eInp = (camp, etiq, def, estil, calc) => "<label>" + etiq + '<input type="text" data-ei="' + camp + '"' + (calc ? ' data-eicalc="1"' : "") + ' value="' + esc(fv(camp, def)) + '"' + (estil ? ' style="' + estil + '"' : "") + "></label>";
+  const eArea = (camp, ph, files, def) => '<textarea data-ei="' + camp + '" rows="' + (files || 5) + '" placeholder="' + esc(ph) + '">' + esc(fv(camp, def || "")) + "</textarea>";
+  const eChk = (camp, etiq, def, re) => '<label class="font"><input type="checkbox" data-ei="' + camp + '"' + (re ? ' data-eire="1"' : "") + (fv(camp, def) ? " checked" : "") + "> " + etiq + "</label>";
+  const eBoto = (acc, text, clar, extra) => '<button type="button" class="boto' + (clar ? " clar" : "") + '" data-asb="ei-' + acc + '"' + (extra || "") + ">" + text + "</button>";
+  const nombre = s => Number(String(s == null ? "" : s).trim().replace(",", "."));
+  const coma = n => String(n).replace(".", ",");
+  const nomAl = n => String(n || "").replace(/\s+DIS$/i, "");
+  const esDIS = n => /\sDIS$/i.test(String(n || ""));
+  const clauAl = (g, nom) => g.nom + "|" + nom;
+  const cursDeGrup = g => { const m = g && String(g.nom).match(/^\s*([1-4])/); return m ? CURSOS_EI[Number(m[1]) - 1] : "1r d'ESO"; };
+  const msgEi = () => eiMsg[asEina] ? '<p class="font" style="color:#1f6b2a;font-weight:600">' + eiMsg[asEina] + "</p>" : "";
+  const notaModel = () => asModel ? '<p class="font">Fet amb el model de reserva (' + esc(asModel) + ") perquè Gemini estava saturat.</p>" : "";
+  // Barreja estable (sempre igual per a la mateixa llavor)
+  function barreja(llista, llavor) {
+    let s = 0; for (const ch of String(llavor)) s = (s * 31 + ch.charCodeAt(0)) >>> 0;
+    const rnd = () => { s = (s + 0x6D2B79F5) >>> 0; let t = s; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+    const a = llista.slice();
+    for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
+    return a;
+  }
+  // Grup, full, alumne i columna triats als selectors (els mateixos de «Corregir»)
+  function triat() {
+    const q = Q(); if (!q.grups.length) return {};
+    const g = q.grups[Math.min(Number(asSel.g || 0), q.grups.length - 1)];
+    const f = g.fulls[Math.min(Number(asSel.f || 0), Math.max(g.fulls.length - 1, 0))];
+    const fila = f && f.files.find(r => r.nom === asSel.a), col = f && f.columnes.find(c => c.nom === asSel.c);
+    return { g, f, fila, col };
+  }
+  const alumnesOrdenats = f => (f ? f.files.slice().sort((a, b) => nomAl(a.nom).localeCompare(nomAl(b.nom), "ca")) : []);
+  function seguentAlumne() {
+    const { f } = triat(); const l = alumnesOrdenats(f); if (!l.length) return;
+    const i = l.findIndex(r => r.nom === asSel.a);
+    asSel.a = i >= 0 && i < l.length - 1 ? l[i + 1].nom : (i < 0 ? l[0].nom : asSel.a);
+  }
+  // Posa la nota a la columna triada (i, si la columna és de rúbrica, la valoració)
+  function posaNota(nota, rb) {
+    const { fila, col } = triat();
+    if (!fila || !col) { alert("Tria a sota el grup, el full, l'alumne i la columna on va la nota."); return false; }
+    if (isNaN(nota)) { alert("La nota no és un número."); return false; }
+    fila.v = fila.v || {};
+    fila.v[col.nom] = Math.round(nota * 100) / 100;
+    if (rb && col.tipus === "rubrica") { fila.rb = fila.rb || {}; fila.rb[col.nom] = rb; }
+    oblidaExcel(fila); desa(); pintaAlumnes();
+    return true;
+  }
+  // Errors d'un alumne (dictats…) per a les fitxes de reforç
+  function apuntaErrors(g, nom, llista) {
+    if (!g || !nom || !llista.length) return;
+    const e = EI(), k = clauAl(g, nom);
+    e.err[k] = (e.err[k] || []).concat(llista.map(x => Object.assign({ d: avuiISO() }, x))).slice(-300);
+  }
+  async function eiIA(fn) {
+    const eina = asEina;
+    asOcupat = true; asResultat = ""; asModel = ""; eiMsg[eina] = ""; pintaAssistent();
+    try { await fn(); } catch (e) { eiRes[eina] = '<p class="avis">' + esc(e.message || String(e)) + "</p>"; }
+    asOcupat = false; pintaAssistent();
+  }
+  // Llegeix un PDF o una foto: retorna { text, imatge } (la imatge, si el PDF és escanejat o és una foto)
+  async function llegeixDocEi(file) {
+    if (!file) return { text: "", imatge: null };
+    const r = await cbLlegeixDoc(file);
+    if (r.text) return { text: r.text.slice(0, 80000), imatge: null };
+    const c = r.pags[0];
+    return { text: "", imatge: c ? { tipus: "image/jpeg", dades: c.toDataURL("image/jpeg", 0.85).split(",")[1] } : null };
+  }
+  let eiAudio = null;
+  function avisSonor() {
+    try { if (eiAudio) { const o = eiAudio.createOscillator(), gn = eiAudio.createGain(); o.frequency.value = 880; o.connect(gn); gn.connect(eiAudio.destination); gn.gain.setValueAtTime(0.25, eiAudio.currentTime); o.start(); o.stop(eiAudio.currentTime + 0.5); } } catch (e) {}
+    try { if (navigator.vibrate) navigator.vibrate([250, 120, 250]); } catch (e) {}
+  }
+  const preparaAudio = () => { try { if (!eiAudio) eiAudio = new (window.AudioContext || window.webkitAudioContext)(); if (eiAudio.state === "suspended") eiAudio.resume(); } catch (e) {} };
+
+  // ---------- 📖 Fluïdesa lectora ----------
+  // L'alumne llegeix en veu alta; es toquen les paraules mal llegides i, en acabar, l'última llegida.
+  // PCM = (paraules llegides − errors) / minuts. Nota de fluïdesa = 10 × PCM / objectiu del curs (màx. 10);
+  // si es fan les preguntes de comprensió, nota = 80 % fluïdesa + 20 % comprensió.
+  const OBJ_PCM = { "1r d'ESO": 130, "2n d'ESO": 140, "3r d'ESO": 150, "4t d'ESO": 160, "1r de batxillerat": 170, "2n de batxillerat": 175 };
+  let flu = null, fluTimer = null;
+  const fluCurs = () => fv("curs", cursDeGrup(triat().g));
+  const fluObj = () => { const v = nombre(EI().obj[fluCurs()]); return v > 0 ? v : OBJ_PCM[fluCurs()] || 130; };
+  const fluDur = () => Number(fv("dur", "60"));
+  const fluToks = text => String(text).replace(/\r/g, "").trim().split(/(\s+)/).filter(x => x).map(t => ({ t: t, w: /[\p{L}\p{N}]/u.test(t) }));
+  const fluTemps = () => (flu ? flu.acum + (flu.corrent ? Date.now() - flu.ini : 0) : 0);
+  function fluNou(text, titol) { flu = { titol: titol || "", text: text, toks: fluToks(text), errs: [], fi: -1, ini: 0, acum: 0, corrent: false, limit: false, mode: "err", preg: null, comp: [] }; }
+  function fluCalc() {
+    if (!flu) return null;
+    const idx = flu.toks.map((x, i) => (x.w ? i : -1)).filter(i => i >= 0);
+    if (flu.fi < 0 || !idx.length) return null;
+    const llegides = idx.filter(i => i <= flu.fi).length, errs = flu.errs.filter(i => i <= flu.fi).length;
+    const seg = flu.limit && fluDur() ? fluDur() : fluTemps() / 1000;
+    if (seg < 5) return { senseTemps: true };
+    const pcm = Math.round((llegides - errs) / (seg / 60)), prec = llegides ? Math.round((llegides - errs) / llegides * 1000) / 10 : 0;
+    const obj = fluObj(), notaF = Math.min(10, Math.round(pcm / obj * 100) / 10);
+    let notaC = null, nota = notaF;
+    if (flu.preg && flu.comp.some(x => x != null)) { notaC = Math.round(flu.comp.filter(x => x === true).length / flu.preg.length * 100) / 10; nota = Math.round((notaF * 0.8 + notaC * 0.2) * 100) / 100; }
+    return { llegides, errs, seg, pcm, prec, obj, notaF, notaC, nota };
+  }
+  function fluTick() {
+    if (!flu) { clearInterval(fluTimer); fluTimer = null; return; }
+    const d = fluDur(), ms = fluTemps();
+    if (flu.corrent && d && ms >= d * 1000) {
+      flu.acum = d * 1000; flu.corrent = false; flu.limit = true; flu.mode = "fi";
+      clearInterval(fluTimer); fluTimer = null; avisSonor();
+      if (asEina === "flu") pintaAssistent();
+      return;
+    }
+    const el = $("flTemps"); if (el) el.textContent = mmss(Math.floor(ms / 1000)) + (d ? " / " + mmss(d) : "");
+  }
+  function fluTextHTML(professor) {
+    let n = 0, h = "";
+    flu.toks.forEach((x, i) => {
+      if (!x.w) { h += /\n/.test(x.t) ? "<br>".repeat(Math.min(2, (x.t.match(/\n/g) || []).length)) : " "; return; }
+      n++;
+      if (professor === "imp") { h += esc(x.t) + (/[.!?…:;]["»”)]*$/.test(x.t) ? ' <sup style="color:#777;font-size:10px">' + n + "</sup>" : ""); return; }
+      if (professor === "alum") { h += esc(x.t); return; }
+      const cl = ["fl-w"]; if (flu.errs.includes(i)) cl.push("err"); if (flu.fi === i) cl.push("fi"); if (flu.fi >= 0 && i > flu.fi) cl.push("fora");
+      h += '<span class="' + cl.join(" ") + '" data-asb="ei-flw" data-i="' + i + '">' + esc(x.t) + "</span>";
+    });
+    return h;
+  }
+  function pintaFlu() {
+    const curs = fluCurs(), e = EI();
+    let h = '<p class="font">Com funciona: l\'alumne llegeix en veu alta un text del seu nivell i tu prems ▶️ quan comença. Mentre llegeix, toca les paraules que diu malament (es posen en vermell; un altre toc ho desfà). Quan sona el temps, toca l\'última paraula que ha llegit. Surten les paraules correctes per minut (PCM), la precisió i una proposta de nota, que pots desar a la columna que triïs. Si vols, la IA prepara tres preguntes de comprensió.</p>' +
+      '<div class="fila-as">' + eSel("curs", "Curs", CURSOS_EI, curs, true) + eSel("lleng", "Llengua", ["castellà", "català"], "castellà") +
+      eSel("dur", "Temps de lectura", [["60", "1 minut"], ["120", "2 minuts"], ["0", "Fins al final del text"]], "60", true) +
+      '<label>Objectiu (PCM)<input type="text" data-ei="obj" data-eicalc="1" value="' + esc(String(fluObj())) + '" inputmode="numeric" style="width:5em"></label></div>';
+    if (!flu) {
+      const desats = e.ftx.filter(t => t.curs === curs);
+      h += '<div class="fila-as">' + eInp("tema", "Tema del text (opcional)", "", "min-width:16em") + "</div>" +
+        eArea("text", "…o enganxa aquí un text teu (un fragment de la novel·la de lectura, per exemple)", 5) +
+        '<div class="alum-eines">' + eBoto("flgen", "🪄 Genera un text del nivell") + eBoto("flusa", "📄 Fes servir el meu text", true) + "</div>" +
+        (desats.length ? '<div class="fila-as"><label>Textos desats de ' + esc(curs) + '<select data-ei="ftx">' + eOpts(desats.map(t => [t.id, t.titol || t.text.slice(0, 40)]), fv("ftx", desats[0].id)) + "</select></label>" +
+          '<span style="align-self:end">' + eBoto("flobre", "Obre", true) + " " + eBoto("flesb", "Esborra", true) + "</span></div>" : "");
+      return h + (eiRes.flu || "");
+    }
+    const r = fluCalc(), d = fluDur(), ms = fluTemps();
+    h += '<div class="fl-barra"><span id="flTemps" class="fl-temps">' + mmss(Math.floor(ms / 1000)) + (d ? " / " + mmss(d) : "") + "</span>" +
+      eBoto("flplay", flu.corrent ? "⏸ Atura" : (ms ? "▶️ Continua" : "▶️ Comença")) + eBoto("flfi", "⏹ Ha acabat el text", true) + eBoto("flreset", "↺ Torna a començar", true) + "</div>" +
+      '<div class="vistes" role="group" aria-label="Què marca el toc" style="margin:6px 0">' +
+      '<button type="button" data-asb="ei-flmode" data-m="err" aria-pressed="' + (flu.mode === "err") + '">✗ Paraula mal llegida</button>' +
+      '<button type="button" data-asb="ei-flmode" data-m="fi" aria-pressed="' + (flu.mode === "fi") + '">🏁 Última paraula llegida</button></div>' +
+      (flu.mode === "fi" ? '<p class="font" style="font-weight:600">Toca l\'última paraula que ha llegit.</p>' : "") +
+      (flu.titol ? "<h4>" + esc(flu.titol) + "</h4>" : "") + '<div class="fl-text" id="flText">' + fluTextHTML() + "</div>" +
+      '<div class="alum-eines">' + eBoto("flimpa", "🖨️ Còpia per a l'alumne", true) + eBoto("flimpp", "🖨️ Còpia del professor", true) + eBoto("fldesatxt", "💾 Desa el text", true) + eBoto("flcanvia", "✕ Canvia el text", true) + "</div>" +
+      '<div id="flRes">' + fluResHTML(r) + "</div>";
+    // Comprensió
+    h += "<h4>Comprensió</h4>" + (flu.preg ? '<ol class="fl-preg">' + flu.preg.map((p, i) => "<li>" + esc(p.p) + ' <span class="font">(' + esc(p.r) + ')</span><span class="cb-ops" style="margin-left:6px"><button type="button" data-asb="ei-flcomp" data-i="' + i + '" data-v="1" aria-pressed="' + (flu.comp[i] === true) + '">✓</button><button type="button" data-asb="ei-flcomp" data-i="' + i + '" data-v="0" aria-pressed="' + (flu.comp[i] === false) + '">✗</button></span></li>').join("") + "</ol>"
+      : '<div class="alum-eines">' + eBoto("flpreg", "❓ Prepara 3 preguntes de comprensió", true) + "</div>");
+    h += "<h4>Desa el resultat</h4>" + selectorsAlumne(asSel) + '<div class="alum-eines">' + eBoto("fldesa", "💾 Desa al registre i a la columna") + "</div>" + msgEi() + notaModel();
+    // Registre de l'alumne
+    const { g, fila } = triat();
+    if (g && fila) {
+      const hist = e.flu.filter(x => x.g === g.nom && x.al === fila.nom).slice(-6);
+      if (hist.length) h += '<p class="font"><b>Lectures anteriors de ' + esc(nomAl(fila.nom)) + ":</b> " + hist.map(x => dma(x.d) + " · " + x.pcm + " PCM (" + coma(x.prec) + " %)").join(" · ") + "</p>";
+    }
+    return h;
+  }
+  function fluResHTML(r) {
+    if (!r) return '<p class="font">' + (flu && flu.fi < 0 ? "Encara no has marcat l'última paraula llegida." : "") + "</p>";
+    if (r.senseTemps) return '<p class="avis">Cronometra la lectura amb ▶️ abans de marcar el final.</p>';
+    return '<div class="xifres fl-xifres"><div class="xifra"><b>' + r.pcm + "</b><span>paraules correctes per minut (objectiu " + r.obj + ")</span></div>" +
+      '<div class="xifra"><b>' + r.llegides + " · " + r.errs + "</b><span>paraules llegides · errors</span></div>" +
+      '<div class="xifra"><b>' + coma(r.prec) + " %</b><span>precisió</span></div>" +
+      '<div class="xifra"><b>' + coma(r.notaF) + "</b><span>nota de fluïdesa</span></div>" +
+      (r.notaC != null ? '<div class="xifra"><b>' + coma(r.notaC) + "</b><span>comprensió</span></div>" : "") + "</div>" +
+      '<div class="fila-as"><label>Nota proposada (la pots canviar)<input type="text" id="flNota" value="' + coma(r.nota) + '" style="width:6em;font-size:1.3rem;font-weight:700"></label></div>';
+  }
+  eiCalc.flu = () => { const el = $("flRes"); if (el && flu) el.innerHTML = fluResHTML(fluCalc()); };
+  async function fluAccio(a, b) {
+    const e = EI();
+    if (a === "flgen") return eiIA(async () => {
+      const curs = fluCurs(), lleng = fv("lleng", "castellà"), d = fluDur(), obj = fluObj();
+      const n = d ? Math.round(obj * d / 60 * 1.35) : 180;
+      const r = await ia("Ets professor de llengua " + lleng + " de secundària a Catalunya. Escriu un text inèdit per a una prova de fluïdesa lectora en veu alta d'alumnat de " + curs + ", en " + lleng + ", d'unes " + n + " paraules" + (fv("tema", "") ? ", sobre «" + fv("tema", "") + "»" : "") +
+        ". Text narratiu o expositiu, coherent i interessant per a adolescents, amb vocabulari i sintaxi del nivell, en 3 o 4 paràgrafs separats per una línia en blanc, sense diàlegs llargs ni noms estrangers difícils de pronunciar. Respon només JSON: {\"titol\": text curt, \"text\": el text}.", "Genera el text.", { json: true });
+      if (!r || !r.text) throw new Error("La IA no ha retornat cap text; torna-ho a provar.");
+      fluNou(String(r.text), String(r.titol || "")); eiRes.flu = "";
+    });
+    if (a === "flusa") { const t = String(fv("text", "")).trim(); if (t.split(/\s+/).length < 20) { alert("Enganxa un text d'almenys 20 paraules."); return; } fluNou(t, ""); eiRes.flu = ""; return pintaAssistent(); }
+    if (a === "flobre" || a === "flesb") {
+      const curs = fluCurs(), l = e.ftx.filter(t => t.curs === curs), t = l.find(x => x.id === fv("ftx", "")) || l[0];
+      if (!t) return;
+      if (a === "flobre") fluNou(t.text, t.titol);
+      else if (confirm("Vols esborrar el text «" + (t.titol || t.text.slice(0, 40)) + "»?")) { e.ftx.splice(e.ftx.indexOf(t), 1); fput("ftx", null); desa(); }
+      return pintaAssistent();
+    }
+    if (!flu) return;
+    if (a === "flplay") {
+      preparaAudio();
+      if (flu.corrent) { flu.acum += Date.now() - flu.ini; flu.corrent = false; flu.mode = "fi"; clearInterval(fluTimer); fluTimer = null; }
+      else { if (flu.limit) return; flu.ini = Date.now(); flu.corrent = true; flu.mode = "err"; flu.fi = -1; clearInterval(fluTimer); fluTimer = setInterval(fluTick, 250); }
+      return pintaAssistent();
+    }
+    if (a === "flfi") {
+      if (flu.corrent) { flu.acum += Date.now() - flu.ini; flu.corrent = false; clearInterval(fluTimer); fluTimer = null; }
+      const idx = flu.toks.map((x, i) => (x.w ? i : -1)).filter(i => i >= 0); flu.fi = idx[idx.length - 1]; flu.mode = "err";
+      return pintaAssistent();
+    }
+    if (a === "flreset") { clearInterval(fluTimer); fluTimer = null; Object.assign(flu, { errs: [], fi: -1, ini: 0, acum: 0, corrent: false, limit: false, mode: "err", comp: [] }); eiMsg.flu = ""; return pintaAssistent(); }
+    if (a === "flmode") { flu.mode = b.dataset.m; return pintaAssistent(); }
+    if (a === "flw") {
+      const i = Number(b.dataset.i);
+      if (flu.mode === "fi") { flu.fi = i; flu.mode = "err"; }
+      else { const k = flu.errs.indexOf(i); if (k >= 0) flu.errs.splice(k, 1); else flu.errs.push(i); }
+      return pintaAssistent();
+    }
+    if (a === "flcanvia") { if (flu.corrent && !confirm("La lectura està en marxa. Vols canviar el text igualment?")) return; clearInterval(fluTimer); fluTimer = null; flu = null; eiMsg.flu = ""; return pintaAssistent(); }
+    if (a === "fldesatxt") { if (!e.ftx.some(t => t.text === flu.text)) { e.ftx.push({ id: nouId(), curs: fluCurs(), titol: flu.titol || flu.text.split(/\s+/).slice(0, 6).join(" ") + "…", text: flu.text }); desa(); } b.textContent = "Desat ✓"; b.disabled = true; return; }
+    if (a === "flimpa") { imprimeix(flu.titol || "Lectura", (flu.titol ? "<h3 style=\"text-transform:none\">" + esc(flu.titol) + "</h3>" : "") + '<div style="font-size:19px;line-height:2;text-align:left">' + fluTextHTML("alum") + "</div>", false, true); return; }
+    if (a === "flimpp") {
+      imprimeix("Fluïdesa lectora · professor", "<h3 style=\"text-transform:none\">Fluïdesa lectora · " + esc(flu.titol || "") + "</h3>" + '<p style="font-size:12px">El número després de cada frase és el total de paraules fins aquí. Ratlla les paraules mal llegides i marca amb una barra on s\'atura al minut.</p>' +
+        '<div style="font-size:15px;line-height:1.9;text-align:left">' + fluTextHTML("imp") + "</div>" +
+        '<table style="width:100%;border-collapse:collapse;margin-top:14px;font-size:13px"><tr>' + ["Paraules llegides", "Errors", "PCM", "Precisió", "Nota"].map(x => '<td style="border:1px solid #000;padding:10px 6px;width:20%"><b>' + x + "</b></td>").join("") + "</tr></table>", false);
+      return;
+    }
+    if (a === "flpreg") return eiIA(async () => {
+      const r = await ia("Ets professor de llengua de secundària. Fes 3 preguntes orals breus de comprensió sobre el text (una literal, una d'inferència i una de vocabulari o idea principal), en " + fv("lleng", "castellà") + ", amb una resposta curta orientativa. Respon només JSON: {\"preguntes\": [{\"p\": pregunta, \"r\": resposta}]}.", flu.text, { json: true });
+      const l = (r && r.preguntes || []).filter(x => x && x.p).slice(0, 3).map(x => ({ p: String(x.p), r: String(x.r || "") }));
+      if (!l.length) throw new Error("La IA no ha retornat preguntes; torna-ho a provar.");
+      flu.preg = l; flu.comp = [];
+    });
+    if (a === "flcomp") { const i = Number(b.dataset.i), v = b.dataset.v === "1"; flu.comp[i] = flu.comp[i] === v ? null : v; return pintaAssistent(); }
+    if (a === "fldesa") {
+      const r = fluCalc(); if (!r || r.senseTemps) { alert("Primer cronometra la lectura i marca l'última paraula llegida."); return; }
+      const { g, fila, col } = triat(); if (!fila) { alert("Tria el grup, el full i l'alumne."); return; }
+      const nota = nombre(($("flNota") || {}).value);
+      if (col && !posaNota(nota)) return;
+      e.flu.push({ d: avuiISO(), g: g.nom, al: fila.nom, curs: fluCurs(), pcm: r.pcm, prec: r.prec, err: r.errs, n: r.llegides, nota: isNaN(nota) ? r.nota : nota, tit: flu.titol || "" });
+      desa();
+      eiMsg.flu = "✓ Desat: " + esc(nomAl(fila.nom)) + ", " + r.pcm + " PCM" + (col ? ", nota " + coma(nota) + " a " + esc(col.nom) : " (sense columna: només al registre)") + ".";
+      Object.assign(flu, { errs: [], fi: -1, ini: 0, acum: 0, corrent: false, limit: false, mode: "err", comp: [] });
+      seguentAlumne();
+      return pintaAssistent();
+    }
+  }
+
+  // ---------- ✏️ Dictats ----------
+  const TEMES_DIC = {
+    "castellà": ["Repaso general", "b / v", "g / j", "h", "ll / y", "c / z / s / x", "r / rr", "Acentuación: agudas, llanas y esdrújulas", "Tilde diacrítica", "Diptongos e hiatos", "Mayúsculas", "Signos de puntuación", "Juntas o separadas (porque / por qué / porqué…)", "Homófonos (haber / a ver, hecho / echo…)"],
+    "català": ["Repàs general", "b / v", "g / j", "s / ss / c / ç / z", "r / rr", "h", "l·l", "Accentuació", "Accents diacrítics", "Dièresi", "Apostrofació i contraccions", "Majúscules", "Signes de puntuació", "Vocals àtones (a / e, o / u)", "Consonants finals (p / b, t / d, c / g)"]
+  };
+  const SIGNES = {
+    "castellà": { ",": "coma", ";": "punto y coma", ":": "dos puntos", "?": "cierra interrogación", "¿": "abre interrogación", "!": "cierra exclamación", "¡": "abre exclamación", "…": "puntos suspensivos", ".": "punto y seguido", par: "punto y aparte", fi: "punto final" },
+    "català": { ",": "coma", ";": "punt i coma", ":": "dos punts", "?": "interrogant", "¿": "", "!": "exclamació", "¡": "", "…": "punts suspensius", ".": "punt i seguit", par: "punt i a part", fi: "punt final" }
+  };
+  let dic = null, dicI = 0, dicAuto = 0, dicFall = [];
+  // Trossos de 3 a 7 paraules, tallant preferentment després de la puntuació; es marca el final de paràgraf
+  function dicFragments(text) {
+    const pars = String(text).replace(/\r/g, "").split(/\n\s*\n|\n/).map(p => p.trim()).filter(Boolean), out = [];
+    pars.forEach((p, ip) => {
+      const ws = p.split(/\s+/); let cur = [];
+      ws.forEach((w, i) => {
+        cur.push(w);
+        const fiFrase = /[,.;:!?…]["»”)]*$/.test(w), resten = ws.length - i - 1;
+        if ((fiFrase && cur.length >= 3) || cur.length >= 7 || resten === 0) {
+          if (resten > 0 && resten < 3 && !fiFrase) return;   // no deixis trossos d'una o dues paraules
+          out.push({ t: cur.join(" "), par: resten === 0 && ip < pars.length - 1, fi: resten === 0 && ip === pars.length - 1 }); cur = [];
+        }
+      });
+      if (cur.length) out.push({ t: cur.join(" "), par: ip < pars.length - 1, fi: ip === pars.length - 1 });
+    });
+    return out;
+  }
+  function dicPerDir(fr, signes) {
+    const lleng = dic.lleng || "castellà", S = SIGNES[lleng] || SIGNES["castellà"];
+    let t = fr.t.replace(/[«»“”"]/g, "").replace(/\.\.\./g, "…");
+    if (!signes) return t;
+    t = t.replace(/\.(?=["»”)]*$)/, fr.fi ? " " + S.fi : fr.par ? " " + S.par : " " + S["."]);
+    t = t.replace(/\.(\s)/g, " " + S["."] + ",$1");
+    t = t.replace(/[,;:?¿!¡…]/g, c => (S[c] ? " " + S[c] + ", " : " "));
+    return t.replace(/\s+/g, " ").trim();
+  }
+  const veusDe = lleng => (window.speechSynthesis ? speechSynthesis.getVoices().filter(v => v.lang && v.lang.toLowerCase().startsWith(lleng === "català" ? "ca" : "es")) : []);
+  function parla(text, vel) {
+    return new Promise(ok => {
+      if (!window.speechSynthesis) { ok(); return; }
+      const u = new SpeechSynthesisUtterance(text), vs = veusDe(dic.lleng), v = vs.find(x => x.name === fv("veu", "")) || vs[0];
+      u.lang = dic.lleng === "català" ? "ca-ES" : "es-ES"; if (v) u.voice = v; u.rate = vel || nombre(fv("vel", "0.8")) || 0.8;
+      u.onend = () => ok(); u.onerror = () => ok();
+      speechSynthesis.speak(u);
+    });
+  }
+  const espera = ms => new Promise(ok => setTimeout(ok, ms));
+  async function dicDictaAuto() {
+    const meu = ++dicAuto, fr = dic.fr, signes = !!fv("signes", true);
+    for (; dicI < fr.length; dicI++) {
+      if (meu !== dicAuto) return;
+      pintaAssistent();
+      const t = dicPerDir(fr[dicI], signes), n = fr[dicI].t.split(/\s+/).length;
+      await parla(t); if (meu !== dicAuto) return;
+      await espera(1500 + n * 1100); if (meu !== dicAuto) return;
+      await parla(t); if (meu !== dicAuto) return;
+      await espera(1200 + n * 900);
+    }
+    if (meu === dicAuto) { dicAuto++; dicI = Math.max(0, fr.length - 1); pintaAssistent(); }
+  }
+  const dicAtura = () => { dicAuto++; try { speechSynthesis.cancel(); } catch (e) {} };
+  const dicNota = () => { const resta = nombre(fv("resta", "0,5")) || 0, altres = Math.max(0, nombre(fv("altres", "0")) || 0); return Math.max(0, Math.round((10 - (dicFall.length + altres) * resta) * 100) / 100); };
+  eiCalc.dic = () => { const el = $("dicNota"); if (el) el.textContent = coma(dicNota()); };
+  function pintaDic() {
+    const e = EI(), lleng = fv("lleng", "castellà");
+    let h = '<p class="font">Dictats temàtics per nivells: tria la norma que vols treballar i la temàtica. Te\'l pot llegir la veu del dispositiu, a trossos i dient els signes de puntuació, i després hi marques les faltes de cada alumne: la nota va a la columna i les paraules fallades queden apuntades per a les fitxes de reforç.</p>';
+    if (!dic) {
+      h += '<div class="fila-as">' + eSel("curs", "Curs", CURSOS_EI, cursDeGrup(triat().g)) + eSel("lleng", "Llengua", ["castellà", "català"], "castellà", true) +
+        eSel("niv", "Nivell", ["Bàsic", "Mitjà", "Avançat"], "Mitjà") + eSel("tema", "Norma", TEMES_DIC[lleng], TEMES_DIC[lleng][0]) +
+        eSel("llarg", "Llargada", [["80", "Curt (~80 paraules)"], ["130", "Mitjà (~130)"], ["190", "Llarg (~190)"], ["250", "Molt llarg (~250)"]], "130") + "</div>" +
+        '<div class="fila-as">' + eInp("temat", "Temàtica (opcional)", "", "min-width:18em") + "</div>" +
+        '<div class="alum-eines">' + eBoto("dicgen", "✏️ Genera el dictat") + "</div>";
+      if (e.dic.length) h += '<div class="fila-as"><label>Dictats desats<select data-ei="dicd">' + eOpts(e.dic.slice().reverse().map(x => [x.id, dma(x.d) + " · " + x.curs + " · " + x.tema + " · " + x.titol]), fv("dicd", e.dic[e.dic.length - 1].id)) + "</select></label>" +
+        '<span style="align-self:end">' + eBoto("dicobre", "Obre", true) + " " + eBoto("dicesb", "Esborra", true) + "</span></div>";
+      return h + (eiRes.dic || "") + notaModel();
+    }
+    const fr = dic.fr, vs = veusDe(dic.lleng);
+    h += "<h4>" + esc(dic.titol) + ' <span class="font">· ' + esc(dic.curs + " · " + dic.niv + " · " + dic.tema) + "</span></h4>";
+    h += '<div class="as-doc dic-text">' + fr.map((x, i) => '<span class="dic-fr' + (i === dicI ? " act" : "") + '" data-asb="ei-dicsalta" data-i="' + i + '">' + esc(x.t) + "</span>" + (x.par ? "<br><br>" : " ")).join("") + "</div>";
+    if (dic.norma) h += '<p class="font"><b>Norma:</b> ' + esc(dic.norma) + "</p>";
+    h += '<details class="font"><summary>Paraules clau (' + dic.clau.length + ")</summary><ul>" + dic.clau.map(c => "<li><b>" + esc(c.paraula) + "</b>: " + esc(c.norma || "") + "</li>").join("") + "</ul></details>";
+    // Lector
+    h += "<h4>🔊 Lector</h4>" + (window.speechSynthesis ? (vs.length ? "" : '<p class="avis">Aquest aparell no té cap veu en ' + esc(dic.lleng) + ". Prova-ho amb un altre navegador (el Chrome de l'ordinador sol tenir-ne) o llegeix-lo tu fent servir els trossos de dalt.</p>") +
+      '<div class="fila-as">' + (vs.length ? eSel("veu", "Veu", vs.map(v => [v.name, v.name]), vs[0].name) : "") + eSel("vel", "Velocitat", [["0.65", "Lenta"], ["0.8", "Pausada"], ["0.95", "Normal"]], "0.8") + "</div>" + eChk("signes", "Diu els signes de puntuació", true) +
+      '<div class="alum-eines">' + eBoto("diccomplet", "▶️ Lectura sencera (abans i després)", true) + eBoto("dicant", "⏮", true) + eBoto("dicfr", "🔁 Tros " + (dicI + 1) + "/" + fr.length) + eBoto("dicseg", "⏭", true) +
+      (dicAutoActiu ? eBoto("dicstop", "⏹ Atura") : eBoto("dicauto", "⏯ Dicta sol (cada tros dues vegades)", true)) + "</div>" : '<p class="avis">Aquest navegador no pot llegir en veu alta.</p>');
+    h += '<div class="alum-eines">' + eBoto("dicimpa", "🖨️ Full de l'alumne", true) + eBoto("dicimpprep", "🖨️ Preparació (norma i frases)", true) + eBoto("dicimpp", "🖨️ Còpia del professor", true) + eBoto("dicnou", "✕ Un altre dictat", true) + "</div>";
+    // Correcció
+    h += "<h4>✅ Correcció</h4>" + selectorsAlumne(asSel) + '<p class="font">Toca les paraules clau que ha escrit malament i afegeix-hi les altres faltes.</p>' +
+      '<div class="dic-xips">' + dic.clau.map((c, i) => '<button type="button" data-asb="ei-dicx" data-i="' + i + '" aria-pressed="' + dicFall.includes(i) + '">' + esc(c.paraula) + "</button>").join("") + "</div>" +
+      '<div class="fila-as">' + eInp("altres", "Altres faltes", "0", "width:5em", true) + eInp("resta", "Resta per falta", "0,5", "width:5em", true) +
+      '<div class="xifra" style="min-width:110px"><b id="dicNota" style="font-size:1.8rem">' + coma(dicNota()) + "</b><span>nota</span></div></div>" +
+      '<div class="alum-eines">' + eBoto("dicdesa", "💾 Desa i passa al següent alumne") + "</div>" + msgEi();
+    return h;
+  }
+  let dicAutoActiu = false;
+  async function dicAccio(a, b) {
+    const e = EI();
+    if (a === "dicgen") return eiIA(async () => {
+      const lleng = fv("lleng", "castellà"), curs = fv("curs", cursDeGrup(triat().g)), niv = fv("niv", "Mitjà"), tema = fv("tema", TEMES_DIC[lleng][0]), n = fv("llarg", "130"), temat = fv("temat", "");
+      const r = await ia("Ets professor de llengua " + lleng + " de secundària a Catalunya. Prepara un dictat inèdit per a " + curs + ", nivell " + niv.toLowerCase() + ", d'unes " + n + " paraules" + (temat ? ", sobre la temàtica «" + temat + "»" : "") + ", que treballi especialment la norma «" + tema + "». " +
+        "El text ha de ser natural, coherent, ortogràficament impecable i amb moltes paraules que practiquin la norma, en paràgrafs separats per una línia en blanc. Tots els camps en " + lleng + ". " +
+        "Respon només JSON: {\"titol\": text curt, \"text\": el dictat, \"norma\": explicació de la norma en 2 a 4 frases per repassar-la abans, \"paraules_clau\": [{\"paraula\": tal com surt al text, \"norma\": per què s'escriu així, molt curt}] (entre 10 i 20), \"preparacio\": [6 frases curtes noves per practicar la norma abans del dictat]}.", "Genera el dictat.", { json: true });
+      if (!r || !r.text) throw new Error("La IA no ha retornat el dictat; torna-ho a provar.");
+      const text = String(r.text).trim();
+      const clau = (Array.isArray(r.paraules_clau) ? r.paraules_clau : []).filter(x => x && x.paraula && text.toLowerCase().includes(String(x.paraula).toLowerCase())).map(x => ({ paraula: String(x.paraula), norma: String(x.norma || "") }));
+      dic = { id: nouId(), d: avuiISO(), curs, lleng, niv, tema, temat, titol: String(r.titol || "Dictat"), text, norma: String(r.norma || ""), clau, prep: (Array.isArray(r.preparacio) ? r.preparacio : []).map(String) };
+      dic.fr = dicFragments(text); dicI = 0; dicFall = [];
+      e.dic.push(Object.assign({}, dic, { fr: undefined })); desa();
+      eiRes.dic = "";
+    });
+    if (a === "dicobre" || a === "dicesb") {
+      const t = e.dic.find(x => x.id === fv("dicd", "")) || e.dic[e.dic.length - 1]; if (!t) return;
+      if (a === "dicobre") { dic = Object.assign({}, t, { fr: dicFragments(t.text) }); dicI = 0; dicFall = []; }
+      else if (confirm("Vols esborrar el dictat «" + t.titol + "»?")) { e.dic.splice(e.dic.indexOf(t), 1); fput("dicd", null); desa(); }
+      return pintaAssistent();
+    }
+    if (!dic) return;
+    if (a === "dicnou") { dicAtura(); dicAutoActiu = false; dic = null; eiMsg.dic = ""; return pintaAssistent(); }
+    if (a === "dicsalta") { dicAtura(); dicAutoActiu = false; dicI = Number(b.dataset.i); pintaAssistent(); return parla(dicPerDir(dic.fr[dicI], !!fv("signes", true))); }
+    if (a === "diccomplet") { dicAtura(); dicAutoActiu = false; pintaAssistent(); return parla(dic.text.replace(/[«»“”"]/g, ""), 0.95); }
+    if (a === "dicfr") { dicAtura(); dicAutoActiu = false; return parla(dicPerDir(dic.fr[dicI], !!fv("signes", true))); }
+    if (a === "dicseg" || a === "dicant") { dicAtura(); dicAutoActiu = false; dicI = Math.max(0, Math.min(dic.fr.length - 1, dicI + (a === "dicseg" ? 1 : -1))); pintaAssistent(); return parla(dicPerDir(dic.fr[dicI], !!fv("signes", true))); }
+    if (a === "dicauto") { dicAtura(); dicAutoActiu = true; if (dicI >= dic.fr.length - 1) dicI = 0; const p = dicDictaAuto(); pintaAssistent(); await p; dicAutoActiu = false; return pintaAssistent(); }
+    if (a === "dicstop") { dicAtura(); dicAutoActiu = false; return pintaAssistent(); }
+    if (a === "dicimpa") { imprimeix("Dictat · " + dic.titol, "<h3>Dictat</h3>" + '<div style="line-height:2.6">' + Array.from({ length: 18 }, () => '<div style="border-bottom:1px solid #999;height:2.2em"></div>').join("") + "</div>", false); return; }
+    if (a === "dicimpprep") { imprimeix("Preparació del dictat", "<h3>Preparació del dictat: " + esc(dic.tema) + "</h3>" + (dic.norma ? "<p>" + esc(dic.norma) + "</p>" : "") + (dic.prep.length ? "<h4>Copia i completa aquestes frases</h4><ol>" + dic.prep.map(f => "<li>" + esc(f) + '<div style="border-bottom:1px solid #999;height:2em"></div></li>').join("") + "</ol>" : ""), false, true); return; }
+    if (a === "dicimpp") { imprimeix("Dictat · professor", '<h3 style="text-transform:none">' + esc(dic.titol) + " · " + esc(dic.curs + " · " + dic.tema) + "</h3>" + dic.text.split(/\n\s*\n|\n/).map(p => "<p>" + esc(p) + "</p>").join("") + (dic.norma ? "<h4>Norma</h4><p>" + esc(dic.norma) + "</p>" : "") + "<h4>Paraules clau</h4><ul>" + dic.clau.map(c => "<li><b>" + esc(c.paraula) + "</b>: " + esc(c.norma) + "</li>").join("") + "</ul>", false, true); return; }
+    if (a === "dicx") { const i = Number(b.dataset.i), k = dicFall.indexOf(i); if (k >= 0) dicFall.splice(k, 1); else dicFall.push(i); return pintaAssistent(); }
+    if (a === "dicdesa") {
+      const { g, fila, col } = triat(); const nota = dicNota();
+      if (!posaNota(nota)) return;
+      apuntaErrors(g, fila.nom, dicFall.map(i => ({ cat: dic.tema, p: dic.clau[i].paraula, font: "dictat" })));
+      desa();
+      eiMsg.dic = "✓ " + esc(nomAl(fila.nom)) + ": " + coma(nota) + " a " + esc(col.nom) + (dicFall.length ? " · " + dicFall.length + " paraules apuntades per al reforç" : "") + ".";
+      dicFall = []; fput("altres", "0"); seguentAlumne();
+      return pintaAssistent();
+    }
+  }
+
+  // ---------- 📗 Controls de lectura ----------
+  const LLIBRES_INI = [{ t: "La hija de la noche", a: "Laura Gallego García" }, { t: "El bosque de los corazones dormidos", a: "Esther Sanz" }];
+  const llibresEi = () => LLIBRES_INI.concat(EI().llibres);
+  let ctl = null, ctlCorr = null;   // ctl = control obert (s'edita aquí); ctlCorr = respostes de l'alumne que es corregeix
+  function variantCtl(c, v) {
+    if (!v) return c.preg.map(p => ({ p: p.p, o: p.o.slice(), c: p.c }));
+    return barreja(c.preg.map((p, i) => i), c.id + "-" + v).map(i => {
+      const p = c.preg[i], ord = barreja(p.o.map((x, j) => j), c.id + "-" + v + "-" + i);
+      return { p: p.p, o: ord.map(j => p.o[j]), c: ord.indexOf(p.c) };
+    });
+  }
+  function pintaCtl() {
+    const e = EI(), ll = llibresEi();
+    let h = '<p class="font">Controls tipus test (a, b, c, d) dels llibres de lectura, amb models A, B, C i D (mateixes preguntes, en un altre ordre) i el solucionari. Per corregir, toca la lletra que ha marcat cada alumne i la nota va sola a la columna.</p>';
+    if (!ctl) {
+      h += '<div class="fila-as">' + eSel("llibre", "Llibre", ll.map((x, i) => [String(i), x.t + " (" + x.a + ")"]).concat([["nou", "➕ Un altre llibre…"]]), "0", true) + "</div>";
+      if (fv("llibre", "0") === "nou") h += '<div class="fila-as">' + eInp("lt", "Títol", "", "min-width:14em") + eInp("la", "Autor/a", "", "min-width:12em") + '<span style="align-self:end">' + eBoto("ctlll", "Afegeix el llibre", true) + "</span></div>";
+      h += '<div class="fila-as">' + eInp("caps", "Capítols (buit = tot el llibre)", "", "width:12em") + eSel("curs", "Curs", CURSOS_EI, cursDeGrup(triat().g)) + eSel("lleng", "Llengua", ["castellà", "català"], "castellà") +
+        eInp("n", "Preguntes", "10", "width:4em") + eSel("k", "Opcions", [["4", "a, b, c, d"], ["3", "a, b, c"]], "4") + eSel("vars", "Models", [["1", "Només A"], ["2", "A i B"], ["3", "A, B i C"], ["4", "A, B, C i D"]], "2") + "</div>" +
+        '<p class="font">⚠️ Perquè no s\'inventi res, puja els capítols (PDF o foto) o enganxa\'n un resum. Si no, la IA es basa en el que sap del llibre i pot equivocar-se: repassa les preguntes abans d\'imprimir-les (es poden editar).</p>' +
+        '<div class="alum-eines"><label class="boto clar" style="display:inline-block">📄 Capítols (PDF o foto)<input type="file" id="ctlDoc" accept="application/pdf,image/*" hidden></label><span class="font" id="ctlDocNom"></span></div>' +
+        eArea("mat", "…o enganxa aquí fragments o un resum dels capítols", 4) +
+        '<div class="alum-eines">' + eBoto("ctlgen", "📗 Genera el control") + "</div>";
+      if (e.ctl.length) h += '<div class="fila-as"><label>Controls desats<select data-ei="ctld">' + eOpts(e.ctl.slice().reverse().map(x => [x.id, dma(x.d) + " · " + x.llibre + (x.caps ? " · cap. " + x.caps : "") + " · " + x.curs]), fv("ctld", e.ctl[e.ctl.length - 1].id)) + "</select></label>" +
+        '<span style="align-self:end">' + eBoto("ctlobre", "Obre", true) + " " + eBoto("ctlesb", "Esborra", true) + "</span></div>";
+      return h + (eiRes.ctl || "") + notaModel();
+    }
+    const desat = e.ctl.some(x => x.id === ctl.id);
+    h += "<h4>" + esc(ctl.llibre) + (ctl.caps ? " · capítols " + esc(ctl.caps) : "") + ' <span class="font">· ' + esc(ctl.curs) + " · " + ctl.preg.length + " preguntes</span></h4>" +
+      '<details class="ctl-ed"' + (desat ? "" : " open") + '><summary class="font">✏️ Revisa i edita les preguntes (el cercle marca la correcta)</summary>' +
+      ctl.preg.map((p, i) => '<div class="ctl-q"><div class="ctl-qn">' + (i + 1) + '.</div><div style="flex:1;min-width:0"><input type="text" data-ctlq="' + i + '" data-ctlc="p" value="' + esc(p.p) + '">' +
+        p.o.map((o, j) => '<label class="ctl-op"><input type="radio" name="ctlc' + i + '" data-ctlq="' + i + '" data-ctlc="c" value="' + j + '"' + (p.c === j ? " checked" : "") + "> " + "abcdefgh"[j] + ') <input type="text" data-ctlq="' + i + '" data-ctlc="o' + j + '" value="' + esc(o) + '"></label>').join("") +
+        "</div>" + eBoto("ctldel", "🗑", true, ' data-i="' + i + '" title="Treu la pregunta"') + "</div>").join("") + "</details>" +
+      '<div class="fila-as">' + eSel("vars", "Models", [["1", "Només A"], ["2", "A i B"], ["3", "A, B i C"], ["4", "A, B, C i D"]], String(ctl.vars || 2)) + "</div>" +
+      '<div class="alum-eines">' + eBoto("ctldesa", desat ? "💾 Desa els canvis" : "💾 Desa el control") + eBoto("ctlimp", "🖨️ Imprimeix els models", true) + eBoto("ctlsol", "🖨️ Solucionari", true) + eBoto("ctltanca", "✕ Tanca", true) + "</div>" + msgEi();
+    if (!desat) return h + '<p class="font">Desa el control per poder-lo corregir.</p>';
+    // Correcció
+    const { g, fila } = triat(), nv = Math.max(1, Number(fv("vars", String(ctl.vars || 2))));
+    const k = fila && g ? clauAl(g, fila.nom) : "";
+    if (!ctlCorr || ctlCorr.id !== ctl.id || ctlCorr.al !== k) { const prev = k && ctl.resp && ctl.resp[k]; ctlCorr = { id: ctl.id, al: k, v: prev ? prev.v : 0, r: prev ? prev.r.slice() : [] }; }
+    const vr = variantCtl(ctl, ctlCorr.v), encerts = ctlCorr.r.filter((x, i) => x != null && vr[i] && x === vr[i].c).length;
+    h += "<h4>✅ Correcció</h4>" + selectorsAlumne(asSel) +
+      '<div class="vistes" role="group" aria-label="Model" style="margin:6px 0">' + Array.from({ length: nv }, (x, v) => '<button type="button" data-asb="ei-ctlv" data-v="' + v + '" aria-pressed="' + (ctlCorr.v === v) + '">Model ' + LLETRES[v] + "</button>").join("") + "</div>" +
+      (k ? '<div class="cb-resp">' + vr.map((p, i) => '<div class="cb-it ' + (ctlCorr.r[i] == null ? "buida" : ctlCorr.r[i] === p.c ? "be" : "malament") + '"><span>' + (i + 1) + '</span><span class="cb-ops">' + p.o.map((o, j) => '<button type="button" data-asb="ei-ctlr" data-q="' + i + '" data-l="' + j + '" aria-pressed="' + (ctlCorr.r[i] === j) + '">' + "abcdefgh"[j] + "</button>").join("") + "</span></div>").join("") + "</div>" +
+        '<div class="fila-as"><div class="xifra" style="min-width:140px"><b style="font-size:1.8rem">' + coma(Math.round(encerts / vr.length * 100) / 10) + "</b><span>" + encerts + " encerts de " + vr.length + "</span></div></div>" +
+        '<div class="alum-eines">' + eBoto("ctlnota", "💾 Desa la nota i passa al següent alumne") + "</div>" : '<p class="font">Tria l\'alumne.</p>');
+    return h;
+  }
+  function ctlHTMLModel(c, v) {
+    const vr = variantCtl(c, v);
+    return '<h3 style="text-transform:none">Control de lectura · ' + esc(c.llibre) + (c.caps ? " · capítols " + esc(c.caps) : "") + (Number(c.vars) > 1 ? " · Model " + LLETRES[v] : "") + "</h3>" +
+      '<p style="margin:0 0 8px">Encercla la resposta correcta. Només n\'hi ha una.</p><ol>' + vr.map(p => '<li style="margin-bottom:8px;break-inside:avoid">' + esc(p.p) + '<div style="margin-left:10px">' + p.o.map((o, j) => "abcdefgh"[j] + ") " + esc(o)).join("<br>") + "</div></li>").join("") + "</ol>";
+  }
+  async function ctlAccio(a, b) {
+    const e = EI();
+    if (a === "ctlll") { const t = String(fv("lt", "")).trim(), au = String(fv("la", "")).trim(); if (!t) { alert("Escriu el títol del llibre."); return; } e.llibres.push({ t, a: au }); desa(); fput("llibre", String(llibresEi().length - 1)); fput("lt", ""); fput("la", ""); return pintaAssistent(); }
+    if (a === "ctlgen") {
+      const ll = llibresEi()[Number(fv("llibre", "0"))]; if (!ll) { alert("Tria el llibre."); return; }
+      const file = $("ctlDoc") && $("ctlDoc").files[0];
+      return eiIA(async () => {
+        const doc = await llegeixDocEi(file), mat = (String(fv("mat", "")).trim() + "\n" + doc.text).trim();
+        const n = Math.max(3, Math.min(40, Number(fv("n", "10")) || 10)), k = Number(fv("k", "4")), caps = String(fv("caps", "")).trim(), lleng = fv("lleng", "castellà");
+        const r = await ia("Ets professor de llengua " + lleng + " de secundària. Fes un control de lectura del llibre «" + ll.t + "»" + (ll.a ? " de " + ll.a : "") + (caps ? ", capítols " + caps : ", de tot el llibre") + ", per a " + fv("curs", "1r d'ESO") + ": " + n + " preguntes tipus test amb " + k + " opcions i una sola de correcta. " +
+          "Preguntes sobre fets concrets de la trama, personatges, llocs i alguna d'inferència senzilla; opcions plausibles i de llargada semblant, sense «totes les anteriors» ni «cap de les anteriors». Reparteix la posició de la correcta. " +
+          (mat || doc.imatge ? "Basa't NOMÉS en el material que t'envio; no preguntis res que no hi surti. " : "Basa't en el que saps del llibre; si no estàs segur d'un fet, no el preguntis. ") +
+          "Redacta-ho en " + lleng + ". Respon només JSON: {\"preguntes\": [{\"p\": enunciat, \"o\": [opcions sense lletra], \"c\": índex de la correcta (0 = la primera)}]}.", mat || "Fes el control.", { json: true, imatge: doc.imatge });
+        const preg = (r && Array.isArray(r.preguntes) ? r.preguntes : []).filter(p => p && p.p && Array.isArray(p.o) && p.o.length === k && Number.isInteger(Number(p.c)) && Number(p.c) >= 0 && Number(p.c) < k).map(p => ({ p: String(p.p), o: p.o.map(String), c: Number(p.c) }));
+        if (!preg.length) throw new Error("La IA no ha retornat preguntes vàlides; torna-ho a provar.");
+        ctl = { id: nouId(), d: avuiISO(), llibre: ll.t, caps, curs: fv("curs", "1r d'ESO"), k, vars: Number(fv("vars", "2")), preg, resp: {} };
+        eiRes.ctl = ""; eiMsg.ctl = preg.length < n ? "La IA n'ha fet " + preg.length + " de vàlides." : "";
+      });
+    }
+    if (a === "ctlobre" || a === "ctlesb") {
+      const t = e.ctl.find(x => x.id === fv("ctld", "")) || e.ctl[e.ctl.length - 1]; if (!t) return;
+      if (a === "ctlobre") { ctl = t; fput("vars", String(t.vars || 2)); }
+      else if (confirm("Vols esborrar el control de «" + t.llibre + "» i les respostes corregides?")) { e.ctl.splice(e.ctl.indexOf(t), 1); fput("ctld", null); desa(); }
+      return pintaAssistent();
+    }
+    if (!ctl) return;
+    if (a === "ctltanca") { ctl = null; ctlCorr = null; eiMsg.ctl = ""; return pintaAssistent(); }
+    if (a === "ctldel") { if (ctl.preg.length < 2) return; if (ctl.resp && Object.keys(ctl.resp).length && !confirm("Ja hi ha alumnes corregits; si treus la pregunta, les seves respostes es desquadraran. Vols continuar?")) return; ctl.preg.splice(Number(b.dataset.i), 1); if (e.ctl.includes(ctl)) desa(); return pintaAssistent(); }
+    if (a === "ctldesa") { ctl.vars = Number(fv("vars", String(ctl.vars || 2))); if (!e.ctl.includes(ctl)) e.ctl.push(ctl); desa(); eiMsg.ctl = "✓ Control desat."; return pintaAssistent(); }
+    if (a === "ctlimp") { ctl.vars = Number(fv("vars", String(ctl.vars || 2))); imprimeix("Control de lectura · " + ctl.llibre, Array.from({ length: ctl.vars }, (x, v) => (v ? '<div style="break-before:page;page-break-before:always"></div>' + capcaleraDoc() : "") + ctlHTMLModel(ctl, v)).join(""), false); return; }
+    if (a === "ctlsol") {
+      ctl.vars = Number(fv("vars", String(ctl.vars || 2)));
+      imprimeix("Solucionari · " + ctl.llibre, '<h3 style="text-transform:none">Solucionari · ' + esc(ctl.llibre) + (ctl.caps ? " · capítols " + esc(ctl.caps) : "") + '</h3><table style="border-collapse:collapse;font-size:13px">' +
+        '<tr><th style="border:1px solid #000;padding:4px 8px">Model</th>' + ctl.preg.map((p, i) => '<th style="border:1px solid #000;padding:4px 6px">' + (i + 1) + "</th>").join("") + "</tr>" +
+        Array.from({ length: ctl.vars }, (x, v) => '<tr><td style="border:1px solid #000;padding:4px 8px"><b>' + LLETRES[v] + "</b></td>" + variantCtl(ctl, v).map(p => '<td style="border:1px solid #000;padding:4px 6px;text-align:center">' + "abcdefgh"[p.c] + "</td>").join("") + "</tr>").join("") + "</table>" +
+        "<h4>Preguntes (model A)</h4><ol>" + ctl.preg.map(p => "<li>" + esc(p.p) + " → <b>" + esc(p.o[p.c]) + "</b></li>").join("") + "</ol>", false, true);
+      return;
+    }
+    if (a === "ctlv") { ctlCorr.v = Number(b.dataset.v); ctlCorr.r = []; return pintaAssistent(); }
+    if (a === "ctlr") { const i = Number(b.dataset.q), l = Number(b.dataset.l); ctlCorr.r[i] = ctlCorr.r[i] === l ? null : l; return pintaAssistent(); }
+    if (a === "ctlnota") {
+      const { g, fila, col } = triat(), vr = variantCtl(ctl, ctlCorr.v);
+      const nota = Math.round(ctlCorr.r.filter((x, i) => x != null && vr[i] && x === vr[i].c).length / vr.length * 1000) / 100;
+      if (!posaNota(nota)) return;
+      ctl.resp = ctl.resp || {}; ctl.resp[clauAl(g, fila.nom)] = { v: ctlCorr.v, r: ctlCorr.r.slice() }; desa();
+      eiMsg.ctl = "✓ " + esc(nomAl(fila.nom)) + ": " + coma(nota) + " a " + esc(col.nom) + ".";
+      const v = ctlCorr.v; seguentAlumne(); ctlCorr = null; pintaAssistent(); if (ctlCorr && !ctlCorr.r.length && ctlCorr.v !== v) { ctlCorr.v = v; pintaAssistent(); } return;
+    }
+  }
+
+  // ---------- 🔀 Variants d'un examen ----------
+  let vari = null;   // { titol, models: [{ text, sol }] }
+  // Sense IA: barreja l'ordre de les preguntes numerades («1.», «2)») i de les opcions («a)», «b.»)
+  function barrejaExamen(text, llavor) {
+    const linies = String(text).replace(/\r/g, "").split("\n"), cap = [], blocs = [];
+    linies.forEach(l => { if (/^\s*\d+\s*[.)]\s+/.test(l)) blocs.push([l]); else if (blocs.length) blocs[blocs.length - 1].push(l); else cap.push(l); });
+    if (blocs.length < 2) return null;
+    const nous = barreja(blocs, llavor).map((bl, i) => {
+      const cos = [bl[0].replace(/^\s*\d+\s*[.)]/, (i + 1) + ".")], ops = [], resta = [];
+      bl.slice(1).forEach(l => { if (/^\s*[a-hA-H]\s*[.)]\s+/.test(l)) ops.push(l.replace(/^\s*[a-hA-H]\s*[.)]\s*/, "")); else if (ops.length) resta.push(l); else cos.push(l); });
+      return cos.concat(barreja(ops, llavor + "-" + i).map((o, j) => "   " + "abcdefgh"[j] + ") " + o), resta).join("\n");
+    });
+    return cap.join("\n") + "\n" + nous.join("\n");
+  }
+  // Text pla amb línies numerades («1.») i opcions («a)») → HTML que les respecta (md() no coneix les opcions)
+  const textExamen = t => esc(t).split("\n").map(l => (/^\s*#{1,4}\s/.test(l) ? "<h4>" + l.replace(/^\s*#+\s*/, "") + "</h4>" : /^\s*[a-hA-H]\s*[.)]\s/.test(l) ? '<div style="margin-left:18px">' + l.trim() + "</div>" : l.trim() ? "<p style=\"margin:4px 0\">" + l.replace(/\*\*(.+?)\*\*/g, "<b>$1</b>") + "</p>" : "")).join("");
+  function pintaVar() {
+    let h = '<p class="font">Puja un examen teu (PDF, foto o Word desat com a PDF) o enganxa\'l, i en surten models equivalents: amb IA canvia dades, frases i exemples mantenint l\'estructura, la dificultat i la puntuació, i fa el solucionari de cada model. Sense IA, només barreja l\'ordre de les preguntes i de les opcions.</p>' +
+      '<div class="alum-eines"><label class="boto clar" style="display:inline-block">📄 Puja l\'examen (PDF o foto)<input type="file" id="varDoc" accept="application/pdf,image/*" hidden></label><span class="font" id="varDocNom"></span>' +
+      (asDades && asDades.text && asDades.titol ? eBoto("varagafa", "📚 Agafa l'última activitat generada", true) : "") + "</div>" +
+      eArea("ex", "…o enganxa aquí l'examen", 8) +
+      '<div class="fila-as">' + eSel("n", "Models nous", [["1", "1 (B)"], ["2", "2 (B i C)"], ["3", "3 (B, C i D)"]], "1") + eSel("mode", "Com", [["ia", "Amb IA: canvia el contingut i fa el solucionari"], ["ordre", "Sense IA: només barreja l'ordre"]], "ia") + "</div>" +
+      '<div class="alum-eines">' + eBoto("vargen", "🔀 Fes els models") + "</div>";
+    if (vari) {
+      h += "<h4>" + esc(vari.titol) + "</h4>" + '<div class="alum-eines">' + eBoto("varimp", "🖨️ Imprimeix tots els models", true) + (vari.models.some(m => m.sol) ? eBoto("varsol", "🖨️ Solucionaris", true) : "") + "</div>" +
+        vari.models.map((m, i) => '<details class="rub-bloc"' + (i === 1 ? " open" : "") + '><summary><b>Model ' + LLETRES[i] + "</b>" + (i ? "" : " (original)") + '</summary><div class="as-doc">' + textExamen(m.text) + (m.sol ? '<hr><div class="font"><b>Solucionari</b>' + md(m.sol) + "</div>" : "") + "</div></details>").join("");
+    }
+    return h + (eiRes.var || "") + notaModel();
+  }
+  async function varAccio(a) {
+    if (a === "varagafa") { fput("ex", asDades.text); return pintaAssistent(); }
+    if (a === "varimp") { imprimeix(vari.titol, vari.models.map((m, i) => (i ? '<div style="break-before:page;page-break-before:always"></div>' + capcaleraDoc() : "") + '<p style="text-align:right;font-weight:700;margin:0">MODEL ' + LLETRES[i] + "</p>" + textExamen(m.text)).join(""), false); return; }
+    if (a === "varsol") { imprimeix("Solucionaris · " + vari.titol, vari.models.map((m, i) => "<h3>Model " + LLETRES[i] + "</h3>" + (m.sol ? md(m.sol) : "<p>(sense solucionari)</p>")).join(""), false, true); return; }
+    if (a === "vargen") {
+      const file = $("varDoc") && $("varDoc").files[0], n = Number(fv("n", "1")), mode = fv("mode", "ia");
+      return eiIA(async () => {
+        let text = String(fv("ex", "")).trim(), imatge = null;
+        if (file) { const d = await llegeixDocEi(file); if (d.text) text = (text ? text + "\n" : "") + d.text.replace(/--- Pàgina \d+ ---\n?/g, ""); imatge = d.imatge; }
+        if (!text && !imatge) throw new Error("Puja l'examen o enganxa'l.");
+        if (mode === "ordre") {
+          if (!text) throw new Error("Per barrejar sense IA cal el text de l'examen (un PDF amb text o enganxat), no una foto.");
+          const models = [{ text: text, sol: "" }];
+          for (let v = 1; v <= n; v++) { const t = barrejaExamen(text, "var-" + v + "-" + text.length); if (!t) throw new Error("No hi trobo preguntes numerades («1.», «2.»…) per barrejar. Prova-ho amb IA."); models.push({ text: t, sol: "" }); }
+          vari = { titol: "Examen", models }; eiRes.var = ""; return;
+        }
+        const r = await ia("Ets professor de llengua de secundària. T'envio un examen" + (imatge && !text ? " en una imatge" : "") + ". " +
+          "1) Transcriu-lo tal com és (model A), en text pla, conservant la numeració de les preguntes («1.», «2.»…), les opcions («a)», «b)»…) i les puntuacions. " +
+          "2) Fes-ne " + n + " model" + (n > 1 ? "s" : "") + " nou" + (n > 1 ? "s" : "") + " equivalent" + (n > 1 ? "s" : "") + ": mateixa estructura, nombre de preguntes, tipus d'exercici, dificultat i puntuació, però amb frases, dades, exemples i paraules diferents, i l'ordre de les opcions canviat; si hi ha un text de lectura, pots mantenir-lo i canviar-ne les preguntes. Mateixa llengua que l'original. " +
+          "3) Per a cada model (també l'A), el solucionari. Respon només JSON: {\"titol\": títol curt de l'examen, \"models\": [{\"text\": examen en text pla, \"sol\": solucionari en Markdown senzill}]}, amb el model A primer.", text || "Examen de la imatge.", { json: true, imatge });
+        const models = (r && Array.isArray(r.models) ? r.models : []).filter(m => m && m.text).map(m => ({ text: String(m.text), sol: String(m.sol || "") }));
+        if (models.length < 2) throw new Error("La IA no ha retornat els models; torna-ho a provar.");
+        vari = { titol: String(r.titol || "Examen"), models: models.slice(0, n + 1) }; eiRes.var = "";
+      });
+    }
+  }
+
+  // ---------- 🩹 Fitxes de reforç ----------
+  function resumAlumne(g, f, fila) {
+    const e = EI(), errs = e.err[clauAl(g, fila.nom)] || [], cats = {};
+    errs.forEach(x => { const c = cats[x.cat] = cats[x.cat] || { n: 0, p: [] }; c.n++; if (x.p && !c.p.includes(x.p)) c.p.push(x.p); });
+    const valor = calculadora(g), baixes = [];
+    g.fulls.forEach(fu => { const r = fu.files.find(x => x.nom === fila.nom); if (!r) return; fu.columnes.forEach(c => { if (c.tipus === "text" || tipusColor(fu, c, valor) !== "nota") return; const n = numOpcional(valor(fu, r, c)); if (n !== null && n < 5) baixes.push(c.nom + " (" + coma(n) + ")"); }); });
+    let faltes = 0; g.fulls.forEach(fu => { const r = fu.files.find(x => x.nom === fila.nom); if (r && r.f) Object.values(r.f).forEach(n => { faltes += Number(n) || 0; }); });
+    return { cats, baixes, faltes };
+  }
+  function pintaRef() {
+    const { g, f, fila } = triat();
+    let h = '<p class="font">Una fitxa a mida amb el que més falla cada alumne: les paraules fallades als dictats, les notes baixes i el que hi afegeixis tu. També en pots fer una de grup amb els errors més repetits. A la IA no hi arriba cap nom.</p>' + selectorsAlumne(asSel);
+    if (!g) return h;
+    h += '<div class="fila-as">' + eSel("lleng", "Llengua", ["castellà", "català"], "castellà") + eSel("curs", "Curs", CURSOS_EI, cursDeGrup(g)) + eChk("dis", "Format DIS", fila ? esDIS(fila.nom) : false) + "</div>";
+    if (fila) {
+      const r = resumAlumne(g, f, fila), cl = Object.keys(r.cats).sort((a, b) => r.cats[b].n - r.cats[a].n);
+      h += '<div class="as-doc" style="max-height:none"><b>' + esc(nomAl(fila.nom)) + "</b>" +
+        (cl.length ? "<ul class=\"as-errs\">" + cl.map(c => "<li><b>" + esc(c) + "</b> (" + r.cats[c].n + "): " + esc(r.cats[c].p.slice(0, 12).join(", ")) + "</li>").join("") + "</ul>" : '<p class="font">Encara no té errors apuntats als dictats.</p>') +
+        (r.baixes.length ? '<p class="font">Notes per sota de 5: ' + esc(r.baixes.join(", ")) + "</p>" : "") + (r.faltes ? '<p class="font">Faltes d\'ortografia als exàmens: ' + r.faltes + "</p>" : "") + "</div>";
+      const def = cl.map(c => c + " (" + r.cats[c].p.slice(0, 8).join(", ") + ")").join("; ");
+      h += '<textarea data-ei="que|' + esc(clauAl(g, fila.nom)) + '" rows="3" placeholder="Què vols que treballi (p. ex.: b/v, accents, comprensió de textos, conjugació…)">' + esc(fv("que|" + clauAl(g, fila.nom), def)) + "</textarea>" +
+        '<div class="alum-eines">' + eBoto("refal", "🩹 Fitxa per a " + esc(nomAl(fila.nom))) + eBoto("refgrup", "👥 Fitxa de grup", true) + "</div>";
+    } else h += '<div class="alum-eines">' + eBoto("refgrup", "👥 Fitxa de grup (errors més repetits)") + "</div>";
+    return h + (eiRes.ref || "") + notaModel();
+  }
+  async function refAccio(a, b) {
+    if (a === "refimp" || a === "refimpdis") { imprimeix(asDades.titol, asDades.html, a === "refimpdis"); return; }
+    if (a === "refcopia") { if (navigator.clipboard) navigator.clipboard.writeText(asDades.text || ""); b.textContent = "Copiat ✓"; return; }
+    const { g, f, fila } = triat(); if (!g) return;
+    const lleng = fv("lleng", "castellà"), curs = fv("curs", cursDeGrup(g)), dis = !!fv("dis", fila ? esDIS(fila.nom) : false);
+    let que = "", paraules = [], per = "";
+    if (a === "refal") {
+      if (!fila) return;
+      const r = resumAlumne(g, f, fila);
+      que = String(fv("que|" + clauAl(g, fila.nom), Object.keys(r.cats).join("; "))).trim();
+      paraules = [].concat(...Object.values(r.cats).map(c => c.p)).slice(0, 25);
+      if (!que && r.baixes.length) que = "reforç general de les competències on ha tret notes baixes: " + r.baixes.join(", ");
+      if (!que) { alert("Escriu què vols que treballi."); return; }
+    } else {
+      const e = EI(), cats = {};
+      f.files.forEach(r => (e.err[clauAl(g, r.nom)] || []).forEach(x => { const c = cats[x.cat] = cats[x.cat] || { n: 0, al: new Set(), p: [] }; c.n++; c.al.add(nomAl(r.nom)); if (x.p && !c.p.includes(x.p)) c.p.push(x.p); }));
+      const top = Object.keys(cats).sort((x, y) => cats[y].n - cats[x].n).slice(0, 4);
+      if (!top.length) { alert("Aquest grup encara no té errors apuntats (es guarden en corregir els dictats)."); return; }
+      que = top.join("; "); paraules = [].concat(...top.map(c => cats[c].p)).slice(0, 25);
+      per = top.map(c => "<li><b>" + esc(c) + ":</b> " + esc(Array.from(cats[c].al).sort((x, y) => x.localeCompare(y, "ca")).join(", ")) + "</li>").join("");
+    }
+    return eiIA(async () => {
+      const r = await ia("Ets professor de llengua " + lleng + " de secundària a Catalunya. Prepara una fitxa de reforç " + (a === "refal" ? "personalitzada per a un alumne" : "per a un grup") + " de " + curs + ", en " + lleng + (dis ? ", adaptada a dislèxia (frases curtes, una instrucció per enunciat, paraules clau en negreta)" : "") + ". " +
+        "Ha de treballar: " + que + "." + (paraules.length ? " Paraules on s'ha equivocat: " + paraules.join(", ") + "." : "") +
+        " Estructura: «## Recorda» (explicació molt breu de cada norma, amb exemples), «## Practica» (entre 8 i 12 exercicis graduats de més fàcil a més difícil i variats: omplir buits, triar l'opció, corregir errors, escriure frases; fes-hi sortir algunes de les paraules fallades), «## Repte final» (un exercici breu d'escriptura) i «## Solucionari». Markdown senzill, sense introduccions ni noms.", "Prepara la fitxa.");
+      const cos = r.split(/\n(?=##\s*Solucionari)/i);
+      const titol = "Fitxa de reforç" + (a === "refal" ? "" : " · " + nomGrup(g.nom));
+      asDades = { titol, text: r, html: "<h3>" + esc(titol) + "</h3>" + md(cos[0]) + (cos[1] ? '<div style="break-before:page;page-break-before:always"></div>' + md(cos[1]) : "") };
+      eiRes.ref = (per ? '<p class="font"><b>Per a qui:</b></p><ul class="as-errs">' + per + "</ul>" : "") +
+        '<div class="alum-eines">' + eBoto("refimp", "🖨️ Imprimeix / PDF", true) + eBoto("refimpdis", "🖨️ Format DIS", true) + eBoto("refcopia", "Copia", true) + "</div>" +
+        '<div class="as-doc' + (dis ? " as-dis" : "") + '">' + capcaleraDoc() + md(r) + "</div>";
+    });
+  }
+
+  // ---------- 📈 Seguiment de l'alumne ----------
+  function seriesSeg(g, nom) {
+    const valor = calculadora(g), punts = [];
+    g.fulls.forEach(f => f.columnes.forEach(c => {
+      if (c.tipus === "text" || c.tipus === "calc" || tipusColor(f, c, valor) !== "nota") return;
+      const vals = f.files.map(r => numOpcional(valor(f, r, c))).filter(n => n !== null);
+      if (!vals.length) return;
+      const fila = nom ? f.files.find(r => r.nom === nom) : null, v = fila ? numOpcional(valor(f, fila, c)) : null;
+      punts.push({ col: c.nom, full: f.nom, v: v, m: Math.round(vals.reduce((x, y) => x + y, 0) / vals.length * 100) / 100 });
+    }));
+    return punts;
+  }
+  function tasquesF(g, nom) {
+    const valor = calculadora(g); let fet = 0, tot = 0;
+    g.fulls.forEach(f => { const r = f.files.find(x => x.nom === nom); if (!r) return; f.columnes.forEach(c => { if (!/^F\d+$/i.test(c.nom.trim())) return; const n = numOpcional(valor(f, r, c)); if (n === null) return; tot++; if (n >= 1) fet++; }); });
+    return { fet, tot };
+  }
+  function grafSeg(p) {
+    const W = Math.round(Math.max(320, Math.min(760, ($("asCos") && $("asCos").clientWidth) || 680))), H = 250, L = 34, R = 12, T = 26, B = 46, n = p.length;
+    const x = i => L + (n === 1 ? (W - L - R) / 2 : i * (W - L - R) / (n - 1)), y = v => T + (10 - Math.max(0, Math.min(10, v))) * (H - T - B) / 10;
+    let s = '<svg viewBox="0 0 ' + W + " " + H + '" class="seg-svg" role="img" aria-label="Evolució de les notes de l\'alumne i mitjana del grup">';
+    [0, 2.5, 5, 7.5, 10].forEach(v => { s += '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + y(v) + '" y2="' + y(v) + '" stroke="#e3e1db" stroke-width="1"' + (v === 5 ? ' stroke-dasharray="3 3" stroke="#c9c6bd"' : "") + '/><text x="' + (L - 6) + '" y="' + (y(v) + 4) + '" text-anchor="end" font-size="11" fill="#6b6b66">' + coma(v) + "</text>"; });
+    // separadors i noms dels fulls
+    let ant = null;
+    p.forEach((q, i) => { if (q.full !== ant) { if (i) s += '<line x1="' + ((x(i) + x(i - 1)) / 2) + '" x2="' + ((x(i) + x(i - 1)) / 2) + '" y1="' + (T - 14) + '" y2="' + (H - B) + '" stroke="#c9c6bd" stroke-width="1"/>'; s += '<text x="' + (i ? (x(i) + x(i - 1)) / 2 + 4 : L) + '" y="' + (T - 14) + '" font-size="11" fill="#6b6b66">' + esc(q.full) + "</text>"; ant = q.full; } });
+    const pas = Math.max(1, Math.ceil(n / Math.max(4, Math.floor((W - L - R) / 48))));
+    p.forEach((q, i) => { if (i % pas === 0) s += '<text x="' + x(i) + '" y="' + (H - B + 16) + '" text-anchor="middle" font-size="10.5" fill="#6b6b66">' + esc(q.col.slice(0, 7)) + "</text>"; });
+    const linia = (k, color, dash) => { let d = "", seg = false; p.forEach((q, i) => { if (q[k] == null) { seg = false; return; } d += (seg ? "L" : "M") + x(i).toFixed(1) + " " + y(q[k]).toFixed(1); seg = true; }); return d ? '<path d="' + d + '" fill="none" stroke="' + color + '" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"' + (dash ? ' stroke-dasharray="5 4"' : "") + "/>" : ""; };
+    s += linia("m", "#77776f", true) + linia("v", "#2f6fb5", false);
+    p.forEach((q, i) => {
+      const tip = q.full + " · " + q.col + ": " + (q.v == null ? "sense nota" : coma(q.v)) + " (grup " + coma(q.m) + ")";
+      if (q.v != null) s += '<circle cx="' + x(i) + '" cy="' + y(q.v) + '" r="4.5" fill="#2f6fb5" stroke="#fff" stroke-width="2"/>';
+      s += '<rect x="' + (x(i) - Math.max(8, (W - L - R) / Math.max(1, n) / 2)) + '" y="' + T + '" width="' + Math.max(16, (W - L - R) / Math.max(1, n)) + '" height="' + (H - T - B) + '" fill="transparent" data-tip="' + esc(tip) + '"><title>' + esc(tip) + "</title></rect>";
+    });
+    return s + "</svg>";
+  }
+  function pintaSeg() {
+    const q = Q(); if (!q.grups.length) return '<p class="buit">Primer cal tenir algun grup amb notes.</p>';
+    const gi = Math.min(Number(fv("g", String(asSel.g || 0))), q.grups.length - 1), g = q.grups[gi];
+    const noms = Array.from(new Set([].concat(...g.fulls.map(f => f.files.map(r => r.nom))))).sort((a, b) => nomAl(a).localeCompare(nomAl(b), "ca"));
+    const al = noms.includes(fv("al", "")) ? fv("al", "") : "";
+    let h = '<p class="font">Evolució de les notes al llarg del curs, amb la mitjana del grup al costat, les tasques lliurades, les faltes de deures, la fluïdesa lectora i els errors dels dictats. Bo per a les juntes d\'avaluació.</p>' +
+      '<div class="fila-as">' + eSel("g", "Grup", q.grups.map((x, i) => [String(i), nomGrup(x.nom)]), String(gi), true) + eSel("al", "Alumne", [["", "— Tot el grup —"]].concat(noms.map(n => [n, nomAl(n)])), al, true) + "</div>";
+    const e = EI(), tA = trimDe(avuiISO());
+    if (!al) {
+      const files = noms.map(nom => {
+        const p = seriesSeg(g, nom).filter(x => x.v != null), mitj = p.length ? p.reduce((s, x) => s + x.v, 0) / p.length : null;
+        const mig = Math.floor(p.length / 2), a1 = p.slice(0, mig), a2 = p.slice(mig), mm = l => l.reduce((s, x) => s + x.v, 0) / l.length;
+        const tend = a1.length && a2.length ? mm(a2) - mm(a1) : null, tf = tasquesF(g, nom), fl = e.flu.filter(x => x.g === g.nom && x.al === nom).slice(-1)[0];
+        return { nom, mitj, tend, deu: deuresDe(g, nom).filter(d => d >= tA.de && d <= tA.fins).length, tf, fl };
+      });
+      h += '<div class="taula"><table><thead><tr><th>Alumne</th><th>Mitjana</th><th>Tendència</th><th>Tasques</th><th>📕 Deures ' + tA.nom + " trim.</th><th>Lectura (PCM)</th></tr></thead><tbody>" +
+        files.map(r => '<tr><td class="nomal"><a href="#" data-asb="ei-segal" data-n="' + esc(r.nom) + '">' + esc(nomAl(r.nom)) + "</a></td>" +
+          "<td" + (r.mitj != null ? ' class="' + colorNota(r.mitj) + '"' : "") + ">" + (r.mitj != null ? num2(r.mitj) : "—") + "</td>" +
+          "<td>" + (r.tend == null ? "—" : r.tend > 0.4 ? "↗ millora" : r.tend < -0.4 ? "↘ baixa" : "→ estable") + "</td>" +
+          "<td>" + (r.tf.tot ? Math.round(r.tf.fet / r.tf.tot * 100) + " %" : "—") + "</td><td>" + (r.deu || "—") + "</td><td>" + (r.fl ? r.fl.pcm : "—") + "</td></tr>").join("") + "</tbody></table></div>" +
+        '<p class="font">Toca un nom per veure\'n la gràfica. La tendència compara la mitjana de la segona meitat de les notes amb la de la primera.</p>' +
+        '<div class="alum-eines">' + eBoto("segimpg", "🖨️ Imprimeix el resum del grup", true) + "</div>";
+      return h;
+    }
+    const p = seriesSeg(g, al), amb = p.filter(x => x.v != null), mitj = amb.length ? amb.reduce((s, x) => s + x.v, 0) / amb.length : null;
+    const mitjG = amb.length ? amb.reduce((s, x) => s + x.m, 0) / amb.length : null, tf = tasquesF(g, al);
+    const fl = e.flu.filter(x => x.g === g.nom && x.al === al), ex = e.exp.filter(x => x.g === g.nom && x.al === al), errs = e.err[clauAl(g, al)] || [], cats = {};
+    errs.forEach(x => { cats[x.cat] = (cats[x.cat] || 0) + 1; });
+    h += '<div class="xifres">' +
+      '<div class="xifra"><b>' + (mitj != null ? num2(mitj) : "—") + "</b><span>mitjana de l'alumne" + (mitjG != null ? " (grup " + num2(mitjG) + ")" : "") + "</span></div>" +
+      '<div class="xifra"><b>' + (tf.tot ? Math.round(tf.fet / tf.tot * 100) + " %" : "—") + "</b><span>tasques lliurades" + (tf.tot ? " (" + tf.fet + " de " + tf.tot + ")" : "") + "</span></div>" +
+      '<div class="xifra"><b>' + TRIMESTRES.map(t => deuresDe(g, al).filter(d => d >= t.de && d <= t.fins).length).join(" · ") + "</b><span>faltes de deures per trimestre</span></div>" +
+      '<div class="xifra"><b>' + (fl.length ? fl[fl.length - 1].pcm + " PCM" : "—") + "</b><span>lectura" + (fl.length > 1 ? " (abans " + fl[0].pcm + ")" : "") + "</span></div>" +
+      (ex.length ? '<div class="xifra"><b>' + coma(ex[ex.length - 1].nota) + "</b><span>darrera exposició oral</span></div>" : "") + "</div>";
+    if (p.length) {
+      h += '<div class="seg-llegenda"><span><i style="background:#2f6fb5"></i>' + esc(nomAl(al)) + '</span><span><i class="ratllat"></i>Mitjana del grup</span></div>' +
+        '<div class="seg-graf" id="segGraf">' + grafSeg(p) + '<div class="seg-tip" id="segTip" hidden></div></div>' +
+        '<details class="font"><summary>Taula de notes</summary><div class="taula"><table><thead><tr><th>Full</th><th>Columna</th><th>Alumne</th><th>Grup</th></tr></thead><tbody>' +
+        p.map(x => "<tr><td>" + esc(x.full) + "</td><td>" + esc(x.col) + "</td><td" + (x.v != null ? ' class="' + colorNota(x.v) + '"' : "") + ">" + (x.v == null ? "—" : num2(x.v)) + "</td><td>" + num2(x.m) + "</td></tr>").join("") + "</tbody></table></div></details>";
+    } else h += '<p class="buit">Encara no hi ha notes d\'aquest alumne.</p>';
+    if (Object.keys(cats).length) h += '<p class="font"><b>Errors dels dictats:</b> ' + Object.keys(cats).sort((a, b) => cats[b] - cats[a]).map(c => esc(c) + " (" + cats[c] + ")").join(" · ") + "</p>";
+    if (fl.length) h += '<p class="font"><b>Lectures:</b> ' + fl.slice(-8).map(x => dma(x.d) + ": " + x.pcm + " PCM").join(" · ") + "</p>";
+    h += '<div class="alum-eines">' + eBoto("segimp", "🖨️ Imprimeix per a la junta", true) + "</div>";
+    return h;
+  }
+  function segDespres() {
+    const gr = $("segGraf"), tip = $("segTip"); if (!gr || !tip) return;
+    const mostra = ev => { const r = ev.target.closest && ev.target.closest("[data-tip]"); if (!r) { tip.hidden = true; return; } const b = gr.getBoundingClientRect(), rr = r.getBoundingClientRect(); tip.textContent = r.dataset.tip; tip.hidden = false; tip.style.left = Math.max(0, Math.min(b.width - 200, rr.left - b.left + rr.width / 2 - 100)) + "px"; tip.style.top = "0px"; };
+    gr.addEventListener("mousemove", mostra); gr.addEventListener("click", mostra); gr.addEventListener("mouseleave", () => { tip.hidden = true; });
+  }
+  async function segAccio(a, b) {
+    if (a === "segal") { fput("al", b.dataset.n); return pintaAssistent(); }
+    if (a === "segimp" || a === "segimpg") {
+      const q = Q(), g = q.grups[Math.min(Number(fv("g", "0")), q.grups.length - 1)], al = fv("al", "");
+      const cos = $("asCos").cloneNode(true);
+      cos.querySelectorAll(".fila-as,.alum-eines,p.font:first-child,.seg-tip").forEach(x => x.remove());
+      cos.querySelectorAll("details").forEach(d => d.setAttribute("open", ""));
+      const css = "<style>.xifres{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:8px 0}.xifra{border:1px solid #999;border-radius:6px;padding:6px}.xifra b{display:block;font-size:16px}.xifra span{font-size:11px}table{border-collapse:collapse;width:100%;font-size:12px}td,th{border-bottom:1px solid #ccc;padding:3px 5px;text-align:left}.seg-llegenda span{margin-right:14px;font-size:12px}.seg-llegenda i{display:inline-block;width:18px;height:3px;background:#77776f;vertical-align:middle;margin-right:5px}svg{width:100%;height:auto}summary{display:none}.n-roig{background:#f8d0cf}.n-groc{background:#fbeeb8}.n-verd{background:#d3ecd4}.n-blau{background:#d4e4f7}a{color:inherit;text-decoration:none}</style>";
+      imprimeix("Seguiment · " + (al ? nomAl(al) : nomGrup(g.nom)), css + '<h3 style="text-transform:none">Seguiment · ' + esc(al ? nomAl(al) + " · " + nomGrup(g.nom) : nomGrup(g.nom)) + " · " + dma(avuiISO()) + "</h3>" + cos.innerHTML, false, true);
+    }
+  }
+
+  // ---------- 🎤 Exposicions en directe ----------
+  let expo = null, expTimer = null;
+  const expTemps = () => (expo ? expo.acum + (expo.corrent ? Date.now() - expo.ini : 0) : 0);
+  function expRubrica() {
+    const { col } = triat(), rbs = rubriques();
+    if (col && col.tipus === "rubrica") { const r = rbs.find(x => x.id === col.rubrica); if (r) return r; }
+    return rbs.find(x => x.id === fv("rb", "")) || rbs.find(x => /exposici/i.test(x.nom)) || rbs[0] || null;
+  }
+  function expEstat() {
+    const s = expTemps() / 1000, mn = (nombre(fv("min", "3")) || 0) * 60, mx = (nombre(fv("max", "5")) || 0) * 60;
+    return !s ? "" : s < mn ? "curt" : mx && s > mx ? "llarg" : "be";
+  }
+  function expTick() {
+    const el = $("expTemps"); if (!el || !expo) return;
+    el.textContent = mmss(Math.floor(expTemps() / 1000)); el.className = "exp-temps " + expEstat();
+  }
+  // Durada → nivell proposat del criteri de temps (0 = el millor)
+  function expNivellDurada(rb) {
+    const s = expTemps() / 1000, mn = (nombre(fv("min", "3")) || 0) * 60, mx = (nombre(fv("max", "5")) || 0) * 60;
+    if (!s) return null;
+    let desv = 0;
+    if (s < mn) desv = (mn - s) / Math.max(mn, 1); else if (mx && s > mx) desv = (s - mx) / mx;
+    const niv = desv === 0 ? 0 : desv <= 0.2 ? 1 : desv <= 0.4 ? 2 : 3;
+    return Math.min(niv, rb.nivells.length - 1);
+  }
+  function pintaExp() {
+    const { g, f, fila, col } = triat(), rb = expRubrica();
+    let h = '<p class="font">Avalua l\'exposició mentre parla: cronòmetre amb la durada demanada (gris si encara és curta, verd dins del marge, vermell si s\'allarga) i la rúbrica per tocar. En aturar el cronòmetre, el criteri de durada es proposa sol. Desa i passa al següent.</p>' + selectorsAlumne(asSel);
+    if (!rb) return h + '<p class="buit">No hi ha cap rúbrica al banc.</p>';
+    const k = g && fila ? clauAl(g, fila.nom) : "";
+    if (!expo || expo.al !== k) {
+      if (expTimer) { clearInterval(expTimer); expTimer = null; }
+      const prev = fila && col && fila.rb && fila.rb[col.nom] && fila.rb[col.nom].rubrica === rb.id ? fila.rb[col.nom] : null;
+      expo = { al: k, ini: 0, acum: 0, corrent: false, sel: prev ? prev.sel.slice() : [], rb: rb.id };
+      fput("com", prev ? prev.comentari || "" : "");
+    }
+    if (expo.rb !== rb.id) { expo.rb = rb.id; expo.sel = []; }
+    h += '<div class="fila-as">' + (col && col.tipus === "rubrica" ? '<span class="font" style="align-self:end">Rúbrica de la columna: <b>' + esc(rb.nom) + "</b></span>" : eSel("rb", "Rúbrica", rubriques().map(r => [r.id, r.nom]), rb.id, true)) +
+      eInp("min", "Durada mínima (min)", "3", "width:5em", true) + eInp("max", "Durada màxima (min)", "5", "width:5em", true) + "</div>";
+    if (!fila) return h + '<p class="font">Tria l\'alumne que exposa.</p>';
+    h += '<div class="exp-cap"><b>' + esc(nomAl(fila.nom)) + '</b><span id="expTemps" class="exp-temps ' + expEstat() + '">' + mmss(Math.floor(expTemps() / 1000)) + "</span>" +
+      eBoto("expplay", expo.corrent ? "⏸ Atura" : expTemps() ? "▶️ Continua" : "▶️ Comença") + eBoto("expreset", "↺", true, ' title="Torna el cronòmetre a zero"') + "</div>" +
+      '<div><table class="exp-rub"><tbody>' + rb.criteris.map((c, i) => "<tr><th>" + esc(c.nom) + (c.extra ? " (extra)" : "") + "</th><td>" + rb.nivells.map((n, j) => '<button type="button" data-asb="ei-expn" data-c="' + i + '" data-n="' + j + '" aria-pressed="' + (expo.sel[i] === j) + '">' + esc(n.nom) + "</button>").join("") + "</td></tr>").join("") + "</tbody></table></div>" +
+      '<div class="fila-as"><div class="xifra" style="min-width:120px"><b style="font-size:1.9rem">' + coma(notaRubrica(rb, expo.sel)) + "</b><span>nota (" + expo.sel.filter(x => x != null).length + " de " + rb.criteris.length + " criteris)</span></div></div>" +
+      eArea("com", "Comentari per a l'alumne (opcional)", 2) +
+      '<div class="alum-eines">' + eBoto("expdesa", "💾 Desa i passa al següent alumne") + "</div>" + msgEi();
+    return h;
+  }
+  async function expAccio(a, b) {
+    if (!expo) return;
+    const rb = expRubrica(); if (!rb) return;
+    if (a === "expplay") {
+      if (expo.corrent) {
+        expo.acum += Date.now() - expo.ini; expo.corrent = false; clearInterval(expTimer); expTimer = null;
+        const ic = rb.criteris.findIndex(c => /durada|temps|tiempo|duraci/i.test(c.nom)), nv = expNivellDurada(rb);
+        if (ic >= 0 && nv != null) expo.sel[ic] = nv;
+      } else { expo.ini = Date.now(); expo.corrent = true; clearInterval(expTimer); expTimer = setInterval(expTick, 500); }
+      return pintaAssistent();
+    }
+    if (a === "expreset") { clearInterval(expTimer); expTimer = null; expo.acum = 0; expo.corrent = false; return pintaAssistent(); }
+    if (a === "expn") { const i = Number(b.dataset.c), j = Number(b.dataset.n); expo.sel[i] = expo.sel[i] === j ? null : j; return pintaAssistent(); }
+    if (a === "expdesa") {
+      const { g, fila, col } = triat();
+      if (!rb.criteris.every((c, i) => c.extra || expo.sel[i] != null) && !confirm("Hi ha criteris sense valorar. Vols desar-ho igualment?")) return;
+      if (expo.corrent) { expo.acum += Date.now() - expo.ini; expo.corrent = false; clearInterval(expTimer); expTimer = null; }
+      const nota = notaRubrica(rb, expo.sel), sel = rb.criteris.map((c, i) => (expo.sel[i] == null ? null : expo.sel[i]));
+      if (col && col.tipus === "rubrica" && col.rubrica !== rb.id) { alert("La columna " + col.nom + " té una altra rúbrica vinculada."); return; }
+      if (!posaNota(nota, { rubrica: rb.id, sel: sel, comentari: String(fv("com", "")) })) return;
+      EI().exp.push({ d: avuiISO(), g: g.nom, al: fila.nom, seg: Math.round(expTemps() / 1000), nota: nota, rb: rb.id }); desa();
+      eiMsg.exp = "✓ " + esc(nomAl(fila.nom)) + ": " + coma(nota) + " a " + esc(col.nom) + " (" + mmss(Math.round(expTemps() / 1000)) + ").";
+      expo = null; seguentAlumne();
+      return pintaAssistent();
+    }
+  }
+
+  // ---------- Connexió amb l'Assistent ----------
+  const EINES = { flu: pintaFlu, dic: pintaDic, ctl: pintaCtl, "var": pintaVar, ref: pintaRef, seg: pintaSeg, exp: pintaExp };
+  const EINES_DESPRES = {
+    seg: segDespres,
+    dic: () => { if (window.speechSynthesis && !veusDe("castellà").length && !veusDe("català").length) speechSynthesis.onvoiceschanged = () => { speechSynthesis.onvoiceschanged = null; if (asEina === "dic" && !$("asCos").contains(document.activeElement)) pintaAssistent(); }; },
+    ctl: () => { const i = $("ctlDoc"); if (i) i.addEventListener("change", () => { $("ctlDocNom").textContent = i.files[0] ? i.files[0].name : ""; }); },
+    "var": () => { const i = $("varDoc"); if (i) i.addEventListener("change", () => { $("varDocNom").textContent = i.files[0] ? i.files[0].name : ""; }); }
+  };
+  const ACCIONS_EI = { fl: fluAccio, di: dicAccio, ct: ctlAccio, va: varAccio, re: refAccio, se: segAccio, ex: expAccio };
+  function eiAccio(a, b) {
+    const f = ACCIONS_EI[a.slice(0, 2)];
+    if (f) Promise.resolve(f(a, b)).catch(e => { asOcupat = false; eiRes[asEina] = '<p class="avis">' + esc(e.message || String(e)) + "</p>"; pintaAssistent(); });
+  }
+  function eiCanvi(ev, canvi) {
+    const el = ev.target;
+    if (el.dataset.ctlq != null && ctl) {
+      const p = ctl.preg[Number(el.dataset.ctlq)], c = el.dataset.ctlc; if (!p) return;
+      if (c === "p") p.p = el.value; else if (c === "c") { if (el.checked) p.c = Number(el.value); } else if (/^o\d$/.test(c)) p.o[Number(c.slice(1))] = el.value;
+      if (canvi && EI().ctl.includes(ctl)) desa();
+      return;
+    }
+    // L'alumne o la columna dels selectors comuns: les eines noves es tornen a dibuixar (la correcció en depèn)
+    if (canvi && (el.dataset.as === "a" || el.dataset.as === "c") && EINES[asEina]) { pintaAssistent(); return; }
+    if (!el.dataset.ei) return;
+    const v = el.type === "checkbox" ? el.checked : el.value;
+    if (asEina === "flu" && el.dataset.ei === "obj") { const n = nombre(v); if (n > 0) { EI().obj[fluCurs()] = n; if (canvi) desa(); } }
+    else fput(el.dataset.ei, v);
+    if (el.dataset.eicalc && eiCalc[asEina]) eiCalc[asEina]();
+    if (canvi && el.dataset.eire) pintaAssistent();
+  }
+  $("asCos").addEventListener("input", ev => eiCanvi(ev, false));
+  $("asCos").addEventListener("change", ev => eiCanvi(ev, true));
+  // Els enllaços de l'Assistent que fan d'acció no han de moure la pàgina
+  $("asCos").addEventListener("click", ev => { const t = ev.target.closest("[data-asb]"); if (t && t.closest("a")) ev.preventDefault(); }, true);
+
+  // ---------- 🎓 Selectivitat (2n de batxillerat): pares mínims, anàlisi inversa i exàmens d'altres anys ----------
+  const PAU_ENLLACOS = [
+    ["Canal Universitats: prepara't la PAU (models i exàmens d'anys anteriors per matèries)", "https://universitats.gencat.cat/ca/proves-acces-PAU-PAP/preparat-PAU/"],
+    ["Llista PAU de Llengua castellana (termes que cal saber)", "https://universitats.gencat.cat/web/.content/01_acces_i_admissio/proves-acces-PAU-PAP/ambits/llengua-castellana-i-literatura/02_PAU25_Castella_LlistaPAU.pdf"],
+    ["3Cat: exàmens i correccions de juny del 2026", "https://www.3cat.cat/3catinfo/correccions-de-la-selectivitat-2026-examens-solucions-en-pdf-i-resultats-de-les-pau/noticia/3410078/"],
+    ["3Cat: exàmens i correccions de setembre del 2026", "https://www.3cat.cat/3catinfo/correccions-de-la-selectivitat-de-setembre-2026-examens-i-solucions-en-pdf/noticia-amp/3426778/"],
+    ["betevé: correccions de la selectivitat 2026", "https://beteve.cat/societat/correccions-selectivitat-2026-solucions-pau-pdf/"],
+    ["3Cat: exàmens i correccions del 2025", "https://www.3cat.cat/3catinfo/correccions-de-la-selectivitat-2025-examens-solucions-en-pdf-i-resultats-de-les-pau-a-catalunya/noticia-amp/3353316/"],
+    ["VilaWeb: exàmens i correccions del 2024", "https://www.vilaweb.cat/noticies/correccions-selectivitat-2024-examens-pau-catalunya-pais-valencia/"],
+    ["El Velero Digital: oraciones compuestas analizadas (bachillerato)", "https://elvelerodigital.com/apuntes/lyl/sintaxis_oc4.htm"],
+    ["El Velero Digital: apunts, sintaxi i exercicis de llengua", "https://www.elvelerodigital.com/"],
+    ["Editorial Text: orientacions de la PAU de castellà (pares mínims, anàlisi inversa…)", "https://educadors.text.cat/interact/public/guiesBAT2022/BAT_CAST_PAU25.pdf"]
+  ];
+  const PAU_FOCUS = {
+    pm: ["Barreja de fenòmens (com a la PAU)", "CD / C. de régimen", "Atributo / C. predicativo", "Valores de «se»", "Pasiva refleja / impersonal con «se»", "Subordinada de relativo / sustantiva", "Especificativa / explicativa", "Perífrasis / verbo + infinitivo", "Locución / combinación libre", "Modo verbal (indicativo / subjuntivo)", "Morfología: derivación / composición", "Ambigüedad sintáctica"],
+    ai: ["Barreja (com a la PAU)", "Oración simple", "Subordinadas sustantivas", "Subordinadas de relativo", "Subordinadas adverbiales", "Coordinación y yuxtaposición", "Valores de «se»", "Perífrasis verbales", "Complementos verbales (CD, CI, CRég, CPred, CC)"]
+  };
+  function pintaPau() {
+    const sub = fv("sub", "pm");
+    let h = '<div class="vistes" role="group" aria-label="Selectivitat" style="margin-bottom:8px">' +
+      [["pm", "⚖️ Pares mínims"], ["ai", "🔁 Anàlisi inversa"], ["ex", "📚 Exàmens i recursos"]].map(x => '<button type="button" data-asb="ei-pausub" data-s="' + x[0] + '" aria-pressed="' + (sub === x[0]) + '">' + x[1] + "</button>").join("") + "</div>";
+    if (sub === "ex") {
+      const e = EI(); e.pau = Array.isArray(e.pau) ? e.pau : [];
+      h += '<p class="font">Exàmens de selectivitat d\'anys anteriors amb les correccions, i oracions analitzades d\'El Velero Digital. S\'obren en una pestanya nova. Pots afegir-hi els enllaços que facis servir.</p><div class="cons-llista">' +
+        PAU_ENLLACOS.concat(e.pau.map(x => [x.t, x.u])).map((x, i) => '<a class="cons-b" href="' + esc(x[1]) + '" target="_blank" rel="noopener"><span class="ini" style="background:#5b6e8c">PAU</span><span>' + esc(x[0]) + (i >= PAU_ENLLACOS.length ? ' <small>afegit per tu · <span data-asb="ei-pauesb" data-i="' + (i - PAU_ENLLACOS.length) + '" style="text-decoration:underline">treu</span></small>' : "") + "</span></a>").join("") + "</div>" +
+        '<div class="fila-as" style="margin-top:10px">' + eInp("lt", "Nom de l'enllaç", "", "min-width:14em") + eInp("lu", "Adreça", "", "min-width:16em") + '<span style="align-self:end">' + eBoto("pauaf", "Afegeix", true) + "</span></div>";
+      return h;
+    }
+    const pm = sub === "pm";
+    h += '<p class="font">' + (pm ? "Pares mínims com els de la selectivitat: dues oracions que només es diferencien en un element i que cal explicar (funció, categoria, valor o significat). Surten amb el solucionari i es poden imprimir." :
+      "Anàlisi inversa: a partir d'una descripció sintàctica, l'alumne ha de construir una oració que s'hi ajusti. Surten amb una oració model; amb «Comprova una oració» la IA et diu si la d'un alumne compleix la descripció.") + "</p>" +
+      '<div class="fila-as">' + eSel("curs", "Curs", CURSOS_EI, "2n de batxillerat") + eSel("lleng" + sub, "Llengua", ["castellà", "català"], "castellà") + eSel("foc" + sub, "Què treballa", PAU_FOCUS[sub], PAU_FOCUS[sub][0]) + eInp("n" + sub, "Quants", "6", "width:4em") + eSel("dif" + sub, "Dificultat", ["Iniciació", "Nivell selectivitat", "Repte"], "Nivell selectivitat") + "</div>" +
+      '<div class="alum-eines">' + eBoto("paugen", pm ? "⚖️ Genera els pares mínims" : "🔁 Genera les descripcions") + "</div>";
+    if (!pm) h += '<details class="rub-bloc"' + (fv("obreComp", false) ? " open" : "") + '><summary>✅ Comprova una oració</summary>' + eArea("desc", "Descripció (enganxa'n una de les generades o de la PAU)", 2) + eArea("frase", "Oració de l'alumne", 2) +
+      '<div class="alum-eines">' + eBoto("paucomp", "✅ Comprova-la", true) + "</div>" + (eiRes.pauComp || "") + "</details>";
+    return h + (eiRes["pau" + sub] || "") + notaModel();
+  }
+  async function pauAccio(a, b) {
+    const e = EI();
+    if (a === "pausub") { fput("sub", b.dataset.s); return pintaAssistent(); }
+    if (a === "pauaf") { const t = String(fv("lt", "")).trim(), u = String(fv("lu", "")).trim(); if (!/^https?:\/\//i.test(u)) { alert("L'adreça ha de començar per https://"); return; } e.pau = Array.isArray(e.pau) ? e.pau : []; e.pau.push({ t: t || u, u: u }); desa(); fput("lt", ""); fput("lu", ""); return pintaAssistent(); }
+    if (a === "pauesb") { e.pau = Array.isArray(e.pau) ? e.pau : []; e.pau.splice(Number(b.dataset.i), 1); desa(); return pintaAssistent(); }
+    if (a === "pauimp" || a === "pauimpsol") { const d = asDades && asDades.pau; if (!d) return; imprimeix(d.titol, "<h3 style=\"text-transform:none\">" + esc(d.titol) + "</h3>" + (a === "pauimp" ? d.html : d.sol), false, a === "pauimpsol"); return; }
+    const sub = fv("sub", "pm");
+    if (a === "paugen") {
+      const pm = sub === "pm", lleng = fv("lleng" + sub, "castellà"), foc = fv("foc" + sub, PAU_FOCUS[sub][0]), n = Math.max(1, Math.min(15, Number(fv("n" + sub, "6")) || 6)), dif = fv("dif" + sub, "Nivell selectivitat");
+      return eiIA(async () => {
+        const sist = pm
+          ? "Ets professor de llengua " + lleng + " de 2n de batxillerat a Catalunya i prepares l'alumnat per a la selectivitat. Crea " + n + " exercicis de pares mínims (" + foc + "), dificultat «" + dif + "»: per a cada exercici, dues oracions (a i b) que només es diferencien en un element mínim (una paraula, l'ordre, un signe, el mode verbal…) i un enunciat com els de la PAU (p. ex. «Explica la diferencia sintáctica entre…»). Les oracions han de ser naturals i gramaticalment correctes, i la diferència, real i inequívoca. Redacta en " + lleng + ". Respon només JSON: {\"titol\": text curt, \"items\": [{\"enunciat\": text, \"a\": oració, \"b\": oració, \"solucio\": explicació clara i precisa de la diferència, amb la terminologia de la Llista PAU}]}."
+          : "Ets professor de llengua " + lleng + " de 2n de batxillerat a Catalunya i prepares l'alumnat per a la selectivitat. Crea " + n + " exercicis d'anàlisi sintàctica inversa (" + foc + "), dificultat «" + dif + "»: per a cada exercici, una descripció sintàctica precisa com les de la PAU (p. ex. «Escribe una oración compuesta que contenga una subordinada sustantiva de CD con el verbo en subjuntivo y un complemento predicativo»), amb indicació de punts, i una oració model que la compleixi exactament, amb la justificació breu. Redacta en " + lleng + ". Respon només JSON: {\"titol\": text curt, \"items\": [{\"descripcio\": text, \"model\": oració, \"justificacio\": text}]}.";
+        const r = await ia(sist, "Genera els exercicis.", { json: true });
+        const items = (r && Array.isArray(r.items) ? r.items : []).filter(x => x && (pm ? x.a && x.b : x.descripcio));
+        if (!items.length) throw new Error("La IA no ha retornat exercicis; torna-ho a provar.");
+        const titol = String(r.titol || (pm ? "Pares mínimos" : "Análisis inverso"));
+        const html = pm ? "<ol>" + items.map(x => '<li style="margin-bottom:12px;break-inside:avoid">' + esc(x.enunciat || "") + '<div style="margin:4px 0 0 10px">a) ' + esc(x.a) + "<br>b) " + esc(x.b) + '</div><div style="border-bottom:1px solid #999;height:2em"></div><div style="border-bottom:1px solid #999;height:2em"></div></li>').join("") + "</ol>"
+          : "<ol>" + items.map(x => '<li style="margin-bottom:12px;break-inside:avoid">' + esc(x.descripcio) + '<div style="border-bottom:1px solid #999;height:2em"></div><div style="border-bottom:1px solid #999;height:2em"></div></li>').join("") + "</ol>";
+        const sol = "<ol>" + items.map(x => "<li>" + (pm ? "a) " + esc(x.a) + "<br>b) " + esc(x.b) + "<br><b>" + esc(x.solucio || "") + "</b>" : esc(x.descripcio) + "<br>→ <b>" + esc(x.model || "") + "</b><br><i>" + esc(x.justificacio || "") + "</i>") + "</li>").join("") + "</ol>";
+        asDades = Object.assign({}, asDades || {}, { pau: { titol, html, sol } });
+        eiRes["pau" + sub] = '<div class="alum-eines">' + eBoto("pauimp", "🖨️ Full de l'alumne", true) + eBoto("pauimpsol", "🖨️ Solucionari", true) + "</div>" +
+          '<div class="as-doc"><h4>' + esc(titol) + "</h4>" + sol + "</div>";
+      });
+    }
+    if (a === "paucomp") {
+      const desc = String(fv("desc", "")).trim(), frase = String(fv("frase", "")).trim();
+      if (!desc || !frase) { alert("Escriu la descripció i l'oració de l'alumne."); return; }
+      fput("obreComp", true);
+      return eiIA(async () => {
+        const r = await ia("Ets corrector de la selectivitat de llengua " + fv("lleng" + sub, "castellà") + " a Catalunya. Comprova si l'oració compleix exactament la descripció sintàctica. Analitza-la breument (estructura i funcions rellevants), digues què compleix i què no, i si és gramaticalment correcta. Respon només JSON: {\"compleix\": true o false, \"puntuacio\": nombre entre 0 i 1 (proporció del que compleix), \"analisi\": text breu, \"millora\": una oració corregida que sí que ho compleixi}.", "Descripció: " + desc + "\nOració: " + frase, { json: true });
+        eiRes.pauComp = '<div class="as-doc" style="max-height:none"><p><b>' + (r.compleix ? "✅ Compleix la descripció" : "❌ No la compleix del tot") + "</b>" + (r.puntuacio != null ? " · " + Math.round(Number(r.puntuacio) * 100) + " %" : "") + "</p><p>" + esc(r.analisi || "") + "</p>" + (r.millora ? '<p class="font">Proposta: <b>' + esc(r.millora) + "</b></p>" : "") + "</div>";
+      });
+    }
+  }
+  EINES.pau = pintaPau;
+  ACCIONS_EI.pa = pauAccio;
 
   // ================= Qualificacions =================
   // Fórmules: {Columna} = mateixa fila; {Full|Columna} = el mateix alumne en un altre full.
