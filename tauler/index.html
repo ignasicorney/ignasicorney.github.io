@@ -1467,6 +1467,8 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       d = await cridaIns(Object.assign({ accio: "ia-reserva" }, cos));
       asModel = d.model || "Groq";
     }
+    // 14.11.2026: si la IA hi afegeix text abans o després del JSON, es retalla del primer «{» a l'últim «}»
+    if (opcions && opcions.json) { const rr = String(d.resposta || ""), a0 = rr.indexOf("{"), a1 = rr.lastIndexOf("}"); if (a0 >= 0 && a1 > a0) { try { return JSON.parse(rr.slice(a0, a1 + 1)); } catch (e) {} } }
     if (opcions && opcions.json) { try { return JSON.parse(d.resposta.replace(/^```(json)?\s*|\s*```$/g, "")); } catch (e) { throw new Error("La IA no ha retornat dades vàlides; torna-ho a provar."); } }
     return d.resposta;
   }
@@ -4902,6 +4904,35 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     setTimeout(() => { const f = document.querySelector('#correuCos [data-cr-form="redacta"]'); if (f) { f.scrollIntoView({ behavior: "smooth", block: "start" }); const as = f.querySelector(".cr-as"); if (as) as.focus({ preventScroll: true }); } }, 60);
   }
   // ================= Comprensió audiovisual (vídeo) =================
+  // Crida de text directa a Gemini que torna JSON (amb els mateixos reintents i models de reserva que la transcripció)
+  async function geminiJSON(g, sistema, text) {
+    const cos = { systemInstruction: { parts: [{ text: sistema }] }, contents: [{ role: "user", parts: [{ text: text }] }], generationConfig: { responseMimeType: "application/json", temperature: 0.4, maxOutputTokens: 32768 } };
+    const models = [g.model || "gemini-flash-latest"].concat(["gemini-flash-latest", "gemini-3.8-flash", "gemini-flash-lite-latest"].filter(x => x !== g.model));
+    let d = null, msg = "", codi = 0;
+    fora:
+    for (const m of models) {
+      let espera = 0;
+      for (let intent = 0; intent < 3; intent++) {
+        if (intent) { progres("Gemini va carregat; es torna a provar d'aquí a " + Math.round((espera || 5000 * intent) / 1000) + " s…"); await new Promise(ok => setTimeout(ok, espera || 5000 * intent)); }
+        let r;
+        try { r = await fetch("https://generativelanguage.googleapis.com/v1beta/models/" + m + ":generateContent", { method: "POST", headers: { "Content-Type": "application/json", "x-goog-api-key": g.clau }, body: JSON.stringify(cos) }); }
+        catch (e) { msg = "no s'ha pogut connectar amb Gemini"; codi = 0; continue; }
+        codi = r.status; const j = await r.json().catch(() => ({}));
+        if (r.ok) { d = j; break fora; }
+        msg = (j.error && j.error.message) || ("error " + r.status);
+        const ri = ((j.error && j.error.details) || []).find(x => x && x.retryDelay);
+        espera = ri ? Math.min(60000, (parseFloat(ri.retryDelay) || 0) * 1000 + 1000) : 0;
+        if (/no longer available|not found|not supported|deprecated|retired/i.test(msg)) continue fora;
+        if (/maxOutputTokens|max_output_tokens/i.test(msg)) { cos.generationConfig.maxOutputTokens = 8192; intent--; continue; }
+        if (r.status === 429 && /per day|PerDay|daily/i.test(msg)) continue fora;
+        if ([429, 500, 503].indexOf(r.status) < 0) break fora;
+      }
+    }
+    if (!d) throw new Error(([429, 500, 503].indexOf(codi) >= 0 ? "Gemini està saturat o ha arribat al límit d'ús. Torna-ho a provar més tard; la transcripció ja és desada." : "Gemini") + " (" + msg.slice(0, 300) + ")");
+    const t = ((((d.candidates || [])[0] || {}).content || {}).parts || []).map(p => p.text || "").join("");
+    const a0 = t.indexOf("{"), a1 = t.lastIndexOf("}");
+    try { return JSON.parse(t.slice(a0, a1 + 1)); } catch (e) { throw new Error("La IA no ha retornat dades vàlides; torna-ho a provar."); }
+  }
   // Transcripció comprovada d'un tros: la IA només transcriu (no rep cap altra instrucció) i els temps han de caure dins del tros
   async function transcriuTros(clau, model, v, inici, final) {
     const NO_VIST = "La IA no ha pogut veure el vídeo (del " + mmss(inici) + " al " + mmss(final) + ") i no se'n fan preguntes inventades. Comprova que el vídeo sigui públic a YouTube i torna-ho a provar, o enganxa'n la transcripció.";
@@ -4980,9 +5011,22 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       "Respon només JSON: {\"titol\": títol curt del fragment, \"resum\": 2 o 3 frases sobre el contingut, \"nivells\": [{\"nom\": un d'aquests: " + JSON.stringify(noms) + ", \"preguntes\": [{\"tipus\": \"test\", \"multiple\", \"completa\" o \"oberta\", \"enunciat\": text, \"opcions\": [textos] (només test i multiple), \"correctes\": [índexs de les correctes, des de 0] (només test i multiple), \"respostes\": [paraules exactes] (només completa), \"resposta\": resposta model (només oberta), \"moment\": \"m:ss\"}]}]}.";
     // 14.11.2026: les instruccions són en català i la IA tendia a respondre en català; l'ordre de llengua va en la llengua triada, al principi i al final
     const es = asVid.lleng !== "català";
+    // 14.11.2026 (nit): si l'activitat és en castellà, totes les instruccions van en castellà (els noms dels nivells es queden igual)
+    const NIV_ES_D = { "Nivell bàsic": "información explícita y literal, orden de los hechos", "Nivell mitjà": "idea principal, relaciones entre ideas, vocabulario en contexto", "Nivell mitjà-alt": "idea principal y relaciones entre ideas, vocabulario en contexto, y también inferencias e intención de quien habla", "Nivell avançat": "inferencias, intención de quien habla, tono, recursos expresivos, valoración" };
+    const sistemaEs = "Eres profesor de lengua castellana de secundaria en Cataluña. Prepara preguntas de comprensión audiovisual de un fragmento de vídeo (del " + mmss(i) + " al " + mmss(f) + ") para alumnado de " + asVid.curs.replace("d'ESO", "de ESO").replace("de batxillerat", "de bachillerato") + ". Todo el contenido (título, resumen, enunciados, opciones y respuestas modelo) se escribe en castellano. " +
+      (triats.length > 1 || asVid.dis ? "Haz estos niveles, cada uno con " + n + " preguntas: " : "Haz solo este nivel, con " + n + " preguntas: ") + triats.map(x => "«" + x + "» (" + NIV_ES_D[x] + ")").join(", ") +
+      (asVid.dis ? " y «Versió adaptada (DIS/PSI)» (enunciados cortos de una sola idea, vocabulario sencillo, 3 opciones claras, preguntas más guiadas y en el orden del vídeo)" : "") + ". " +
+      "Mezcla tipos de preguntas (no todas a-b-c-d): " +
+      "«test» (una sola correcta; de 2 a 4 opciones; también puede ser de verdadero o falso, con las opciones «Verdadero» y «Falso»); " +
+      "«multiple» (pocas veces: más de una correcta); " +
+      "«completa» (unas " + Math.max(1, Math.round(n / 5)) + " por nivel: una frase dicha en el fragmento, copiada tal cual de la transcripción y puesta entre comillas «», con una o dos palabras clave sustituidas por «___»; en \"respostes\" van las palabras exactas que faltan, tal como se dicen, y variantes aceptables si las hay); " +
+      "«oberta» (" + (n >= 8 ? "una o dos" : "una") + " por nivel: parte de una cita literal del fragmento entre comillas «», copiada exactamente de la transcripción, y pide interpretarla o relacionarla con el fragmento; se responde en 2 o 3 líneas; en \"resposta\" va una respuesta modelo). " +
+      (asVid.dis ? "En la versión adaptada (DIS/PSI), ninguna abierta y como mucho una de completar. " : "") +
+      "Pregunta solo por lo que se ve y se oye dentro del fragmento, según la transcripción; no inventes nada que no aparezca. Indica el momento (m:ss del vídeo, el de la transcripción) al que se refiere cada pregunta. " +
+      "Responde solo JSON, sin texto antes ni después: {\"titol\": título corto del fragmento, \"resum\": 2 o 3 frases sobre el contenido, \"nivells\": [{\"nom\": uno de estos, exactamente así: " + JSON.stringify(noms) + ", \"preguntes\": [{\"tipus\": \"test\", \"multiple\", \"completa\" u \"oberta\", \"enunciat\": texto, \"opcions\": [textos] (solo test y multiple), \"correctes\": [índices de las correctas, desde 0] (solo test y multiple), \"respostes\": [palabras exactas] (solo completa), \"resposta\": respuesta modelo (solo oberta), \"moment\": \"m:ss\"}]}]}.";
     const ordreLl = es ? "MUY IMPORTANTE: escribe TODO el contenido (título, resumen, enunciados y opciones) en castellano (español), aunque estas instrucciones estén en catalán. Solo los nombres de los niveles y las claves del JSON se quedan tal como se indican."
       : "MOLT IMPORTANT: escriu TOT el contingut (títol, resum, enunciats i opcions) en català, encara que el vídeo sigui en una altra llengua.";
-    const sistemaLl = ordreLl + "\n\n" + sistema + "\n\n" + ordreLl;
+    const sistemaLl = es ? sistemaEs : ordreLl + "\n\n" + sistema + "\n\n" + ordreLl;
     const ind = asVid.ind ? "Indicacions del professor: " + asVid.ind + "\n" : "";
     try {
       let r;
@@ -5029,7 +5073,12 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       Object.keys(TR).forEach(k => { const p = k.split("|"); if (p[0] === v && TR[k].tros && Number(p[1]) >= i && Number(p[2]) <= f) delete TR[k]; });
       desa();
       progres("Preparant les preguntes a partir de la transcripció…");
-      r = await ia(sistemaLl, ind + "Transcripció del fragment (amb el moment de cada frase):\n" + transcripcio + "\n\n" + ordreLl, { json: true });
+      const peticio = (es ? (asVid.ind ? "Indicaciones del profesor: " + asVid.ind + "\n" : "") + "Transcripción del fragmento (con el momento de cada frase):\n" : ind + "Transcripció del fragment (amb el moment de cada frase):\n") + transcripcio + "\n\n" + ordreLl;
+      // 14.11.2026 (nit): les preguntes del vídeo es demanen directament a Gemini (amb la clau del compte d'ieslabisbal.cat),
+      // sense passar pel Worker de l'assistent, perquè hi responia en català encara que es demanés el castellà
+      const gq = await cridaIns({ accio: "gemini-clau" });
+      try { r = await geminiJSON(gq, sistemaLl, peticio); }
+      catch (e) { if (!/dades vàlides/.test(e.message)) throw e; progres("La resposta no era completa; es torna a demanar…"); r = await geminiJSON(gq, sistemaLl, peticio); }
       // 14.11.2026: si l'activitat és en castellà i la IA ha escrit en català (les instruccions són en català), es tradueix
       // sense tocar les cites literals, les paraules de completar ni les claus del JSON
       const llengua = obj => {
@@ -5040,7 +5089,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       };
       if (es && llengua(r) === "ca") {
         progres("Passant les preguntes al castellà…");
-        r = await ia("Eres traductor del catalán al castellano. Recibes un JSON con preguntas de comprensión audiovisual y lo devuelves idéntico, con la misma estructura y las mismas claves, pero con todo el texto en castellano: título, resumen, enunciados, opciones y respuestas modelo. NO cambies: los nombres de los niveles (campo \"nom\"), los índices de \"correctes\", el campo \"moment\", las palabras de \"respostes\" ni las citas literales entre comillas «», que ya están en la lengua del vídeo. Responde solo el JSON.", JSON.stringify(r), { json: true });
+        r = await geminiJSON(gq, "Eres traductor del catalán al castellano. Recibes un JSON con preguntas de comprensión audiovisual y lo devuelves idéntico, con la misma estructura y las mismas claves, pero con todo el texto en castellano: título, resumen, enunciados, opciones y respuestas modelo. NO cambies: los nombres de los niveles (campo \"nom\"), los índices de \"correctes\", el campo \"moment\", las palabras de \"respostes\" ni las citas literales entre comillas «», que ya están en la lengua del vídeo. Responde solo el JSON.", JSON.stringify(r));
       }
       // Comprovació: les paraules de completar i les cites de les obertes han de ser a la transcripció
       const norm = t => String(t || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/\[[^\]]*\]/g, " ").replace(/[^a-zñç0-9]+/g, " ").trim();
