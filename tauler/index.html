@@ -3193,8 +3193,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       '<input type="search" id="alumCerca" placeholder="Cerca alumne…" value="' + esc(cerca) + '" style="flex:1 1 140px"></div>' +
       '<div class="alum-eines"><button type="button" class="boto clar" data-q="formules">⚙️ ' + (qFormules ? "Amaga les fórmules" : "Columnes i fórmules") + "</button>" +
       ('<span class="boto-grup"><button type="button" class="boto clar" data-q="classroom" title="Omple una columna amb els lliuraments o les notes d\'una tasca del Classroom o d\'un formulari"><img src="https://www.gstatic.com/classroom/logo_square_rounded.svg" alt="" class="ico-cls"> Classroom</button>' + (f && Array.isArray(f.desfes) && f.desfes.length ? '<button type="button" class="boto clar boto-ico" data-q="clsdesfes" title="Desfés l\'última càrrega del Classroom (' + esc(f.desfes.map(x => x.col).join(", ")) + ')" aria-label="Desfés l\'última càrrega del Classroom">↶</button>' : "") + (f && f.columnes.some(c => c.classroom) ? '<button type="button" class="boto clar boto-ico" data-q="clsact" title="Actualitza del Classroom les columnes enllaçades d\'aquest full (' + esc(f.columnes.filter(c => c.classroom).map(c => c.nom).join(", ")) + ')" aria-label="Actualitza del Classroom">🔄</button>' : "") + "</span>") +
-      '<label class="boto clar" title="Puja els PSI (Word, Excel o PDF): cada un va a l\'alumne que surt al nom del fitxer o al document">📄 PSI<input type="file" id="psiMolts" accept=".docx,.xlsx,.xls,.ods,.pdf,.txt" multiple hidden></label>' +
-      '<button type="button" class="boto clar" data-q="psidrive" title="Llegeix els PSI de les carpetes del Drive del centre (compte d\'ieslabisbal.cat): cada document va al seu alumne i l\'original s\'obre a qualsevol aparell">📁 PSI del Drive</button>' +
+      '<button type="button" class="boto clar" data-q="psidrive" title="Llegeix els PSI de les carpetes del Drive del centre (compte d\'ieslabisbal.cat): cada document va al seu alumne i l\'original s\'obre a qualsevol aparell"><img src="https://ssl.gstatic.com/images/branding/product/1x/drive_2020q4_32dp.png" alt="" class="ico-cls"> PSI</button>' +
       '<button type="button" class="boto clar" data-q="correus" title="Posa el correu de cada alumne (del Classroom o d\'un Excel del centre) amb una icona ✉️ al costat del nom">✉️ Correus</button>' +
       '<span class="boto-grup"><button type="button" class="boto clar' + (qDeures ? " actiu" : "") + '" data-q="passadeures" title="Mode ràpid: cada toc a la columna de deures posa o treu la falta d\'avui">📕 ' + (qDeures ? "Prou deures" : "Passa deures") + '</button><button type="button" class="boto clar boto-ico" data-q="deuimp" title="Imprimeix les faltes de deures del grup" aria-label="Imprimeix les faltes de deures del grup">🖨️</button></span><button type="button" class="boto clar" data-q="alumne">+ Alumne</button><button type="button" class="boto clar" data-q="banc">📋 ' + (rubObert ? "Amaga les rúbriques" : "Rúbriques") + "</button>" + importa + "</div>" + (clsMsg && f && g && clsMsg.clau === g.nom + "|" + f.nom ? '<p class="cls-msg ' + (clsMsg.err ? "avis" : "font") + '">' + esc(clsMsg.t) + "</p>" : "") + (rubObert ? htmlBanc() : "");
     if (f && qFormules) {
@@ -4256,26 +4255,26 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     if (brut.length && !nous.length) { alert("Això no sembla l'enllaç d'una carpeta del Drive (ha de contenir «/folders/…»)."); return; }
     nous.forEach(id => { if (!q.psiCarpetes.some(c => c.id === id)) q.psiCarpetes.push({ id }); });
     if (!q.psiCarpetes.length) return;
-    const txt = boto.textContent; boto.disabled = true;
+    const txt = boto.innerHTML; boto.disabled = true;
     try {
       const fitxers = [], errors = [];
       for (const c of q.psiCarpetes) {
-        boto.textContent = "📁 Llegint " + (c.nom || "la carpeta") + "…";
+        boto.textContent = "Llegint " + (c.nom || "la carpeta") + "…";
         try { const r = await cridaIns({ accio: "drive-llista", carpeta: c.id }); c.nom = r.nom; r.fitxers.forEach(x => fitxers.push(x)); }
         catch (e) { errors.push("Carpeta " + (c.nom || c.id) + ": " + (/Acció desconeguda/i.test(e.message) ? "cal posar al dia l'script d'ieslabisbal.cat" : e.message)); }
       }
       const cal = fitxers.filter(x => /\.(xlsx?|ods|docx|pdf)$/i.test(x.nom) || /spreadsheet|wordprocessing|ms-excel|google-apps\.(document|spreadsheet)|pdf/i.test(x.tipus)).filter(x => q.psiVistos[x.id] !== x.data);
       const baixats = [];
       for (let i = 0; i < cal.length; i++) {
-        boto.textContent = "📁 PSI " + (i + 1) + "/" + cal.length + "…";
+        boto.textContent = "PSI " + (i + 1) + "/" + cal.length + "…";
         try { const r = await cridaIns({ accio: "drive-fitxer", id: cal[i].id }); const fi = new File([b64aBuf(r.b64)], r.nom, { type: r.tipus || "" }); fi.drive = cal[i].id; fi.dm = cal[i].data; baixats.push(fi); }
         catch (e) { errors.push(cal[i].nom + ": " + e.message); }
       }
       desa();
       if (!baixats.length) { alert((errors.length ? "No s'ha pogut llegir:\n" + errors.join("\n") : "Els PSI de les carpetes (" + fitxers.length + ") ja estan al dia.")); return; }
-      boto.textContent = "📁 Aparellant…";
+      boto.textContent = "Aparellant…";
       await pujaPSI(g, baixats, null, errors);
-    } finally { boto.disabled = false; boto.textContent = txt; }
+    } finally { boto.disabled = false; boto.innerHTML = txt; }
   }
   function obrePSI(g, nom) {
     let dlg = $("dlgPsi");
@@ -4297,7 +4296,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       if (!orig && vista === "orig") vista = "text";
       dlg.innerHTML = '<form method="dialog"><h2>📄 PSI</h2><p style="margin:0"><b>' + esc(nom.replace(/\s+DIS$/i, "")) + "</b> · " + esc(nomGrup(g.nom)) + (d ? ' <span class="font">· ' + esc(d.fitxer) + " · " + dma(d.d) + "</span>" : "") + "</p>" +
         (d ? '<div class="vistes" role="group" aria-label="Com es mostra" style="margin:6px 0"><button type="button" data-psi="v-orig" aria-pressed="' + (vista === "orig") + '"' + (orig ? "" : " disabled") + '>Document original</button><button type="button" data-psi="v-text" aria-pressed="' + (vista === "text") + '">Text i cerca</button></div>' +
-          (!orig ? (d.drive ? '<p class="font">No s\'ha pogut obrir l\'original del Drive del centre' + (errDrive ? " (" + esc(errDrive) + ")" : "") + '. Mentrestant en tens el text.</p>' : '<p class="font">L\'original no és en aquest aparell (es guarda només on el vas pujar). Pots consultar-ne el text, o tornar-lo a pujar aquí amb el botó de sota, o llegir-lo del Drive amb «📁 PSI del Drive».</p>') : "") +
+          (!orig ? (d.drive ? '<p class="font">No s\'ha pogut obrir l\'original del Drive del centre' + (errDrive ? " (" + esc(errDrive) + ")" : "") + '. Mentrestant en tens el text.</p>' : '<p class="font">L\'original no és en aquest aparell (es guarda només on el vas pujar). Pots consultar-ne el text, o tornar-lo a pujar aquí amb el botó de sota, o llegir-lo del Drive amb el botó «PSI» de la icona del Drive.</p>') : "") +
           (vista === "orig" ? '<div class="psi-zoom"><button type="button" class="boto clar boto-ico" data-psi="z-" aria-label="Més petit">−</button><button type="button" class="boto clar boto-ico" data-psi="z+" aria-label="Més gran">+</button><span class="font">Mida</span></div><div class="psi-orig" id="psiOrig" style="--z:' + zoom + '"></div>' :
             '<input type="search" id="psiCerca" placeholder="Cerca dins del PSI (p. ex. examen, temps, lectura…)" style="width:100%;box-sizing:border-box;font:inherit;padding:6px 8px;border:1px solid var(--linia);border-radius:8px"><div class="psi-text" id="psiText">' + esc(d.text) + "</div>")
           : '<p class="font">Encara no hi ha cap PSI per a aquest alumne.</p>') +
