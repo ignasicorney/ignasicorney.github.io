@@ -2160,10 +2160,10 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
   const llibresEi = () => { const c = cursCtl(); return LLIBRES_INI.concat(EI().llibres).filter(x => !x.c || x.c === c); };
   let ctl = null, ctlCorr = null, ctlFitxer = null, varFitxer = null;   // fitxers triats (es guarden fora del camp: en tornar del selector del mòbil la pàgina es redibuixa)   // ctl = control obert (s'edita aquí); ctlCorr = respostes de l'alumne que es corregeix
   function variantCtl(c, v) {
-    if (!v) return c.preg.map(p => ({ p: p.p, o: p.o.slice(), c: p.c }));
+    if (!v) return c.preg.map((p, i) => ({ p: p.p, o: p.o.slice(), c: p.c, i }));
     return barreja(c.preg.map((p, i) => i), c.id + "-" + v).map(i => {
       const p = c.preg[i], ord = barreja(p.o.map((x, j) => j), c.id + "-" + v + "-" + i);
-      return { p: p.p, o: ord.map(j => p.o[j]), c: ord.indexOf(p.c) };
+      return { p: p.p, o: ord.map(j => p.o[j]), c: ord.indexOf(p.c), i };
     });
   }
   function pintaCtl() {
@@ -2285,10 +2285,18 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     if (a === "ctlimp") { ctl.vars = Number(fv("vars", String(ctl.vars || 2))); imprimeix("Control de lectura · " + ctl.llibre, Array.from({ length: ctl.vars }, (x, v) => ctlHTMLModel(ctl, v)), false); return; }
     if (a === "ctlsol") {
       ctl.vars = Number(fv("vars", String(ctl.vars || 2)));
-      imprimeix("Solucionari · " + ctl.llibre, '<h3 style="text-transform:none">Solucionari · ' + esc(ctl.llibre) + (ctl.caps ? " · capítols " + esc(ctl.caps) : "") + '</h3><table style="border-collapse:collapse;font-size:13px">' +
-        '<tr><th style="border:1px solid #000;padding:4px 8px">Model</th>' + ctl.preg.map((p, i) => '<th style="border:1px solid #000;padding:4px 6px">' + (i + 1) + "</th>").join("") + "</tr>" +
-        Array.from({ length: ctl.vars }, (x, v) => '<tr><td style="border:1px solid #000;padding:4px 8px"><b>' + LLETRES[v] + "</b></td>" + variantCtl(ctl, v).map(p => '<td style="border:1px solid #000;padding:4px 6px;text-align:center">' + "abcdefgh"[p.c] + "</td>").join("") + "</tr>").join("") + "</table>" +
-        "<h4>Preguntes (model A)</h4><ol>" + ctl.preg.map(p => "<li>" + esc(ctlPr(p.p, ctl)) + " → <b>" + esc(ctlOp(p.o[p.c])) + "</b>" + (p.pag || p.cita ? '<br><span style="font-size:12px">' + (p.pag ? "p. " + p.pag : "") + (p.cita ? (p.pag ? " · " : "") + "«" + esc(p.cita) + "»" : "") + "</span>" : "") + "</li>").join("") + "</ol>", false, true);
+      // Taula cap avall (una fila per pregunta, una columna per model; en blocs de 20 files l'un al costat de l'altre)
+      // i, després, les preguntes amb la resposta de cada model, en l'ordre d'aquell model (es fa de nou cada vegada, amb les preguntes d'ara)
+      const tit = esc(ctl.llibre) + (ctl.caps ? " · capítols " + esc(ctl.caps) : ""), vrs = Array.from({ length: ctl.vars }, (x, v) => variantCtl(ctl, v));
+      const td = 'style="border:1px solid #000;padding:3px 10px;text-align:center"';
+      let taules = "";
+      for (let ini = 0; ini < ctl.preg.length; ini += 20) {
+        taules += '<table style="border-collapse:collapse;font-size:13px;display:inline-table;vertical-align:top;margin:0 14px 10px 0"><tr><th ' + td + ">Núm.</th>" + vrs.map((x, v) => "<th " + td + ">" + LLETRES[v] + "</th>").join("") + "</tr>" +
+          ctl.preg.slice(ini, ini + 20).map((p, k) => "<tr><td " + td + "><b>" + (ini + k + 1) + "</b></td>" + vrs.map(vr => "<td " + td + ">" + "abcdefgh"[vr[ini + k].c] + "</td>").join("") + "</tr>").join("") + "</table>";
+      }
+      const llista = (vr, v) => '<h3 style="text-transform:none">Solucionari · ' + tit + (ctl.vars > 1 ? " · Model " + LLETRES[v] : "") + "</h3><ol>" + vr.map(q => { const p = ctl.preg[q.i];
+        return "<li>" + esc(ctlPr(q.p, ctl)) + " → <b>" + "abcdefgh"[q.c] + ") " + esc(ctlOp(q.o[q.c])) + "</b>" + (p.pag || p.cita ? '<br><span style="font-size:12px">' + (p.pag ? "p. " + p.pag : "") + (p.cita ? (p.pag ? " · " : "") + "«" + esc(p.cita) + "»" : "") + "</span>" : "") + "</li>"; }).join("") + "</ol>";
+      imprimeix("Solucionari · " + ctl.llibre, ['<h3 style="text-transform:none">Solucionari · ' + tit + "</h3>" + taules].concat(vrs.map(llista)), false, true);
       return;
     }
     if (a === "ctlv") { ctlCorr.v = Number(b.dataset.v); ctlCorr.r = []; return pintaAssistent(); }
