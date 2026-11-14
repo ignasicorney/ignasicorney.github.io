@@ -195,6 +195,16 @@ dialog#dlgRub{width:min(760px,calc(100vw - 24px))}
 .taula td.deu.zero{color:var(--suau);font-weight:400}
 .taula td.deu:hover{outline:1px solid var(--accent);outline-offset:-1px}
 .taula td.deu.avui{background:#f6c9a8}
+.taula th.pts,.taula td.pts{text-align:center;background:#f3f1f8}
+.taula td.pts{cursor:pointer;font-weight:700;color:#4b3a8a}
+.taula td.pts.zero{color:var(--suau);font-weight:400}
+.taula td.pts.p15{background:#fbe3c4;color:#8a4b00}
+.taula td.pts.p27{background:#f8d0cf;color:#a3161b}
+.taula td.pts:hover{outline:1px solid var(--accent);outline-offset:-1px}
+.crit-doc{overflow-x:auto}
+.crit-doc table{width:100%;border-collapse:collapse;font-size:.9rem;background:#fff}
+.crit-doc th,.crit-doc td{border:1px solid var(--linia);padding:6px 8px;text-align:left;vertical-align:top;font-weight:400}
+.crit-doc p{margin:2px 0}
 .taula.passa td.deu{background:#fde6d4}
 .boto.actiu{background:var(--accent);color:#fff}
 .deu-trims{display:flex;gap:8px;flex-wrap:wrap}
@@ -598,6 +608,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       <button type="button" data-as="exp">🎤 Exposicions</button>
       <button type="button" data-as="pau">🧩 Sintaxi i selectivitat</button>
       <button type="button" data-as="cur">📘 Currículum</button>
+      <button type="button" data-as="crit">📋 Criteris del departament</button>
     </div>
     <div id="asCos"></div>
   </div>
@@ -2671,6 +2682,99 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       CURRICULUM.map(s => "<h4>" + esc(s[0]) + '</h4><div class="cons-llista">' + s[1].map(x => '<a class="cons-b" href="' + esc(x[1]) + '" target="_blank" rel="noopener"><span class="ini" style="background:#4a6b3a;font-size:.56rem">' + (/drive\.google/.test(x[1]) ? "SA" : /portal(dogc|juridic)/.test(x[1]) ? "DOGC" : "XTEC") + "</span><span>" + esc(x[0]) + "</span></a>").join("") + "</div>").join("");
   }
   EINES.cur = pintaCur;
+  // ================= Faltes de disciplina: sistema de punts del centre (14.11.2026) =================
+  // g.sancions = { "Nom de l'alumne": [{ id, d: "aaaa-mm-dd", tipus, motiu, punts, obs }] }; els serveis a la comunitat resten punts
+  const SANCIONS = [
+    { t: "retard", nom: "Retard", punts: 1, motius: ["Retard"] },
+    { t: "incid", nom: "Incidència", punts: 3, motius: ["Portar gorra o caputxa", "Menjar xiclet", "Sortir al passadís", "Marxar de classe sense permís", "Impedir el bon desenvolupament de la classe", "Fer malbé material dels companys", "Conversar assíduament a classe amb companys o expressar-se improcedentment a classe", "Desordenar, embrutar aules i passadissos", "Fer feina d'una altra matèria, sense el permís del professorat", "Desobeir les indicacions del monitoratge acompanyant del transport escolar", "No portar el carnet del bus escolar"] },
+    { t: "lleu", nom: "Falta lleu", punts: 9, motius: ["Fer malbé material del centre", "Menjar a classe sense permís del professorat", "Cridar pels passadissos, córrer, empènyer sense intenció de lesionar, alterant l'ordre", "Passejar-se pels passadissos entre classes, sense permís i sense targeta de trànsit", "Estar al passadís, al bar, al lavabo o en un espai no autoritzat durant el període lectiu sense causa justificada i sense la targeta de trànsit", "Amagar o prendre objectes d'altres alumnes", "Reiteració a no fer cas de les indicacions del monitoratge del transport escolar (3 faltes = 1 dia sense bus)"] },
+    { t: "greu", nom: "Falta greu", punts: 15, motius: ["Desobeir, contestar inadequadament, comportar-se grollerament o impedir el treball del professorat i dels companys d'aula", "Provocar verbalment els companys", "Fer caure intencionadament taules i/o cadires", "Desobeir una indicació d'un membre del PAS o professorat", "No dir la veritat quan se li pregunta per alguna incidència que pugui afectar el mateix alumne o de la qual hagi estat testimoni", "Ús inadequat de l'ordinador", "Ús de la IA sense permís del professorat", "Tenir el mòbil o qualsevol aparell electrònic visible", "Molestar o faltar al respecte al conductor o al monitoratge del transport escolar (= 1 dia sense bus)"] },
+    { t: "moltgreu", nom: "Falta molt greu", punts: 27, motius: ["a. Fer campana", "b. Burlar-se dels companys amb menyspreu, accentuant pejorativament aspectes físics i econòmics o socials", "c. Agredir físicament un company, un professor, un membre del PAS, o al personal del transport escolar", "d. Insultar a un professor o qualsevol membre de la comunitat educativa, inclòs el personal del transport escolar", "e. Sortir del centre en horari lectiu sense permís", "f. Discriminació de gènere", "g. La suplantació de la personalitat en els actes de la vida docent i la falsificació o sostracció de documents acadèmics", "h. Mantenir actituds xenòfobes, racistes o falta de respecte de l'opció sexual i/o idees dels altres, utilitzant insults o malnoms triats a aquest efecte", "i. Rebutjar, intimidar o acovardir contínuament determinats companys", "j. Realitzar actes obscens, d'assetjament sexual o moral, incloent-hi el xantatge", "k. Penjar a internet sense autorització fotografies o gravacions de qualsevol membre de la comunitat educativa de l'institut", "l. Publicar comentaris ofensius a les xarxes de qualsevol membre de la comunitat educativa de l'institut", "m. Ús del mòbil o altres aparells electrònics", "n. La tinença o consum de drogues (alcohol, tabac, cigarret electrònic, cànnabis, etc.) i begudes energètiques", "o. La tinença d'armes"] },
+    { t: "serveis", nom: "Serveis a la comunitat", punts: -9, motius: ["Una hora i mitja una tarda de serveis a la comunitat"] }
+  ];
+  const EXPULSIO = /^[bcdjmno]\. /;   // faltes molt greus que comporten expulsió immediata
+  const sancionsDe = (g, nom) => (g.sancions && Array.isArray(g.sancions[nom]) ? g.sancions[nom] : []);
+  const puntsDe = (g, nom) => Math.max(0, sancionsDe(g, nom).reduce((s, x) => s + (Number(x.punts) || 0), 0));
+  const esESO = g => !/batx/i.test(String(g && g.nom));
+  function celaPunts(g, nom) {
+    const p = puntsDe(g, nom), n = sancionsDe(g, nom).length;
+    return '<td class="pts' + (!n ? " zero" : p >= 27 ? " p27" : p >= 15 ? " p15" : "") + '" data-pts="' + esc(nom) + '" title="Faltes de disciplina: ' + p + " punts" + (p >= 27 ? " (reunió del tutor i el coordinador de nivell)" : p >= 15 && esESO(g) ? " (pot fer serveis a la comunitat)" : "") + '">' + (n ? p : "–") + "</td>";
+  }
+  function obreSancions(g, nom) {
+    let dlg = $("dlgSan");
+    if (!dlg) { dlg = document.createElement("dialog"); dlg.id = "dlgSan"; document.body.appendChild(dlg); }
+    const nomMostra = nom.replace(/\s+DIS$/i, "");
+    let tipus = "incid", motiu = "", dia = avuiISO(), obs = "";
+    const pinta = () => {
+      const l = sancionsDe(g, nom).slice().sort((a, b) => (a.d < b.d ? 1 : -1)), p = puntsDe(g, nom), S = SANCIONS.find(x => x.t === tipus) || SANCIONS[1];
+      if (!S.motius.includes(motiu)) motiu = S.motius[0];
+      const avisos = [];
+      if (p >= 27) avisos.push("Ha arribat a 27 punts: el tutor i el coordinador de nivell s'han de reunir per decidir les mesures correctores.");
+      if (p >= 15 && esESO(g)) avisos.push("Té 15 punts o més: el tutor i el coordinador de nivell li poden oferir venir una tarda una hora i mitja a fer serveis a la comunitat i rebaixar 9 punts.");
+      dlg.innerHTML = '<form method="dialog"><h2>⚖️ Faltes de disciplina</h2><p style="margin:0"><b>' + esc(nomMostra) + "</b> · " + esc(nomGrup(g.nom)) + "</p>" +
+        '<div class="deu-trims"><span>Punts: <b>' + p + "</b></span>" + ["retard", "incid", "lleu", "greu", "moltgreu"].map(t => { const n = sancionsDe(g, nom).filter(x => x.tipus === t).length; return n ? "<span>" + esc(SANCIONS.find(x => x.t === t).nom) + ": <b>" + n + "</b></span>" : ""; }).join("") + "</div>" +
+        avisos.map(a => '<p class="avis" style="margin:4px 0">' + esc(a) + "</p>").join("") +
+        '<div class="fila"><label>Tipus<select id="sanTipus">' + SANCIONS.filter(x => x.t !== "serveis" || esESO(g)).map(x => '<option value="' + x.t + '"' + (x.t === tipus ? " selected" : "") + ">" + esc(x.nom) + " (" + (x.punts > 0 ? "+" : "") + x.punts + ")</option>").join("") + "</select></label>" +
+        '<label>Dia<input type="date" id="sanDia" value="' + dia + '"></label></div>' +
+        (S.motius.length > 1 ? '<label>Motiu<select id="sanMotiu">' + S.motius.map(m => "<option" + (m === motiu ? " selected" : "") + ">" + esc(m) + "</option>").join("") + "</select></label>" : "") +
+        (tipus === "moltgreu" && EXPULSIO.test(motiu) ? '<p class="avis" style="margin:4px 0">Aquesta falta comporta l\'expulsió immediata del centre.</p>' : "") +
+        '<label>Observacions (opcional)<input type="text" id="sanObs" value="' + esc(obs) + '"></label>' +
+        '<div class="botons" style="justify-content:flex-start;margin-top:0"><button type="button" class="boto" data-san="afegeix">+ Apunta-ho</button></div>' +
+        (l.length ? '<ul class="deu-dates">' + l.map(x => { const T = SANCIONS.find(y => y.t === x.tipus) || { nom: x.tipus }; return '<li><span><b>' + dma(x.d) + "</b> · " + esc(T.nom) + " (" + (x.punts > 0 ? "+" : "") + x.punts + ")" + (x.motiu && x.motiu !== T.nom ? "<br><small>" + esc(x.motiu) + "</small>" : "") + (x.obs ? "<br><small><i>" + esc(x.obs) + "</i></small>" : "") + '</span><button type="button" class="boto clar" data-san="treu" data-id="' + esc(x.id) + '" title="Treu-ho">✕</button></li>'; }).join("") + "</ul>" : '<p class="font">Cap falta apuntada.</p>') +
+        '<p class="font">Sistema de punts del centre: retard 1, incidència 3, falta lleu 9, falta greu 15, falta molt greu 27 o més.</p>' +
+        '<div class="botons"><button type="button" class="boto clar" data-san="tanca">Fet</button></div></form>';
+    };
+    pinta();
+    dlg.onchange = ev => {
+      const id = ev.target.id;
+      if (id === "sanTipus") { tipus = ev.target.value; motiu = ""; obs = ($("sanObs") || {}).value || ""; pinta(); }
+      else if (id === "sanMotiu") { motiu = ev.target.value; obs = ($("sanObs") || {}).value || ""; pinta(); }
+      else if (id === "sanDia" && esISO(ev.target.value)) dia = ev.target.value;
+    };
+    dlg.onclick = ev => {
+      const b = ev.target.closest("[data-san]"); if (!b) return;
+      if (b.dataset.san === "tanca") { dlg.close(); return; }
+      g.sancions = g.sancions || {};
+      const l = sancionsDe(g, nom).slice();
+      if (b.dataset.san === "afegeix") {
+        const v = ($("sanDia") || {}).value; if (esISO(v)) dia = v;
+        const S = SANCIONS.find(x => x.t === tipus);
+        l.push({ id: nouId(), d: dia, tipus: tipus, motiu: S.motius.length > 1 ? motiu : S.nom, punts: S.punts, obs: String(($("sanObs") || {}).value || "").trim() });
+        obs = "";
+      } else if (b.dataset.san === "treu") {
+        const i = l.findIndex(x => x.id === b.dataset.id);
+        if (i >= 0 && confirm("Vols treure aquesta anotació?")) l.splice(i, 1); else return;
+      }
+      g.sancions[nom] = l; if (!l.length) delete g.sancions[nom];
+      desa(); pinta(); pintaAlumnes();
+    };
+    dlg.showModal();
+  }
+  // ---------- 📋 Criteris d'avaluació del departament, per cursos ----------
+  const CRITERIS = [["1r-eso", "1r d'ESO"], ["2n-eso", "2n d'ESO"], ["3r-eso", "3r d'ESO"], ["4t-eso", "4t d'ESO"], ["1r-batx", "1r de batxillerat"], ["2n-batx", "2n de batxillerat"]];
+  const critCache = {};
+  const critDeGrup = g => { if (!g) return "1r-eso"; const n = String(g.nom), m = n.match(/^\s*([1-4])/); if (/batx/i.test(n)) return (m && m[1] === "2" ? "2n" : "1r") + "-batx"; return m ? ["1r", "2n", "3r", "4t"][Number(m[1]) - 1] + "-eso" : "1r-eso"; };
+  function pintaCrit() {
+    const c = fv("c", critDeGrup(triat().g)), nom = (CRITERIS.find(x => x[0] === c) || CRITERIS[0])[1];
+    let h = '<p class="font">Criteris d\'avaluació del departament de Llengua castellana i literatura (curs 2026-2027): continguts, material, temporització i avaluació de cada curs.</p>' +
+      '<div class="vistes" role="group" aria-label="Curs" style="margin-bottom:8px;flex-wrap:wrap">' + CRITERIS.map(x => '<button type="button" data-asb="ei-crc" data-c="' + x[0] + '" aria-pressed="' + (x[0] === c) + '">' + esc(x[1]) + "</button>").join("") + "</div>";
+    if (critCache[c] == null) {
+      critCache[c] = "";
+      fetch("criteris/" + c + ".html", { cache: "no-cache" }).then(r => { if (!r.ok) throw new Error(r.status); return r.text(); })
+        .then(t => { critCache[c] = t; }, () => { critCache[c] = false; })
+        .then(() => { if (asEina === "crit") pintaAssistent(); });
+    }
+    if (critCache[c] === false) return h + '<p class="avis">No s\'han pogut carregar els criteris de ' + esc(nom) + '.</p><div class="alum-eines">' + eBoto("crretry", "Torna-ho a provar", true) + "</div>";
+    if (!critCache[c]) return h + '<p class="font">Carregant…</p>';
+    return h + '<div class="alum-eines">' + eBoto("crimp", "🖨️ Imprimeix / PDF", true) + '</div><div class="crit-doc">' + critCache[c] + "</div>";
+  }
+  async function critAccio(a, b) {
+    if (a === "crc") { fput("c", b.dataset.c); return pintaAssistent(); }
+    if (a === "crretry") { delete critCache[fv("c", critDeGrup(triat().g))]; return pintaAssistent(); }
+    if (a === "crimp") { const c = fv("c", critDeGrup(triat().g)); if (critCache[c]) imprimeix("Criteris d'avaluació · " + (CRITERIS.find(x => x[0] === c) || [0, ""])[1], '<div class="crit-doc">' + critCache[c] + "</div><style>.crit-doc table{width:100%;border-collapse:collapse}.crit-doc th,.crit-doc td{border:1px solid #999;padding:4px 6px;text-align:left;vertical-align:top;font-weight:400}.crit-doc p{margin:2px 0}</style>", false, true); }
+  }
+  EINES.crit = pintaCrit;
+  ACCIONS_EI.cr = critAccio;
   ACCIONS_EI.pa = pauAccio;
 
   // ================= Qualificacions =================
@@ -2985,8 +3089,8 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       const tcol = {}; f.columnes.forEach(c => { tcol[c.nom] = tipusColor(f, c, valor); });
       const ombra = (c, v) => { if (!tcol[c.nom]) return ""; if (esExempt(v)) return " n-ex"; const n = numOpcional(v); if (n === null) return ""; if (tcol[c.nom] === "sobre") return " n-sobre"; return tcol[c.nom] === "form" ? (n === 0 ? " f-0" : " f-1") : " " + colorNota(n); };
       const tD = trimDeures(f), dAvui = avuiISO();
-      h += '<div class="taula' + (qDeures ? " passa" : "") + '"><table><thead><tr><th>Alumne</th><th class="deu" title="Faltes de deures del ' + tD.nom + ' trimestre. Toca la xifra per afegir-ne o treure\'n.">📕 Deures ' + tD.nom + "</th>" + f.columnes.map(c => "<th" + (c.tipus === "calc" ? ' class="calc" title="' + esc(c.formula) + '"' : "") + ">" + esc(c.nom) + (desquadres[c.nom] ? " ⚠️" : "") + "</th>").join("") + "</tr></thead><tbody>" +
-        (files.map(r => { const psi = (g.psi || []).includes(r.nom), dis = /\sDIS$/i.test(r.nom); return '<tr><td class="nomal' + (psi ? " psi" : "") + '" data-alumne="' + esc(r.nom) + '" title="' + (psi ? "PSI" : "") + (psi && dis ? " · " : "") + (dis ? "Dislèxia" : "") + '">' + esc(dis ? r.nom.replace(/\s+DIS$/i, "") : r.nom) + (psi ? ' <span class="marca-al psi">PSI</span>' : "") + (dis ? ' <span class="marca-al">DIS</span>' : "") + (g.correus && g.correus[r.nom] ? ' <a href="#" class="mail-al" data-mail="' + esc(g.correus[r.nom]) + '" title="Escriu a ' + esc(g.correus[r.nom]) + '" aria-label="Escriu un correu a ' + esc(dis ? r.nom.replace(/\s+DIS$/i, "") : r.nom) + '">✉️</a>' : "") + "</td>" + (() => { const ds = deuresDe(g, r.nom), n = ds.filter(d => d >= tD.de && d <= tD.fins).length, av = ds.includes(dAvui); return '<td class="deu' + (n ? "" : " zero") + (av ? " avui" : "") + '" data-deu="' + esc(r.nom) + '" title="' + n + " falt" + (n === 1 ? "a" : "es") + " de deures al " + tD.nom + " trimestre" + (av ? " (una d'avui)" : "") + '">' + (n || "–") + "</td>"; })() + f.columnes.map(c => {
+      h += '<div class="taula' + (qDeures ? " passa" : "") + '"><table><thead><tr><th>Alumne</th><th class="deu" title="Faltes de deures del ' + tD.nom + ' trimestre. Toca la xifra per afegir-ne o treure\'n.">📕 Deures ' + tD.nom + '</th><th class="pts" title="Faltes de disciplina (sistema de punts del centre). Toca la xifra per apuntar-ne.">⚖️ Punts</th>' + f.columnes.map(c => "<th" + (c.tipus === "calc" ? ' class="calc" title="' + esc(c.formula) + '"' : "") + ">" + esc(c.nom) + (desquadres[c.nom] ? " ⚠️" : "") + "</th>").join("") + "</tr></thead><tbody>" +
+        (files.map(r => { const psi = (g.psi || []).includes(r.nom), dis = /\sDIS$/i.test(r.nom); return '<tr><td class="nomal' + (psi ? " psi" : "") + '" data-alumne="' + esc(r.nom) + '" title="' + (psi ? "PSI" : "") + (psi && dis ? " · " : "") + (dis ? "Dislèxia" : "") + '">' + esc(dis ? r.nom.replace(/\s+DIS$/i, "") : r.nom) + (psi ? ' <span class="marca-al psi">PSI</span>' : "") + (dis ? ' <span class="marca-al">DIS</span>' : "") + (g.correus && g.correus[r.nom] ? ' <a href="#" class="mail-al" data-mail="' + esc(g.correus[r.nom]) + '" title="Escriu a ' + esc(g.correus[r.nom]) + '" aria-label="Escriu un correu a ' + esc(dis ? r.nom.replace(/\s+DIS$/i, "") : r.nom) + '">✉️</a>' : "") + "</td>" + (() => { const ds = deuresDe(g, r.nom), n = ds.filter(d => d >= tD.de && d <= tD.fins).length, av = ds.includes(dAvui); return '<td class="deu' + (n ? "" : " zero") + (av ? " avui" : "") + '" data-deu="' + esc(r.nom) + '" title="' + n + " falt" + (n === 1 ? "a" : "es") + " de deures al " + tD.nom + " trimestre" + (av ? " (una d'avui)" : "") + '">' + (n || "–") + "</td>"; })() + celaPunts(g, r.nom) + f.columnes.map(c => {
           const v = valor(f, r, c), txt = mostraValor(v);
           if (c.tipus === "calc") {
             const n = numOpcional(v), ok = coincideix(v, r.o && r.o[c.nom]);
@@ -3116,6 +3220,8 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     const b = ev.target.closest("[data-grup]");
     if (b) { qGrup = Number(b.dataset.grup); qFull = 0; pintaAlumnes(); return; }
     const bb = ev.target.closest("[data-rb2]"); if (bb) { accioBanc(bb); return; }
+    const tdP = ev.target.closest("td.pts");
+    if (tdP) { const gP = grupActual(); if (gP) obreSancions(gP, tdP.dataset.pts); return; }
     const tdD = ev.target.closest("td.deu");
     if (tdD) {
       const gD = grupActual(); if (!gD) return;
@@ -3143,10 +3249,11 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       if (nou === null) return;
       g.psi = g.psi || [];
       if (!nou.trim()) {
-        if (confirm("Vols esborrar «" + vell + "» i totes les seves notes del grup " + g.nom + "?")) { g.fulls.forEach(fu => { fu.files = fu.files.filter(r => r.nom !== vell); }); g.psi = g.psi.filter(n => n !== vell); if (g.deures) delete g.deures[vell]; }
+        if (confirm("Vols esborrar «" + vell + "» i totes les seves notes del grup " + g.nom + "?")) { g.fulls.forEach(fu => { fu.files = fu.files.filter(r => r.nom !== vell); }); g.psi = g.psi.filter(n => n !== vell); if (g.deures) delete g.deures[vell]; if (g.sancions) delete g.sancions[vell]; if (g.correus) delete g.correus[vell]; }
       } else {
         const net = nou.trim().replace(/\s+dis$/i, " DIS");
         g.fulls.forEach(fu => fu.files.forEach(r => { if (r.nom === vell) r.nom = net; }));
+        if (g.sancions && g.sancions[vell] && net !== vell) { g.sancions[net] = sancionsDe(g, net).concat(g.sancions[vell]); delete g.sancions[vell]; }
         if (g.correus && g.correus[vell] && net !== vell) { g.correus[net] = g.correus[vell]; delete g.correus[vell]; }
         if (g.deures && g.deures[vell] && net !== vell) { posaDeures(g, net, deuresDe(g, net).concat(g.deures[vell])); delete g.deures[vell]; }
         const teniaPsi = g.psi.includes(vell);
