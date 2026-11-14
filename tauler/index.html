@@ -5134,6 +5134,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       fet('<div class="alum-eines"><a class="boto clar" href="' + esc(enllac) + '" target="_blank" rel="noopener">▶️ Mira el fragment</a><button type="button" class="boto clar" data-asb="copia">Copia</button><button type="button" class="boto clar" data-asb="imprimeix">🖨️ Imprimeix / PDF</button><button type="button" class="boto clar" data-asb="imprimeixsol">🔑 Solucionari</button><button type="button" class="boto clar" data-asb="videoword">⬇️ Word</button><button type="button" class="boto clar" data-asb="videosolword">⬇️ Solucionari en Word</button>' + (compteIns() ? sel + '<button type="button" class="boto" data-asb="qr">📱 Qüestionari en línia</button>' : "") + '</div><div class="as-doc">' + capcaleraDoc() + asDades.html + '</div><div class="as-doc as-sol">' + asDades.sol + "</div>");
       // 14.11.2026: cada qüestionari preparat es desa sol (amb la transcripció) i es pot tornar a obrir des de «📂 Qüestionaris desats»
       desaVideo(transcripcio);
+      pintaAssistent();   // perquè la llista de desats ja hi surti
     } catch (e) { fet('<p class="avis">' + esc(e.message) + "</p>"); }
   }
   // Enllaça el qüestionari del vídeo a la columna EO1 del grup de la classe del Classroom (full del trimestre actual).
