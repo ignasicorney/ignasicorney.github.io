@@ -4246,72 +4246,106 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
   // altre grup teu) i l'original s'obre des del Drive a qualsevol aparell. Només es baixen els nous o els que han canviat.
   const b64aBuf = b64 => Uint8Array.from(atob(String(b64).replace(/\n/g, "")), c => c.charCodeAt(0));
   const idCarpeta = t => { t = String(t || "").trim(); const m = t.match(/folders\/([\w-]{10,})/) || t.match(/[?&]id=([\w-]{10,})/) || t.match(/^([\w-]{20,})$/); return m ? m[1] : null; };
-  async function psiDelDrive(g, boto) {
-    const q = Q(); q.psiCarpetes = Array.isArray(q.psiCarpetes) ? q.psiCarpetes : []; q.psiVistos = q.psiVistos || {};
-    if (!compteIns()) await detectaIns(true);
-    if (!compteIns()) { alert("No trobo el compte d'ieslabisbal.cat al correu de la Bitàcola (📬 Correu > ⚙️). Els PSI es llegeixen amb aquell compte."); return; }
-    const t = prompt((q.psiCarpetes.length ? "Carpetes de PSI que ja hi ha: " + q.psiCarpetes.map(c => c.nom || "?").join(", ") + ".\n\n" : "") +
-      "Enganxa l'enllaç de la carpeta del Drive amb els PSI (o diversos enllaços, separats per espais)." + (q.psiCarpetes.length ? "\nDeixa-ho buit per tornar a llegir les carpetes que ja hi ha." : ""), "");
-    if (t === null) return;
-    const brut = t.match(/\S+/g) || [], nous = brut.map(idCarpeta).filter(Boolean);
-    if (brut.length && !nous.length) { alert("Això no sembla l'enllaç d'una carpeta del Drive (ha de contenir «/folders/…»)."); return; }
-    nous.forEach(id => { if (!q.psiCarpetes.some(c => c.id === id)) q.psiCarpetes.push({ id }); });
-    if (!q.psiCarpetes.length) return;
-    const txt = boto.innerHTML; boto.disabled = true;
-    try {
-      const fitxers = [], errors = [];
-      for (const c of q.psiCarpetes) {
-        boto.textContent = "Llegint " + (c.nom || "la carpeta") + "…";
-        try { const r = await cridaIns({ accio: "drive-llista", carpeta: c.id }); c.nom = r.nom; r.fitxers.forEach(x => fitxers.push(x)); }
-        catch (e) { errors.push("Carpeta " + (c.nom || c.id) + ": " + (/Acció desconeguda/i.test(e.message) ? "cal posar al dia l'script d'ieslabisbal.cat" : e.message)); }
-      }
-      const cal = fitxers.filter(x => /\.(xlsx?|ods|docx|pdf)$/i.test(x.nom) || /spreadsheet|wordprocessing|ms-excel|google-apps\.(document|spreadsheet)|pdf/i.test(x.tipus)).filter(x => q.psiVistos[x.id] !== x.data);
-      const baixats = [];
-      for (let i = 0; i < cal.length; i++) {
-        boto.textContent = "PSI " + (i + 1) + "/" + cal.length + "…";
-        try { const r = await cridaIns({ accio: "drive-fitxer", id: cal[i].id }); const fi = new File([b64aBuf(r.b64)], r.nom, { type: r.tipus || "" }); fi.drive = cal[i].id; fi.dm = cal[i].data; baixats.push(fi); }
-        catch (e) { errors.push(cal[i].nom + ": " + e.message); }
-      }
-      desa();
-      if (!baixats.length) { alert((errors.length ? "No s'ha pogut llegir:\n" + errors.join("\n") : "Els PSI de les carpetes (" + fitxers.length + ") ja estan al dia.")); return; }
-      boto.textContent = "Aparellant…";
-      const pendents = [];
-      await pujaPSI(g, baixats, null, { errors, pendents });
-      if (pendents.length) assignaPSI(pendents);
-    } finally { boto.disabled = false; boto.innerHTML = txt; }
-  }
-  // PSI del Drive que no s'han pogut aparellar: els assigna l'Ignasi triant l'alumne (o els marca com a no seus)
-  function assignaPSI(pendents) {
-    let dlg = $("dlgPsiAssig");
-    if (!dlg) { dlg = document.createElement("dialog"); dlg.id = "dlgPsiAssig"; document.body.appendChild(dlg); }
-    const grups = Q().grups;
-    const opcions = '<option value="">— Tria l\'alumne —</option>' + grups.map((gx, gi) => {
+  // Gestor dels PSI del Drive (14.11.2026): una finestra amb totes les carpetes i tots els documents que s'hi han
+  // trobat, amb l'alumne a qui ha anat cada un. Es pot canviar o posar l'alumne de qualsevol document.
+  // Q().psiFitxers = [{ id, nom, data, carpeta }]: la darrera lectura de les carpetes.
+  function psiDelDrive(g, boto) {
+    const q = Q(); q.psiCarpetes = Array.isArray(q.psiCarpetes) ? q.psiCarpetes : []; q.psiVistos = q.psiVistos || {}; q.psiFitxers = Array.isArray(q.psiFitxers) ? q.psiFitxers : [];
+    let dlg = $("dlgPsiDrive");
+    if (!dlg) { dlg = document.createElement("dialog"); dlg.id = "dlgPsiDrive"; dlg.style.width = "min(900px,calc(100vw - 12px))"; document.body.appendChild(dlg); }
+    const enMemoria = {};   // fitxers ja baixats en aquesta sessió (per no tornar-los a demanar en assignar)
+    let ocupat = "", avis = "";
+    const assignatDe = id => { for (const gx of q.grups) for (const [n, d] of Object.entries(gx.psiDocs || {})) if (d && d.drive === id) return { gx, n }; return null; };
+    const opcions = sel => '<option value="">— Sense alumne —</option>' + q.grups.map((gx, gi) => {
       const noms = Array.from(new Set([].concat(...gx.fulls.map(f => f.files.map(r => r.nom))))).sort((a, b) => a.localeCompare(b, "ca"));
-      return '<optgroup label="' + esc(nomGrup(gx.nom)) + '">' + noms.map(n => '<option value="' + gi + "|" + esc(n) + '">' + esc(n.replace(/\s+DIS$/i, "")) + (psiDocDe(gx, n) ? " · ja té PSI" : "") + "</option>").join("") + "</optgroup>";
+      return '<optgroup label="' + esc(nomGrup(gx.nom)) + '">' + noms.map(n => { const v = gi + "|" + n; return '<option value="' + esc(v) + '"' + (v === sel ? " selected" : "") + ">" + esc(n.replace(/\s+DIS$/i, "")) + "</option>"; }).join("") + "</optgroup>";
     }).join("");
+    const baixa = async f => {
+      if (enMemoria[f.id]) return enMemoria[f.id];
+      const r = await cridaIns({ accio: "drive-fitxer", id: f.id });
+      const fi = new File([b64aBuf(r.b64)], r.nom, { type: r.tipus || "" }); fi.drive = f.id; fi.dm = f.data;
+      return (enMemoria[f.id] = fi);
+    };
     const pinta = () => {
-      if (!pendents.length) { dlg.close(); return; }
-      dlg.innerHTML = '<form method="dialog"><h2>PSI per assignar</h2><p class="font">No he sabut de qui són aquests documents del Drive. Tria l\'alumne de cada un.</p>' +
-        pendents.map((fi, i) => '<div style="border-top:1px solid var(--linia);padding:8px 0"><b>' + esc(fi.name) + '</b><div class="botons" style="flex-wrap:wrap;margin-top:4px"><select data-pa="' + i + '" style="font:inherit;max-width:100%">' + opcions + '</select>' +
-          '<button type="button" class="boto" data-pas="' + i + '">Assigna</button><button type="button" class="boto clar" data-pno="' + i + '" title="No tornarà a sortir fins que canviï al Drive">No és de cap alumne meu</button></div></div>').join("") +
-        '<div class="botons"><button type="button" class="boto clar" data-pfet="1">Ho faré més tard</button></div></form>';
+      const fs = q.psiFitxers.slice().sort((a, b) => { const x = assignatDe(a.id) ? 1 : 0, y = assignatDe(b.id) ? 1 : 0; return x - y || a.nom.localeCompare(b.nom, "ca"); });
+      const sense = fs.filter(f => !assignatDe(f.id)).length;
+      dlg.innerHTML = '<form method="dialog"><h2><img src="https://ssl.gstatic.com/images/branding/product/1x/drive_2020q4_32dp.png" alt="" class="ico-cls"> PSI del Drive</h2>' +
+        '<p class="font" style="margin:0">' + (q.psiCarpetes.length ? "Carpetes: " + q.psiCarpetes.map(c => esc(c.nom || "(sense llegir)")).join(", ") : "Encara no hi ha cap carpeta.") + "</p>" +
+        '<div class="botons" style="flex-wrap:wrap;margin:6px 0"><button type="button" class="boto" data-pd="afegeix"' + (ocupat ? " disabled" : "") + ">+ Afegeix carpetes</button>" +
+        (q.psiCarpetes.length ? '<button type="button" class="boto clar" data-pd="llegeix"' + (ocupat ? " disabled" : "") + ">🔄 Torna a llegir les carpetes</button>" : "") + "</div>" +
+        (ocupat ? '<p class="font"><b>' + esc(ocupat) + "</b></p>" : "") + (avis ? '<p class="avis" style="white-space:pre-wrap">' + esc(avis) + "</p>" : "") +
+        (fs.length ? '<p class="font">' + fs.length + " documents · " + (fs.length - sense) + " assignats · " + sense + " sense alumne. Per canviar-ne l'alumne, tria'l i toca «Desa».</p>" +
+          fs.map(f => { const a = assignatDe(f.id), v = a ? q.grups.indexOf(a.gx) + "|" + a.n : "";
+            return '<div style="border-top:1px solid var(--linia);padding:6px 0"><b' + (a ? "" : ' style="color:#c0001a"') + ">" + esc(f.nom) + "</b>" +
+              '<div class="botons" style="flex-wrap:wrap;margin-top:3px"><select data-ps="' + esc(f.id) + '" data-ara="' + esc(v) + '" style="font:inherit;max-width:100%">' + opcions(v) + "</select>" +
+              '<button type="button" class="boto clar" data-pdesa="' + esc(f.id) + '"' + (ocupat ? " disabled" : "") + ">Desa</button></div></div>"; }).join("") : "") +
+        '<div class="botons"><button type="button" class="boto" data-pd="tanca">Fet</button></div></form>';
     };
-    pinta();
+    const llegeix = async () => {
+      if (!compteIns()) await detectaIns(true);
+      if (!compteIns()) { avis = "No trobo el compte d'ieslabisbal.cat al correu de la Bitàcola (📬 Correu > ⚙️). Els PSI es llegeixen amb aquell compte."; pinta(); return; }
+      const fitxers = [], errors = [];
+      avis = "";
+      for (const c of q.psiCarpetes) {
+        ocupat = "Llegint " + (c.nom || "la carpeta") + "…"; pinta();
+        try { const r = await cridaIns({ accio: "drive-llista", carpeta: c.id }); c.nom = r.nom; r.fitxers.forEach(x => { x.carpeta = c.id; fitxers.push(x); }); }
+        catch (e) { errors.push("Carpeta " + (c.nom || c.id) + ": " + (/Acció desconeguda/i.test(e.message) ? "cal posar al dia l'script d'ieslabisbal.cat" : e.message)); fitxers.push(...q.psiFitxers.filter(x => x.carpeta === c.id)); }
+      }
+      q.psiFitxers = fitxers.filter(x => /\.(xlsx?|ods|docx|pdf)$/i.test(x.nom) || /spreadsheet|wordprocessing|ms-excel|google-apps\.(document|spreadsheet)|pdf/i.test(x.tipus))
+        .map(x => ({ id: x.id, nom: x.nom, data: x.data, carpeta: x.carpeta }));
+      // nous o canviats: es baixen i s'aparellen sols; un per un, perquè cada document vagi al seu alumne
+      const cal = q.psiFitxers.filter(x => q.psiVistos[x.id] !== x.data || (assignatDe(x.id) && (assignatDe(x.id).gx.psiDocs[assignatDe(x.id).n].dm !== x.data))).sort((a, b) => String(a.data).localeCompare(String(b.data)));   // del més antic al més recent: si un alumne en té dos, es queda el darrer
+      let fets = 0;
+      for (let i = 0; i < cal.length; i++) {
+        ocupat = "Llegint els PSI: " + (i + 1) + " de " + cal.length + "…"; pinta();
+        try {
+          const fi = await baixa(cal[i]), a = assignatDe(cal[i].id);
+          const pendents = [];
+          if (a) await pujaPSI(a.gx, [fi], a.n, { silenci: true });   // ja tenia alumne: s'hi queda (actualitzat)
+          else await pujaPSI(g, [fi], null, { pendents, silenci: true });
+          if (assignatDe(cal[i].id)) fets++;
+          else { q.psiVistos[cal[i].id] = cal[i].data; if (!pendents.length) errors.push(cal[i].nom + ": l'alumne ja tenia un PSI més recent; si és d'un altre alumne, assigna'l a sota."); }
+        } catch (e) { errors.push(cal[i].nom + ": " + e.message); }
+      }
+      desa(); pintaAlumnes();
+      ocupat = "";
+      avis = (cal.length ? "Documents nous o canviats: " + cal.length + " · assignats sols: " + fets + "." : "No hi ha documents nous.") + (errors.length ? "\n\nAvisos:\n" + errors.join("\n") : "");
+      pinta();
+    };
     dlg.onclick = async ev => {
-      const b = ev.target.closest("[data-pas],[data-pno],[data-pfet]"); if (!b) return;
-      if (b.dataset.pfet) { dlg.close(); return; }
-      if (b.dataset.pno) { const fi = pendents[Number(b.dataset.pno)]; const q = Q(); q.psiVistos = q.psiVistos || {}; if (fi.drive) q.psiVistos[fi.drive] = fi.dm; pendents.splice(Number(b.dataset.pno), 1); desa(); pinta(); return; }
-      const i = Number(b.dataset.pas), sel = dlg.querySelector('[data-pa="' + i + '"]');
-      if (!sel || !sel.value) { alert("Tria primer l'alumne."); return; }
-      const k = sel.value.indexOf("|"), gx = grups[Number(sel.value.slice(0, k))], nom = sel.value.slice(k + 1);
-      if (psiDocDe(gx, nom) && !confirm(nom.replace(/\s+DIS$/i, "") + " ja té un PSI. Vols substituir-lo per «" + pendents[i].name + "»?")) return;
-      b.disabled = true;
-      await pujaPSI(gx, [pendents[i]], nom, { silenci: true });
-      const d = psiDocDe(gx, nom);
-      if (!d || d.drive !== pendents[i].drive) { b.disabled = false; alert("No s'ha pogut llegir «" + pendents[i].name + "». Torna-ho a provar."); return; }
-      pendents.splice(i, 1); pinta();
+      const b = ev.target.closest("[data-pd],[data-pdesa]"); if (!b || ocupat) return;
+      if (b.dataset.pd === "tanca") { dlg.close(); return; }
+      if (b.dataset.pd === "afegeix") {
+        const t = prompt("Enganxa l'enllaç de la carpeta del Drive amb els PSI (o diversos enllaços, separats per espais):", "");
+        if (!t) return;
+        const nous = (t.match(/\S+/g) || []).map(idCarpeta).filter(Boolean);
+        if (!nous.length) { alert("Això no sembla l'enllaç d'una carpeta del Drive (ha de contenir «/folders/…»)."); return; }
+        nous.forEach(id => { if (!q.psiCarpetes.some(c => c.id === id)) q.psiCarpetes.push({ id }); });
+        desa(); await llegeix(); return;
+      }
+      if (b.dataset.pd === "llegeix") { await llegeix(); return; }
+      const id = b.dataset.pdesa, sel = dlg.querySelector('select[data-ps="' + CSS.escape(id) + '"]'), f = q.psiFitxers.find(x => x.id === id);
+      if (!sel || !f || sel.value === sel.dataset.ara) return;
+      const ant = assignatDe(id);
+      try {
+        if (sel.value) {
+          const k = sel.value.indexOf("|"), gx = q.grups[Number(sel.value.slice(0, k))], nom = sel.value.slice(k + 1);
+          const ja = psiDocDe(gx, nom);
+          if (ja && ja.drive !== id && !confirm(nom.replace(/\s+DIS$/i, "") + " ja té un PSI (" + ja.fitxer + "). Vols substituir-lo per «" + f.nom + "»?")) { sel.value = sel.dataset.ara; return; }
+          ocupat = "Assignant «" + f.nom + "»…"; pinta();
+          const fi = await baixa(f);
+          await pujaPSI(gx, [fi], nom, { silenci: true });
+          const d = psiDocDe(gx, nom);
+          if (!d || d.drive !== id) throw new Error("No s'ha pogut llegir «" + f.nom + "».");
+        }
+        if (ant && !(sel.value && q.grups[Number(sel.value.split("|")[0])] === ant.gx && sel.value.slice(sel.value.indexOf("|") + 1) === ant.n)) { delete ant.gx.psiDocs[ant.n]; await idbTreuPSI(clauPSI(ant.gx, ant.n)); }
+        q.psiVistos[id] = f.data;
+        desa(); pintaAlumnes(); avis = "";
+      } catch (e) { avis = e.message; }
+      ocupat = ""; pinta();
     };
-    dlg.showModal();
+    pinta(); dlg.showModal();
+    if (!q.psiCarpetes.length) setTimeout(() => dlg.querySelector('[data-pd="afegeix"]').click(), 50);
   }
   function obrePSI(g, nom) {
     let dlg = $("dlgPsi");
@@ -4333,7 +4367,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       if (!orig && vista === "orig") vista = "text";
       dlg.innerHTML = '<form method="dialog"><h2>📄 PSI</h2><p style="margin:0"><b>' + esc(nom.replace(/\s+DIS$/i, "")) + "</b> · " + esc(nomGrup(g.nom)) + (d ? ' <span class="font">· ' + esc(d.fitxer) + " · " + dma(d.d) + "</span>" : "") + "</p>" +
         (d ? '<div class="vistes" role="group" aria-label="Com es mostra" style="margin:6px 0"><button type="button" data-psi="v-orig" aria-pressed="' + (vista === "orig") + '"' + (orig ? "" : " disabled") + '>Document original</button><button type="button" data-psi="v-text" aria-pressed="' + (vista === "text") + '">Text i cerca</button></div>' +
-          (!orig ? (d.drive ? '<p class="font">No s\'ha pogut obrir l\'original del Drive del centre' + (errDrive ? " (" + esc(errDrive) + ")" : "") + '. Mentrestant en tens el text.</p>' : '<p class="font">L\'original no és en aquest aparell (es guarda només on el vas pujar). Pots consultar-ne el text, o tornar-lo a pujar aquí amb el botó de sota, o llegir-lo del Drive amb el botó «PSI» de la icona del Drive.</p>') : "") +
+          (!orig ? (d.drive ? '<p class="font">No s\'ha pogut obrir l\'original del Drive del centre' + (errDrive ? " (" + esc(errDrive) + ")" : "") + '. Mentrestant en tens el text.</p>' : '<p class="font">L\'original no és en aquest aparell (es guarda només on el vas pujar). Pots consultar-ne el text, o tornar-lo a pujar aquí amb el botó de sota, o assignar-li el del Drive amb el botó «PSI» de la icona del Drive.</p>') : "") +
           (vista === "orig" ? '<div class="psi-zoom"><button type="button" class="boto clar boto-ico" data-psi="z-" aria-label="Més petit">−</button><button type="button" class="boto clar boto-ico" data-psi="z+" aria-label="Més gran">+</button><span class="font">Mida</span></div><div class="psi-orig" id="psiOrig" style="--z:' + zoom + '"></div>' :
             '<input type="search" id="psiCerca" placeholder="Cerca dins del PSI (p. ex. examen, temps, lectura…)" style="width:100%;box-sizing:border-box;font:inherit;padding:6px 8px;border:1px solid var(--linia);border-radius:8px"><div class="psi-text" id="psiText">' + esc(d.text) + "</div>")
           : '<p class="font">Encara no hi ha cap PSI per a aquest alumne.</p>') +
