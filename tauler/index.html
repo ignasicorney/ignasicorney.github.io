@@ -5008,6 +5008,18 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       }
       progres("Preparant les preguntes a partir de la transcripció…");
       r = await ia(sistemaLl, ind + "Transcripció del fragment (amb el moment de cada frase):\n" + transcripcio + "\n\n" + ordreLl, { json: true });
+      // 14.11.2026: si l'activitat és en castellà i la IA ha escrit en català (les instruccions són en català), es tradueix
+      // sense tocar les cites literals, les paraules de completar ni les claus del JSON
+      const llengua = obj => {
+        const nv = (obj && Array.isArray(obj.nivells) ? obj.nivells : []).flatMap(x => (x && x.preguntes) || []);
+        const t = " " + nv.map(q => [q.enunciat].concat(q.opcions || [], q.resposta || []).join(" ")).join(" ").toLowerCase().replace(/«[^»]*»/g, " ").replace(/[^a-zàèéíòóúïüçñ·']+/g, " ") + " ";
+        const n = ws => ws.reduce((a, w) => a + (t.split(" " + w + " ").length - 1), 0);
+        return n(["què", "quina", "quin", "quines", "segons", "els", "amb", "dels", "aquest", "aquesta", "seva", "seu", "també", "perquè", "són", "l'orador", "s'hi", "pel"]) > n(["qué", "cuál", "cuáles", "según", "los", "con", "este", "esta", "fragmento", "su", "también", "porque", "son", "para", "por"]) ? "ca" : "es";
+      };
+      if (es && llengua(r) === "ca") {
+        progres("Passant les preguntes al castellà…");
+        r = await ia("Eres traductor del catalán al castellano. Recibes un JSON con preguntas de comprensión audiovisual y lo devuelves idéntico, con la misma estructura y las mismas claves, pero con todo el texto en castellano: título, resumen, enunciados, opciones y respuestas modelo. NO cambies: los nombres de los niveles (campo \"nom\"), los índices de \"correctes\", el campo \"moment\", las palabras de \"respostes\" ni las citas literales entre comillas «», que ya están en la lengua del vídeo. Responde solo el JSON.", JSON.stringify(r), { json: true });
+      }
       // Comprovació: les paraules de completar i les cites de les obertes han de ser a la transcripció
       const norm = t => String(t || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/\[[^\]]*\]/g, " ").replace(/[^a-zñç0-9]+/g, " ").trim();
       const trN = " " + norm(transcripcio) + " ";
@@ -5044,7 +5056,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
         video: { id: v, inici: i, final: f, enllac: enllac, desc: desc, nivells: nivells, es: es }
       };
       const htmlNiv = nv => "<h4>" + esc(nv.nom) + "</h4><ol class=\"preg\">" + nv.preguntes.map(q => "<li>" + esc(q.enunciat) + (q.moment ? ' <span class="font">[' + esc(q.moment) + "]</span>" : "") + (q.tipus === "multiple" ? ' <span class="font">(pot haver-hi més d\'una resposta)</span>' : "") + (q.opcions ? '<ol type="a">' + q.opcions.map(o => "<li>" + esc(o) + "</li>").join("") + "</ol>" : q.tipus === "oberta" ? '<div style="border-bottom:1px solid #999;height:1.8em"></div><div style="border-bottom:1px solid #999;height:1.8em"></div><div style="border-bottom:1px solid #999;height:1.8em"></div>' : "") + "</li>").join("") + "</ol>";
-      asDades.html = "<h3>" + esc(titolV) + "</h3><p>Fragment del vídeo del " + mmss(i) + " al " + mmss(f) + ": " + esc(enllac) + "</p>" + (r.resum ? "<p><i>" + esc(String(r.resum)) + "</i></p>" : "") + nivells.map(htmlNiv).join("");
+      asDades.html = "<h3>" + esc(titolV) + "</h3><p>" + (es ? "Fragmento del vídeo del " : "Fragment del vídeo del ") + mmss(i) + " al " + mmss(f) + ": " + esc(enllac) + "</p>" + (r.resum ? "<p><i>" + esc(String(r.resum)) + "</i></p>" : "") + nivells.map(htmlNiv).join("");
       // 14.11.2026: el solucionari va a part (es veu i s'imprimeix separat de les preguntes)
       asDades.sol = "<h3>" + esc(titolV) + "</h3><h4>Solucionari</h4><ul>" + nivells.map(nv => "<li><b>" + esc(nv.nom) + ":</b> " + nv.preguntes.map((q, k) => esc(solQ(q, k))).join(" · ") + "</li>").join("") + "</ul>";
       const sel = '<select id="asQrNiv" aria-label="Nivell del qüestionari">' + nivells.map((nv, k) => "<option" + (k === (nivells.length >= 3 && triats.length > 1 ? 1 : 0) ? " selected" : "") + ">" + esc(nv.nom) + "</option>").join("") + "</select>";
