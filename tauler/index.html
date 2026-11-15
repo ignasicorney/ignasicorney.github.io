@@ -1557,6 +1557,8 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
   }
   let asSel = { g: 0, f: 0, a: "", c: "" };
   // Comprensió audiovisual (13.11.2026): fragments de 4 a 5 minuts d'un vídeo de YouTube
+  // 15.11.2026: el que es tria a Activitats (curs, llengua, tipus, preguntes, DIS) es manté en redibuixar
+  let asAct = { curs: "1r d'ESO", lleng: "català", tipus: "Comprensió lectora", n: "6", dis: false };
   let asVid = { url: "", i: "", f: "", curs: "1r d'ESO", lleng: "castellà", niv: "Tots tres", n: "8", dis: false, ind: "" };
   // 14.11.2026: es pot triar un sol nivell (menys feina per a la IA: es poden demanar més preguntes sense que es talli)
   const VID_NIVELLS = {
@@ -1583,11 +1585,12 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
         '<div class="alum-eines"><label class="boto clar" style="display:inline-block">📷 Foto del full<input type="file" id="asFoto" accept="image/*" capture="environment" hidden></label><span class="font" id="asFotoNom"></span></div>' +
         '<div class="alum-eines"><button type="button" class="boto clar" data-asb="ortografia">🔤 Només ortografia</button><button type="button" class="boto" data-asb="corregeix">✍️ Corregeix amb IA</button></div>';
     } else if (asEina === "activitats") {
+      const ao = (llista, v) => llista.map(o => "<option" + (o === v ? " selected" : "") + ">" + o + "</option>").join("");
       h = '<p class="font">Genera una activitat en tres nivells (bàsic, mitjà i avançat) amb solucionari.</p>' +
-        '<div class="fila-as"><label>Curs<select id="asCurs"><option>1r d\'ESO</option><option>2n d\'ESO</option><option>3r d\'ESO</option><option>4t d\'ESO</option><option>1r de batxillerat</option><option>2n de batxillerat</option></select></label><label>Llengua<select id="asLleng"><option value="català">Català</option><option value="castellà">Castellà</option></select></label>' +
-        '<label>Tipus<select id="asTipus"><option>Comprensió lectora</option><option>Dictat</option><option>Ortografia</option><option>Gramàtica</option><option>Vocabulari</option><option>Expressió escrita (consignes)</option><option>Qüestionari tipus test</option><option>Literatura</option></select></label><label>Preguntes<input type="text" id="asN" value="6" inputmode="numeric" style="width:4em"></label></div>' +
+        '<div class="fila-as"><label>Curs<select id="asCurs">' + ao(["1r d'ESO", "2n d'ESO", "3r d'ESO", "4t d'ESO", "1r de batxillerat", "2n de batxillerat"], asAct.curs) + '</select></label><label>Llengua<select id="asLleng"><option value="català"' + (asAct.lleng === "català" ? " selected" : "") + '>Català</option><option value="castellà"' + (asAct.lleng === "castellà" ? " selected" : "") + '>Castellà</option></select></label>' +
+        '<label>Tipus<select id="asTipus">' + ao(["Comprensió lectora", "Ortografia", "Gramàtica", "Vocabulari", "Expressió escrita (consignes)", "Qüestionari tipus test", "Literatura"], asAct.tipus) + '</select></label><label>Preguntes<input type="text" id="asN" value="' + esc(asAct.n) + '" inputmode="numeric" style="width:4em"></label></div>' +
         '<textarea id="asText" placeholder="Tema, objectius o text de partida (pots enganxar-hi un text)…" rows="6"></textarea>' +
-        '<label class="font"><input type="checkbox" id="asDisAct"> Afegeix també una versió adaptada DIS/PSI</label>' +
+        '<label class="font"><input type="checkbox" id="asDisAct"' + (asAct.dis ? " checked" : "") + '> Afegeix també una versió adaptada DIS/PSI</label>' +
         '<div class="alum-eines"><button type="button" class="boto" data-asb="activitat">📚 Genera l\'activitat</button></div>';
     } else if (asEina === "video") {
       const vo = (llista, v) => llista.map(o => "<option" + (o === v ? " selected" : "") + ">" + o + "</option>").join("");
@@ -1687,6 +1690,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     // Es llegeix tot el formulari abans de redibuixar
     const val = id => ($(id) ? ($(id).type === "checkbox" ? $(id).checked : $(id).value) : "");
     const F = { lleng: val("asLleng"), rub: val("asRub"), max: val("asMax"), foto: $("asFoto") && $("asFoto").files[0], curs: val("asCurs"), tipus: val("asTipus"), n: val("asN"), dis: val("asDisAct"), adap: val("asAdap") };
+    if (a === "activitat") asAct = { curs: F.curs, lleng: F.lleng, tipus: F.tipus, n: F.n, dis: F.dis };
     asOcupat = true; asResultat = ""; asModel = ""; pintaAssistent();
     try {
       if (a === "ortografia") {
