@@ -2931,7 +2931,10 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     const e = EI();
     let h = '<p class="font">Les faltes d\'un examen (foto de la pissarra o escrites a mà) es converteixen en una fitxa avaluable sobre 10: dictat de 20 paraules (5 punts), text amb 12 faltes per trobar (3 punts) i «per què?» amb la regla de 8 paraules (2 punts), amb el solucionari a part. Les paraules del dictat són les mateixes o similars (de la mateixa regla).</p>';
     if (!fal) {
-      if (e.fal.length) h += '<div class="fila-as"><label>Fitxes desades<select data-ei="fald">' + eOpts(e.fal.slice().reverse().map(x => [x.id, dma(x.d) + " · " + x.grup + " · " + x.lleng]), fv("fald", e.fal[e.fal.length - 1].id)) + "</select></label>" +
+      // Fitxes desades per l'ordre dels grups (1r A, 1r I, 1r J…) i, dins de cada grup, la més nova primer
+      const ordG = falGrups(), posG = x => { const i = ordG.indexOf(x.grup); return i < 0 ? ordG.length : i; };
+      const falOrd = e.fal.slice().reverse().sort((a, b) => posG(a) - posG(b) || String(a.grup).localeCompare(String(b.grup), "ca") || String(b.d).localeCompare(String(a.d)));
+      if (e.fal.length) h += '<div class="fila-as"><label>Fitxes desades<select data-ei="fald">' + eOpts(falOrd.map(x => [x.id, dma(x.d) + " · " + x.grup + " · " + x.lleng]), fv("fald", falOrd[0].id)) + "</select></label>" +
         '<span style="align-self:end">' + eBoto("falobre", "Obre", true) + " " + eBoto("falwordd", "⬇️ Word", true) + " " + eBoto("falsolwordd", "⬇️ Solucionari en Word", true) + " " + eBoto("falesb", "Esborra", true) + "</span></div>";
       h += "<h4>➕ Fitxa nova</h4>" +
         '<div class="fila-as">' + eSel("grup", "Grup", falGrups(), falGrups()[0]) + eSel("lleng", "Llengua", ["castellà", "català"], "castellà") + "</div>" +
