@@ -624,6 +624,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       <button type="button" data-as="butlleti">💬 Butlletí</button>
       <button type="button" data-as="flu">📖 Fluïdesa lectora</button>
       <button type="button" data-as="dic">✏️ Dictats</button>
+      <button type="button" data-as="fal">🔤 Faltes d'ortografia</button>
       <button type="button" data-as="ctl">📗 Controls de lectura</button>
       <button type="button" data-as="var">🔀 Variants d'examen</button>
       <button type="button" data-as="ref">🩹 Reforç</button>
@@ -1787,7 +1788,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
   const EI = () => {
     if (!dades.eines || typeof dades.eines !== "object") dades.eines = {};
     const e = dades.eines;
-    ["flu", "ftx", "dic", "ctl", "exp", "llibres", "pau"].forEach(k => { if (!Array.isArray(e[k])) e[k] = []; });
+    ["flu", "ftx", "dic", "ctl", "exp", "llibres", "pau", "fal"].forEach(k => { if (!Array.isArray(e[k])) e[k] = []; });
     ["err", "obj"].forEach(k => { if (!e[k] || typeof e[k] !== "object" || Array.isArray(e[k])) e[k] = {}; });
     return e;
   };
@@ -2875,21 +2876,244 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     }
   }
 
+  // ---------- 🔤 Faltes d'ortografia (15.11.2026) ----------
+  // Les faltes d'un examen anotades a la pissarra (foto o a mà) → fitxa avaluable sobre 10: dictat (20 paraules, 5 punts),
+  // text amb 12 faltes (3 punts) i «per què?» (8 paraules amb la regla, 2 punts), amb el solucionari a part i la correcció per alumne.
+  // Al text, cada falta s'escriu {incorrecta|correcta}; al dictat, les paraules que puntuen van entre asteriscs.
+  const FAL_REG = {
+    "castellà": [["A", "Lleva tilde porque es aguda y acaba en vocal, -n o -s."], ["B", "Lleva tilde porque es esdrújula, o porque es llana y no acaba en vocal, -n ni -s."], ["C", "Lleva tilde para marcar un hiato: la i o la u tónicas junto a otra vocal."], ["D", "Lleva tilde diacrítica: la distingue de otra palabra que se escribe igual."], ["E", "Se escribe distinto que en catalán: no hay que copiar la forma catalana."], ["F", "Ojo con las letras: h, b/v, g/j, c/z/qu."]],
+    "català": [["A", "Porta accent perquè és aguda i acaba en vocal, -as, -es, -is, -os, -us, -en o -in."], ["B", "Porta accent perquè és esdrúixola, o perquè és plana i no acaba en vocal, -as, -es, -is, -os, -us, -en ni -in."], ["C", "Porta dièresi: la u sona (güe, güi, qüe, qüi) o hi ha hiat (raïm, veïna)."], ["D", "Porta accent diacrític: la distingeix d'una altra paraula que s'escriu igual."], ["E", "S'escriu diferent que en castellà: no s'ha de copiar la forma castellana."], ["F", "Compte amb les lletres: h, b/v, g/j, s/ss/c/ç/z, l·l, ny."]]
+  };
+  const FAL_TX = {
+    "castellà": { tit: "ORTOGRAFÍA: LAS FALTAS DEL EXAMEN", mat: "Lengua castellana", d: "1. Dictado (5 puntos)", di: "Escucha y escribe las frases que dicta el profesor.", t: "2. Texto con faltas (3 puntos)", ti: "Este texto tiene 12 faltas de ortografía. Subráyalas y escribe abajo la forma correcta.", p: "3. ¿Por qué? (2 puntos)", pi: "Escribe al lado de cada palabra la letra de la regla que explica cómo se escribe.", sol: "SOLUCIONARIO", sd: "1. Dictado (5 puntos): 0,25 por cada palabra en negrita (20)", sdi: "Solo cuentan las palabras en negrita; los demás errores no restan en esta actividad.", st: "2. Texto con faltas (3 puntos): 0,25 por cada falta corregida (12)", sp: "3. ¿Por qué? (2 puntos): 0,25 por cada respuesta (8)", sub: "Ortografía: las faltas del examen" },
+    "català": { tit: "ORTOGRAFIA: LES FALTES DE L'EXAMEN", mat: "Llengua catalana", d: "1. Dictat (5 punts)", di: "Escolta i escriu les frases que dicta el professor.", t: "2. Text amb faltes (3 punts)", ti: "Aquest text té 12 faltes d'ortografia. Subratlla-les i escriu a sota la forma correcta.", p: "3. Per què? (2 punts)", pi: "Escriu al costat de cada paraula la lletra de la regla que explica com s'escriu.", sol: "SOLUCIONARI", sd: "1. Dictat (5 punts): 0,25 per cada paraula en negreta (20)", sdi: "Només compten les paraules en negreta; els altres errors no resten en aquesta activitat.", st: "2. Text amb faltes (3 punts): 0,25 per cada falta corregida (12)", sp: "3. Per què? (2 punts): 0,25 per cada resposta (8)", sub: "Ortografia: les faltes de l'examen" }
+  };
+  // Les tres fitxes del 15.11.2026 (pissarres de 1r A, 1r I i 1r J), preparades a mà: entren una sola vegada com a desades
+  const FAL_INI = [
+    { grup: "1r A", faltes: "rindió\npodía\nasí\nfalleció\ndecidió\nmás\noído\nestaba\nmayúsculas\ntenía\ndejó\naunque\ndía\n*i > y\nraíz\nraíces\n*lleba > lleva\n*habrà > habrá\nprácticamente\ntecnologías\n*quizo > quiso\n*havian > habían\nMaría\ntú\n*quando > cuando\n*positiba > positiva\n*prefigo > prefijo\n*solida > sólida\nteléfono\nestá\n*és > es\n*ajitar > agitar\n*sige > sigue\n*enzima > encima\n*tubo > tuvo\n*intentar-lo > intentarlo\n*són > son\n*deves > debes\n*s'escribe > se escribe\n*asta > hasta",
+      dictat: ["*Cuando* sonó el *teléfono*, corrí a cogerlo.", "Mi hermana *lleva* una mochila *nueva*.", "*Debes* *intentarlo* otra vez.", "Ella *tuvo* que esperar *hasta* las ocho.", "El libro *estaba* *encima* de la mesa.", "Mañana *habrá* un examen; ya lo *sabían*.", "*Quiso* decírselo, pero no se *atrevió*.", "Las nuevas *tecnologías* son *prácticamente* imprescindibles.", "La mesa es de madera *sólida* y *sigue* intacta.", "*Lucía* tenía dolor de *oído*."],
+      text: "{Maria|María} tenía una actitud muy {positiba|positiva}. Un {dia|día} decidió aprender a escribir mejor, aunque al principio le costaba tanto que se ponía nerviosa y empezaba a {ajitar|agitar} las piernas. Su profesora le explicó que los nombres propios se escriben con mayúscula {i|y} que «in-» es un {prefigo|prefijo}. También aprendió que «raíz» y «raíces» llevan tilde; {asi|así} no se equivocó {mas|más}. Al final del curso, todos sus compañeros {habian|habían} aprendido mucho con ella. Ahora sabe que las normas {són|son} fáciles y que la ortografía {és|es} importante. Cuando duda de cómo {s'escribe|se escribe} una palabra, la busca en el diccionario.",
+      perque: [["falleció", "A"], ["teléfono", "B"], ["tenía", "C"], ["raíz", "C"], ["tú (Tú eres mi amigo.)", "D"], ["son (Ellos son amigos.)", "E"], ["prefijo", "F"], ["tuvo", "F"]] },
+    { grup: "1r I", faltes: "imposible\n*hai > ahí\n*i > y\n*pissarra > pizarra\n*quando > cuando\n*actitut > actitud\n*és > es\nsirvió\nprovocó\nenergías\nconvirtió\nalumnos\n*resbaladisas > resbaladizas\n*asta > hasta\n*passa > pasa\n*porquè > porque\n*resibe > recibe\n*jamas > jamás\n*consigió > consiguió\n*dia > día\n*mayuscula > mayúscula\n*mas > más\n*envia > envía\n*Maria > María\n*composicion > composición\n*paises > países\n*facil > fácil\n*rendiria > rendiría\n*undir > hundir\n*Catalunya > Cataluña\n*què > que\n*rendir-se > rendirse\n*comença > comienza\n*esta > está",
+      dictat: ["*Cuando* llegué a clase, la *pizarra* ya estaba limpia.", "Mi prima tiene una *actitud* muy positiva *y* nunca se queja.", "No salimos al patio *porque* el suelo estaba *resbaladizo*.", "Es *imposible* aparcar *ahí*.", "Mi abuela *recibe* una carta de sus nietos cada *día*.", "*Jamás* pensé que esa película me *divertiría* tanto.", "Las *montañas* de *Cataluña* son preciosas en otoño.", "El nombre de *Lucía* empieza con *mayúscula*.", "Antes de *rendirse*, el equipo luchó *hasta* el final.", "Esta *composición* es *fácil*."],
+      text: "{Maria|María} {és|es} una alumna que viaja por muchos {paises|países}. Cada verano {comença|comienza} un viaje nuevo y siempre nos {envia|envía} fotos. El año pasado {consigió|consiguió} subir a una montaña muy alta, aunque el esfuerzo le provocó un gran cansancio. Dice que las energías del grupo le sirvieron de mucho. Este año, el viaje se convirtió en una aventura: el barco estuvo a punto de {undirse|hundirse}. Ahora {esta|está} en casa {i|y} dice que jamás se rendiría. ¿{Mas|Más} aventuras? «Claro, {porquè|porque} lo que me {passa|pasa} es que me encanta viajar», contesta.",
+      perque: [["países", "C"], ["composición", "A"], ["mayúscula", "B"], ["más (Quiero más agua.)", "D"], ["pizarra", "E"], ["hundir", "F"], ["envía", "C"], ["Cataluña", "E"]] },
+    { grup: "1r J", faltes: "podían\ncansó\nquería\ndecidió\nempujó\n*i > y\nestá\ncomió\nviajó\ncayeron\ndía\nenergías\nhundió\nhasta\nallí\nhacía\nmás\nMaría\nmayúscula\n*hiban > iban\nfalleció\njamás\naunque\ncambio / cambie\nmóvil\ndespués\n*porquè > porque\nconvirtió\nderivación\nhay\nbatir\n*aver > haber\n*escutxar > escuchar\npaíses\nraíces\n*resipiente > recipiente\n*lutxar > luchar\n*beç > vez\n*mutxas > muchas\n*nuebo > nuevo\n*cieres > quieres\nfútbol\n*acer > hacer\n*cojer > coger",
+      dictat: ["Ayer *escuché* una canción *nueva*.", "Mi hermano *quería* jugar al *fútbol*.", "*Después* de cenar, los niños *iban* a la plaza.", "¿*Quieres* *hacer* los deberes conmigo?", "Tenemos que *luchar* *hasta* el final.", "*Hay* *muchas* personas en la cola.", "*Allí* había un *recipiente* con agua.", "Por primera *vez*, el portero *cogió* el balón con una mano.", "Las hojas *cayeron* del árbol y el viento las *empujó*.", "Las *raíces* del *maíz* crecen deprisa."],
+      text: "Aquel {dia|día}, {Maria|María} se levantó con muchas energías. Hacía sol y {decidio|decidió} salir a {vatir|batir} su récord en la pista. Corrió tanto que se cansó; su entrenador le dijo que debía {aver|haber} descansado más. Después viajó a otros {paises|países} para competir, aunque sus amigos no {podian|podían} creérselo. Un día, el barco en el que iba casi se {undió|hundió}, {i|y} ella {jamas|jamás} olvidó aquel susto. Ahora {esta|está} en casa y dice que se convirtió en otra persona {porquè|porque} aprendió a no rendirse.",
+      perque: [["falleció", "A"], ["móvil", "B"], ["podían", "C"], ["raíces", "C"], ["más (Quiero más agua.)", "D"], ["escuchar", "E"], ["muchas", "E"], ["haber", "F"]] }
+  ];
+  let fal = null, falCorr = null, falFitxer = null, falLlegint = false;
+  const FAL_MARCA = /\{([^{}|]+)\|([^{}|]+)\}/g;
+  const falClaus = f => f.dictat.reduce((a, s) => a.concat((String(s).match(/\*[^*]+\*/g) || []).map(x => x.slice(1, -1))), []);
+  const falErrs = f => { const r = []; String(f.text).replace(FAL_MARCA, (m, a, b) => { r.push({ mal: a, be: b }); return m; }); return r; };
+  const falTextAl = f => String(f.text).replace(FAL_MARCA, "$1");
+  const falTextSol = f => String(f.text).replace(FAL_MARCA, "*$2*");
+  const falTx = f => FAL_TX[f.lleng] || FAL_TX["castellà"];
+  const falReg = f => FAL_REG[f.lleng] || FAL_REG["castellà"];
+  function falComprova(f) {
+    const av = [], nd = falClaus(f).length, nt = falErrs(f).length, np = f.perque.length;
+    if (f.dictat.length !== 10) av.push(f.dictat.length + " frases de dictat (n'hi ha d'haver 10)");
+    if (nd !== 20) av.push(nd + " paraules que puntuen al dictat (n'hi ha d'haver 20)");
+    if (nt !== 12) av.push(nt + " faltes al text (n'hi ha d'haver 12)");
+    if (np !== 8) av.push(np + " paraules a «per què?» (n'hi ha d'haver 8)");
+    if (f.perque.some(x => !/^[A-F]$/.test(x[1]))) av.push("alguna paraula de «per què?» no té la regla (A-F)");
+    return av;
+  }
+  function falSeed() {
+    const e = EI(); if (e.falIni) return;
+    FAL_INI.forEach((x, i) => e.fal.push({ id: "fal" + (i + 1) + "-20261115", d: "2026-11-15", grup: x.grup, lleng: "castellà", faltes: x.faltes, dictat: x.dictat.slice(), text: x.text, perque: x.perque.map(p => p.slice()), resp: {} }));
+    e.falIni = 1; desa();
+  }
+  const falGrups = () => { const n = Q().grups.map(g => g.nom); return n.length ? n : ["1r A", "1r I", "1r J"]; };
+  function pintaFal() {
+    falSeed();
+    const e = EI();
+    let h = '<p class="font">Les faltes d\'un examen (foto de la pissarra o escrites a mà) es converteixen en una fitxa avaluable sobre 10: dictat de 20 paraules (5 punts), text amb 12 faltes per trobar (3 punts) i «per què?» amb la regla de 8 paraules (2 punts), amb el solucionari a part. Les paraules del dictat són les mateixes o similars (de la mateixa regla).</p>';
+    if (!fal) {
+      if (e.fal.length) h += '<div class="fila-as"><label>Fitxes desades<select data-ei="fald">' + eOpts(e.fal.slice().reverse().map(x => [x.id, dma(x.d) + " · " + x.grup + " · " + x.lleng]), fv("fald", e.fal[e.fal.length - 1].id)) + "</select></label>" +
+        '<span style="align-self:end">' + eBoto("falobre", "Obre", true) + " " + eBoto("falwordd", "⬇️ Word", true) + " " + eBoto("falsolwordd", "⬇️ Solucionari en Word", true) + " " + eBoto("falesb", "Esborra", true) + "</span></div>";
+      h += "<h4>➕ Fitxa nova</h4>" +
+        '<div class="fila-as">' + eSel("grup", "Grup", falGrups(), falGrups()[0]) + eSel("lleng", "Llengua", ["castellà", "català"], "castellà") + "</div>" +
+        '<div class="alum-eines"><label class="boto clar" style="display:inline-block">📷 Foto de la pissarra<input type="file" id="falFoto" accept="image/*" hidden></label><span class="font" id="falFotoNom">' + (falLlegint ? "Llegint la pissarra…" : falFitxer ? "✓ " + esc(falFitxer.name) : "") + "</span></div>" +
+        '<p class="font">En triar la foto, la IA llegeix la pissarra i n\'omple la llista: revisa-la abans de generar. Format: una per línia, «*incorrecta > correcta» si hi ha la forma de l\'alumne, o només la paraula correcta.</p>' +
+        eArea("faltes", "*hai > ahí\n*quando > cuando\ndía\nmás\n…", 8) +
+        eInp("ind", "Indicacions (opcional)", "", "min-width:20em") +
+        '<div class="alum-eines">' + eBoto("falgen", "🔤 Genera la fitxa") + "</div>";
+      return h + (eiRes.fal || "") + msgEi() + notaModel();
+    }
+    const desat = e.fal.includes(fal), av = falComprova(fal), tx = falTx(fal);
+    h += "<h4>" + esc(tx.sub) + " · " + esc(fal.grup) + ' <span class="font">· ' + dma(fal.d) + " · " + esc(fal.lleng) + "</span></h4>" +
+      (av.length ? '<p class="avis">⚠️ ' + esc(av.join("; ")) + ". Revisa-ho abans d'imprimir.</p>" : '<p class="font" style="color:#1f6b2a">✓ 10 frases i 20 paraules al dictat, 12 faltes al text i 8 paraules amb la regla.</p>') +
+      '<details' + (desat ? "" : " open") + '><summary class="font">✏️ Revisa i edita la fitxa</summary>' +
+      '<p class="font"><b>Dictat</b>: una frase per línia; les paraules que puntuen, entre asteriscs (*paraula*).</p><textarea data-falc="dictat" rows="10">' + esc(fal.dictat.join("\n")) + "</textarea>" +
+      '<p class="font"><b>Text</b>: cada falta, entre claus amb la forma correcta: {incorrecta|correcta}.</p><textarea data-falc="text" rows="7">' + esc(fal.text) + "</textarea>" +
+      '<p class="font"><b>Per què?</b>: una per línia, «paraula = lletra de la regla». ' + falReg(fal).map(r => "<b>" + r[0] + "</b> " + esc(r[1])).join(" ") + '</p><textarea data-falc="perque" rows="8">' + esc(fal.perque.map(x => x[0] + " = " + x[1]).join("\n")) + "</textarea>" +
+      (fal.faltes ? '<details><summary class="font">Faltes de la pissarra</summary><p class="font" style="white-space:pre-wrap">' + esc(fal.faltes) + "</p></details>" : "") + "</details>" +
+      '<div class="alum-eines">' + eBoto("faldesa", desat ? "💾 Desa els canvis" : "💾 Desa la fitxa") + eBoto("falimp", "🖨️ Imprimeix la fitxa", true) + eBoto("falword", "⬇️ Fitxa en Word", true) + eBoto("falsol", "🖨️ Solucionari", true) + eBoto("falsolword", "⬇️ Solucionari en Word", true) + eBoto("faltanca", "✕ Tanca", true) + "</div>" + msgEi() + notaModel();
+    if (!desat) return h + '<p class="font">Desa la fitxa per poder-la corregir.</p>';
+    // Correcció: es toca el que l'alumne ha fallat; la nota va sola a la columna triada
+    const { g, fila } = triat(), k = fila && g ? clauAl(g, fila.nom) : "";
+    if (!falCorr || falCorr.id !== fal.id || falCorr.al !== k) { const p = k && fal.resp && fal.resp[k]; falCorr = { id: fal.id, al: k, d: p ? p.d.slice() : [], t: p ? p.t.slice() : [], p: p ? p.p.slice() : [] }; }
+    const cl = falClaus(fal), er = falErrs(fal), nota = falNota(fal, falCorr);
+    const xips = (part, ll) => '<div class="dic-xips">' + ll.map((x, i) => '<button type="button" data-asb="ei-falx" data-part="' + part + '" data-i="' + i + '" aria-pressed="' + falCorr[part].includes(i) + '">' + esc(x) + "</button>").join("") + "</div>";
+    h += "<h4>✅ Correcció</h4>" + selectorsAlumne(asSel);
+    if (!k) return h + '<p class="font">Tria l\'alumne.</p>';
+    return h + '<p class="font"><b>Dictat</b>: toca les paraules que ha escrit malament.</p>' + xips("d", cl) +
+      '<p class="font"><b>Text</b>: toca les faltes que no ha trobat o no ha corregit bé.</p>' + xips("t", er.map(x => x.mal + " → " + x.be)) +
+      '<p class="font"><b>Per què?</b>: toca les que ha fallat.</p>' + xips("p", fal.perque.map(x => x[0].replace(/\s*\(.*\)$/, "") + " (" + x[1] + ")")) +
+      '<div class="fila-as"><div class="xifra" style="min-width:160px"><b style="font-size:1.8rem">' + coma(nota) + "</b><span>dictat " + (cl.length - falCorr.d.length) + "/" + cl.length + " · text " + (er.length - falCorr.t.length) + "/" + er.length + " · per què " + (fal.perque.length - falCorr.p.length) + "/" + fal.perque.length + "</span></div></div>" +
+      '<div class="alum-eines">' + eBoto("falnota", "💾 Desa la nota i passa al següent alumne") + "</div>";
+  }
+  function falNota(f, c) {
+    const nd = falClaus(f).length || 1, nt = falErrs(f).length || 1, np = f.perque.length || 1;
+    return Math.round((5 * Math.max(0, nd - c.d.length) / nd + 3 * Math.max(0, nt - c.t.length) / nt + 2 * Math.max(0, np - c.p.length) / np) * 100) / 100;
+  }
+  // Edició (textareas): es passa a la fitxa oberta
+  function falEdita(el, canvi) {
+    const c = el.dataset.falc, v = el.value;
+    if (c === "dictat") fal.dictat = v.split("\n").map(x => x.trim()).filter(Boolean);
+    else if (c === "text") fal.text = v.trim();
+    else if (c === "perque") fal.perque = v.split("\n").map(x => x.trim()).filter(Boolean).map(x => { const m = x.match(/^(.*?)\s*[=:→-]\s*([A-Fa-f])\s*$/); return m ? [m[1].trim(), m[2].toUpperCase()] : [x, ""]; });
+    if (canvi) { if (EI().fal.includes(fal)) desa(); pintaAssistent(); }
+  }
+  // ---- Lectura de la foto de la pissarra ----
+  async function falLlegeixFoto(file) {
+    falFitxer = file; falLlegint = true; eiRes.fal = ""; pintaAssistent();
+    try {
+      const imatge = await fitxerABase64(file);
+      const r = await ia("Aquesta foto és una pissarra d'una classe de secundària amb les faltes d'ortografia d'un examen (títol «Faltas del examen» o semblant). Hi ha dos tipus d'entrades: " +
+        "(1) amb asterisc: «*FORMA INCORRECTA > FORMA CORRECTA», on la primera és el que va escriure l'alumne; (2) sense asterisc: una paraula ben escrita amb una lletra subratllada, que marca on es van equivocar (gairebé sempre l'accent). " +
+        "Transcriu-les TOTES, columna per columna, d'esquerra a dreta i de dalt a baix. Escriu-les en minúscules amb l'ortografia normal (majúscula només als noms propis, com María o Cataluña), conservant exactament les lletres, els accents, els guionets i els apòstrofs que hi ha escrits: NO corregeixis les formes incorrectes. " +
+        "Ignora el títol, la data, els restes esborrats i el que no sigui una entrada. Si una entrada té dues paraules separades per «/», deixa-la així. " +
+        "Respon només JSON: {\"faltes\": [{\"mal\": forma incorrecta o \"\" si no n'hi ha, \"be\": forma correcta}], \"dubtes\": [entrades que no es llegeixen bé, com a text]}.", "Llegeix la pissarra de la imatge.", { json: true, imatge });
+      const ll = (r && Array.isArray(r.faltes) ? r.faltes : []).filter(x => x && x.be).map(x => (String(x.mal || "").trim() ? "*" + String(x.mal).trim() + " > " : "") + String(x.be).trim());
+      if (!ll.length) throw new Error("No s'hi ha llegit cap falta. Fes una altra foto, més de prop i sense reflexos, o escriu-les a mà.");
+      fput("faltes", ll.join("\n"));
+      const dub = (r.dubtes || []).filter(Boolean);
+      eiMsg.fal = "✓ " + ll.length + " entrades llegides de la pissarra. Revisa-les." + (dub.length ? " Dubtes: " + esc(dub.join("; ")) + "." : "");
+    } catch (er) { eiRes.fal = '<p class="avis">' + esc(er.message || String(er)) + "</p>"; }
+    falLlegint = false; pintaAssistent();
+  }
+  // ---- Generació amb la IA (amb comprovació dels recomptes i fins a 3 intents) ----
+  async function falGenera() {
+    const faltes = String(fv("faltes", "")).trim(); if (!faltes) { alert("Fes la foto de la pissarra o escriu-hi les faltes."); return; }
+    const grup = fv("grup", falGrups()[0]), lleng = fv("lleng", "castellà"), ind = String(fv("ind", "")).trim(), reg = FAL_REG[lleng];
+    const curs = cursDeGrup({ nom: grup });
+    return eiIA(async () => {
+      let millor = null, avis = [];
+      for (let intent = 0; intent < 3; intent++) {
+        const r = await ia("Ets professor de llengua " + lleng + " de secundària. Prepara una fitxa avaluable d'ortografia per a " + curs + " a partir de les faltes que va fer el grup a l'examen (llista de sota). " +
+          "Format de la llista: «*incorrecta > correcta» quan hi ha la forma de l'alumne; només la paraula quan l'error va ser l'accent o la lletra que hi ha subratllada.\n\n" +
+          "FES-HO EXACTAMENT AIXÍ:\n" +
+          "1) «dictat»: EXACTAMENT 10 frases curtes (de 5 a 12 paraules), naturals i adequades a alumnes de 12-13 anys, sense noms d'alumnes. Cada frase té EXACTAMENT 2 paraules clau marcades entre asteriscs (*així*): en total, 20 paraules clau, totes diferents i ben escrites. Aproximadament la meitat han de ser paraules de la llista; l'altra meitat, paraules DIFERENTS que segueixin la mateixa regla (per exemple, «sabían» en lloc de «podían», «maíz» en lloc de «país», «tuvo» → «vino»).\n" +
+          "2) «text»: un paràgraf narratiu de 70 a 110 paraules amb EXACTAMENT 12 faltes d'ortografia del mateix tipus que les de la llista (sobretot les més repetides i les de context, com más/mas, está/esta, y/i, es/és o porque/porquè si hi són). Cada falta s'escriu així: {forma incorrecta|forma correcta}. Fora de les 12 marques, el text ha d'estar perfectament escrit.\n" +
+          "3) «perque»: EXACTAMENT 8 paraules de la llista (ben escrites), cadascuna amb la lletra de la regla que l'explica, sense ambigüitat. Si és la regla D, afegeix entre parèntesis una frase curta que en mostri l'ús, p. ex. «más (Quiero más agua.)». Regles:\n" + reg.map(x => x[0] + ". " + x[1]).join("\n") + "\n" +
+          "Fes servir almenys 4 regles diferents.\n" +
+          (ind ? "Indicacions del professor: " + ind + "\n" : "") +
+          (intent && avis.length ? "ATENCIÓ: l'intent anterior no complia això: " + avis.join("; ") + ". Corregeix-ho.\n" : "") +
+          "Tot en " + lleng + ", amb ortografia impecable. Respon només JSON: {\"dictat\": [10 frases], \"text\": paràgraf amb les marques {incorrecta|correcta}, \"perque\": [{\"p\": paraula, \"r\": lletra}]}.", "Faltes del grup " + grup + ":\n" + faltes, { json: true });
+        const f = { id: nouId(), d: avuiISO(), grup, lleng, faltes, dictat: (Array.isArray(r.dictat) ? r.dictat : []).map(x => String(x).trim()).filter(Boolean), text: String(r.text || "").trim(),
+          perque: (Array.isArray(r.perque) ? r.perque : []).filter(x => x && x.p).map(x => [String(x.p).trim(), String(x.r || "").trim().toUpperCase().slice(0, 1)]), resp: {} };
+        avis = falComprova(f);
+        if (!millor || avis.length < falComprova(millor).length) millor = f;
+        if (!avis.length) break;
+      }
+      if (!millor || !millor.dictat.length) throw new Error("La IA no ha retornat la fitxa; torna-ho a provar.");
+      fal = millor; falCorr = null; eiRes.fal = "";
+      const q = Q().grups.findIndex(x => x.nom === grup); if (q >= 0) asSel = { g: q, f: 0, a: "", c: "" };
+      const av = falComprova(fal);
+      eiMsg.fal = av.length ? "" : "✓ Fitxa generada. Revisa-la i desa-la.";
+    });
+  }
+  // ---- Impressió ----
+  const falRichH = t => esc(t).replace(/\*([^*]+)\*/g, "<b>$1</b>");
+  function falHTMLFitxa(f) {
+    const tx = falTx(f), lin = n => '<div style="display:flex;gap:6px;margin:15px 0 0"><span style="width:1.6em">' + n + '.</span><span style="flex:1;border-bottom:1px dotted #000"></span></div>';
+    return '<h3 style="text-align:center;margin-top:0">' + esc(tx.tit) + '</h3><p style="text-align:center;font-size:12px;margin:-4px 0 8px">' + esc(tx.mat) + " · " + esc(f.grup) + "</p>" +
+      "<h4>" + esc(tx.d) + "</h4><p>" + esc(tx.di) + "</p>" + f.dictat.map((x, i) => lin(i + 1)).join("") +
+      "<h4>" + esc(tx.t) + "</h4><p>" + esc(tx.ti) + "</p><p>" + esc(falTextAl(f)) + "</p>" +
+      '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px 18px">' + falErrs(f).map((x, i) => '<div style="display:flex;gap:4px"><span>' + (i + 1) + '.</span><span style="flex:1;border-bottom:1px dotted #000"></span></div>').join("") + "</div>" +
+      '<div style="break-inside:avoid"><h4>' + esc(tx.p) + "</h4><p>" + esc(tx.pi) + "</p>" + falReg(f).map(r => '<div style="margin-left:12px"><b>' + r[0] + ".</b> " + esc(r[1]) + "</div>").join("") +
+      '<table style="border-collapse:collapse;width:100%;margin-top:10px">' + [0, 1, 2, 3].map(r => "<tr>" + [r, r + 4].map(i => f.perque[i] ? '<td style="border:1px solid #000;padding:4px 8px;width:36%">' + esc(f.perque[i][0]) + '</td><td style="border:1px solid #000;width:14%"></td>' : "<td></td><td></td>").join("") + "</tr>").join("") + "</table></div>";
+  }
+  function falHTMLSol(f) {
+    const tx = falTx(f);
+    return '<h3 style="text-transform:none">' + esc(tx.sol) + " · " + esc(f.grup) + " · " + esc(tx.sub) + "</h3>" +
+      "<h4>" + esc(tx.sd) + '</h4><p style="font-size:12px">' + esc(tx.sdi) + "</p><ol>" + f.dictat.map(x => "<li>" + falRichH(x) + "</li>").join("") + "</ol>" +
+      "<h4>" + esc(tx.st) + "</h4><p>" + falRichH(falTextSol(f)) + '</p><p style="font-size:12px">' + falErrs(f).map(x => esc(x.mal) + " → " + esc(x.be)).join(" · ") + "</p>" +
+      "<h4>" + esc(tx.sp) + "</h4><p>" + f.perque.map(x => esc(x[0]) + " → <b>" + x[1] + "</b>").join(" · ") + "</p>";
+  }
+  // ---- Word ----
+  const falRichW = t => String(t).split("*").map((x, i) => x ? wRun(x, { b: i % 2 === 1 }) : "").filter(Boolean);
+  function falWordFitxa(f) {
+    const tx = falTx(f), lin = { tabs: '<w:tabs><w:tab w:val="left" w:pos="420"/><w:tab w:val="right" w:leader="dot" w:pos="' + W_AMPLE + '"/></w:tabs>', antes: 120, despres: 120 };
+    const t3 = '<w:tabs><w:tab w:val="left" w:pos="' + Math.round(W_AMPLE / 3) + '"/><w:tab w:val="left" w:pos="' + Math.round(W_AMPLE * 2 / 3) + '"/></w:tabs>', er = falErrs(f);
+    let h = wCapcalera(false) + wPar([wRun(tx.tit, { b: true, sz: 26 })], { centre: true, despres: 60 }) + wPar([wRun(tx.mat + " · " + f.grup, { sz: 20 })], { centre: true, despres: 120 }) +
+      wPar([wRun(tx.d, { b: true })], { antes: 240, despres: 100, keep: true }) + wPar(tx.di, { despres: 120 }) +
+      f.dictat.map((x, i) => wPar((i + 1) + ".\t\t", lin)).join("") +
+      wPar([wRun(tx.t, { b: true })], { antes: 240, despres: 100, keep: true }) + wPar(tx.ti, { despres: 120 }) + wPar(falTextAl(f), { despres: 160 });
+    for (let i = 0; i < er.length; i += 3) h += wPar(er.slice(i, i + 3).map((x, j) => (i + j + 1) + ". ...............................").join("\t"), { antes: 60, despres: 60, tabs: t3 });
+    h += wPar([wRun(tx.p, { b: true })], { antes: 240, despres: 100, keep: true }) + wPar(tx.pi, { despres: 100, keep: true }) +
+      falReg(f).map(r => wPar([wRun(r[0] + ". ", { b: true }), wRun(r[1])], { esq: 200, despres: 40, keep: true })).join("") + wPar("", { despres: 60, keep: true });
+    const am = [3700, 1346, 3700, 1346], c = (a, t) => wCel(a, wPar(t || "", { antes: 60, despres: 60 }));
+    h += wTaula(am, [0, 1, 2, 3].map(r => [r, r + 4].map(i => c(am[0], f.perque[i] ? f.perque[i][0] : "") + c(am[1], "")).join("")));
+    return h;
+  }
+  function falWordSol(f) {
+    const tx = falTx(f), tit = o => wPar([wRun(o, { b: true })], { antes: 240, despres: 100, keep: true });
+    return wCapcalera(true) + wPar([wRun(tx.sol + " · " + f.grup + " · " + tx.sub, { b: true, sz: 24 })], { centre: true, despres: 160 }) +
+      tit(tx.sd) + wPar([wRun(tx.sdi, { sz: 20 })], { despres: 100 }) + f.dictat.map((x, i) => wPar([wRun((i + 1) + ". ")].concat(falRichW(x)), { despres: 60 })).join("") +
+      tit(tx.st) + wPar(falRichW(falTextSol(f)), { despres: 100 }) + wPar([wRun(falErrs(f).map(x => x.mal + " → " + x.be).join("   ·   "), { sz: 20 })], { despres: 80 }) +
+      tit(tx.sp) + wPar(f.perque.map(x => x[0] + " → " + x[1]).join("   ·   "), { despres: 80 });
+  }
+  async function falWord(f, sol) {
+    const tx = falTx(f), nom = (sol ? (f.lleng === "català" ? "Solucionari - " : "Solucionario - ") : "") + (f.lleng === "català" ? "Faltes de l'examen - " : "Faltas del examen - ") + f.grup;
+    try { await baixaDocx(nom, [sol ? falWordSol(f) : falWordFitxa(f)]); }
+    catch (er) { alert("No s'ha pogut fer el Word: " + er.message); }
+  }
+  async function falAccio(a, b) {
+    const e = EI();
+    if (a === "falgen") return falGenera();
+    if (a === "falwordd" || a === "falsolwordd" || a === "falobre" || a === "falesb") {
+      const t = e.fal.find(x => x.id === fv("fald", "")) || e.fal[e.fal.length - 1]; if (!t) return;
+      if (a === "falwordd" || a === "falsolwordd") return falWord(t, a === "falsolwordd");
+      if (a === "falobre") { fal = t; falCorr = null; eiMsg.fal = ""; const q = Q().grups.findIndex(x => x.nom === t.grup); if (q >= 0 && Q().grups[asSel.g] !== Q().grups[q]) asSel = { g: q, f: 0, a: "", c: "" }; }
+      else if (confirm("Vols esborrar la fitxa de " + t.grup + " del " + dma(t.d) + " i les correccions?")) { e.fal.splice(e.fal.indexOf(t), 1); fput("fald", null); desa(); }
+      return pintaAssistent();
+    }
+    if (!fal) return;
+    if (a === "faltanca") { fal = null; falCorr = null; eiMsg.fal = ""; return pintaAssistent(); }
+    if (a === "faldesa") { if (!e.fal.includes(fal)) e.fal.push(fal); desa(); eiMsg.fal = "✓ Fitxa desada."; return pintaAssistent(); }
+    if (a === "falimp") { imprimeix(falTx(fal).sub + " · " + fal.grup, [falHTMLFitxa(fal)], false); return; }
+    if (a === "falsol") { imprimeix(falTx(fal).sol + " · " + fal.grup, [falHTMLSol(fal)], false, true); return; }
+    if (a === "falword" || a === "falsolword") return falWord(fal, a === "falsolword");
+    if (a === "falx") { const p = b.dataset.part, i = Number(b.dataset.i), l = falCorr[p], j = l.indexOf(i); if (j >= 0) l.splice(j, 1); else l.push(i); return pintaAssistent(); }
+    if (a === "falnota") {
+      const { g, fila, col } = triat(), nota = falNota(fal, falCorr);
+      if (!posaNota(nota)) return;
+      fal.resp = fal.resp || {}; fal.resp[clauAl(g, fila.nom)] = { d: falCorr.d.slice(), t: falCorr.t.slice(), p: falCorr.p.slice() }; desa();
+      eiMsg.fal = "✓ " + esc(nomAl(fila.nom)) + ": " + coma(nota) + " a " + esc(col.nom) + ".";
+      seguentAlumne(); falCorr = null; return pintaAssistent();
+    }
+  }
   // ---------- Connexió amb l'Assistent ----------
-  const EINES = { flu: pintaFlu, dic: pintaDic, ctl: pintaCtl, "var": pintaVar, ref: pintaRef, seg: pintaSeg, exp: pintaExp };
+  const EINES = { flu: pintaFlu, dic: pintaDic, fal: pintaFal, ctl: pintaCtl, "var": pintaVar, ref: pintaRef, seg: pintaSeg, exp: pintaExp };
   const EINES_DESPRES = {
     seg: segDespres,
     dic: () => { if (window.speechSynthesis && !veusDe("castellà").length && !veusDe("català").length) speechSynthesis.onvoiceschanged = () => { speechSynthesis.onvoiceschanged = null; if (asEina === "dic" && !$("asCos").contains(document.activeElement)) pintaAssistent(); }; },
+    fal: () => { const i = $("falFoto"); if (i) i.addEventListener("change", () => { if (i.files[0] && !asOcupat) falLlegeixFoto(i.files[0]); }); },
     ctl: () => { const i = $("ctlDoc"); if (i) i.addEventListener("change", () => { if (i.files[0]) ctlFitxer = i.files[0]; if ($("ctlDocNom")) $("ctlDocNom").textContent = ctlFitxer ? "✓ " + ctlFitxer.name : ""; }); },
     "var": () => { const i = $("varDoc"); if (i) i.addEventListener("change", () => { if (i.files[0]) varFitxer = i.files[0]; if ($("varDocNom")) $("varDocNom").textContent = varFitxer ? "✓ " + varFitxer.name : ""; }); }
   };
-  const ACCIONS_EI = { fl: fluAccio, di: dicAccio, ct: ctlAccio, va: varAccio, re: refAccio, se: segAccio, ex: expAccio };
+  const ACCIONS_EI = { fl: fluAccio, di: dicAccio, fa: falAccio, ct: ctlAccio, va: varAccio, re: refAccio, se: segAccio, ex: expAccio };
   function eiAccio(a, b) {
     const f = ACCIONS_EI[a.slice(0, 2)];
     if (f) Promise.resolve(f(a, b)).catch(e => { asOcupat = false; eiRes[asEina] = '<p class="avis">' + esc(e.message || String(e)) + "</p>"; pintaAssistent(); });
   }
   function eiCanvi(ev, canvi) {
     const el = ev.target;
+    if (el.dataset.falc && fal) { falEdita(el, canvi); return; }
     if (el.dataset.ctlq != null && ctl) {
       const p = ctl.preg[Number(el.dataset.ctlq)], c = el.dataset.ctlc; if (!p) return;
       if (c === "p") p.p = el.value; else if (c === "c") { if (el.checked) p.c = Number(el.value); } else if (/^o\d$/.test(c)) p.o[Number(c.slice(1))] = el.value;
