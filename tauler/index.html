@@ -4360,6 +4360,10 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       const ids = Array.isArray(e.forms) && e.forms.length ? e.forms : [e.form];   // 13.11.2026: diversos nivells del mateix vídeo
       const [al, ...rss] = await Promise.all([cridaIns({ accio: "classroom-alumnes", curs: e.curs })].concat(ids.map(id => cridaIns({ accio: "formulari-respostes", id: id }))));
       alumnes = al.alumnes;
+      // 15.11.2026: per a proves, el professor pot respondre el formulari amb el seu compte d'ieslabisbal.cat;
+      // si al full hi ha una fila amb el seu nom («Corney Oller , Ignasi»), la nota hi va (no és a la llista del Classroom)
+      const jo = String(correusComptes[(compteIns() || {}).url] || "").toLowerCase();
+      if (jo && !alumnes.some(a => String(a.email || "").toLowerCase() === jo)) alumnes = alumnes.concat([{ nom: "Ignasi", cognoms: "Corney Oller", complet: "Ignasi Corney Oller", email: jo }]);
       const nota = {}, ha = {};
       rss.forEach(rs => rs.respostes.forEach(r => { ha[r.email] = true; if (!rs.max) return; const n = Math.round(r.punts / rs.max * 1000) / 100; if (nota[r.email] == null || n > nota[r.email]) nota[r.email] = n; }));
       valorDe = a => e.mode === "nota" ? (nota[a.email] == null ? null : nota[a.email]) : (ha[a.email] ? 1 : 0);
