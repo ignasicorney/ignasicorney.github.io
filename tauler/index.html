@@ -339,6 +339,7 @@ a.cons-b{text-decoration:none;color:inherit;font-size:.86rem;line-height:1.3}
 .dic-xips{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}
 .dic-xips button,.exp-rub button{margin:2px;padding:6px 10px;border:1px solid var(--linia);border-radius:999px;background:var(--targeta);font:inherit;color:inherit;cursor:pointer}
 .dic-xips button[aria-pressed=true]{background:#a3161b;border-color:#a3161b;color:#fff;text-decoration:line-through}
+.dic-xips.bones button[aria-pressed=true]{background:#1f6b2a;border-color:#1f6b2a;color:#fff;text-decoration:none}
 .ctl-q{display:flex;gap:6px;align-items:flex-start;padding:6px 0;border-bottom:1px solid var(--linia)}
 .ctl-qn{font-weight:700;min-width:1.8em;padding-top:4px}
 .ctl-q input[type=text]{width:100%;box-sizing:border-box;font:inherit}
@@ -3264,14 +3265,16 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     if (!desat) return h + '<p class="font">Desa la fitxa per poder-la corregir.</p>';
     // Correcció: es toca el que l'alumne ha fallat; la nota va sola a la columna triada
     const { g, fila } = triat(), k = fila && g ? clauAl(g, fila.nom) : "";
-    if (!falCorr || falCorr.id !== fal.id || falCorr.al !== k) { const p = k && fal.resp && fal.resp[k]; falCorr = { id: fal.id, al: k, d: p ? p.d.slice() : [], t: p ? p.t.slice() : [], p: p ? p.p.slice() : [] }; }
+    // 16.11.2026: a 1r J, al «per què?» es marquen les encertades (en verd), no les fallades; per dins es continuen desant les fallades
+    const pBo = fal.grup === "1r J";
+    if (!falCorr || falCorr.id !== fal.id || falCorr.al !== k) { const p = k && fal.resp && fal.resp[k]; falCorr = { id: fal.id, al: k, d: p ? p.d.slice() : [], t: p ? p.t.slice() : [], p: p ? p.p.slice() : (pBo ? fal.perque.map((x, j) => j) : []) }; }
     const cl = falClaus(fal), er = falErrs(fal), nota = falNota(fal, falCorr);
-    const xips = (part, ll) => '<div class="dic-xips">' + ll.map((x, i) => '<button type="button" data-asb="ei-falx" data-part="' + part + '" data-i="' + i + '" aria-pressed="' + falCorr[part].includes(i) + '">' + esc(x) + "</button>").join("") + "</div>";
+    const xips = (part, ll) => { const bo = part === "p" && pBo; return '<div class="dic-xips' + (bo ? " bones" : "") + '">' + ll.map((x, i) => '<button type="button" data-asb="ei-falx" data-part="' + part + '" data-i="' + i + '" aria-pressed="' + (bo ? !falCorr[part].includes(i) : falCorr[part].includes(i)) + '">' + esc(x) + "</button>").join("") + "</div>"; };
     h += "<h4>✅ Correcció</h4>" + selectorsAlumne(asSel);
     if (!k) return h + '<p class="font">Tria l\'alumne.</p>';
     return h + '<p class="font"><b>Dictat</b>: toca les paraules que ha escrit malament.</p>' + xips("d", cl) +
       '<p class="font"><b>Text</b>: toca les faltes que no ha trobat o no ha corregit bé.</p>' + xips("t", er.map(x => x.mal + " → " + x.be)) +
-      '<p class="font"><b>Per què?</b>: toca les que ha fallat.</p>' + xips("p", fal.perque.map(x => x[0].replace(/\s*\(.*\)$/, "") + " (" + x[1] + ")")) +
+      '<p class="font"><b>Per què?</b>: ' + (pBo ? "toca les que ha encertat." : "toca les que ha fallat.") + '</p>' + xips("p", fal.perque.map(x => x[0].replace(/\s*\(.*\)$/, "") + " (" + x[1] + ")")) +
       '<div class="fila-as"><div class="xifra" style="min-width:160px"><b style="font-size:1.8rem">' + coma(nota) + "</b><span>dictat " + (cl.length - falCorr.d.length) + "/" + cl.length + " · text " + (er.length - falCorr.t.length) + "/" + er.length + " · per què " + (fal.perque.length - falCorr.p.length) + "/" + fal.perque.length + "</span></div></div>" +
       '<div class="alum-eines">' + eBoto("falnota", "💾 Desa la nota i passa al següent alumne") + "</div>";
   }
