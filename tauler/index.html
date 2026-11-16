@@ -5621,7 +5621,9 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       "«completa» (unes " + Math.max(1, Math.round(n / 5)) + " per nivell: una frase dita al fragment, copiada tal com és a la transcripció, amb una o dues paraules clau substituïdes per «___»; a \"respostes\" hi van les paraules exactes que falten, tal com es diuen, i variants acceptables si n'hi ha); " +
       "«oberta» (" + (n >= 8 ? "una o dues" : "una") + " per nivell: parteix d'una cita literal del fragment entre cometes «», copiada exactament de la transcripció, i demana interpretar-la o relacionar-la amb el fragment; respon-se en 2 o 3 línies; a \"resposta\" hi va una resposta model). " +
       (asVid.dis ? "A la versió adaptada (DIS/PSI), cap d'oberta i com a molt una de completar. " : "") +
-      "Pregunta només pel que es veu i se sent dins del fragment, segons la transcripció; no t'inventis res que no hi surti. Indica el moment (m:ss del vídeo, el de la transcripció) a què es refereix cada pregunta. " +
+      "Pregunta només pel que es veu i se sent dins del fragment, segons la transcripció; no t'inventis res que no hi surti. " +
+      // 16.11.2026: que dues preguntes no tractin les mateixes paraules o la mateixa expressió
+      "Dins de cada nivell, cada pregunta ha de tractar unes paraules, una expressió o un fet diferent: si una pregunta ja tracta unes paraules o una expressió concreta (per exemple, en demana el significat, en fa completar el buit o la cita), cap altra pregunta del mateix nivell no pot tornar a preguntar per aquestes paraules o aquesta expressió, ni amb un altre tipus de pregunta ni amb altres paraules. Indica el moment (m:ss del vídeo, el de la transcripció) a què es refereix cada pregunta. " +
       "Respon només JSON: {\"titol\": títol curt del fragment, \"resum\": 2 o 3 frases sobre el contingut, \"nivells\": [{\"nom\": un d'aquests: " + JSON.stringify(noms) + ", \"preguntes\": [{\"tipus\": \"test\", \"multiple\", \"completa\" o \"oberta\", \"enunciat\": text, \"opcions\": [textos] (només test i multiple), \"correctes\": [índexs de les correctes, des de 0] (només test i multiple), \"respostes\": [paraules exactes] (només completa), \"resposta\": resposta model (només oberta), \"moment\": \"m:ss\"}]}]}.";
     // 14.11.2026: les instruccions són en català i la IA tendia a respondre en català; l'ordre de llengua va en la llengua triada, al principi i al final
     const es = asVid.lleng !== "català";
@@ -5636,7 +5638,8 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       "«completa» (unas " + Math.max(1, Math.round(n / 5)) + " por nivel: una frase dicha en el fragmento, copiada tal cual de la transcripción y puesta entre comillas «», con una o dos palabras clave sustituidas por «___»; en \"respostes\" van las palabras exactas que faltan, tal como se dicen, y variantes aceptables si las hay); " +
       "«oberta» (" + (n >= 8 ? "una o dos" : "una") + " por nivel: parte de una cita literal del fragmento entre comillas «», copiada exactamente de la transcripción, y pide interpretarla o relacionarla con el fragmento; se responde en 2 o 3 líneas; en \"resposta\" va una respuesta modelo). " +
       (asVid.dis ? "En la versión adaptada (DIS/PSI), ninguna abierta y como mucho una de completar. " : "") +
-      "Pregunta solo por lo que se ve y se oye dentro del fragmento, según la transcripción; no inventes nada que no aparezca. Indica el momento (m:ss del vídeo, el de la transcripción) al que se refiere cada pregunta. " +
+      "Pregunta solo por lo que se ve y se oye dentro del fragmento, según la transcripción; no inventes nada que no aparezca. " +
+      "Dentro de cada nivel, cada pregunta debe tratar unas palabras, una expresión o un hecho distinto: si una pregunta ya trata unas palabras o una expresión concreta (por ejemplo, pide su significado, hace completar el hueco o la cita), ninguna otra pregunta del mismo nivel puede volver a preguntar por esas palabras o esa expresión, ni con otro tipo de pregunta ni con otras palabras. Indica el momento (m:ss del vídeo, el de la transcripción) al que se refiere cada pregunta. " +
       "Responde solo JSON, sin texto antes ni después: {\"titol\": título corto del fragmento, \"resum\": 2 o 3 frases sobre el contenido, \"nivells\": [{\"nom\": uno de estos, exactamente así: " + JSON.stringify(noms) + ", \"preguntes\": [{\"tipus\": \"test\", \"multiple\", \"completa\" u \"oberta\", \"enunciat\": texto, \"opcions\": [textos] (solo test y multiple), \"correctes\": [índices de las correctas, desde 0] (solo test y multiple), \"respostes\": [palabras exactas] (solo completa), \"resposta\": respuesta modelo (solo oberta), \"moment\": \"m:ss\"}]}]}.";
     const ordreLl = es ? "MUY IMPORTANTE: escribe TODO el contenido (título, resumen, enunciados y opciones) en castellano (español), aunque estas instrucciones estén en catalán. Solo los nombres de los niveles y las claves del JSON se quedan tal como se indican."
       : "MOLT IMPORTANT: escriu TOT el contingut (títol, resum, enunciats i opcions) en català, encara que el vídeo sigui en una altra llengua.";
@@ -5722,11 +5725,20 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
         if (x.tipus === "oberta") { const c = cita(x.enunciat); return !!String(x.resposta || "").trim() && !!c && c.split(/…|\.\.\./).filter(y => norm(y).split(" ").length >= 2).every(hiEs); }
         return Array.isArray(x.opcions) && x.opcions.length >= 2 && Array.isArray(x.correctes) && x.correctes.length && x.correctes.every(k => Number.isInteger(k) && k >= 0 && k < x.opcions.length);
       };
+      // 16.11.2026: dins d'un nivell, si una pregunta torna sobre les mateixes paraules o expressió (entre «» o les del buit) que una d'anterior, es treu
+      const claus = q => {
+        const c = [], e = String(q.enunciat || "");
+        (e.match(/[«"“][^»"”]+[»"”]/g) || []).forEach(t => { t = t.slice(1, -1); c.push(norm(q.tipus === "completa" && q.respostes && q.respostes[0] ? t.replace(/_{3,}/, q.respostes[0]) : t)); });
+        if (q.tipus === "completa") (q.respostes || []).forEach(t => c.push(norm(t)));
+        return c.filter(Boolean);
+      };
+      const toca = (a, b) => a === b || (a.split(" ").length >= 2 && b.split(" ").length >= 2 && ((" " + b + " ").indexOf(" " + a + " ") >= 0 || (" " + a + " ").indexOf(" " + b + " ") >= 0));
+      const senseRepes = ll => { const vistes = []; return ll.filter(q => { const c = claus(q); if (c.some(k => vistes.some(v => toca(k, v)))) return false; vistes.push(...c); return true; }); };
       const moment = t => { const sg = segons(t); return sg != null && sg >= i - 10 && sg <= f + 10 ? mmss(sg) : ""; };
       const neta = x => x.tipus === "completa" ? { tipus: "completa", enunciat: String(x.enunciat), respostes: x.respostes.map(String).filter(y => y.trim()), moment: moment(x.moment) }
         : x.tipus === "oberta" ? { tipus: "oberta", enunciat: String(x.enunciat), resposta: String(x.resposta), moment: moment(x.moment) }
         : { tipus: x.correctes.length > 1 ? "multiple" : "test", enunciat: String(x.enunciat), opcions: x.opcions.map(String), correctes: x.correctes, moment: moment(x.moment) };
-      const nivells = noms.map(nom => { const nv = (r && Array.isArray(r.nivells) ? r.nivells : []).find(x => x && String(x.nom).trim().toLowerCase() === nom.toLowerCase()); return { nom: nom, preguntes: nv && Array.isArray(nv.preguntes) ? nv.preguntes.filter(valida).map(neta) : [] }; }).filter(x => x.preguntes.length);
+      const nivells = noms.map(nom => { const nv = (r && Array.isArray(r.nivells) ? r.nivells : []).find(x => x && String(x.nom).trim().toLowerCase() === nom.toLowerCase()); return { nom: nom, preguntes: nv && Array.isArray(nv.preguntes) ? senseRepes(nv.preguntes.filter(valida).map(neta)) : [] }; }).filter(x => x.preguntes.length);
       if (!nivells.length) throw new Error("La IA no ha preparat preguntes vàlides; torna-ho a provar.");
       const titolV = String(r.titol || "Fragment de vídeo").trim();
       const base = location.origin + location.pathname.replace(/[^/]*$/, "") + "video.html?v=" + v + "&i=" + i + "&f=" + f + (es ? "&l=es" : "") + "&t=" + encodeURIComponent(titolV);
