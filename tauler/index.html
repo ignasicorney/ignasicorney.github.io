@@ -6736,8 +6736,8 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     { nom: "DCVB", desc: "Alcover-Moll", domini: "dcvb.iec.cat", logo: "https://dlc.iec.cat/img/LOGO_IEC2.png", color: "#1f3a68", lat1: true, url: p => "https://dcvb.iec.cat/results.asp?Word=" + p },
     { nom: "Optimot", desc: "Consultes lingüístiques", domini: "aplicacions.llengua.gencat.cat", logo: "https://aplicacions.llengua.gencat.cat/llc/img/logo_optimot.png", retall: true, color: "#c0001a", url: p => "https://aplicacions.llengua.gencat.cat/llc/AppJava/index.html?action=Principal&method=cerca_generica&tipusCerca=cerca.tot&input_cercar=" + p },
     { nom: "Termcat", desc: "Cercaterm", domini: "www.termcat.cat", color: "#e2001a", url: p => "https://www.termcat.cat/ca/cercaterm/" + p + "?type=basic" },
-    { nom: "DLE", desc: "Diccionario de la RAE", domini: "dle.rae.es", color: "#7a1f2b", url: p => "https://dle.rae.es/" + p },
-    { nom: "Sinònims", desc: "Diccionari de Softcatalà", domini: "www.softcatala.org", color: "#d4232a", url: p => "https://www.softcatala.org/diccionari-de-sinonims/paraula/" + p + "/" }
+    { nom: "Sinònims", desc: "Diccionari de Softcatalà", domini: "www.softcatala.org", color: "#d4232a", url: p => "https://www.softcatala.org/diccionari-de-sinonims/paraula/" + p + "/" },
+    { nom: "DLE", desc: "Diccionario de la RAE", domini: "dle.rae.es", color: "#7a1f2b", url: p => "https://dle.rae.es/" + p }
   ];
   $("consLlista").innerHTML = CONSULTA.map((o, i) => '<button type="button" class="cons-b" data-cons="' + i + '" title="Busca la paraula a ' + esc(o.nom) + '"><img src="' + (o.logo || "https://www.google.com/s2/favicons?domain=" + o.domini + "&sz=64") + '"' + (o.retall ? ' class="retall"' : "") + ' alt="" loading="lazy" data-ini="' + esc(o.nom.charAt(0)) + '" data-color="' + o.color + '"><span><b>' + esc(o.nom) + "</b><small>" + esc(o.desc) + "</small></span></button>").join("");
   // Si el logo no es pot carregar, hi posa la inicial amb el color de l'obra
