@@ -935,7 +935,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
   const $ = id => document.getElementById(id);
   // Blocs plegables de l'Institut: cada apartat s'obre i es tanca tocant-ne el títol
   (function () {
-    const PLEGATS = { reunions: 1, alumnes: 1, assistent: 1 };
+    const PLEGATS = { correu: 1, reunions: 1, alumnes: 1, assistent: 1 };   // 16.11.2026: el correu, plegat (s'obre sol si hi ha correu nou)
     document.querySelectorAll("#institutCos > .bloc").forEach(b => {
       const h = b.querySelector(":scope > h3.bt"); if (!h) return;
       const cos = document.createElement("div"); cos.className = "bloc-cos"; cos.id = "plec-" + b.id;
@@ -1484,7 +1484,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
   }));
 
   // ================= Correu =================
-  let gestorCorreu = null, correuCarregat = false;
+  let gestorCorreu = null, correuCarregat = false, correuNlVist = 0;
   function muntaCorreu() {
     if (gestorCorreu || !window.Correu) return;
     gestorCorreu = window.Correu.munta($("correuCos"), {
@@ -1499,6 +1499,10 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
         el.hidden = false;
         el.innerHTML = r.n + (r.ple ? "+" : "") + (r.nl ? " <small>· " + r.nl + " sense llegir</small>" : "");
         el.title = r.comptes.map(c => c.nom + ": " + c.n + (c.ple ? "+" : "") + " a la safata d'entrada" + (c.nl ? " (" + c.nl + " sense llegir)" : "")).join("\n");
+        // 16.11.2026: si arriba correu nou (més correus sense llegir que l'últim cop), el bloc s'obre sol; si el tornes a plegar, no s'obre fins que n'arribi un altre
+        const nl = Number(r.nl) || 0, b = $("correu");
+        if (nl > correuNlVist && b && b.classList.contains("plegat")) { const bt = b.querySelector(":scope > h3.bt button"); if (bt) bt.click(); }
+        correuNlVist = nl;
       }
     });
   }
