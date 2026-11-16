@@ -3077,7 +3077,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     const gi = Math.min(Number(fv("g", String(asSel.g || 0))), q.grups.length - 1), g = q.grups[gi];
     const noms = Array.from(new Set([].concat(...g.fulls.map(f => f.files.map(r => r.nom))))).sort((a, b) => nomAl(a).localeCompare(nomAl(b), "ca"));
     const al = noms.includes(fv("al", "")) ? fv("al", "") : "";
-    let h = '<p class="font">Evolució de les notes al llarg del curs, amb la mitjana del grup al costat, les tasques lliurades, les faltes de deures, la fluïdesa lectora i els errors dels dictats. Bo per a les juntes d\'avaluació.</p>' +
+    let h = '<p class="font">Evolució de les notes al llarg del curs, amb la mitjana del grup al costat, les tasques lliurades, les faltes de deures, la fluïdesa lectora, els errors dels dictats i els comentaris i incidències. Bo per a les juntes d\'avaluació.</p>' +
       '<div class="fila-as">' + eSel("g", "Grup", q.grups.map((x, i) => [String(i), nomGrup(x.nom)]), String(gi), true) + eSel("al", "Alumne", [["", "— Tot el grup —"]].concat(noms.map(n => [n, nomAl(n)])), al, true) + "</div>";
     const e = EI(), tA = trimDe(avuiISO());
     if (!al) {
@@ -3085,13 +3085,14 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
         const p = seriesSeg(g, nom).filter(x => x.v != null), mitj = p.length ? p.reduce((s, x) => s + x.v, 0) / p.length : null;
         const mig = Math.floor(p.length / 2), a1 = p.slice(0, mig), a2 = p.slice(mig), mm = l => l.reduce((s, x) => s + x.v, 0) / l.length;
         const tend = a1.length && a2.length ? mm(a2) - mm(a1) : null, tf = tasquesF(g, nom), fl = e.flu.filter(x => x.g === g.nom && x.al === nom).slice(-1)[0];
-        return { nom, mitj, tend, deu: deuresDe(g, nom).filter(d => d >= tA.de && d <= tA.fins).length, tf, fl };
+        const cm = comentarisDe(g, nom), sg = t => cm.reduce((a, x) => a + (x.etq || []).filter(y => signeEtq(y) === t).length, 0);
+        return { nom, mitj, tend, deu: deuresDe(g, nom).filter(d => d >= tA.de && d <= tA.fins).length, tf, fl, cm: cm.length, pos: sg("pos"), neg: sg("neg"), pts: puntsDe(g, nom), inc: sancionsDe(g, nom).length };
       });
-      h += '<div class="taula"><table><thead><tr><th>Alumne</th><th>Mitjana</th><th>Tendència</th><th>Tasques</th><th>📕 Deures ' + tA.nom + " trim.</th><th>Lectura (PCM)</th></tr></thead><tbody>" +
+      h += '<div class="taula"><table><thead><tr><th>Alumne</th><th>Mitjana</th><th>Tendència</th><th>Tasques</th><th>📕 Deures ' + tA.nom + " trim.</th><th>Lectura (PCM)</th><th>💬 Comentaris</th><th>⚖️ Incidències</th></tr></thead><tbody>" +
         files.map(r => '<tr><td class="nomal"><a href="#" data-asb="ei-segal" data-n="' + esc(r.nom) + '">' + esc(nomAl(r.nom)) + "</a></td>" +
           "<td" + (r.mitj != null ? ' class="' + colorNota(r.mitj) + '"' : "") + ">" + (r.mitj != null ? num2(r.mitj) : "—") + "</td>" +
           "<td>" + (r.tend == null ? "—" : r.tend > 0.4 ? "↗ millora" : r.tend < -0.4 ? "↘ baixa" : "→ estable") + "</td>" +
-          "<td>" + (r.tf.tot ? Math.round(r.tf.fet / r.tf.tot * 100) + " %" : "—") + "</td><td>" + (r.deu || "—") + "</td><td>" + (r.fl ? r.fl.pcm : "—") + "</td></tr>").join("") + "</tbody></table></div>" +
+          "<td>" + (r.tf.tot ? Math.round(r.tf.fet / r.tf.tot * 100) + " %" : "—") + "</td><td>" + (r.deu || "—") + "</td><td>" + (r.fl ? r.fl.pcm : "—") + "</td><td>" + (r.cm ? r.cm + (r.pos ? " · 👍" + r.pos : "") + (r.neg ? " · 👎" + r.neg : "") : "—") + "</td><td>" + (r.inc ? r.pts + " punts" : "—") + "</td></tr>").join("") + "</tbody></table></div>" +
         '<p class="font">Toca un nom per veure\'n la gràfica. La tendència compara la mitjana de la segona meitat de les notes amb la de la primera.</p>' +
         '<div class="alum-eines">' + eBoto("segimpg", "🖨️ Imprimeix el resum del grup", true) + "</div>";
       return h;
@@ -3114,6 +3115,10 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     } else h += '<p class="buit">Encara no hi ha notes d\'aquest alumne.</p>';
     if (Object.keys(cats).length) h += '<p class="font"><b>Errors dels dictats:</b> ' + Object.keys(cats).sort((a, b) => cats[b] - cats[a]).map(c => esc(c) + " (" + cats[c] + ")").join(" · ") + "</p>";
     if (fl.length) h += '<p class="font"><b>Lectures:</b> ' + fl.slice(-8).map(x => dma(x.d) + ": " + x.pcm + " PCM").join(" · ") + "</p>";
+    // 16.11.2026: comentaris i incidències de la columna «💬 Comentaris» del full de notes
+    const cmL = comentarisDe(g, al).slice().sort((a, b) => (a.d < b.d ? -1 : 1)), incL = sancionsDe(g, al).slice().sort((a, b) => (a.d < b.d ? -1 : 1));
+    h += '<div class="seg-com"><h4 style="margin:14px 0 4px">💬 Comentaris</h4>' + (cmL.length ? (() => { const cnt = {}; cmL.forEach(x => (x.etq || []).forEach(t => { cnt[t] = (cnt[t] || 0) + 1; })); const ks = Object.keys(cnt).sort((a, b) => cnt[b] - cnt[a]); return (ks.length ? '<p style="margin:2px 0">' + ks.map(t => '<span class="cm-tag ' + signeEtq(t) + '">' + esc(t) + (cnt[t] > 1 ? " ×" + cnt[t] : "") + "</span>").join(" ") + "</p>" : "") + '<ul class="seg-llista">' + cmL.map(x => "<li><b>" + dma(x.d) + "</b> " + (x.etq || []).map(t => '<span class="cm-tag ' + signeEtq(t) + '">' + esc(t) + "</span>").join("") + (x.text ? " " + esc(x.text) : "") + "</li>").join("") + "</ul>"; })() : '<p class="buit" style="margin:2px 0">Cap comentari.</p>') +
+      '<h4 style="margin:14px 0 4px">⚖️ Incidències' + (incL.length ? " (" + puntsDe(g, al) + " punts)" : "") + "</h4>" + (incL.length ? '<ul class="seg-llista">' + incL.map(x => { const T = SANCIONS.find(y => y.t === x.tipus) || { nom: x.tipus }; return "<li><b>" + dma(x.d) + "</b> · " + esc(T.nom) + " (" + (x.punts > 0 ? "+" : "") + x.punts + ")" + (x.motiu && x.motiu !== T.nom ? ": " + esc(x.motiu) : "") + (x.obs ? " <i>(" + esc(x.obs) + ")</i>" : "") + "</li>"; }).join("") + "</ul>" : '<p class="buit" style="margin:2px 0">Cap incidència.</p>') + "</div>";
     h += '<div class="alum-eines">' + eBoto("segimp", "🖨️ Imprimeix per a la junta", true) + "</div>";
     return h;
   }
@@ -3129,7 +3134,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       const cos = $("asCos").cloneNode(true);
       cos.querySelectorAll(".fila-as,.alum-eines,p.font:first-child,.seg-tip").forEach(x => x.remove());
       cos.querySelectorAll("details").forEach(d => d.setAttribute("open", ""));
-      const css = "<style>.xifres{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:8px 0}.xifra{border:1px solid #999;border-radius:6px;padding:6px}.xifra b{display:block;font-size:16px}.xifra span{font-size:11px}table{border-collapse:collapse;width:100%;font-size:12px}td,th{border-bottom:1px solid #ccc;padding:3px 5px;text-align:left}.seg-llegenda span{margin-right:14px;font-size:12px}.seg-llegenda i{display:inline-block;width:18px;height:3px;background:#77776f;vertical-align:middle;margin-right:5px}svg{width:100%;height:auto}summary{display:none}.n-roig{background:#f8d0cf}.n-groc{background:#fbeeb8}.n-verd{background:#d3ecd4}.n-blau{background:#d4e4f7}a{color:inherit;text-decoration:none}</style>";
+      const css = "<style>.xifres{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:8px 0}.xifra{border:1px solid #999;border-radius:6px;padding:6px}.xifra b{display:block;font-size:16px}.xifra span{font-size:11px}table{border-collapse:collapse;width:100%;font-size:12px}td,th{border-bottom:1px solid #ccc;padding:3px 5px;text-align:left}.seg-llegenda span{margin-right:14px;font-size:12px}.seg-llegenda i{display:inline-block;width:18px;height:3px;background:#77776f;vertical-align:middle;margin-right:5px}svg{width:100%;height:auto}summary{display:none}.n-roig{background:#f8d0cf}.n-groc{background:#fbeeb8}.n-verd{background:#d3ecd4}.n-blau{background:#d4e4f7}a{color:inherit;text-decoration:none}.cm-tag{display:inline-block;border:1px solid #bbb;border-radius:8px;padding:0 6px;font-size:11px;margin-right:3px}.cm-tag.pos{background:#d8f0dc}.cm-tag.neg{background:#f8d9d6}.cm-tag.neu{background:#e6e3f3}.seg-llista{margin:2px 0 0 18px;padding:0;font-size:12px}.seg-com h4{font-size:14px}</style>";
       imprimeix("Seguiment · " + (al ? nomAl(al) : nomGrup(g.nom)), css + '<h3 style="text-transform:none">Seguiment · ' + esc(al ? nomAl(al) + " · " + nomGrup(g.nom) : nomGrup(g.nom)) + " · " + dma(avuiISO()) + "</h3>" + cos.innerHTML, false, true);
     }
   }
