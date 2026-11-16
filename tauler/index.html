@@ -232,6 +232,14 @@ dialog#dlgRub{width:min(760px,calc(100vw - 24px))}
 .taula td.pts.p15{background:#fbe3c4;color:#8a4b00}
 .taula td.pts.p27{background:#f8d0cf;color:#a3161b}
 .taula td.pts:hover{outline:1px solid var(--accent);outline-offset:-1px}
+.taula td.pts .cm{font-weight:400;color:#4b3a8a;white-space:nowrap}
+.cm-etq{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}
+.cm-etq button{border:1px solid var(--linia);background:#fff;border-radius:16px;padding:4px 10px;cursor:pointer;font:inherit;font-size:.9rem}
+.cm-etq button.pos[aria-pressed=true]{background:#d8f0dc;border-color:#5aa469}
+.cm-etq button.neg[aria-pressed=true]{background:#f8d9d6;border-color:#c0504d}
+.cm-etq button.neu[aria-pressed=true]{background:#e6e3f3;border-color:#7a6bb8}
+.cm-tag{display:inline-block;border-radius:10px;padding:0 7px;font-size:.8rem;margin-right:3px}
+.cm-tag.pos{background:#d8f0dc}.cm-tag.neg{background:#f8d9d6}.cm-tag.neu{background:#e6e3f3}
 .crit-doc{overflow-x:auto}
 .crit-orig{max-height:75vh;overflow:auto;border:1px solid var(--linia);border-radius:8px;background:#f3f1ec;margin-top:6px;-webkit-overflow-scrolling:touch}
 .crit-orig .docx-wrapper{zoom:var(--z,1);padding:10px!important;background:transparent!important}
@@ -3634,22 +3642,49 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
   const sancionsDe = (g, nom) => (g.sancions && Array.isArray(g.sancions[nom]) ? g.sancions[nom] : []);
   const puntsDe = (g, nom) => Math.max(0, sancionsDe(g, nom).reduce((s, x) => s + (Number(x.punts) || 0), 0));
   const esESO = g => !/batx/i.test(String(g && g.nom));
+  // 16.11.2026: la columna «Punts» passa a ser «💬 Comentaris»: comentaris sobre l'alumne (treballa més o menys, participa…)
+  // i, a part, les incidències del sistema de punts del centre. g.comentaris = { "Nom": [{ id, d, etq: [..], text }] }
+  const ETIQUETES = [
+    ["pos", "Treballa molt"], ["pos", "Participa"], ["pos", "Millora"], ["pos", "Porta el material"], ["pos", "Ajuda els companys"], ["pos", "Fa els deures"],
+    ["neg", "Treballa poc"], ["neg", "No participa"], ["neg", "Es distreu"], ["neg", "No porta el material"], ["neg", "Xerra molt"], ["neg", "Baixa el rendiment"],
+    ["neu", "Cal parlar amb la família"], ["neu", "Cal fer-ne seguiment"]
+  ];
+  const signeEtq = t => (ETIQUETES.find(x => x[1] === t) || ["neu"])[0];
+  const comentarisDe = (g, nom) => (g.comentaris && Array.isArray(g.comentaris[nom]) ? g.comentaris[nom] : []);
   function celaPunts(g, nom) {
-    const p = puntsDe(g, nom), n = sancionsDe(g, nom).length;
-    return '<td class="pts' + (!n ? " zero" : p >= 27 ? " p27" : p >= 15 ? " p15" : "") + '" data-pts="' + esc(nom) + '" title="Faltes de disciplina: ' + p + " punts" + (p >= 27 ? " (reunió del tutor i el coordinador de nivell)" : p >= 15 && esESO(g) ? " (pot fer serveis a la comunitat)" : "") + '">' + (n ? p : "–") + "</td>";
+    const p = puntsDe(g, nom), n = sancionsDe(g, nom).length, c = comentarisDe(g, nom);
+    const darrer = c.slice().sort((a, b) => (a.d < b.d ? 1 : -1))[0];
+    const tit = "Comentaris: " + c.length + (darrer ? " (l'últim, " + dma(darrer.d) + ": " + (darrer.etq || []).concat(darrer.text ? [darrer.text] : []).join(", ") + ")" : "") +
+      " · Incidències: " + p + " punts" + (p >= 27 ? " (reunió del tutor i el coordinador de nivell)" : p >= 15 && esESO(g) ? " (pot fer serveis a la comunitat)" : "") + ". Toca per afegir-ne.";
+    const pos = c.reduce((a, x) => a + (x.etq || []).filter(t => signeEtq(t) === "pos").length, 0), neg = c.reduce((a, x) => a + (x.etq || []).filter(t => signeEtq(t) === "neg").length, 0);
+    const txt = [c.length ? '<span class="cm">💬 ' + c.length + (pos ? " 👍" + pos : "") + (neg ? " 👎" + neg : "") + "</span>" : "", n ? "⚖️ " + p : ""].filter(Boolean).join(" · ");
+    return '<td class="pts' + (!n && !c.length ? " zero" : p >= 27 ? " p27" : p >= 15 ? " p15" : "") + '" data-pts="' + esc(nom) + '" title="' + esc(tit) + '">' + (txt || "–") + "</td>";
   }
   function obreSancions(g, nom) {
     let dlg = $("dlgSan");
     if (!dlg) { dlg = document.createElement("dialog"); dlg.id = "dlgSan"; document.body.appendChild(dlg); }
     const nomMostra = nom.replace(/\s+DIS$/i, "");
-    let tipus = "incid", motiu = "", dia = avuiISO(), obs = "";
+    let tipus = "incid", motiu = "", dia = avuiISO(), obs = "", pest = "com", etq = [], cmTxt = "", cmDia = avuiISO();
+    const pestanyes = () => '<div class="vistes" role="group" aria-label="Apartat" style="margin:6px 0"><button type="button" data-san="pest" data-p="com" aria-pressed="' + (pest === "com") + '">💬 Comentaris (' + comentarisDe(g, nom).length + ')</button><button type="button" data-san="pest" data-p="inc" aria-pressed="' + (pest === "inc") + '">⚖️ Incidències (' + puntsDe(g, nom) + ' punts)</button></div>';
+    const pintaCom = () => {
+      const l = comentarisDe(g, nom).slice().sort((a, b) => (a.d < b.d ? 1 : -1));
+      dlg.innerHTML = '<form method="dialog"><h2>💬 Comentaris</h2><p style="margin:0"><b>' + esc(nomMostra) + "</b> · " + esc(nomGrup(g.nom)) + "</p>" + pestanyes() +
+        '<p class="font" style="margin:4px 0">Marca com treballa o es comporta (pots triar-ne més d\'una) i, si vols, escriu-hi un comentari.</p>' +
+        '<div class="cm-etq">' + ETIQUETES.map(x => '<button type="button" class="' + x[0] + '" data-san="etq" data-t="' + esc(x[1]) + '" aria-pressed="' + etq.includes(x[1]) + '">' + (x[0] === "pos" ? "👍 " : x[0] === "neg" ? "👎 " : "📌 ") + esc(x[1]) + "</button>").join("") + "</div>" +
+        '<label>Comentari (opcional)<textarea id="cmText" rows="2">' + esc(cmTxt) + "</textarea></label>" +
+        '<div class="fila"><label>Dia<input type="date" id="cmDia" value="' + cmDia + '"></label></div>' +
+        '<div class="botons" style="justify-content:flex-start;margin-top:0"><button type="button" class="boto" data-san="afcom">+ Afegeix el comentari</button></div>' +
+        (l.length ? '<ul class="deu-dates">' + l.map(x => '<li><span><b>' + dma(x.d) + "</b> " + (x.etq || []).map(t => '<span class="cm-tag ' + signeEtq(t) + '">' + esc(t) + "</span>").join("") + (x.text ? "<br><small>" + esc(x.text) + "</small>" : "") + '</span><button type="button" class="boto clar" data-san="treucom" data-id="' + esc(x.id) + '" title="Treu-ho">✕</button></li>').join("") + "</ul>" : '<p class="font">Encara no hi ha cap comentari.</p>') +
+        '<div class="botons"><button type="button" class="boto clar" data-san="tanca">Fet</button></div></form>';
+    };
     const pinta = () => {
+      if (pest === "com") return pintaCom();
       const l = sancionsDe(g, nom).slice().sort((a, b) => (a.d < b.d ? 1 : -1)), p = puntsDe(g, nom), S = SANCIONS.find(x => x.t === tipus) || SANCIONS[1];
       if (!S.motius.includes(motiu)) motiu = S.motius[0];
       const avisos = [];
       if (p >= 27) avisos.push("Ha arribat a 27 punts: el tutor i el coordinador de nivell s'han de reunir per decidir les mesures correctores.");
       if (p >= 15 && esESO(g)) avisos.push("Té 15 punts o més: el tutor i el coordinador de nivell li poden oferir venir una tarda una hora i mitja a fer serveis a la comunitat i rebaixar 9 punts.");
-      dlg.innerHTML = '<form method="dialog"><h2>⚖️ Faltes de disciplina</h2><p style="margin:0"><b>' + esc(nomMostra) + "</b> · " + esc(nomGrup(g.nom)) + "</p>" +
+      dlg.innerHTML = '<form method="dialog"><h2>💬 Comentaris</h2><p style="margin:0"><b>' + esc(nomMostra) + "</b> · " + esc(nomGrup(g.nom)) + "</p>" + pestanyes() +
         '<div class="deu-trims"><span>Punts: <b>' + p + "</b></span>" + ["retard", "incid", "lleu", "greu", "moltgreu"].map(t => { const n = sancionsDe(g, nom).filter(x => x.tipus === t).length; return n ? "<span>" + esc(SANCIONS.find(x => x.t === t).nom) + ": <b>" + n + "</b></span>" : ""; }).join("") + "</div>" +
         avisos.map(a => '<p class="avis" style="margin:4px 0">' + esc(a) + "</p>").join("") +
         '<div class="fila"><label>Tipus<select id="sanTipus">' + SANCIONS.filter(x => x.t !== "serveis" || esESO(g)).map(x => '<option value="' + x.t + '"' + (x.t === tipus ? " selected" : "") + ">" + esc(x.nom) + " (" + (x.punts > 0 ? "+" : "") + x.punts + ")</option>").join("") + "</select></label>" +
@@ -3668,10 +3703,30 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       if (id === "sanTipus") { tipus = ev.target.value; motiu = ""; obs = ($("sanObs") || {}).value || ""; pinta(); }
       else if (id === "sanMotiu") { motiu = ev.target.value; obs = ($("sanObs") || {}).value || ""; pinta(); }
       else if (id === "sanDia" && esISO(ev.target.value)) dia = ev.target.value;
+      else if (id === "cmDia" && esISO(ev.target.value)) cmDia = ev.target.value;
     };
+    dlg.oninput = ev => { if (ev.target.id === "cmText") cmTxt = ev.target.value; };
     dlg.onclick = ev => {
       const b = ev.target.closest("[data-san]"); if (!b) return;
       if (b.dataset.san === "tanca") { dlg.close(); return; }
+      if (b.dataset.san === "pest") { pest = b.dataset.p; pinta(); return; }
+      if (b.dataset.san === "etq") { const t = b.dataset.t; etq = etq.includes(t) ? etq.filter(x => x !== t) : etq.concat(t); pinta(); return; }
+      if (b.dataset.san === "afcom" || b.dataset.san === "treucom") {
+        g.comentaris = g.comentaris || {};
+        const lc = comentarisDe(g, nom).slice();
+        if (b.dataset.san === "afcom") {
+          cmTxt = String(($("cmText") || {}).value || "").trim();
+          const v = ($("cmDia") || {}).value; if (esISO(v)) cmDia = v;
+          if (!etq.length && !cmTxt) { alert("Marca alguna etiqueta o escriu un comentari."); return; }
+          lc.push({ id: nouId(), d: cmDia, etq: etq.slice(), text: cmTxt });
+          etq = []; cmTxt = "";
+        } else {
+          const i = lc.findIndex(x => x.id === b.dataset.id);
+          if (i >= 0 && confirm("Vols treure aquest comentari?")) lc.splice(i, 1); else return;
+        }
+        g.comentaris[nom] = lc; if (!lc.length) delete g.comentaris[nom];
+        desa(); pinta(); pintaAlumnes(); return;
+      }
       g.sancions = g.sancions || {};
       const l = sancionsDe(g, nom).slice();
       if (b.dataset.san === "afegeix") {
@@ -4182,7 +4237,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       const tcol = {}; f.columnes.forEach(c => { tcol[c.nom] = tipusColor(f, c, valor); });
       const ombra = (c, v) => { if (!tcol[c.nom]) return ""; if (esExempt(v)) return " n-ex"; const n = numOpcional(v); if (n === null) return ""; if (tcol[c.nom] === "sobre") return " n-sobre"; return tcol[c.nom] === "form" ? (n === 0 ? " f-0" : " f-1") : " " + colorNota(n); };
       const tD = trimDeures(f), dAvui = avuiISO();
-      h += '<div class="taula' + (qDeures ? " passa" : "") + '"><table><thead><tr><th>Alumne/a</th><th class="deu" title="Faltes de deures del ' + tD.nom + ' trimestre. Toca la xifra per afegir-ne o treure\'n.">📕 Deures ' + tD.nom + '</th><th class="pts" title="Faltes de disciplina (sistema de punts del centre). Toca la xifra per apuntar-ne.">⚖️ Punts</th>' + f.columnes.map(c => "<th" + (c.tipus === "calc" ? ' class="calc" title="' + esc(c.formula) + '"' : "") + ">" + esc(c.nom) + (desquadres[c.nom] ? " ⚠️" : "") + "</th>").join("") + "</tr></thead><tbody>" +
+      h += '<div class="taula' + (qDeures ? " passa" : "") + '"><table><thead><tr><th>Alumne/a</th><th class="deu" title="Faltes de deures del ' + tD.nom + ' trimestre. Toca la xifra per afegir-ne o treure\'n.">📕 Deures ' + tD.nom + '</th><th class="pts" title="Comentaris sobre l\'alumne (com treballa, participa…) i incidències del sistema de punts del centre. Toca la casella per afegir-ne.">💬 Comentaris</th>' + f.columnes.map(c => "<th" + (c.tipus === "calc" ? ' class="calc" title="' + esc(c.formula) + '"' : "") + ">" + esc(c.nom) + (desquadres[c.nom] ? " ⚠️" : "") + "</th>").join("") + "</tr></thead><tbody>" +
         (files.map(r => { const psi = (g.psi || []).includes(r.nom) || !!psiDocDe(g, r.nom), dis = /\sDIS$/i.test(r.nom); return '<tr><td class="nomal' + (psi ? " psi" : "") + '" data-alumne="' + esc(r.nom) + '" title="' + (psi ? "PSI" : "") + (psi && dis ? " · " : "") + (dis ? "Dislèxia" : "") + '">' + esc(dis ? r.nom.replace(/\s+DIS$/i, "") : r.nom) + (psi || psiDocDe(g, r.nom) ? ' <span class="marca-al psi" data-psidoc="' + esc(r.nom) + '" role="button" title="' + (psiDocDe(g, r.nom) ? "Obre el PSI" : "Encara no hi ha el document del PSI: toca per pujar-lo") + '">PSI' + (psiDocDe(g, r.nom) ? "" : "?") + "</span>" : "") + (dis ? ' <span class="marca-al">DIS</span>' : "") + (g.correus && g.correus[r.nom] ? ' <a href="#" class="mail-al" data-mail="' + esc(g.correus[r.nom]) + '" title="Escriu a ' + esc(g.correus[r.nom]) + '" aria-label="Escriu un correu a ' + esc(dis ? r.nom.replace(/\s+DIS$/i, "") : r.nom) + '">✉️</a>' : "") + (origenDe(g, r.nom) ? '<span class="al-extra"><span class="orig-al" title="Grup d\'origen' + (tutorDe(origenDe(g, r.nom)) ? " i tutor/a" : "") + '">(' + esc(origenDe(g, r.nom)) + (tutorDe(origenDe(g, r.nom)) ? " · " + esc(tutorDe(origenDe(g, r.nom))) + mailTutor(tutorDe(origenDe(g, r.nom))) : "") + ")</span></span>" : "") + "</td>" + (() => { const ds = deuresDe(g, r.nom), n = ds.filter(d => d >= tD.de && d <= tD.fins).length, av = ds.includes(dAvui); return '<td class="deu' + (n ? "" : " zero") + (av ? " avui" : "") + '" data-deu="' + esc(r.nom) + '" title="' + n + " falt" + (n === 1 ? "a" : "es") + " de deures al " + tD.nom + " trimestre" + (av ? " (una d'avui)" : "") + '">' + (n || "–") + "</td>"; })() + celaPunts(g, r.nom) + f.columnes.map(c => {
           const v = valor(f, r, c), txt = mostraValor(v);
           if (c.tipus === "calc") {
@@ -4344,13 +4399,14 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       if (nou === null) return;
       g.psi = g.psi || [];
       if (!nou.trim()) {
-        if (confirm("Vols esborrar «" + vell + "» i totes les seves notes del grup " + g.nom + "?")) { g.fulls.forEach(fu => { fu.files = fu.files.filter(r => r.nom !== vell); }); g.psi = g.psi.filter(n => n !== vell); if (g.deures) delete g.deures[vell]; if (g.sancions) delete g.sancions[vell]; if (g.correus) delete g.correus[vell]; if (g.psiDocs) delete g.psiDocs[vell]; if (g.origen) delete g.origen[vell]; }
+        if (confirm("Vols esborrar «" + vell + "» i totes les seves notes del grup " + g.nom + "?")) { g.fulls.forEach(fu => { fu.files = fu.files.filter(r => r.nom !== vell); }); g.psi = g.psi.filter(n => n !== vell); if (g.deures) delete g.deures[vell]; if (g.sancions) delete g.sancions[vell]; if (g.comentaris) delete g.comentaris[vell]; if (g.correus) delete g.correus[vell]; if (g.psiDocs) delete g.psiDocs[vell]; if (g.origen) delete g.origen[vell]; }
       } else {
         const net = nou.trim().replace(/\s+dis$/i, " DIS");
         g.fulls.forEach(fu => fu.files.forEach(r => { if (r.nom === vell) r.nom = net; }));
         if (g.origen && g.origen[vell] && net !== vell) { g.origen[net] = g.origen[vell]; delete g.origen[vell]; }
         if (g.psiDocs && g.psiDocs[vell] && net !== vell) { g.psiDocs[net] = g.psiDocs[vell]; delete g.psiDocs[vell]; idbMouPSI(clauPSI(g, vell), clauPSI(g, net)); }
         if (g.sancions && g.sancions[vell] && net !== vell) { g.sancions[net] = sancionsDe(g, net).concat(g.sancions[vell]); delete g.sancions[vell]; }
+        if (g.comentaris && g.comentaris[vell] && net !== vell) { g.comentaris[net] = comentarisDe(g, net).concat(g.comentaris[vell]); delete g.comentaris[vell]; }
         if (g.correus && g.correus[vell] && net !== vell) { g.correus[net] = g.correus[vell]; delete g.correus[vell]; }
         if (g.deures && g.deures[vell] && net !== vell) { posaDeures(g, net, deuresDe(g, net).concat(g.deures[vell])); delete g.deures[vell]; }
         const teniaPsi = g.psi.includes(vell);
