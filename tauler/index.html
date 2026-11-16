@@ -273,7 +273,9 @@ dialog#dlgCB{width:min(760px,calc(100vw - 24px))}
 .cb-it.be{background:#dff3df}.cb-it.malament{background:#f8d9d9}.cb-it.buida{background:#eee}.cb-it.dubte{border-color:#e0b000}
 .cb-it.mig{background:#fff3c4}
 .vd-corr{border:1px solid var(--linia);border-radius:8px;padding:8px 10px;margin:8px 0}
-.vd-corr-l{display:flex;flex-direction:column;gap:4px;margin:6px 0}
+.vd-corr-l{columns:2;column-gap:14px;margin:6px 0}
+.vd-corr-l .cb-it{break-inside:avoid;margin-bottom:4px}
+@media (max-width:640px){.vd-corr-l{columns:1}}
 .vd-pista{color:var(--suau);font-weight:400;flex:1 1 16em}
 /* Dreceres de consulta */
 .cons-form{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
