@@ -72,7 +72,11 @@
     boto.style.cssText = "background:none;border:0;padding:0 4px;cursor:pointer;font-size:1.1em;color:inherit";
     input.style.cssText += ";position:absolute;opacity:0;width:1px;height:1px;padding:0;border:0;pointer-events:none";
     input.tabIndex = -1;
-    input.after(vis, boto);
+    // 16.11.2026: el camp i el 📅 van junts en una sola línia (dins d'una etiqueta en graella, el 📅 queia a sota)
+    const caixa = document.createElement("span");
+    caixa.style.cssText = "display:inline-flex;align-items:center;gap:2px;white-space:nowrap";
+    caixa.append(vis, boto);
+    input.after(caixa);
 
     const pinta = () => { const v = descValor.get.call(input); vis.value = v ? v.split("-").reverse().join(".") : ""; };
     Object.defineProperty(input, "value", {
