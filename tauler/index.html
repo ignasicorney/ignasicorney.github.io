@@ -5604,6 +5604,8 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
   async function preparaVideo(transcripcio) {
     const fet = html => { asOcupat = false; asResultat = html; pintaAssistent(); };
     const v = idYoutube(asVid.url), i = segons(asVid.i), f = segons(asVid.f), n = Math.max(3, Math.min(20, parseInt(asVid.n, 10) || 8));
+    // 16.11.2026: se'n demanen unes quantes de més per nivell; després de treure les no vàlides i les repetides, es queden les n primeres
+    const nDem = n + Math.max(3, Math.ceil(n * 0.3));
     if (!v) return fet('<p class="avis">Enganxa l\'enllaç d\'un vídeo de YouTube.</p>');
     if (i == null || f == null) return fet('<p class="avis">Escriu l\'inici i el final del fragment en minuts i segons (p. ex. 2:15 i 6:45).</p>');
     if (f - i < VID_MIN || f - i > VID_MAX) return fet('<p class="avis">El fragment ha de durar entre 4 i 5 minuts; ara en fa ' + (f > i ? mmss(f - i) : "0:00") + ".</p>");
@@ -5612,7 +5614,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     const triats = VID_NIVELLS[asVid.niv] ? [asVid.niv] : ["Nivell bàsic", "Nivell mitjà", "Nivell avançat"];
     const noms = triats.concat(asVid.dis ? ["Versió adaptada (DIS/PSI)"] : []);
     const sistema = "Ets un professor de llengua " + (asVid.lleng === "català" ? "catalana" : "castellana") + " de secundària a Catalunya. Prepara preguntes de comprensió audiovisual d'un fragment de vídeo (del " + mmss(i) + " al " + mmss(f) + ") per a alumnat de " + asVid.curs + ", redactades en " + asVid.lleng + ". " +
-      (triats.length > 1 || asVid.dis ? "Fes aquests nivells, cadascun amb " + n + " preguntes: " : "Fes només aquest nivell, amb " + n + " preguntes: ") + triats.map(x => "«" + x + "» (" + VID_NIVELLS[x] + ")").join(", ") +
+      (triats.length > 1 || asVid.dis ? "Fes aquests nivells, cadascun amb " + nDem + " preguntes: " : "Fes només aquest nivell, amb " + nDem + " preguntes: ") + triats.map(x => "«" + x + "» (" + VID_NIVELLS[x] + ")").join(", ") +
       (asVid.dis ? " i «Versió adaptada (DIS/PSI)» (enunciats curts d'una sola idea, vocabulari senzill, 3 opcions clares, preguntes més guiades i en l'ordre del vídeo)" : "") + ". " +
       // 14.11.2026: no sempre a-b-c-d: també vertader/fals, completar amb les paraules literals i alguna d'oberta amb una cita textual
       "Barreja tipus de preguntes (no les facis totes a-b-c-d): " +
@@ -5630,7 +5632,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     // 14.11.2026 (nit): si l'activitat és en castellà, totes les instruccions van en castellà (els noms dels nivells es queden igual)
     const NIV_ES_D = { "Nivell bàsic": "información explícita y literal, orden de los hechos", "Nivell mitjà": "idea principal, relaciones entre ideas, vocabulario en contexto", "Nivell mitjà-alt": "idea principal y relaciones entre ideas, vocabulario en contexto, y también inferencias e intención de quien habla", "Nivell avançat": "inferencias, intención de quien habla, tono, recursos expresivos, valoración" };
     const sistemaEs = "Eres profesor de lengua castellana de secundaria en Cataluña. Prepara preguntas de comprensión audiovisual de un fragmento de vídeo (del " + mmss(i) + " al " + mmss(f) + ") para alumnado de " + asVid.curs.replace("d'ESO", "de ESO").replace("de batxillerat", "de bachillerato") + ". Todo el contenido (título, resumen, enunciados, opciones y respuestas modelo) se escribe en castellano. " +
-      (triats.length > 1 || asVid.dis ? "Haz estos niveles, cada uno con " + n + " preguntas: " : "Haz solo este nivel, con " + n + " preguntas: ") + triats.map(x => "«" + x + "» (" + NIV_ES_D[x] + ")").join(", ") +
+      (triats.length > 1 || asVid.dis ? "Haz estos niveles, cada uno con " + nDem + " preguntas: " : "Haz solo este nivel, con " + nDem + " preguntas: ") + triats.map(x => "«" + x + "» (" + NIV_ES_D[x] + ")").join(", ") +
       (asVid.dis ? " y «Versió adaptada (DIS/PSI)» (enunciados cortos de una sola idea, vocabulario sencillo, 3 opciones claras, preguntas más guiadas y en el orden del vídeo)" : "") + ". " +
       "Mezcla tipos de preguntas (no todas a-b-c-d): " +
       "«test» (una sola correcta; de 2 a 4 opciones; también puede ser de verdadero o falso, con las opciones «Verdadero» y «Falso»); " +
