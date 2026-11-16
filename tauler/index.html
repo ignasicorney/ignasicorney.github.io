@@ -3265,8 +3265,8 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     if (!desat) return h + '<p class="font">Desa la fitxa per poder-la corregir.</p>';
     // Correcció: es toca el que l'alumne ha fallat; la nota va sola a la columna triada
     const { g, fila } = triat(), k = fila && g ? clauAl(g, fila.nom) : "";
-    // 16.11.2026: a 1r J, al «per què?» es marquen les encertades (en verd), no les fallades; per dins es continuen desant les fallades
-    const pBo = fal.grup === "1r J";
+    // 16.11.2026: al «per què?» es marquen les encertades (en verd), no les fallades; per dins es continuen desant les fallades
+    const pBo = true;
     if (!falCorr || falCorr.id !== fal.id || falCorr.al !== k) { const p = k && fal.resp && fal.resp[k]; falCorr = { id: fal.id, al: k, d: p ? p.d.slice() : [], t: p ? p.t.slice() : [], p: p ? p.p.slice() : (pBo ? fal.perque.map((x, j) => j) : []) }; }
     const cl = falClaus(fal), er = falErrs(fal), nota = falNota(fal, falCorr);
     const xips = (part, ll) => { const bo = part === "p" && pBo; return '<div class="dic-xips' + (bo ? " bones" : "") + '">' + ll.map((x, i) => '<button type="button" data-asb="ei-falx" data-part="' + part + '" data-i="' + i + '" aria-pressed="' + (bo ? !falCorr[part].includes(i) : falCorr[part].includes(i)) + '">' + esc(x) + "</button>").join("") + "</div>"; };
