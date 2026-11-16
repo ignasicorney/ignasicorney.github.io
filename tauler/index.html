@@ -1724,6 +1724,18 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
   const tYoutube = u => { const m = String(u || "").match(/[?&](?:t|start)=(?:(\d+)h)?(?:(\d+)m)?(\d+)s?\b/); return m ? (Number(m[1] || 0) * 3600 + Number(m[2] || 0) * 60 + Number(m[3])) : null; };
   const segons = t => { const x = String(t || "").trim().replace(/[.,']/g, ":"); if (!x) return null; if (/^\d+$/.test(x)) return Number(x); const m = x.match(/^(?:(\d+):)?(\d{1,2}):(\d{2})$/); return m ? Number(m[1] || 0) * 3600 + Number(m[2]) * 60 + Number(m[3]) : null; };
   const mmss = s => (s >= 3600 ? Math.floor(s / 3600) + ":" + String(Math.floor(s % 3600 / 60)).padStart(2, "0") : Math.floor(s / 60)) + ":" + String(s % 60).padStart(2, "0");
+  // 16.11.2026: les preguntes (enunciats, opcions i respostes) no poden dur referències temporals al vídeo
+  // («en el minuto 1:08», «(2:15)», «[1:03]», «al principio del fragmento»…); el moment només va al solucionari
+  const netejaTemps = s => {
+    const T = /\d{1,2}:\d{2}|\bminut[oa]?s?\b|\bsegund[oa]s?\b|\bsegons?\b|\b(?:principi|principio|inici|inicio|començament|comienzo|final|meitat|mitad)\s+(?:del?|de l'|dels)\s*(?:fragment[o]?|v[íi]deo)\b/i;
+    let t = String(s == null ? "" : s)
+      .replace(/\s*[\(\[]\s*(?:min(?:uto|ut)?\.?\s*)?\d{1,2}:\d{2}(?:\s*(?:-|–|a|al)\s*\d{1,2}:\d{2})?\s*[\)\]]/gi, "")
+      .replace(/\s*,?\s*\b(?:en|a|al|hacia|cap a|sobre|cerca del?|prop del?|alrededor del?|durante|durant|des del?|desde)\s+(?:(?:el|la|los|les|l')\s*)?(?:minut[oa]?|segund[oa]|segon|moment[oa]?|instante?)\s+(?:\d{1,2}:\d{2}|\d+)\b/gi, "")
+      .replace(/\s*,?\s*\b(?:al|a l'|en el|hacia el|cap al|cerca del|prop del)\s*(?:principi|principio|inici|inicio|començament|comienzo|final|meitat|mitad)\s+(?:del?|de l'|dels)\s*(?:fragment[o]?|v[íi]deo)\b/gi, "");
+    const m = t.match(/^(\s*[¿¡]?)([^,«»"“?¿!]{1,80}),\s*/);
+    if (m && T.test(m[2])) { const r = t.slice(m[0].length); t = m[1] + r.charAt(0).toUpperCase() + r.slice(1); }
+    return t.replace(/\s{2,}/g, " ").replace(/\s+([,.;:?!»])/g, "$1").replace(/([«\[(])\s+/g, "$1").replace(/^([¿¡]?)\s*,\s*/, "$1").trim().replace(/^([¿¡]?)([a-zàèéíòóúñç])/, (a, b, c) => b + c.toUpperCase());
+  };
   function pintaAssistent() {
     const cos = $("asCos"); if (!cos) return;
     const textAbans = $("asText") ? $("asText").value : "";
@@ -2582,6 +2594,11 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     if (asDades.html) asDades.html = asDades.html.replace(/ <span class="font">\[\d+:\d{2}\]<\/span>/g, "");
     if (asDades.text) asDades.text = asDades.text.replace(/^(\d+\. .*?) \[\d+:\d{2}\]$/gm, "$1");
     x.html = String(x.html || "").replace(/(<ol class="preg">[\s\S]*?)<\/ol>/g, m => m.replace(/ <span class="font">\[\d+:\d{2}\]<\/span>/g, ""));
+    // 16.11.2026: i també les referències temporals dins de les preguntes (enunciats, opcions i respostes)
+    const ntP = h => String(h || "").replace(/<li>([^<]+)/g, (z, t) => "<li>" + netejaTemps(t));
+    x.html = ntP(x.html); if (asDades.html) asDades.html = ntP(asDades.html);
+    if (asDades.video && Array.isArray(asDades.video.nivells)) asDades.video.nivells.forEach(nv => (nv.preguntes || []).forEach(q => { q.enunciat = netejaTemps(q.enunciat); if (q.opcions) q.opcions = q.opcions.map(netejaTemps); if (q.resposta) q.resposta = netejaTemps(q.resposta); }));
+    if (asDades.text) asDades.text = asDades.text.split("\nSOLUCIONARI\n").map((b, k) => k ? b : b.split("\n").map(l => /^\s*(\d+\.|[a-d]\))\s/.test(l) ? l.replace(/^(\s*(?:\d+\.|[a-d]\))\s)(.*)$/, (z, p, r) => p + netejaTemps(r)) : l).join("\n")).join("\nSOLUCIONARI\n");
     // avís a dalt del resultat, perquè es vegi que s'ha obert el desat (i no el que hi havia abans)
     asResultat = '<p class="avis" style="background:#e8f5e9;color:#1b5e20;border-color:#a5d6a7">📂 Obert el qüestionari desat «' + esc(x.titol) + "» (" + esc(x.data.split("-").reverse().join(".")) + ")" + (x.formulari ? ", amb el seu formulari" : "") + ".</p>" + (/id="vdInstr"/.test(x.html || "") ? "" : capsaInstr()) + (x.html || "");
     pintaAssistent();
@@ -5628,7 +5645,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       (asVid.dis ? "A la versió adaptada (DIS/PSI), cap d'oberta i com a molt una de completar. " : "") +
       "Pregunta només pel que es veu i se sent dins del fragment, segons la transcripció; no t'inventis res que no hi surti. " +
       // 16.11.2026: que dues preguntes no tractin les mateixes paraules o la mateixa expressió
-      "Dins de cada nivell, cada pregunta ha de tractar unes paraules, una expressió o un fet diferent: si una pregunta ja tracta unes paraules o una expressió concreta (per exemple, en demana el significat, en fa completar el buit o la cita), cap altra pregunta del mateix nivell no pot tornar a preguntar per aquestes paraules o aquesta expressió, ni amb un altre tipus de pregunta ni amb altres paraules. Indica el moment (m:ss del vídeo, el de la transcripció) a què es refereix cada pregunta. " +
+      "Dins de cada nivell, cada pregunta ha de tractar unes paraules, una expressió o un fet diferent: si una pregunta ja tracta unes paraules o una expressió concreta (per exemple, en demana el significat, en fa completar el buit o la cita), cap altra pregunta del mateix nivell no pot tornar a preguntar per aquestes paraules o aquesta expressió, ni amb un altre tipus de pregunta ni amb altres paraules. Indica el moment (m:ss del vídeo, el de la transcripció) a què es refereix cada pregunta. El moment va NOMÉS al camp \"moment\": els enunciats, les opcions i les respostes no poden contenir cap referència temporal al vídeo (ni minuts ni segons, ni m:ss, ni «al minut…», «al principi del fragment», «cap al final del vídeo» o semblants), tampoc dins de les frases copiades de la transcripció. " +
       "Respon només JSON: {\"titol\": títol curt del fragment, \"resum\": 2 o 3 frases sobre el contingut, \"nivells\": [{\"nom\": un d'aquests: " + JSON.stringify(noms) + ", \"preguntes\": [{\"tipus\": \"test\", \"multiple\", \"completa\" o \"oberta\", \"enunciat\": text, \"opcions\": [textos] (només test i multiple), \"correctes\": [índexs de les correctes, des de 0] (només test i multiple), \"respostes\": [paraules exactes] (només completa), \"resposta\": resposta model (només oberta), \"moment\": \"m:ss\"}]}]}.";
     // 14.11.2026: les instruccions són en català i la IA tendia a respondre en català; l'ordre de llengua va en la llengua triada, al principi i al final
     const es = asVid.lleng !== "català";
@@ -5644,7 +5661,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       "«oberta» (" + (n >= 8 ? "una o dos" : "una") + " por nivel: parte de una cita literal del fragmento entre comillas «», copiada exactamente de la transcripción, y pide interpretarla o relacionarla con el fragmento; se responde en 2 o 3 líneas; en \"resposta\" va una respuesta modelo). " +
       (asVid.dis ? "En la versión adaptada (DIS/PSI), ninguna abierta y como mucho una de completar. " : "") +
       "Pregunta solo por lo que se ve y se oye dentro del fragmento, según la transcripción; no inventes nada que no aparezca. " +
-      "Dentro de cada nivel, cada pregunta debe tratar unas palabras, una expresión o un hecho distinto: si una pregunta ya trata unas palabras o una expresión concreta (por ejemplo, pide su significado, hace completar el hueco o la cita), ninguna otra pregunta del mismo nivel puede volver a preguntar por esas palabras o esa expresión, ni con otro tipo de pregunta ni con otras palabras. Indica el momento (m:ss del vídeo, el de la transcripción) al que se refiere cada pregunta. " +
+      "Dentro de cada nivel, cada pregunta debe tratar unas palabras, una expresión o un hecho distinto: si una pregunta ya trata unas palabras o una expresión concreta (por ejemplo, pide su significado, hace completar el hueco o la cita), ninguna otra pregunta del mismo nivel puede volver a preguntar por esas palabras o esa expresión, ni con otro tipo de pregunta ni con otras palabras. Indica el momento (m:ss del vídeo, el de la transcripción) al que se refiere cada pregunta. El momento va SOLO en el campo \"moment\": los enunciados, las opciones y las respuestas no pueden contener ninguna referencia temporal al vídeo (ni minutos ni segundos, ni m:ss, ni «en el minuto…», «al principio del fragmento», «hacia el final del vídeo» o similares), tampoco dentro de las frases copiadas de la transcripción. " +
       "Responde solo JSON, sin texto antes ni después: {\"titol\": título corto del fragmento, \"resum\": 2 o 3 frases sobre el contenido, \"nivells\": [{\"nom\": uno de estos, exactamente así: " + JSON.stringify(noms) + ", \"preguntes\": [{\"tipus\": \"test\", \"multiple\", \"completa\" u \"oberta\", \"enunciat\": texto, \"opcions\": [textos] (solo test y multiple), \"correctes\": [índices de las correctas, desde 0] (solo test y multiple), \"respostes\": [palabras exactas] (solo completa), \"resposta\": respuesta modelo (solo oberta), \"moment\": \"m:ss\"}]}]}.";
     const ordreLl = es ? "MUY IMPORTANTE: escribe TODO el contenido (título, resumen, enunciados y opciones) en castellano (español), aunque estas instrucciones estén en catalán. Solo los nombres de los niveles y las claves del JSON se quedan tal como se indican."
       : "MOLT IMPORTANT: escriu TOT el contingut (títol, resum, enunciats i opcions) en català, encara que el vídeo sigui en una altra llengua.";
@@ -5741,9 +5758,9 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       const toca = (a, b) => a === b || (a.split(" ").length >= 2 && b.split(" ").length >= 2 && ((" " + b + " ").indexOf(" " + a + " ") >= 0 || (" " + a + " ").indexOf(" " + b + " ") >= 0));
       const senseRepes = ll => { const vistes = []; return ll.filter(q => { const c = claus(q); if (c.some(k => vistes.some(v => toca(k, v)))) return false; vistes.push(...c); return true; }); };
       const moment = t => { const sg = segons(t); return sg != null && sg >= i - 10 && sg <= f + 10 ? mmss(sg) : ""; };
-      const neta = x => x.tipus === "completa" ? { tipus: "completa", enunciat: String(x.enunciat), respostes: x.respostes.map(String).filter(y => y.trim()), moment: moment(x.moment) }
-        : x.tipus === "oberta" ? { tipus: "oberta", enunciat: String(x.enunciat), resposta: String(x.resposta), moment: moment(x.moment) }
-        : { tipus: x.correctes.length > 1 ? "multiple" : "test", enunciat: String(x.enunciat), opcions: x.opcions.map(String), correctes: x.correctes, moment: moment(x.moment) };
+      const neta = x => x.tipus === "completa" ? { tipus: "completa", enunciat: netejaTemps(x.enunciat), respostes: x.respostes.map(String).filter(y => y.trim()), moment: moment(x.moment) }
+        : x.tipus === "oberta" ? { tipus: "oberta", enunciat: netejaTemps(x.enunciat), resposta: netejaTemps(x.resposta), moment: moment(x.moment) }
+        : { tipus: x.correctes.length > 1 ? "multiple" : "test", enunciat: netejaTemps(x.enunciat), opcions: x.opcions.map(netejaTemps), correctes: x.correctes, moment: moment(x.moment) };
       const dNiv = (rr, nom) => (rr && Array.isArray(rr.nivells) ? rr.nivells : []).find(x => x && String(x.nom).trim().toLowerCase() === nom.toLowerCase());
       const totsNiv = noms.map(nom => { const nv = dNiv(r, nom); return { nom: nom, preguntes: nv && Array.isArray(nv.preguntes) ? senseRepes(nv.preguntes.filter(valida).map(neta)) : [] }; });
       // 16.11.2026: es verifica cada nivell i, si en falten (perquè se n'han tret de no vàlides o repetides), se'n demanen més fins arribar al número demanat
