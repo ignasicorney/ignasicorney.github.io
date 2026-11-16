@@ -5699,6 +5699,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       catch (e) { if (!/dades vàlides/.test(e.message)) throw e; progres("La resposta no era completa; es torna a demanar…"); r = await geminiJSON(gq, sistemaLl, peticio); }
       // 14.11.2026: si l'activitat és en castellà i la IA ha escrit en català (les instruccions són en català), es tradueix
       // sense tocar les cites literals, les paraules de completar ni les claus del JSON
+      const TRAD = "Eres traductor del catalán al castellano. Recibes un JSON con preguntas de comprensión audiovisual y lo devuelves idéntico, con la misma estructura y las mismas claves, pero con todo el texto en castellano: título, resumen, enunciados, opciones y respuestas modelo. NO cambies: los nombres de los niveles (campo \"nom\"), los índices de \"correctes\", el campo \"moment\", las palabras de \"respostes\" ni las citas literales entre comillas «», que ya están en la lengua del vídeo. Responde solo el JSON.";
       const llengua = obj => {
         const nv = (obj && Array.isArray(obj.nivells) ? obj.nivells : []).flatMap(x => (x && x.preguntes) || []);
         const t = " " + nv.map(q => [q.enunciat].concat(q.opcions || [], q.resposta || []).join(" ")).join(" ").toLowerCase().replace(/«[^»]*»/g, " ").replace(/[^a-zàèéíòóúïüçñ·']+/g, " ") + " ";
@@ -5707,7 +5708,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       };
       if (es && llengua(r) === "ca") {
         asPas = "Pas 3 de 3: traducció al castellà"; progres("Passant les preguntes al castellà…");
-        r = await geminiJSON(gq, "Eres traductor del catalán al castellano. Recibes un JSON con preguntas de comprensión audiovisual y lo devuelves idéntico, con la misma estructura y las mismas claves, pero con todo el texto en castellano: título, resumen, enunciados, opciones y respuestas modelo. NO cambies: los nombres de los niveles (campo \"nom\"), los índices de \"correctes\", el campo \"moment\", las palabras de \"respostes\" ni las citas literales entre comillas «», que ya están en la lengua del vídeo. Responde solo el JSON.", JSON.stringify(r));
+        r = await geminiJSON(gq, TRAD, JSON.stringify(r));
       }
       // Comprovació: les paraules de completar i les cites de les obertes han de ser a la transcripció
       const norm = t => String(t || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/\[[^\]]*\]/g, " ").replace(/[^a-zñç0-9]+/g, " ").trim();
@@ -5738,7 +5739,26 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       const neta = x => x.tipus === "completa" ? { tipus: "completa", enunciat: String(x.enunciat), respostes: x.respostes.map(String).filter(y => y.trim()), moment: moment(x.moment) }
         : x.tipus === "oberta" ? { tipus: "oberta", enunciat: String(x.enunciat), resposta: String(x.resposta), moment: moment(x.moment) }
         : { tipus: x.correctes.length > 1 ? "multiple" : "test", enunciat: String(x.enunciat), opcions: x.opcions.map(String), correctes: x.correctes, moment: moment(x.moment) };
-      const nivells = noms.map(nom => { const nv = (r && Array.isArray(r.nivells) ? r.nivells : []).find(x => x && String(x.nom).trim().toLowerCase() === nom.toLowerCase()); return { nom: nom, preguntes: nv && Array.isArray(nv.preguntes) ? senseRepes(nv.preguntes.filter(valida).map(neta)) : [] }; }).filter(x => x.preguntes.length);
+      const dNiv = (rr, nom) => (rr && Array.isArray(rr.nivells) ? rr.nivells : []).find(x => x && String(x.nom).trim().toLowerCase() === nom.toLowerCase());
+      const totsNiv = noms.map(nom => { const nv = dNiv(r, nom); return { nom: nom, preguntes: nv && Array.isArray(nv.preguntes) ? senseRepes(nv.preguntes.filter(valida).map(neta)) : [] }; });
+      // 16.11.2026: es verifica cada nivell i, si en falten (perquè se n'han tret de no vàlides o repetides), se'n demanen més fins arribar al número demanat
+      for (let volta = 1; volta <= 3; volta++) {
+        const curts = totsNiv.filter(nv => nv.preguntes.length < n);
+        if (!curts.length) break;
+        progres("Faltaven preguntes (" + curts.map(nv => nv.nom + ": " + nv.preguntes.length + " de " + n).join(", ") + "); se'n demanen més, volta " + volta + " de 3…");
+        const dem = curts.map(nv => es
+          ? "Nivel «" + nv.nom + "»: ya hay estas " + nv.preguntes.length + " preguntas:\n" + nv.preguntes.map(q => "- " + q.enunciat + (q.respostes ? " → " + q.respostes.join(" / ") : "")).join("\n") + "\nHaz EXACTAMENTE " + (n - nv.preguntes.length) + " preguntas nuevas más para este nivel, que no traten ninguna de las palabras, expresiones ni hechos que ya preguntan estas."
+          : "Nivell «" + nv.nom + "»: ja hi ha aquestes " + nv.preguntes.length + " preguntes:\n" + nv.preguntes.map(q => "- " + q.enunciat + (q.respostes ? " → " + q.respostes.join(" / ") : "")).join("\n") + "\nFes EXACTAMENT " + (n - nv.preguntes.length) + " preguntes noves més per a aquest nivell, que no tractin cap de les paraules, expressions ni fets que ja pregunten aquestes.").join("\n\n");
+        const peu = es ? "\n\nDevuelve en el JSON solo las preguntas nuevas, en \"nivells\" con el mismo \"nom\" de nivel." : "\n\nTorna al JSON només les preguntes noves, a \"nivells\" amb el mateix \"nom\" de nivell.";
+        let r2;
+        try { r2 = await geminiJSON(gq, sistemaLl, peticio + "\n\n" + dem + peu); } catch (e) { break; }
+        if (es && llengua(r2) === "ca") { try { r2 = await geminiJSON(gq, TRAD, JSON.stringify(r2)); } catch (e) {} }
+        curts.forEach(nv => { const x = dNiv(r2, nv.nom); if (x && Array.isArray(x.preguntes)) nv.preguntes = senseRepes(nv.preguntes.concat(x.preguntes.filter(valida).map(neta))); });
+      }
+      totsNiv.forEach(nv => { nv.preguntes = nv.preguntes.slice(0, n); });
+      const nivells = totsNiv.filter(x => x.preguntes.length);
+      const falten = nivells.filter(nv => nv.preguntes.length < n);
+      const avisFalten = falten.length ? '<p class="avis">Després de tres intents, Gemini no ha arribat al número demanat: ' + esc(falten.map(nv => nv.nom + ", " + nv.preguntes.length + " de " + n).join("; ")) + ".</p>" : "";
       if (!nivells.length) throw new Error("La IA no ha preparat preguntes vàlides; torna-ho a provar.");
       const titolV = String(r.titol || "Fragment de vídeo").trim();
       const base = location.origin + location.pathname.replace(/[^/]*$/, "") + "video.html?v=" + v + "&i=" + i + "&f=" + f + (es ? "&l=es" : "") + "&t=" + encodeURIComponent(titolV);
@@ -5758,7 +5778,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       // 14.11.2026: el solucionari va a part (es veu i s'imprimeix separat de les preguntes)
       asDades.sol = "<h3>" + esc(titolV) + "</h3><h4>Solucionari</h4><ul>" + nivells.map(nv => "<li><b>" + esc(nv.nom) + ":</b> " + nv.preguntes.map((q, k) => esc(solQ(q, k))).join(" · ") + "</li>").join("") + "</ul>";
       const sel = '<select id="asQrNiv" aria-label="Nivell del qüestionari">' + nivells.map((nv, k) => "<option" + (k === (nivells.length >= 3 && triats.length > 1 ? 1 : 0) ? " selected" : "") + ">" + esc(nv.nom) + "</option>").join("") + "</select>";
-      fet(capsaInstr() + '<div class="alum-eines"><a class="boto clar" href="' + esc(enllac) + '" target="_blank" rel="noopener">▶️ Mira el fragment</a><button type="button" class="boto clar" data-asb="copia">Copia</button><button type="button" class="boto clar" data-asb="imprimeix">🖨️ Imprimeix / PDF</button><button type="button" class="boto clar" data-asb="imprimeixsol">🔑 Solucionari</button><button type="button" class="boto clar" data-asb="videoword">⬇️ Word</button><button type="button" class="boto clar" data-asb="videosolword">⬇️ Solucionari en Word</button>' + (compteIns() ? sel + '<button type="button" class="boto" data-asb="qr">📱 Qüestionari en línia</button>' : "") + '</div><div class="as-doc">' + capcaleraDoc() + asDades.html + '</div><div class="as-doc as-sol">' + asDades.sol + "</div>");
+      fet(avisFalten + capsaInstr() + '<div class="alum-eines"><a class="boto clar" href="' + esc(enllac) + '" target="_blank" rel="noopener">▶️ Mira el fragment</a><button type="button" class="boto clar" data-asb="copia">Copia</button><button type="button" class="boto clar" data-asb="imprimeix">🖨️ Imprimeix / PDF</button><button type="button" class="boto clar" data-asb="imprimeixsol">🔑 Solucionari</button><button type="button" class="boto clar" data-asb="videoword">⬇️ Word</button><button type="button" class="boto clar" data-asb="videosolword">⬇️ Solucionari en Word</button>' + (compteIns() ? sel + '<button type="button" class="boto" data-asb="qr">📱 Qüestionari en línia</button>' : "") + '</div><div class="as-doc">' + capcaleraDoc() + asDades.html + '</div><div class="as-doc as-sol">' + asDades.sol + "</div>");
       // 14.11.2026: cada qüestionari preparat es desa sol (amb la transcripció) i es pot tornar a obrir des de «📂 Qüestionaris desats»
       desaVideo(transcripcio);
       pintaAssistent();   // perquè la llista de desats ja hi surti
