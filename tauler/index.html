@@ -5515,9 +5515,13 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       for (let intent = 0; intent < 3; intent++) {
         if (intent) { progres("Gemini va carregat; es torna a provar d'aquí a " + Math.round((espera || 5000 * intent) / 1000) + " s…"); await new Promise(ok => setTimeout(ok, espera || 5000 * intent)); }
         let r;
-        try { r = await fetch("https://generativelanguage.googleapis.com/v1beta/models/" + m + ":generateContent", { method: "POST", headers: { "Content-Type": "application/json", "x-goog-api-key": g.clau }, body: JSON.stringify(cos) }); }
-        catch (e) { msg = "no s'ha pogut connectar amb Gemini"; codi = 0; continue; }
-        codi = r.status; const j = await r.json().catch(() => ({}));
+        // 16.11.2026: es diu què s'espera i, si Gemini no respon en 2 minuts, es talla la petició i es torna a provar
+        progres("Esperant resposta de Gemini (intent " + (intent + 1) + " de 3, model " + m + ")…");
+        const atura = new AbortController(), rellotge = setTimeout(() => atura.abort(), 120000);
+        try { r = await fetch("https://generativelanguage.googleapis.com/v1beta/models/" + m + ":generateContent", { method: "POST", headers: { "Content-Type": "application/json", "x-goog-api-key": g.clau }, body: JSON.stringify(cos), signal: atura.signal }); }
+        catch (e) { clearTimeout(rellotge); if (e && e.name === "AbortError") { msg = "Gemini no ha respost en 2 minuts"; codi = 503; } else { msg = "no s'ha pogut connectar amb Gemini"; codi = 0; } continue; }
+        codi = r.status; const j = await r.json().catch(() => ({})); clearTimeout(rellotge);
+        if (atura.signal.aborted) { msg = "Gemini no ha respost en 2 minuts"; codi = 503; continue; }
         if (r.ok) { d = j; break fora; }
         msg = (j.error && j.error.message) || ("error " + r.status);
         const ri = ((j.error && j.error.details) || []).find(x => x && x.retryDelay);
@@ -5553,9 +5557,13 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       for (let intent = 0; intent < 3; intent++) {
         if (intent) { progres("Gemini va carregat; es torna a provar d'aquí a " + Math.round((espera || 5000 * intent) / 1000) + " s…"); await new Promise(ok => setTimeout(ok, espera || 5000 * intent)); }
         let r;
-        try { r = await fetch("https://generativelanguage.googleapis.com/v1beta/models/" + m + ":generateContent", { method: "POST", headers: { "Content-Type": "application/json", "x-goog-api-key": clau }, body: JSON.stringify(cos) }); }
-        catch (e) { msg = "no s'ha pogut connectar amb Gemini"; codi = 0; continue; }
-        codi = r.status; const j = await r.json().catch(() => ({}));
+        // 16.11.2026: es diu què s'espera i, si Gemini no respon en 2 minuts, es talla la petició i es torna a provar
+        progres("Esperant resposta de Gemini (tros " + mmss(inici) + "–" + mmss(final) + ") (intent " + (intent + 1) + " de 3, model " + m + ")…");
+        const atura = new AbortController(), rellotge = setTimeout(() => atura.abort(), 120000);
+        try { r = await fetch("https://generativelanguage.googleapis.com/v1beta/models/" + m + ":generateContent", { method: "POST", headers: { "Content-Type": "application/json", "x-goog-api-key": clau }, body: JSON.stringify(cos), signal: atura.signal }); }
+        catch (e) { clearTimeout(rellotge); if (e && e.name === "AbortError") { msg = "Gemini no ha respost en 2 minuts"; codi = 503; } else { msg = "no s'ha pogut connectar amb Gemini"; codi = 0; } continue; }
+        codi = r.status; const j = await r.json().catch(() => ({})); clearTimeout(rellotge);
+        if (atura.signal.aborted) { msg = "Gemini no ha respost en 2 minuts"; codi = 503; continue; }
         if (r.ok) { d = j; break fora; }
         msg = (j.error && j.error.message) || ("error " + r.status);
         const ri = ((j.error && j.error.details) || []).find(x => x && x.retryDelay);
