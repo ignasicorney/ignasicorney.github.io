@@ -5516,13 +5516,14 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       for (let intent = 0; intent < 3; intent++) {
         if (intent) { for (let falta = Math.round((espera || 5000 * intent) / 1000); falta > 0; falta--) { progres("Gemini va carregat; es torna a provar d'aquí a " + falta + " s…"); await new Promise(ok => setTimeout(ok, 1000)); } }
         let r;
+        // 16.11.2026: preparar moltes preguntes pot passar de 2 minuts; aquí el límit és de 4
         // 16.11.2026: es diu què s'espera i, si Gemini no respon en 2 minuts, es talla la petició i es torna a provar
         const base = "Esperant resposta de Gemini (intent " + (intent + 1) + " de 3, model " + m + "):", t0 = Date.now(); progres(base + " 0 s");
-        const atura = new AbortController(), tic = setInterval(() => progres(base + " " + Math.round((Date.now() - t0) / 1000) + " s (màxim 120 s)"), 1000), rellotge = setTimeout(() => atura.abort(), 120000), para = () => { clearTimeout(rellotge); clearInterval(tic); };
+        const atura = new AbortController(), tic = setInterval(() => progres(base + " " + Math.round((Date.now() - t0) / 1000) + " s (màxim 240 s)"), 1000), rellotge = setTimeout(() => atura.abort(), 240000), para = () => { clearTimeout(rellotge); clearInterval(tic); };
         try { r = await fetch("https://generativelanguage.googleapis.com/v1beta/models/" + m + ":generateContent", { method: "POST", headers: { "Content-Type": "application/json", "x-goog-api-key": g.clau }, body: JSON.stringify(cos), signal: atura.signal }); }
-        catch (e) { para(); if (e && e.name === "AbortError") { msg = "Gemini no ha respost en 2 minuts"; codi = 503; } else { msg = "no s'ha pogut connectar amb Gemini"; codi = 0; } continue; }
+        catch (e) { para(); if (e && e.name === "AbortError") { msg = "Gemini no ha respost en 4 minuts"; codi = 503; } else { msg = "no s'ha pogut connectar amb Gemini"; codi = 0; } continue; }
         codi = r.status; const j = await r.json().catch(() => ({})); para();
-        if (atura.signal.aborted) { msg = "Gemini no ha respost en 2 minuts"; codi = 503; continue; }
+        if (atura.signal.aborted) { msg = "Gemini no ha respost en 4 minuts"; codi = 503; continue; }
         if (r.ok) { d = j; break fora; }
         msg = (j.error && j.error.message) || ("error " + r.status);
         const ri = ((j.error && j.error.details) || []).find(x => x && x.retryDelay);
