@@ -271,6 +271,10 @@ dialog#dlgCB{width:min(760px,calc(100vw - 24px))}
 .cb-it{display:flex!important;align-items:center;gap:4px;padding:2px 4px;border-radius:6px;border:2px solid transparent;color:var(--text)!important;font-size:.85rem!important}
 .cb-it span{min-width:2.4em;font-weight:700}
 .cb-it.be{background:#dff3df}.cb-it.malament{background:#f8d9d9}.cb-it.buida{background:#eee}.cb-it.dubte{border-color:#e0b000}
+.cb-it.mig{background:#fff3c4}
+.vd-corr{border:1px solid var(--linia);border-radius:8px;padding:8px 10px;margin:8px 0}
+.vd-corr-l{display:flex;flex-direction:column;gap:4px;margin:6px 0}
+.vd-pista{color:var(--suau);font-weight:400;flex:1 1 16em}
 /* Dreceres de consulta */
 .cons-form{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
 .cons-form input{flex:1 1 220px;font-size:1rem}
@@ -1771,7 +1775,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     if (asOcupat && !asInici) asInici = new Date();
     if (!asOcupat) { asInici = null; asProgres = ""; }
     const hInici = asInici ? asInici.toLocaleTimeString("ca-ES", { hour: "2-digit", minute: "2-digit", second: "2-digit" }) : "";
-    h += '<div id="asSortida">' + (asOcupat ? '<p class="cr-buit">Treballant… (començat a les ' + hInici + ')' + (asProgres ? " · " + esc(asProgres) : "") + '</p>' : asResultat + (asResultat && asModel ? '<p class="font">Fet amb el model de reserva (' + esc(asModel) + ') perquè Gemini estava saturat.</p>' : "")) + "</div>";
+    h += '<div id="asSortida">' + (asOcupat ? '<p class="cr-buit">Treballant… (començat a les ' + hInici + ')' + (asProgres ? " · " + esc(asProgres) : "") + '</p>' : (asEina === "video" ? vdAmbEines(asResultat) : asResultat) + (asResultat && asModel ? '<p class="font">Fet amb el model de reserva (' + esc(asModel) + ') perquè Gemini estava saturat.</p>' : "")) + "</div>";
     cos.innerHTML = h;
     if (asEina === "cb") pintaCB();
     if (EINES_DESPRES[asEina]) EINES_DESPRES[asEina]();
@@ -1813,6 +1817,8 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     if (a === "vdinstrdesa") { desaInstr(); return; }
     if (a === "trusa" || a === "trdel") { accioTranscripcio(a, b.dataset.k); return; }
     if (a === "vdobre" || a === "vdesb") { accioVideoDesat(a, b.dataset.id); return; }
+    if (a === "vdescurca") { escurcaVideo(b); return; }
+    if (a.indexOf("vdc") === 0) { vdCorrAccio(a, b); return; }
     if (a === "videoword" || a === "videosolword") { videoWord(a === "videosolword"); return; }
     if (a === "imprimeixsol") { if (asDades && asDades.sol) imprimeix(asDades.titol + " · Solucionari", asDades.sol, false, false, true); return; }
     if (a === "imprimeix") { imprimeix(asDades.titol, asDades.html, false); return; }
@@ -1922,6 +1928,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     else if (el.dataset.as === "f") { asSel.f = Number(el.value); asSel.a = ""; const t = ($("asText") || {}).value; pintaAssistent(); if ($("asText")) $("asText").value = t || ""; }
     else if (el.dataset.as === "a") asSel.a = el.value;
     else if (el.dataset.as === "c") asSel.c = el.value;
+    else if (el.dataset.vdc) vdCorrCanvi(el);
     else if (el.id === "asFoto") $("asFotoNom").textContent = el.files[0] ? el.files[0].name : "";
   });
 
@@ -2523,6 +2530,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     const x = asDades.desatId && (dades.videos || []).find(y => y.id === asDades.desatId);
     if (x) { x.html = asResultat; x.dades = Object.assign({}, asDades); delete x.dades.desatId; desa(); }
     pintaAssistent();
+    if (vd.curt) escurcaVideo(null, true);   // les instruccions noves van a l'enllaç: se'n fa un de curt nou
     if (asDades.qr) alert("Fet. El formulari ja creat porta les instruccions d'abans: si el publiques ara, a la tasca del Classroom hi aniran les noves, però dins del formulari no canvien (les pots editar amb «Revisa el formulari»).");
   }
   // 15.11.2026: transcripcions de vídeo desades, per fer-les servir sense tornar a mirar el vídeo
@@ -2571,6 +2579,154 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     pintaAssistent();
     if ($("asText")) $("asText").value = x.transcripcio || "";
     const o = $("asSortida"); if (o) o.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+  // ---------- 🔗 Enllaç curt del fragment (16.11.2026) ----------
+  // Primer TinyURL; si el navegador no hi pot accedir, is.gd o v.gd (per JSONP, sense clau ni CORS)
+  const esCurt = u => /^https?:\/\/(tinyurl\.com|is\.gd|v\.gd)\//i.test(String(u || ""));
+  function escurcaJSONP(srv, url) {
+    return new Promise((ok, ko) => {
+      const cb = "__escurca" + Date.now() + Math.floor(Math.random() * 1e4), s = document.createElement("script");
+      const neteja = () => { clearTimeout(t); delete window[cb]; s.remove(); };
+      const t = setTimeout(() => { neteja(); ko(new Error("no respon")); }, 10000);
+      window[cb] = d => { neteja(); d && d.shorturl ? ok(String(d.shorturl)) : ko(new Error((d && d.errormessage) || "error")); };
+      s.onerror = () => { neteja(); ko(new Error("no respon")); };
+      s.src = "https://" + srv + "/create.php?format=json&callback=" + cb + "&url=" + encodeURIComponent(url);
+      document.head.appendChild(s);
+    });
+  }
+  async function escurcaURL(url) {
+    try { const r = await fetch("https://tinyurl.com/api-create.php?url=" + encodeURIComponent(url)); const t = (await r.text()).trim(); if (r.ok && /^https:\/\/tinyurl\.com\/[\w-]+$/.test(t)) return t; } catch (e) {}
+    for (const srv of ["is.gd", "v.gd"]) { try { const c = await escurcaJSONP(srv, url); if (esCurt(c)) return c; } catch (e) {} }
+    throw new Error("No s'ha pogut escurçar l'enllaç: els escurçadors no responen. Torna-ho a provar d'aquí a una estona.");
+  }
+  // Canvia l'enllaç llarg pel curt a tot arreu: pàgina, full imprès, Word, text copiat, tasca del Classroom i qüestionari desat
+  async function escurcaVideo(b, silenci) {
+    const vd = asDades && asDades.video; if (!vd || !vd.enllac || esCurt(vd.enllac)) return;
+    const llarg = vd.enllac;
+    if (b) { b.disabled = true; b.textContent = "Escurçant…"; }
+    try {
+      const curt = await escurcaURL(llarg);
+      if (!asDades || asDades.video !== vd || vd.enllac !== llarg) return;   // mentrestant s'ha obert un altre qüestionari
+      const canvia = h => String(h || "").split(llarg).join(curt).split(esc(llarg)).join(esc(curt));
+      asDades.text = canvia(asDades.text); asDades.html = canvia(asDades.html);
+      Object.assign(vd, { enllac: curt, llarg: llarg, desc: canvia(vd.desc), curt: true });
+      asResultat = canvia(asResultat);
+      const x = asDades.desatId && (dades.videos || []).find(y => y.id === asDades.desatId);
+      if (x) { x.html = canvia(x.html); x.dades = Object.assign({}, asDades); delete x.dades.desatId; }
+      desa(); pintaAssistent();
+    } catch (e) { if (b) { b.disabled = false; b.textContent = "🔗 Escurça l'enllaç"; } if (!silenci) alert(e.message); }
+  }
+  // ---------- ✍️ Correcció en paper dels qüestionaris de vídeo (16.11.2026) ----------
+  // L'alumnat respon el full imprès; s'hi marca el que ha respost cada alumne i la nota (sobre 10) va a la columna
+  // triada (per defecte EO1). Test i resposta múltiple es corregeixen sols; completar i obertes: ✓ 1 · ½ · ✗ 0.
+  let vdCorr = null;   // { vid, obert, niv, g, f, col, al, r, msg }
+  const vdTrimFull = g => { const tA = trimDe(avuiISO()); const i = g.fulls.findIndex(x => { const m = String(x.nom).match(/([123])\s*(r|n|er|º|a)?\s*trim/i); return !!m && TRIMESTRES[Number(m[1]) - 1] === tA; }); return i >= 0 ? i : 0; };
+  const vdIgual = (a, b) => { const x = a.slice().sort(), y = b.slice().sort(); return x.length === y.length && x.every((v, k) => v === y[k]); };
+  function vdCorrEstat() {
+    const vd = asDades && asDades.video; if (!vd) return null;
+    if (!vdCorr || vdCorr.vid !== vd) {
+      const q = Q(), g = Math.min(Number(dades.vdCorrG || 0), Math.max(q.grups.length - 1, 0));
+      vdCorr = { vid: vd, obert: false, niv: vd.nivells.length >= 3 ? 1 : 0, g: g, f: q.grups[g] ? vdTrimFull(q.grups[g]) : 0, col: "EO1", al: "", r: [], msg: "" };
+    }
+    return vdCorr;
+  }
+  function vdCarregaAl(c, g, nom) { c.al = nom || ""; const p = nom && g && c.vid.corr && c.vid.corr[clauAl(g, nom)]; c.r = p ? p.r.slice() : []; if (p) c.niv = p.niv; }
+  function vdPuntua(nv, r) {
+    let p = 0, pend = 0;
+    nv.preguntes.forEach((q, i) => { const x = r[i];
+      if (q.tipus === "test") { if (x === q.correctes[0]) p += 1; }
+      else if (q.tipus === "multiple") { if (Array.isArray(x) && vdIgual(x, q.correctes)) p += 1; }
+      else if (x == null) pend++; else p += Number(x) || 0; });
+    return { punts: p, total: nv.preguntes.length, pend: pend, nota: Math.round(p / nv.preguntes.length * 1000) / 100 };
+  }
+  function vdCorrHTML() {
+    const c = vdCorr; if (!c || !c.obert || !asDades || c.vid !== asDades.video) return "";
+    const vd = c.vid, q = Q();
+    if (!q.grups.length) return '<div class="vd-corr"><h4>✍️ Correcció en paper</h4><p class="font">Primer cal tenir algun grup a «Alumnes i qualificacions».</p></div>';
+    c.g = Math.min(c.g, q.grups.length - 1);
+    const g = q.grups[c.g], f = g.fulls[Math.min(c.f, Math.max(g.fulls.length - 1, 0))] || { nom: "", columnes: [], files: [] };
+    const nv = vd.nivells[Math.min(c.niv, vd.nivells.length - 1)], corr = vd.corr || {};
+    let h = '<div class="vd-corr"><h4>✍️ Correcció en paper</h4><p class="font">Marca el que ha respost cada alumne al full. Les de test es corregeixen soles; les de completar i les obertes, les puntues tu (✓ 1 · ½ · ✗ 0). La nota, sobre 10, va a la columna que hi hagi escrita.</p>' +
+      '<div class="fila-as"><label>Grup<select data-vdc="g">' + q.grups.map((x, i) => '<option value="' + i + '"' + (x === g ? " selected" : "") + ">" + esc(x.nom) + "</option>").join("") + "</select></label>" +
+      '<label>Full<select data-vdc="f">' + g.fulls.map((x, i) => '<option value="' + i + '"' + (x === f ? " selected" : "") + ">" + esc(x.nom) + "</option>").join("") + "</select></label>" +
+      '<label>Columna<input type="text" data-vdc="col" list="vdcCols" value="' + esc(c.col) + '" style="width:5em"><datalist id="vdcCols">' + f.columnes.filter(x => x.tipus === "nota").map(x => '<option value="' + esc(x.nom) + '">').join("") + "</datalist></label>" +
+      '<label>Alumne<select data-vdc="al"><option value="">—</option>' + alumnesOrdenats(f).map(r => { const k = corr[clauAl(g, r.nom)]; return '<option value="' + esc(r.nom) + '"' + (c.al === r.nom ? " selected" : "") + ">" + (k ? "✓ " : "") + esc(nomAl(r.nom)) + (k ? " · " + coma(k.nota) : "") + "</option>"; }).join("") + "</select></label></div>" +
+      (c.msg ? '<p class="font" style="color:#1f6b2a;font-weight:600">' + c.msg + "</p>" : "");
+    if (vd.nivells.length > 1) h += '<div class="vistes" role="group" aria-label="Nivell" style="margin:6px 0;flex-wrap:wrap">' + vd.nivells.map((x, i) => '<button type="button" data-asb="vdcniv" data-i="' + i + '" aria-pressed="' + (x === nv) + '">' + esc(x.nom) + "</button>").join("") + "</div>";
+    if (!c.al) return h + '<p class="font">Tria l\'alumne.</p></div>';
+    h += '<div class="vd-corr-l">' + nv.preguntes.map((p, i) => {
+      const x = c.r[i]; let cl, ops;
+      if (p.opcions) {
+        const sel = p.tipus === "multiple" ? (Array.isArray(x) ? x : []) : (x == null ? [] : [x]);
+        cl = !sel.length ? "buida" : (p.tipus === "multiple" ? vdIgual(sel, p.correctes) : x === p.correctes[0]) ? "be" : "malament";
+        ops = p.opcions.map((o, j) => '<button type="button" data-asb="vdcr" data-q="' + i + '" data-l="' + j + '" aria-pressed="' + sel.includes(j) + '" title="' + esc(o) + '">' + "abcdefgh"[j] + "</button>").join("");
+      } else {
+        cl = x == null ? "buida" : x === 1 ? "be" : x === 0 ? "malament" : "mig";
+        ops = [[1, "✓"], [0.5, "½"], [0, "✗"]].map(([v, t]) => '<button type="button" data-asb="vdcp" data-q="' + i + '" data-v="' + v + '" aria-pressed="' + (x === v) + '">' + t + "</button>").join("");
+      }
+      const pista = p.tipus === "completa" ? "Ha de posar: " + p.respostes.join(" / ") : p.tipus === "oberta" ? "Resposta model: " + p.resposta : p.tipus === "multiple" ? "(més d'una de correcta)" : "";
+      return '<div class="cb-it ' + cl + '"><span>' + (i + 1) + '</span><span class="cb-ops">' + ops + "</span>" + (pista ? '<small class="vd-pista">' + esc(pista) + "</small>" : "") + "</div>";
+    }).join("") + "</div>";
+    const pt = vdPuntua(nv, c.r);
+    return h + '<div class="fila-as"><div class="xifra" style="min-width:140px"><b style="font-size:1.8rem">' + coma(pt.nota) + "</b><span>" + coma(pt.punts) + " punts de " + pt.total + (pt.pend ? " · " + pt.pend + " per puntuar" : "") + "</span></div></div>" +
+      '<div class="alum-eines"><button type="button" class="boto" data-asb="vdcdesa">💾 Desa la nota i passa al següent alumne</button></div></div>';
+  }
+  function vdCorrAccio(a, b) {
+    const c = vdCorrEstat(); if (!c) return;
+    const vd = c.vid, nv = vd.nivells[Math.min(c.niv, vd.nivells.length - 1)];
+    if (a === "vdcorr") { c.obert = !c.obert; c.msg = ""; pintaAssistent(); const o = c.obert && document.querySelector(".vd-corr"); if (o) o.scrollIntoView({ behavior: "smooth", block: "start" }); return; }
+    if (a === "vdcniv") { c.niv = Number(b.dataset.i); c.r = []; return pintaAssistent(); }
+    if (a === "vdcr") {
+      const i = Number(b.dataset.q), l = Number(b.dataset.l), p = nv.preguntes[i]; if (!p) return;
+      if (p.tipus === "multiple") { const s = Array.isArray(c.r[i]) ? c.r[i].slice() : [], k = s.indexOf(l); if (k >= 0) s.splice(k, 1); else s.push(l); c.r[i] = s.length ? s : null; }
+      else c.r[i] = c.r[i] === l ? null : l;
+      return pintaAssistent();
+    }
+    if (a === "vdcp") { const i = Number(b.dataset.q), v = Number(b.dataset.v); c.r[i] = c.r[i] === v ? null : v; return pintaAssistent(); }
+    if (a === "vdcdesa") {
+      const q = Q(), g = q.grups[c.g], f = g && g.fulls[c.f], fila = f && f.files.find(r => r.nom === c.al);
+      if (!fila) { alert("Tria el grup, el full i l'alumne."); return; }
+      const CN = String(c.col || "").trim().toUpperCase(); if (!CN) { alert("Escriu la columna on va la nota."); return; }
+      const pt = vdPuntua(nv, c.r);
+      if (pt.pend && !confirm("Hi ha " + pt.pend + (pt.pend > 1 ? " preguntes" : " pregunta") + " per puntuar (compten com a 0). Vols desar la nota igualment?")) return;
+      let col = f.columnes.find(x => x.nom.trim().toUpperCase() === CN);
+      if (col && col.tipus !== "nota") { alert("La columna " + col.nom + " del full «" + f.nom + "» no és de notes."); return; }
+      if (!col) { if (!confirm("El full «" + f.nom + "» no té la columna " + CN + ". Vols crear-la?")) return; col = { nom: CN, tipus: "nota" }; f.columnes.push(col); }
+      fila.v = fila.v || {};
+      const k = clauAl(g, fila.nom), ja = fila.v[col.nom], abans = (vd.corr || {})[k];
+      // si ja hi ha una nota que no és d'aquesta correcció (p. ex. la del qüestionari en línia), es pregunta quina es queda
+      if (ja != null && ja !== "" && Number(ja) !== pt.nota && !(abans && abans.col === col.nom && abans.nota === ja) &&
+        !confirm(nomAl(fila.nom) + " ja té " + coma(ja) + " a " + col.nom + " (potser del qüestionari en línia). Vols substituir-la per " + coma(pt.nota) + "?")) return;
+      fila.v[col.nom] = pt.nota; oblidaExcel(fila);
+      vd.corr = vd.corr || {}; vd.corr[k] = { niv: c.niv, r: c.r.slice(), nota: pt.nota, col: col.nom, data: avuiISO() };
+      const x = asDades.desatId && (dades.videos || []).find(y => y.id === asDades.desatId);
+      if (x) { x.dades = Object.assign({}, asDades); delete x.dades.desatId; }
+      dades.vdCorrG = c.g; c.col = col.nom;
+      desa(); pintaAlumnes();
+      c.msg = "✓ " + esc(nomAl(fila.nom)) + ": " + coma(pt.nota) + " a " + esc(col.nom) + ".";
+      const l = alumnesOrdenats(f), i = l.findIndex(r => r.nom === c.al);
+      vdCarregaAl(c, g, i >= 0 && i < l.length - 1 ? l[i + 1].nom : "");
+      return pintaAssistent();
+    }
+  }
+  function vdCorrCanvi(el) {
+    const c = vdCorrEstat(); if (!c) return;
+    const q = Q(), k = el.dataset.vdc;
+    if (k === "col") { c.col = el.value.trim().toUpperCase() || "EO1"; return; }
+    if (k === "g") { c.g = Number(el.value); c.f = q.grups[c.g] ? vdTrimFull(q.grups[c.g]) : 0; vdCarregaAl(c, null, ""); c.msg = ""; }
+    else if (k === "f") { c.f = Number(el.value); vdCarregaAl(c, null, ""); }
+    else if (k === "al") vdCarregaAl(c, q.grups[c.g], el.value);
+    pintaAssistent();
+  }
+  // Botons que s'afegeixen al resultat del vídeo (també als qüestionaris desats abans d'avui) i el bloc de correcció
+  function vdAmbEines(res) {
+    const vd = asDades && asDades.video; if (!vd || !res) return res;
+    const c = vdCorr && vdCorr.vid === vd ? vdCorr : null;
+    const extra = '<button type="button" class="boto clar" data-asb="vdcorr">' + (c && c.obert ? "✕ Tanca la correcció" : "✍️ Corregeix en paper") + "</button>" +
+      (esCurt(vd.enllac) ? "" : '<button type="button" class="boto clar" data-asb="vdescurca">🔗 Escurça l\'enllaç</button>');
+    res = res.replace('data-asb="videosolword">⬇️ Solucionari en Word</button>', m => m + extra);
+    const i = res.indexOf('<div class="as-doc">');
+    return i >= 0 ? res.slice(0, i) + vdCorrHTML() + res.slice(i) : res + vdCorrHTML();
   }
   // 14.11.2026: el qüestionari del vídeo en Word editable (un nivell per secció, amb la capçalera del centre) i el solucionari a part
   async function videoWord(sol) {
@@ -5578,6 +5734,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       // 14.11.2026: cada qüestionari preparat es desa sol (amb la transcripció) i es pot tornar a obrir des de «📂 Qüestionaris desats»
       desaVideo(transcripcio);
       pintaAssistent();   // perquè la llista de desats ja hi surti
+      escurcaVideo(null, true);   // 16.11.2026: l'enllaç del fragment, curt (si l'escurçador no respon, queda el llarg i surt el botó 🔗)
     } catch (e) { fet('<p class="avis">' + esc(e.message) + "</p>"); }
   }
   // Enllaça el qüestionari del vídeo a la columna EO1 del grup de la classe del Classroom (full del trimestre actual).
