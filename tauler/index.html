@@ -233,6 +233,10 @@ dialog#dlgRub{width:min(760px,calc(100vw - 24px))}
 .taula td.pts.p27{background:#f8d0cf;color:#a3161b}
 .taula td.pts:hover{outline:1px solid var(--accent);outline-offset:-1px}
 .taula td.pts .cm{font-weight:400;color:#4b3a8a;white-space:nowrap}
+.cm-fila{display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap}
+.cm-fila label{flex:0 0 auto}
+.cm-fila input[type=date]{width:auto;color:var(--text)}
+.cm-fila .boto{margin:0}
 .cm-etq{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}
 .cm-etq button{border:1px solid var(--linia);background:#fff;border-radius:16px;padding:4px 10px;cursor:pointer;font:inherit;font-size:.9rem}
 .cm-etq button.pos[aria-pressed=true]{background:#d8f0dc;border-color:#5aa469}
@@ -3677,8 +3681,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
         '<p class="font" style="margin:4px 0">Marca com treballa o es comporta (pots triar-ne més d\'una) i, si vols, escriu-hi un comentari.</p>' +
         '<div class="cm-etq">' + ETIQUETES.map(x => '<button type="button" class="' + x[0] + '" data-san="etq" data-t="' + esc(x[1]) + '" aria-pressed="' + etq.includes(x[1]) + '">' + (x[0] === "pos" ? "👍 " : x[0] === "neg" ? "👎 " : "📌 ") + esc(x[1]) + "</button>").join("") + "</div>" +
         '<label>Comentari (opcional)<textarea id="cmText" rows="2">' + esc(cmTxt) + "</textarea></label>" +
-        '<div class="fila"><label>Dia<input type="date" id="cmDia" value="' + cmDia + '"></label></div>' +
-        '<div class="botons" style="justify-content:flex-start;margin-top:0"><button type="button" class="boto" data-san="afcom">+ Afegeix el comentari</button></div>' +
+        '<div class="cm-fila"><label>Dia<input type="date" id="cmDia" value="' + cmDia + '"></label><button type="button" class="boto" data-san="afcom">+ Afegeix el comentari</button></div>' +
         (l.length ? '<ul class="deu-dates">' + l.map(x => '<li><span><b>' + dma(x.d) + "</b> " + (x.etq || []).map(t => '<span class="cm-tag ' + signeEtq(t) + '">' + esc(t) + "</span>").join("") + (x.text ? "<br><small>" + esc(x.text) + "</small>" : "") + '</span><button type="button" class="boto clar" data-san="treucom" data-id="' + esc(x.id) + '" title="Treu-ho">✕</button></li>').join("") + "</ul>" : '<p class="font">Encara no hi ha cap comentari.</p>') +
         '<div class="botons"><button type="button" class="boto clar" data-san="tanca">Fet</button></div></form>';
     };
@@ -3693,11 +3696,11 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
         '<div class="deu-trims"><span>Punts: <b>' + p + "</b></span>" + ["retard", "incid", "lleu", "greu", "moltgreu"].map(t => { const n = sancionsDe(g, nom).filter(x => x.tipus === t).length; return n ? "<span>" + esc(SANCIONS.find(x => x.t === t).nom) + ": <b>" + n + "</b></span>" : ""; }).join("") + "</div>" +
         avisos.map(a => '<p class="avis" style="margin:4px 0">' + esc(a) + "</p>").join("") +
         '<div class="fila"><label>Tipus<select id="sanTipus">' + SANCIONS.filter(x => x.t !== "serveis" || esESO(g)).map(x => '<option value="' + x.t + '"' + (x.t === tipus ? " selected" : "") + ">" + esc(x.nom) + " (" + (x.punts > 0 ? "+" : "") + x.punts + ")</option>").join("") + "</select></label>" +
-        '<label>Dia<input type="date" id="sanDia" value="' + dia + '"></label></div>' +
+        "</div>" +
         (S.motius.length > 1 ? '<label>Motiu<select id="sanMotiu">' + S.motius.map(m => "<option" + (m === motiu ? " selected" : "") + ">" + esc(m) + "</option>").join("") + "</select></label>" : "") +
         (tipus === "moltgreu" && EXPULSIO.test(motiu) ? '<p class="avis" style="margin:4px 0">Aquesta falta comporta l\'expulsió immediata del centre.</p>' : "") +
         '<label>Observacions (opcional)<input type="text" id="sanObs" value="' + esc(obs) + '"></label>' +
-        '<div class="botons" style="justify-content:flex-start;margin-top:0"><button type="button" class="boto" data-san="afegeix">+ Apunta-ho</button></div>' +
+        '<div class="cm-fila"><label>Dia<input type="date" id="sanDia" value="' + dia + '"></label><button type="button" class="boto" data-san="afegeix">+ Apunta-ho</button></div>' +
         (l.length ? '<ul class="deu-dates">' + l.map(x => { const T = SANCIONS.find(y => y.t === x.tipus) || { nom: x.tipus }; return '<li><span><b>' + dma(x.d) + "</b> · " + esc(T.nom) + " (" + (x.punts > 0 ? "+" : "") + x.punts + ")" + (x.motiu && x.motiu !== T.nom ? "<br><small>" + esc(x.motiu) + "</small>" : "") + (x.obs ? "<br><small><i>" + esc(x.obs) + "</i></small>" : "") + '</span><button type="button" class="boto clar" data-san="treu" data-id="' + esc(x.id) + '" title="Treu-ho">✕</button></li>'; }).join("") + "</ul>" : '<p class="font">Cap falta apuntada.</p>') +
         '<p class="font">Sistema de punts del centre: retard 1, incidència 3, falta lleu 9, falta greu 15, falta molt greu 27 o més.</p>' +
         '<div class="botons"><button type="button" class="boto clar" data-san="tanca">Fet</button></div></form>';
