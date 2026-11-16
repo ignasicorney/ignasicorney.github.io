@@ -579,6 +579,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     <div class="tdg-accessos feina-peu">
       <a class="tdg-acces" target="_blank" rel="noopener" href="/"><span class="tdg-ico">🌐</span><span>Pàgina web</span></a>
       <button type="button" class="tdg-acces feina-obre" id="genBoto" aria-expanded="false" aria-controls="genealogia" title="Obre la genealogia"><span class="tdg-ico">🌳</span><span>Genealogia</span></button>
+      <button type="button" class="tdg-acces feina-obre" id="f1Boto" aria-expanded="false" aria-controls="f1" title="Obre la Fórmula 1"><span class="tdg-ico">🏎️</span><span>Fórmula 1</span></button>
       <button type="button" class="tdg-acces feina-obre" id="instBoto" aria-expanded="false" aria-controls="institut" title="Obre l'Institut"><img src="logo-ins.png" alt="" class="feina-logo"><span>Institut</span></button>
     </div>
   </section>
@@ -693,6 +694,60 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
   <section id="genealogia" class="ample" hidden>
     <h2>🌳 Arbre genealògic</h2>
     <div id="genCos"><p class="buit">Carregant l'arbre…</p></div>
+  </section>
+
+  <section id="f1" class="ample" hidden>
+    <div class="f1-cap">
+      <h2 style="text-transform:none">🏎️ Fórmula 1</h2>
+      <div class="f1-enll">
+        <a href="https://www.formuletry.com" target="_blank" rel="noopener">⏱️ Formuletry (temps en directe i telemetria)</a>
+        <a href="https://www.formula1.com/en/timing/f1-live" target="_blank" rel="noopener">F1 Live Timing</a>
+        <a href="https://www.formula1.com/en/latest" target="_blank" rel="noopener">Notícies F1</a>
+      </div>
+    </div>
+    <div class="f1-proper" id="f1Proper"><p class="buit">Carregant…</p></div>
+    <div class="f1-graella">
+      <div class="f1-caixa">
+        <div class="f1-pest" id="f1Pest"><button type="button" data-t="pilots" class="actiu">Pilots</button><button type="button" data-t="equips">Equips</button><button type="button" data-t="darrer">Darrer GP</button></div>
+        <div id="f1Taula"></div>
+      </div>
+      <div class="f1-caixa">
+        <h3>Calendari de la temporada</h3>
+        <ol class="f1-cal" id="f1Cal"></ol>
+      </div>
+    </div>
+    <div class="f1-directe">
+      <div class="f1-dir-cap"><h3>📡 Directe</h3><span id="f1Candau" title="Amb la clau de La TdG">🔒</span></div>
+      <p class="buit" id="f1DirTancat">El directe va amb la clau de La TdG. Obre primer l'Institut amb el logo de l'INS i escriu-la; després ja s'obrirà sol.</p>
+      <div id="f1DirObert" hidden>
+        <div class="f1-monitor">
+          <div class="f1-mon-barra">
+            <span class="f1-led" id="f1Led"></span><span class="nom" id="f1MonNom">Sense senyal</span>
+            <button type="button" id="f1Grava" disabled>⏺ Grava</button>
+            <button type="button" id="f1Pip" disabled title="Imatge sobre imatge">⧉</button>
+            <button type="button" id="f1Full" title="Pantalla completa">⛶</button>
+            <a id="f1Fora" href="#" target="_blank" rel="noopener" hidden>↗ Obre a part</a>
+            <button type="button" id="f1Atura">■ Atura</button>
+          </div>
+          <div class="f1-pantalla" id="f1Pantalla">
+            <div class="f1-nosenyal" id="f1NoSenyal"><b>SENSE SENYAL</b><span>Enganxa l'enllaç del directe a sota</span></div>
+            <video id="f1Video" controls playsinline hidden></video>
+            <iframe id="f1Frame" hidden allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>
+          </div>
+        </div>
+        <form class="f1-form" id="f1Form">
+          <input type="text" id="f1Nom" placeholder="Nom del senyal" maxlength="60">
+          <input type="url" id="f1Url" placeholder="Enllaç: .m3u8, .mp4, YouTube, Twitch o pàgina d'inserció">
+          <button type="submit" class="boto">▶ Reprodueix</button>
+          <button type="button" class="boto clar" id="f1Desa">⭐ Desa'l</button>
+        </form>
+        <ul class="f1-fonts" id="f1Fonts"></ul>
+        <div class="f1-auto" id="f1Auto"></div>
+        <p class="avis" id="f1Avis" hidden></p>
+        <p class="font">Un sol senyal alhora. Es grava en aquest aparell el vídeo directe (.m3u8 o .mp4) mentre la pàgina és oberta; les pàgines inserides (YouTube, Twitch…) només es miren. «Grava sola» fa servir el darrer senyal posat: comença 5 minuts abans de la sessió i s'atura 15 minuts després del final, amb la Bitàcola i la F1 obertes.</p>
+      </div>
+    </div>
+    <p class="font">Dades: Jolpica (API d'Ergast) · temps al circuit: Open-Meteo · hores en hora local.</p>
   </section>
 
 
@@ -6912,6 +6967,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
   if (clau && lsLlegeix("tauler.obert") === "1") obre();
 })();
 </script>
+<script src="f1.js?v=2" defer></script>
 <script src="dates-ca.js?v=4"></script>
 <script>
 // =============================================================================
