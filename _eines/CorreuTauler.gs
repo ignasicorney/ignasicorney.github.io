@@ -58,6 +58,11 @@
 //   { accio: "formulari-tanca", id, quan }            → tanca les respostes ara (sense «quan») o a l'hora «quan» (ISO)
 //                                                       (en lloc d'«id» es pot passar «url», p. ex. el d'un qüestionari d'una tasca del Classroom)
 //   { accio: "formulari-obre", id }                   → torna a acceptar respostes i anul·la el tancament programat
+//
+// DIRECTORI (16.11.2026; només al compte d'ieslabisbal.cat):
+//   Cal afegir-hi el servei avançat «People API» (Serveis > +) i fer una versió nova de la implementació.
+//   { accio: "directori" }                            → { persones: [{ nom, email }] }: les persones del directori
+//                                                       del centre (per posar els correus a l'organigrama de la Bitàcola)
 //   { accio: "formulari-estat", id }                  → { obert, tancament }
 //   { accio: "formulari-esborra", id, curs, tasca }   → envia el formulari a la paperera del Drive (14.11.2026)
 //                                                       i, si hi ha «curs» i «tasca», esborra també la tasca del Classroom
@@ -463,6 +468,25 @@ function doPost(e) {
       }
 
       // 14.11.2026 (nit): el tauler crida Gemini directament per transcriure vídeos (aquí les crides es tallen al minut)
+      case "directori": {   // 16.11.2026: correus del directori del centre per a l'organigrama de la Bitàcola
+        if (typeof People === "undefined") throw new Error("Falta afegir el servei avançat «People API» a l'script (Serveis > +).");
+        const persones = [];
+        let token = "";
+        do {
+          const r = People.People.listDirectoryPeople(Object.assign({
+            readMask: "names,emailAddresses",
+            sources: ["DIRECTORY_SOURCE_TYPE_DOMAIN_PROFILE"],
+            pageSize: 1000
+          }, token ? { pageToken: token } : {}));
+          (r.people || []).forEach(function (p) {
+            const n = (p.names || [])[0], e = (p.emailAddresses || [])[0];
+            if (n && e && e.value) persones.push({ nom: n.displayName || "", email: e.value });
+          });
+          token = r.nextPageToken || "";
+        } while (token && persones.length < 20000);
+        return json_({ ok: true, persones: persones });
+      }
+
       case "gemini-clau": {
         const pr = PropertiesService.getScriptProperties();
         if (!pr.getProperty("GEMINI_KEY")) throw new Error("Falta la propietat GEMINI_KEY a l'script del compte d'ieslabisbal.cat (Configuració del projecte > Propietats de l'script).");

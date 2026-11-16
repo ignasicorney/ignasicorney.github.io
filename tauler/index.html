@@ -97,6 +97,11 @@ dialog#dlgOrg{width:min(860px,calc(100vw - 24px))}
 .org-llista li.meu{font-weight:700}
 .org-llista li.meu span:first-child{color:var(--text)}
 .tutor-grup{color:#a8a6a0;font-size:.85rem;margin:2px 0 6px}
+.org-llista .org-nom{display:inline-flex;gap:4px;align-items:baseline;text-align:right}
+.org-llista .org-ed{border:0;background:none;padding:0;cursor:pointer;opacity:.35;font-size:.8em}
+.org-llista .org-ed:hover{opacity:1}
+.org-llista a.org-mail{text-decoration:none;font-size:.85em}
+#orgDirRes .boto{font-size:.8rem;padding:2px 8px;margin:2px 4px 2px 0}
 #dlgPsi{width:min(980px,calc(100vw - 12px))}
 .psi-orig{max-height:68vh;overflow:auto;border:1px solid var(--linia);border-radius:8px;background:#fff;margin-top:6px;-webkit-overflow-scrolling:touch}
 .psi-pag{display:block;width:calc(var(--z,1) * 100%);max-width:none;height:auto;border-bottom:1px solid var(--linia)}
@@ -712,7 +717,8 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
 <dialog id="dlgOrg">
   <form method="dialog">
     <div class="fila" style="align-items:center;justify-content:space-between"><h2>Organigrama · curs 2026-27</h2><button type="submit" class="boto clar">Tanca</button></div>
-    <input type="search" id="orgCerca" placeholder="Cerca un nom, un grup o un càrrec…">
+    <div class="fila" style="align-items:center"><input type="search" id="orgCerca" placeholder="Cerca un nom, un grup o un càrrec…" style="flex:1 1 220px"><button type="button" class="boto clar" id="orgDir" title="Busca el correu de cada persona al directori del compte d'ieslabisbal.cat">🔎 Correus del directori</button></div>
+    <div id="orgDirRes" class="font"></div>
     <div id="orgCos"></div>
   </form>
 </dialog>
@@ -977,17 +983,81 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     const q = senseAccents(($("orgCerca").value || "").trim());
     const h = ORG.map(([sec, files]) => {
       const fs = q ? files.filter(([c, n]) => senseAccents(sec + " " + c + " " + n).includes(q)) : files;
-      return fs.length ? '<section class="org-sec"><h3>' + esc(sec) + '</h3><ul class="org-llista">' + fs.map(([c, n]) => '<li' + (ORG_MEUS.includes(c) && (sec.startsWith("Tutors d'ESO") || sec.startsWith("Caps")) ? ' class="meu"' : "") + "><span>" + esc(c) + "</span><span>" + esc(n) + "</span></li>").join("") + "</ul></section>" : "";
+      return fs.length ? '<section class="org-sec"><h3>' + esc(sec) + '</h3><ul class="org-llista">' + fs.map(([c, n]) => '<li' + (ORG_MEUS.includes(c) && (sec.startsWith("Tutors d'ESO") || sec.startsWith("Caps")) ? ' class="meu"' : "") + "><span>" + esc(c) + '</span><span class="org-nom">' + esc(n) +
+        (orgMail(n) ? ' <a href="#" class="org-mail" data-orgmail="' + esc(orgMail(n)) + '" title="Escriu a ' + esc(orgMail(n)) + '">✉️</a>' : "") +
+        ' <button type="button" class="org-ed" data-orged="' + esc(n) + '" title="' + (orgMail(n) ? "Canvia el correu" : "Posa-hi el correu a mà") + '">✏️</button></span></li>').join("") + "</ul></section>" : "";
     }).join("");
     $("orgCos").innerHTML = h || '<p class="buit">No hi ha cap coincidència.</p>';
   }
-  $("orgBoto").addEventListener("click", () => { $("orgCerca").value = ""; pintaOrg(); $("dlgOrg").showModal(); });
+  $("orgBoto").addEventListener("click", () => { $("orgCerca").value = ""; $("orgDirRes").innerHTML = ""; pintaOrg(); $("dlgOrg").showModal(); });
   $("orgCerca").addEventListener("input", pintaOrg);
+  // Correus de l'organigrama (16.11.2026): del directori del compte d'ieslabisbal.cat, o a mà amb ✏️
+  const orgMail = n => (typeof dades !== "undefined" && dades && dades.orgCorreus && dades.orgCorreus[n]) || "";
+  function posaOrgMail(n, email) { dades.orgCorreus = dades.orgCorreus || {}; if (email) dades.orgCorreus[n] = email; else delete dades.orgCorreus[n]; }
+  const tokensNom = t => senseAccents(t).replace(/[·.'’]/g, "").replace(/-/g, " ").split(/\s+/).filter(Boolean);
+  // Pistes per als noms repetits: «Jordi Ferrer B» és Jordi Ferrer Bonet; el director, «Jordi Ferrer», és l'altre
+  const ORG_PISTES = { "Jordi Ferrer B": d => d.includes("bonet"), "Jordi Ferrer": d => !d.includes("bonet") };
+  function candidatsOrg(nom, persones) {
+    const o = tokensNom(nom);
+    const vistos = new Set();
+    return persones.filter(p => {
+      const d = tokensNom(p.nom);
+      if (!d.length || d[0] !== o[0]) return false;
+      if (!o.slice(1).every(t => d.slice(1).some(x => t.length === 1 ? x.startsWith(t) : x === t))) return false;
+      if (ORG_PISTES[nom] && !ORG_PISTES[nom](d)) return false;
+      const e = String(p.email).toLowerCase();
+      if (vistos.has(e)) return false;
+      vistos.add(e); return true;
+    });
+  }
+  let orgDubtes = {}, orgSense = [];
+  function pintaOrgRes(trobats) {
+    const dub = Object.keys(orgDubtes);
+    $("orgDirRes").innerHTML = (trobats != null ? "<p>Correus trobats al directori: <b>" + trobats + "</b>.</p>" : "") +
+      (dub.length ? "<p><b>Amb dubte</b> (tria el bo):</p>" + dub.map(n => "<p>" + esc(n) + ": " + orgDubtes[n].map(p => '<button type="button" class="boto clar" data-orgtria="' + esc(n) + '" data-email="' + esc(p.email) + '">' + esc(p.nom) + " · " + esc(p.email) + "</button>").join("") + "</p>").join("") : "") +
+      (orgSense.length ? "<p><b>No trobats</b> (" + orgSense.length + "): " + orgSense.map(esc).join(", ") + ". Els pots posar a mà amb ✏️.</p>" : "");
+  }
+  $("orgDir").addEventListener("click", async () => {
+    const b = $("orgDir"); b.disabled = true; $("orgDirRes").innerHTML = "<p>Buscant al directori del centre… (" + new Date().toLocaleTimeString("ca-ES", { hour: "2-digit", minute: "2-digit" }) + ")</p>";
+    try {
+      const d = await cridaIns({ accio: "directori" });
+      const persones = d.persones || [];
+      let trobats = 0; orgDubtes = {}; orgSense = [];
+      ORG_NOMS.forEach(n => {
+        if (orgMail(n)) return;   // els que ja hi són (també els posats a mà) no es toquen
+        const c = candidatsOrg(n, persones);
+        if (c.length === 1) { posaOrgMail(n, c[0].email); trobats++; }
+        else if (c.length > 1) orgDubtes[n] = c.slice(0, 6);
+        else orgSense.push(n);
+      });
+      if (trobats) desa();
+      pintaOrg(); pintaOrgRes(trobats);
+    } catch (e) {
+      $("orgDirRes").innerHTML = '<p class="avis">' + esc(/Acció desconeguda|People/i.test(e.message) ? "Falta posar al dia l'script del compte d'ieslabisbal.cat (acció «directori») i afegir-hi el servei avançat «People API»." : e.message) + "</p>";
+    }
+    b.disabled = false;
+  });
+  $("orgDirRes").addEventListener("click", ev => {
+    const t = ev.target.closest("[data-orgtria]"); if (!t) return;
+    posaOrgMail(t.dataset.orgtria, t.dataset.email); delete orgDubtes[t.dataset.orgtria]; desa(); pintaOrg(); pintaOrgRes(null);
+  });
+  $("orgCos").addEventListener("click", ev => {
+    const m = ev.target.closest("[data-orgmail]");
+    if (m) { ev.preventDefault(); $("dlgOrg").close(); escriuA(m.dataset.orgmail); return; }
+    const e = ev.target.closest("[data-orged]");
+    if (e) {
+      const n = e.dataset.orged, v = prompt("Correu de " + n + " (deixa-ho buit per treure'l):", orgMail(n));
+      if (v === null) return;
+      const net = v.trim();
+      if (net && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(net)) { alert("Aquest correu no sembla vàlid."); return; }
+      posaOrgMail(n, net); orgSense = orgSense.filter(x => x !== n); delete orgDubtes[n]; desa(); pintaOrg(); pintaOrgRes(null);
+    }
+  });
   // «Amb qui» de les reunions: suggereix noms de l'organigrama (també després d'una coma)
   const ORG_NOMS = [...new Set(ORG.flatMap(([, f]) => f.map(([, n]) => n)))].sort((a, b) => a.localeCompare(b, "ca"));
   function suggereixNoms() {
     const v = $("reuAmb").value, i = v.lastIndexOf(","), pre = i >= 0 ? v.slice(0, i + 1).replace(/,\s*$/, ", ") : "";
-    $("orgNoms").innerHTML = ORG_NOMS.map(n => '<option value="' + esc(pre + n) + '">').join("");
+    $("orgNoms").innerHTML = ORG_NOMS.map(n => '<option value="' + esc(pre + n) + '"' + (orgMail(n) ? ' label="' + esc(n + " · " + orgMail(n)) + '"' : "") + ">").join("");
   }
   $("reuAmb").addEventListener("input", suggereixNoms);
   $("reuAmb").addEventListener("focus", suggereixNoms);
@@ -1013,6 +1083,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       if (d.guardiesBlau) r.guardiesBlau = true;
       if (Array.isArray(d.rubriques)) r.rubriques = d.rubriques;
       if (d.rubriquesInicials) r.rubriquesInicials = true;
+      if (d.orgCorreus && typeof d.orgCorreus === "object") r.orgCorreus = d.orgCorreus;   // 16.11.2026: correus de l'organigrama
       if (d.agenda && typeof d.agenda === "object") r.agenda = d.agenda;
       if (Array.isArray(d.tasques)) r.tasques = d.tasques.filter(t => t && typeof t.text === "string");
       if (d.correu && Array.isArray(d.correu.comptes)) r.correu = { comptes: d.correu.comptes.filter(c => c && c.url) };
