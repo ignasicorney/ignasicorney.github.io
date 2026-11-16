@@ -86,6 +86,17 @@ h3.bt{margin:0 0 8px;font-size:1rem;text-transform:uppercase}
 .al-extra{display:block;line-height:1.2;margin-top:1px}
 .al-extra .mail-al:first-child{margin-left:0}
 .orig-al{color:#a8a6a0;font-size:.8em;margin-right:2px;white-space:nowrap}
+.capinst-esq{display:flex;align-items:center;justify-content:flex-start}
+.org-boto{font-size:.85rem;padding:4px 10px}
+dialog#dlgOrg{width:min(860px,calc(100vw - 24px))}
+#orgCos{display:grid;gap:12px}
+.org-sec h3{margin:0 0 4px;font-size:.8rem;text-transform:uppercase;letter-spacing:.05em;color:var(--suau)}
+.org-llista{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:2px 16px;margin:0;padding:0;list-style:none;font-size:.92rem}
+.org-llista li{display:flex;gap:8px;justify-content:space-between;border-bottom:1px dotted var(--linia);padding:2px 0}
+.org-llista li span:first-child{color:var(--suau)}
+.org-llista li.meu{font-weight:700}
+.org-llista li.meu span:first-child{color:var(--text)}
+.tutor-grup{color:#a8a6a0;font-size:.85rem;margin:2px 0 6px}
 #dlgPsi{width:min(980px,calc(100vw - 12px))}
 .psi-orig{max-height:68vh;overflow:auto;border:1px solid var(--linia);border-radius:8px;background:#fff;margin-top:6px;-webkit-overflow-scrolling:touch}
 .psi-pag{display:block;width:calc(var(--z,1) * 100%);max-width:none;height:auto;border-bottom:1px solid var(--linia)}
@@ -547,7 +558,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
   </section>
   <section id="institut" class="ample" hidden>
     <div class="capinst">
-      <span></span>
+      <div class="capinst-esq"><button type="button" class="boto clar org-boto" id="orgBoto" title="Organigrama del centre, curs 2026-27">👥 Organigrama</button></div>
       <h2 class="curs-inst">CURS 2026-2027</h2>
       <div class="capinst-dreta">
         <span class="estat-sinc" id="estatSinc"><i></i><span>Tancat</span></span>
@@ -697,6 +708,14 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
   </form>
 </dialog>
 
+<!-- Organigrama del centre (16.11.2026) -->
+<dialog id="dlgOrg">
+  <form method="dialog">
+    <div class="fila" style="align-items:center;justify-content:space-between"><h2>Organigrama · curs 2026-27</h2><button type="submit" class="boto clar">Tanca</button></div>
+    <input type="search" id="orgCerca" placeholder="Cerca un nom, un grup o un càrrec…">
+    <div id="orgCos"></div>
+  </form>
+</dialog>
 <!-- Diàleg de reunió -->
 <dialog id="dlgReu">
   <form method="dialog" id="formReu">
@@ -706,7 +725,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       <label>Dia<input type="date" id="reuData"></label>
       <label>Hora<input type="time" id="reuHora"></label>
     </div>
-    <label>Amb qui<input type="text" id="reuAmb" maxlength="200"></label>
+    <label>Amb qui<input type="text" id="reuAmb" maxlength="200" list="orgNoms" autocomplete="off" placeholder="Noms separats per comes"></label><datalist id="orgNoms"></datalist>
     <label>Ordre del dia<textarea id="reuOrdre" maxlength="4000"></textarea></label>
     <label>Acords i notes<textarea id="reuAcords" maxlength="8000"></textarea></label>
     <label>Tasques pendents<textarea id="reuPendents" maxlength="4000" placeholder="Una per línia"></textarea></label>
@@ -933,6 +952,45 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
   const art = dd => (/^(01|11)\./.test(dd) ? "l'" : "el ");
   const hora = tz => new Intl.DateTimeFormat("ca", { timeZone: tz, hour: "2-digit", minute: "2-digit", hour12: false }).format(new Date());
   const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  // ================= Organigrama del centre, curs 2026-27 (16.11.2026) =================
+  const ORG = [
+    ["Equip directiu", [["Director", "Jordi Ferrer"], ["Cap d'estudis", "Cristina Gaya"], ["Cap d'estudis adjunt", "Montse Morales"], ["Cap d'estudis d'FP", "Marc Arimany"], ["Coordinadora pedagògica", "Marta Nogué"], ["Secretària", "Nuri Cassanyes"], ["Administradora", "Coral·lí Jou"]]],
+    ["Coordinacions de nivell", [["1r d'ESO", "Cristina Botó"], ["2n d'ESO", "Samy Abad"], ["3r d'ESO", "Pau Campos"], ["4t d'ESO", "Òscar Canudas"], ["Batxillerat", "Jaume Català"], ["Cicles", "Gisela Rodríguez"]]],
+    ["Tutors d'ESO", [["1r A", "Natzaret Gallego"], ["1r B", "Neus Comas"], ["1r C", "Mireia Calm"], ["1r D", "Mònica Llach"], ["1r E", "Anna Puigmiquel"], ["1r F", "Sònia Jiménez"], ["1r G", "Raquel Guàrdia"],
+      ["2n A", "Daniel Oliveras"], ["2n B", "Jordi Ferrer B"], ["2n C", "David Gálvez"], ["2n D", "Laura Fuentes"], ["2n E", "Jordi Botó"], ["2n F", "Estel Nonell"], ["2n G", "Xavier Marcó"],
+      ["3r A", "Anna Conde"], ["3r B", "Pep Bartrina"], ["3r C", "Núria Múñoz"], ["3r D", "Fabiana Vila"], ["3r E", "Robert Fabrellas"], ["3r F", "Andrea Rubio"], ["3r G", "Albert Cordonet"], ["3r H", "Roser Pijoan"],
+      ["4t A", "Pere Saballs"], ["4t B", "Sandra Soto"], ["4t C", "Emma Martí"], ["4t D", "Gabriel Artero"], ["4t E", "Diego Terol"], ["4t F", "Anna Masclans"], ["4t G", "Rachid el Bekkaoui"]]],
+    ["Tutors de batxillerat", [["1r Batx A", "Pitu Pérez"], ["1r Batx B", "Adrià Puig"], ["1r Batx C", "Anna Lozano"], ["1r Batx D", "Clio Sebastià"], ["1r Batx E", "Joan Manel Martos"],
+      ["2n Batx A", "Jofre Sebastián"], ["2n Batx B", "Esther Paretas"], ["2n Batx C", "Gerard Prados"], ["2n Batx D", "Rafel Brusi"], ["2n Batx E", "Irene Castellà"]]],
+    ["Tutors de cicles", [["1r GAD", "Jordi Aurich"], ["1r APSD", "Yolanda Nievas"], ["1r IS", "Cristina Vernet"], ["1r JD", "Mariona Isern"], ["1r TER", "Maria Romero"], ["1r AF", "Júlia Jiménez"],
+      ["2n GAD", "Carles Cortada"], ["2n APSD", "Berta Solé"], ["2n IS", "Toni Rocha"], ["2n JD", "Marta Cané"], ["2n TER", "Josep Motas"], ["2n AF", "Àngels Artigas"]]],
+    ["Altres coordinacions", [["DUAL/FCT", "Marc Arimany"], ["Sortides", "Coral·lí Jou"], ["Lingüística", "Mireia Calm"], ["Aula d'Acollida", "Carme Oliveras"], ["Mobilitat", "Míriam Comas"], ["PQiMC", "Anna Font"], ["Pràcticum", "Sandra Soto"],
+      ["SIEI", "Cristina Lagos"], ["Informàtica", "Narcís Bahí"], ["Riscos Laborals", "Pere Saballs"], ["Manteniment", "Jordi Fanals"], ["Pla català de l'esport", "Mònica Llach"], ["COCOBE", "Montse Morales"]]],
+    ["Caps de departament", [["Llengua catalana", "Íria Masó"], ["Llengua castellana", "Anna Lozano"], ["Llengües estrangeres", "Meritxell Martínez"], ["Ciències socials", "Cristina Abadia"], ["Matemàtiques", "Llorenç Rubió"], ["Biologia i Geologia", "Anna Bou"], ["Física i Química", "Adrià Puig"], ["Tecnologia", "Rachid el Bekkaoui"],
+      ["Educació visual i plàstica", "Marta Alsina"], ["Música", "Joan Gay"], ["Orientació educativa", "Natàlia Coderch"], ["Educació física", "Jaume Català"], ["Serveis a la comunitat", "Anna Pruneda"], ["Administratiu", "Carles Cortada"], ["Jardineria", "Mariona Isern"], ["Arts Plàstiques", "Josep Motas"]]]
+  ];
+  // Els seus grups i els caps dels seus dos departaments, destacats
+  const ORG_MEUS = ["1r A", "4t B", "4t C", "4t D", "4t G", "Llengua catalana", "Llengua castellana"];
+  const tutorDe = grup => { const k = String(grup || "").replace(/\s+/g, "").toLowerCase(); const t = ORG[2][1].find(([c]) => c.replace(/\s+/g, "").toLowerCase() === k); return t ? t[1] : ""; };
+  const senseAccents = t => String(t).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  function pintaOrg() {
+    const q = senseAccents(($("orgCerca").value || "").trim());
+    const h = ORG.map(([sec, files]) => {
+      const fs = q ? files.filter(([c, n]) => senseAccents(sec + " " + c + " " + n).includes(q)) : files;
+      return fs.length ? '<section class="org-sec"><h3>' + esc(sec) + '</h3><ul class="org-llista">' + fs.map(([c, n]) => '<li' + (ORG_MEUS.includes(c) && (sec.startsWith("Tutors d'ESO") || sec.startsWith("Caps")) ? ' class="meu"' : "") + "><span>" + esc(c) + "</span><span>" + esc(n) + "</span></li>").join("") + "</ul></section>" : "";
+    }).join("");
+    $("orgCos").innerHTML = h || '<p class="buit">No hi ha cap coincidència.</p>';
+  }
+  $("orgBoto").addEventListener("click", () => { $("orgCerca").value = ""; pintaOrg(); $("dlgOrg").showModal(); });
+  $("orgCerca").addEventListener("input", pintaOrg);
+  // «Amb qui» de les reunions: suggereix noms de l'organigrama (també després d'una coma)
+  const ORG_NOMS = [...new Set(ORG.flatMap(([, f]) => f.map(([, n]) => n)))].sort((a, b) => a.localeCompare(b, "ca"));
+  function suggereixNoms() {
+    const v = $("reuAmb").value, i = v.lastIndexOf(","), pre = i >= 0 ? v.slice(0, i + 1).replace(/,\s*$/, ", ") : "";
+    $("orgNoms").innerHTML = ORG_NOMS.map(n => '<option value="' + esc(pre + n) + '">').join("");
+  }
+  $("reuAmb").addEventListener("input", suggereixNoms);
+  $("reuAmb").addEventListener("focus", suggereixNoms);
   const quan = n => n === 0 ? "avui" : n === 1 ? "demà" : n > 1 ? "d'aquí a " + n + " dies" : "fa " + (-n) + (n === -1 ? " dia" : " dies");
   const esISO = s => /^\d{4}-\d{2}-\d{2}$/.test(s || "");
   const nouId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
@@ -3834,6 +3892,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       Q().grups.map((x, i) => '<button type="button" data-grup="' + i + '" aria-pressed="' + (x === g) + '">' + esc(nomGrup(x.nom)) + "</button>").join("") + "</div>" +
       '<select id="alumFull" aria-label="Full">' + g.fulls.map((x, i) => '<option value="' + i + '"' + (x === f ? " selected" : "") + ">" + esc(x.nom) + "</option>").join("") + "</select>" +
       '<input type="search" id="alumCerca" placeholder="Cerca alumne…" value="' + esc(cerca) + '" style="flex:1 1 140px"></div>' +
+      (tutorDe(g.nom) ? '<p class="tutor-grup">Tutor/a de ' + esc(nomGrup(g.nom)) + ": " + esc(tutorDe(g.nom)) + "</p>" : (/^1r\s*[IJ]$/i.test(nomGrup(g.nom)) ? '<p class="tutor-grup">Grup barrejat: al costat de cada nom hi ha el grup d\'origen i el seu tutor/a</p>' : "")) +
       '<div class="alum-eines"><button type="button" class="boto clar" data-q="formules">⚙️ ' + (qFormules ? "Amaga les fórmules" : "Columnes i fórmules") + "</button>" +
       ('<span class="boto-grup"><button type="button" class="boto clar" data-q="classroom" title="Omple una columna amb els lliuraments o les notes d\'una tasca del Classroom o d\'un formulari"><img src="https://www.gstatic.com/classroom/logo_square_rounded.svg" alt="" class="ico-cls"> Classroom</button>' + (f && Array.isArray(f.desfes) && f.desfes.length ? '<button type="button" class="boto clar boto-ico" data-q="clsdesfes" title="Desfés l\'última càrrega del Classroom (' + esc(f.desfes.map(x => x.col).join(", ")) + ')" aria-label="Desfés l\'última càrrega del Classroom">↶</button>' : "") + (f && f.columnes.some(c => c.classroom) ? '<button type="button" class="boto clar boto-ico" data-q="clsact" title="Actualitza del Classroom les columnes enllaçades d\'aquest full (' + esc(f.columnes.filter(c => c.classroom).map(c => c.nom).join(", ")) + ')" aria-label="Actualitza del Classroom">🔄</button>' : "") + "</span>") +
       '<button type="button" class="boto clar" data-q="psidrive" title="Llegeix els PSI de les carpetes del Drive del centre (compte d\'ieslabisbal.cat): cada document va al seu alumne i l\'original s\'obre a qualsevol aparell"><img src="https://ssl.gstatic.com/images/branding/product/1x/drive_2020q4_32dp.png" alt="" class="ico-cls"> PSI</button>' +
@@ -3859,7 +3918,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       const ombra = (c, v) => { if (!tcol[c.nom]) return ""; if (esExempt(v)) return " n-ex"; const n = numOpcional(v); if (n === null) return ""; if (tcol[c.nom] === "sobre") return " n-sobre"; return tcol[c.nom] === "form" ? (n === 0 ? " f-0" : " f-1") : " " + colorNota(n); };
       const tD = trimDeures(f), dAvui = avuiISO();
       h += '<div class="taula' + (qDeures ? " passa" : "") + '"><table><thead><tr><th>Alumne</th><th class="deu" title="Faltes de deures del ' + tD.nom + ' trimestre. Toca la xifra per afegir-ne o treure\'n.">📕 Deures ' + tD.nom + '</th><th class="pts" title="Faltes de disciplina (sistema de punts del centre). Toca la xifra per apuntar-ne.">⚖️ Punts</th>' + f.columnes.map(c => "<th" + (c.tipus === "calc" ? ' class="calc" title="' + esc(c.formula) + '"' : "") + ">" + esc(c.nom) + (desquadres[c.nom] ? " ⚠️" : "") + "</th>").join("") + "</tr></thead><tbody>" +
-        (files.map(r => { const psi = (g.psi || []).includes(r.nom) || !!psiDocDe(g, r.nom), dis = /\sDIS$/i.test(r.nom); return '<tr><td class="nomal' + (psi ? " psi" : "") + '" data-alumne="' + esc(r.nom) + '" title="' + (psi ? "PSI" : "") + (psi && dis ? " · " : "") + (dis ? "Dislèxia" : "") + '">' + esc(dis ? r.nom.replace(/\s+DIS$/i, "") : r.nom) + (psi || psiDocDe(g, r.nom) ? ' <span class="marca-al psi" data-psidoc="' + esc(r.nom) + '" role="button" title="' + (psiDocDe(g, r.nom) ? "Obre el PSI" : "Encara no hi ha el document del PSI: toca per pujar-lo") + '">PSI' + (psiDocDe(g, r.nom) ? "" : "?") + "</span>" : "") + (dis ? ' <span class="marca-al">DIS</span>' : "") + ((origenDe(g, r.nom) || (g.correus && g.correus[r.nom])) ? '<span class="al-extra">' : "") + (origenDe(g, r.nom) ? '<span class="orig-al" title="Grup d\'origen">(' + esc(origenDe(g, r.nom)) + ")</span>" : "") + "" + (g.correus && g.correus[r.nom] ? ' <a href="#" class="mail-al" data-mail="' + esc(g.correus[r.nom]) + '" title="Escriu a ' + esc(g.correus[r.nom]) + '" aria-label="Escriu un correu a ' + esc(dis ? r.nom.replace(/\s+DIS$/i, "") : r.nom) + '">✉️</a>' : "") + ((origenDe(g, r.nom) || (g.correus && g.correus[r.nom])) ? "</span>" : "") + "</td>" + (() => { const ds = deuresDe(g, r.nom), n = ds.filter(d => d >= tD.de && d <= tD.fins).length, av = ds.includes(dAvui); return '<td class="deu' + (n ? "" : " zero") + (av ? " avui" : "") + '" data-deu="' + esc(r.nom) + '" title="' + n + " falt" + (n === 1 ? "a" : "es") + " de deures al " + tD.nom + " trimestre" + (av ? " (una d'avui)" : "") + '">' + (n || "–") + "</td>"; })() + celaPunts(g, r.nom) + f.columnes.map(c => {
+        (files.map(r => { const psi = (g.psi || []).includes(r.nom) || !!psiDocDe(g, r.nom), dis = /\sDIS$/i.test(r.nom); return '<tr><td class="nomal' + (psi ? " psi" : "") + '" data-alumne="' + esc(r.nom) + '" title="' + (psi ? "PSI" : "") + (psi && dis ? " · " : "") + (dis ? "Dislèxia" : "") + '">' + esc(dis ? r.nom.replace(/\s+DIS$/i, "") : r.nom) + (psi || psiDocDe(g, r.nom) ? ' <span class="marca-al psi" data-psidoc="' + esc(r.nom) + '" role="button" title="' + (psiDocDe(g, r.nom) ? "Obre el PSI" : "Encara no hi ha el document del PSI: toca per pujar-lo") + '">PSI' + (psiDocDe(g, r.nom) ? "" : "?") + "</span>" : "") + (dis ? ' <span class="marca-al">DIS</span>' : "") + ((origenDe(g, r.nom) || (g.correus && g.correus[r.nom])) ? '<span class="al-extra">' : "") + (origenDe(g, r.nom) ? '<span class="orig-al" title="Grup d\'origen' + (tutorDe(origenDe(g, r.nom)) ? " i tutor/a" : "") + '">(' + esc(origenDe(g, r.nom)) + (tutorDe(origenDe(g, r.nom)) ? " · " + esc(tutorDe(origenDe(g, r.nom))) : "") + ")</span>" : "") + "" + (g.correus && g.correus[r.nom] ? ' <a href="#" class="mail-al" data-mail="' + esc(g.correus[r.nom]) + '" title="Escriu a ' + esc(g.correus[r.nom]) + '" aria-label="Escriu un correu a ' + esc(dis ? r.nom.replace(/\s+DIS$/i, "") : r.nom) + '">✉️</a>' : "") + ((origenDe(g, r.nom) || (g.correus && g.correus[r.nom])) ? "</span>" : "") + "</td>" + (() => { const ds = deuresDe(g, r.nom), n = ds.filter(d => d >= tD.de && d <= tD.fins).length, av = ds.includes(dAvui); return '<td class="deu' + (n ? "" : " zero") + (av ? " avui" : "") + '" data-deu="' + esc(r.nom) + '" title="' + n + " falt" + (n === 1 ? "a" : "es") + " de deures al " + tD.nom + " trimestre" + (av ? " (una d'avui)" : "") + '">' + (n || "–") + "</td>"; })() + celaPunts(g, r.nom) + f.columnes.map(c => {
           const v = valor(f, r, c), txt = mostraValor(v);
           if (c.tipus === "calc") {
             const n = numOpcional(v), ok = coincideix(v, r.o && r.o[c.nom]);
