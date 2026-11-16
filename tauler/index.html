@@ -989,7 +989,11 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     }).join("");
     $("orgCos").innerHTML = h || '<p class="buit">No hi ha cap coincidència.</p>';
   }
-  $("orgBoto").addEventListener("click", () => { $("orgCerca").value = ""; $("orgDirRes").innerHTML = ""; pintaOrg(); $("dlgOrg").showModal(); });
+  let orgCercat = false;   // 16.11.2026: la primera vegada que s'obre (per sessió), busca sol els correus que falten
+  $("orgBoto").addEventListener("click", () => {
+    $("orgCerca").value = ""; $("orgDirRes").innerHTML = ""; pintaOrg(); $("dlgOrg").showModal();
+    if (!orgCercat && typeof dades !== "undefined" && dades && compteIns() && ORG_NOMS.some(n => !orgMail(n))) { orgCercat = true; $("orgDir").click(); }
+  });
   $("orgCerca").addEventListener("input", pintaOrg);
   // Correus de l'organigrama (16.11.2026): del directori del compte d'ieslabisbal.cat, o a mà amb ✏️
   const orgMail = n => (typeof dades !== "undefined" && dades && dades.orgCorreus && dades.orgCorreus[n]) || "";
