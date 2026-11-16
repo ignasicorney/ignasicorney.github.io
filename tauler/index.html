@@ -101,7 +101,9 @@ dialog#dlgOrg{width:min(860px,calc(100vw - 24px))}
 .org-llista .org-ed{border:0;background:none;padding:0;cursor:pointer;opacity:.35;font-size:.8em}
 .org-llista .org-ed:hover{opacity:1}
 .org-llista a.org-mail{text-decoration:none;font-size:.85em}
-#orgDirRes .boto{font-size:.8rem;padding:2px 8px;margin:2px 4px 2px 0}
+#orgDirRes .boto,.org-falten .boto{font-size:.8rem;padding:2px 8px;margin:2px 4px 2px 0}
+.org-falten{background:#fff6e5;border-radius:8px;padding:8px 10px}
+.org-falten p{margin:0}
 #dlgPsi{width:min(980px,calc(100vw - 12px))}
 .psi-orig{max-height:68vh;overflow:auto;border:1px solid var(--linia);border-radius:8px;background:#fff;margin-top:6px;-webkit-overflow-scrolling:touch}
 .psi-pag{display:block;width:calc(var(--z,1) * 100%);max-width:none;height:auto;border-bottom:1px solid var(--linia)}
@@ -987,11 +989,14 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
         (orgMail(n) ? ' <a href="#" class="org-mail" data-orgmail="' + esc(orgMail(n)) + '" title="Escriu a ' + esc(orgMail(n)) + '">✉️</a>' : "") +
         ' <button type="button" class="org-ed" data-orged="' + esc(n) + '" title="' + (orgMail(n) ? "Canvia el correu" : "Posa-hi el correu a mà") + '">✏️</button></span></li>').join("") + "</ul></section>" : "";
     }).join("");
-    $("orgCos").innerHTML = h || '<p class="buit">No hi ha cap coincidència.</p>';
+    // 16.11.2026: a dalt, sempre, els que encara no tenen correu (un clic per posar-l'hi a mà)
+    const falten = q ? [] : ORG_NOMS.filter(n => !orgMail(n));
+    const fH = falten.length ? '<section class="org-sec org-falten"><h3>Sense correu (' + falten.length + ")</h3><p>" + falten.map(n => '<button type="button" class="boto clar" data-orged="' + esc(n) + '" title="Posa-hi el correu a mà">✏️ ' + esc(n) + "</button>").join("") + "</p></section>" : "";
+    $("orgCos").innerHTML = fH + (h || '<p class="buit">No hi ha cap coincidència.</p>');
   }
   let orgCercat = false;   // 16.11.2026: la primera vegada que s'obre (per sessió), busca sol els correus que falten
   $("orgBoto").addEventListener("click", () => {
-    $("orgCerca").value = ""; $("orgDirRes").innerHTML = ""; pintaOrg(); $("dlgOrg").showModal();
+    $("orgCerca").value = ""; pintaOrgRes(null); pintaOrg(); $("dlgOrg").showModal();
     if (!orgCercat && typeof dades !== "undefined" && dades && compteIns() && ORG_NOMS.some(n => !orgMail(n))) { orgCercat = true; $("orgDir").click(); }
   });
   $("orgCerca").addEventListener("input", pintaOrg);
@@ -1021,7 +1026,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     const dub = Object.keys(orgDubtes);
     $("orgDirRes").innerHTML = (trobats != null ? "<p>Correus trobats al directori: <b>" + trobats + "</b>.</p>" : "") +
       (dub.length ? "<p><b>Amb dubte</b> (tria el bo):</p>" + dub.map(n => "<p>" + esc(n) + ": " + orgDubtes[n].map(p => '<button type="button" class="boto clar" data-orgtria="' + esc(n) + '" data-email="' + esc(p.email) + '">' + esc(p.nom) + " · " + esc(p.email) + "</button>").join("") + "</p>").join("") : "") +
-      (orgSense.length ? "<p><b>No trobats</b> (" + orgSense.length + "): " + orgSense.map(esc).join(", ") + ". Els pots posar a mà amb ✏️.</p>" : "");
+      (orgSense.length ? "<p>No s'han trobat al directori: " + orgSense.length + ". Els tens a «Sense correu».</p>" : "");
   }
   $("orgDir").addEventListener("click", async () => {
     const b = $("orgDir"); b.disabled = true; $("orgDirRes").innerHTML = "<p>Buscant al directori del centre… (" + new Date().toLocaleTimeString("ca-ES", { hour: "2-digit", minute: "2-digit" }) + ")</p>";
