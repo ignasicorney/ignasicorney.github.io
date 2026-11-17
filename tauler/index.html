@@ -4313,7 +4313,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
           if (df) return '<td class="ed ambf' + (/NOTA|GLOBAL|FINAL/i.test(c.nom) ? (v < 5 ? " susp" : " apro") : "") + ombra(c, v) + '" data-alumne="' + esc(r.nom) + '" data-c="' + esc(c.nom) + '" title="Nota de l\'examen ' + num2(r.v[c.nom]) + ' · ' + df.faltes + ' falt' + (df.faltes === 1 ? "a" : "es") + ' · −' + num2(df.resta) + '"><span class="nf-ini">' + num2(r.v[c.nom]) + " · −" + num2(df.resta) + " (" + df.faltes + " f.)</span><span class=\"nf-fin\">" + num2(v) + "</span></td>";
           return '<td class="ed' + (c.tipus === "text" ? " txt" : "") + (esExempt(v) ? " exempt" : "") + ombra(c, v) + '" data-alumne="' + esc(r.nom) + '" data-c="' + esc(c.nom) + '" title="' + esc(txt) + '">' + esc(txt) + "</td>";
         }).join("") + "</tr>"; }).join("") || '<tr><td colspan="' + (f.columnes.length + 2) + '" class="buit">Cap alumne no coincideix.</td></tr>') +
-        "</tbody></table></div><p class=\"font\">" + files.length + " alumnes · toca una nota per canviar-la; toca el nom per canviar-lo o esborrar l'alumne; toca «📕 Deures» per apuntar faltes de deures" + (qDeures ? " (mode ràpid: cada toc posa o treu la falta d'avui)" : "") + ".</p>";
+        "</tbody></table></div><p class=\"font\">" + files.length + " alumnes · toca una nota per canviar-la (Retorn o ↓ baixa a l\'alumne següent; ↑ o Maj+Retorn, a l\'anterior); toca el nom per canviar-lo o esborrar l'alumne; toca «📕 Deures» per apuntar faltes de deures" + (qDeures ? " (mode ràpid: cada toc posa o treu la falta d'avui)" : "") + ".</p>";
     }
     cos.innerHTML = h;
     if (typeof pintaAssistent === "function" && $("asCos") && !$("asCos").contains(document.activeElement) && !asOcupat && !asResultat) pintaAssistent();
@@ -4354,13 +4354,17 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       }
       pintaAlumnes();
       if (mou) {
-        const cel = Array.from($("alumCos").querySelectorAll("td.ed"));
+        // 17.11.2026: Retorn i les fletxes amunt/avall es mouen per la mateixa columna (alumne següent o anterior)
+        const vert = mou === "avall" || mou === "amunt";
+        const cel = Array.from($("alumCos").querySelectorAll("td.ed")).filter(x => !vert || x.dataset.c === td.dataset.c);
         const i = cel.findIndex(x => x.dataset.alumne === td.dataset.alumne && x.dataset.c === td.dataset.c);
-        const seg = cel[i + mou]; if (seg) editaCela(seg);
+        const seg = cel[i + (vert ? (mou === "avall" ? 1 : -1) : mou)];
+        if (seg && !seg.classList.contains("rub")) { seg.scrollIntoView({ block: "nearest" }); editaCela(seg); }
       }
     };
     [inp, inpF].forEach(el => { if (el) el.addEventListener("keydown", e => {
-      if (e.key === "Enter") { e.preventDefault(); tanca(true, 0); }
+      if (e.key === "Enter") { e.preventDefault(); tanca(true, e.shiftKey ? "amunt" : "avall"); }
+      else if (e.key === "ArrowDown" || e.key === "ArrowUp") { e.preventDefault(); tanca(true, e.key === "ArrowDown" ? "avall" : "amunt"); }
       else if (e.key === "Escape") tanca(false, 0);
       else if (e.key === "Tab") {
         if (inpF && ((el === inp && !e.shiftKey) || (el === inpF && e.shiftKey))) return; // salta entre nota i faltes
