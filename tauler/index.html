@@ -4336,7 +4336,16 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     $("alumCos").querySelectorAll("td.sel").forEach(x => x.classList.remove("sel"));
     const td = celaTd(celaSel); if (td) td.classList.add("sel");
   }
-  function triaCela(td) { celaSel = td ? { alumne: td.dataset.alumne, c: td.dataset.c } : null; marcaSel(); if (td) td.scrollIntoView({ block: "nearest", inline: "nearest" }); }
+  function triaCela(td) { celaSel = td ? { alumne: td.dataset.alumne, c: td.dataset.c } : null; marcaSel(); if (td) veuCela(td); }
+  // Fa visible la casella: si en anar cap a l'esquerra queda tapada per la columna fixa del nom, desplaça la taula
+  function veuCela(td) {
+    td.scrollIntoView({ block: "nearest", inline: "nearest" });
+    const cont = td.closest(".taula"); if (!cont || getComputedStyle(td).position === "sticky") return;
+    const fixes = Array.from(td.parentElement.children).filter(x => x !== td && getComputedStyle(x).position === "sticky");
+    const tapa = fixes.reduce((m, x) => Math.max(m, x.getBoundingClientRect().right), cont.getBoundingClientRect().left);
+    const esq = td.getBoundingClientRect().left;
+    if (esq < tapa) cont.scrollLeft -= tapa - esq + 6;
+  }
   // Casella veïna: dalt/baix a la mateixa columna, dreta/esquerra a la mateixa fila; Tab segueix l'ordre de lectura
   function veina(td, mou) {
     const vert = mou === "avall" || mou === "amunt", horit = mou === "dreta" || mou === "esquerra";
