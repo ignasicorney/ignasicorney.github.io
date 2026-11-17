@@ -1767,13 +1767,13 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
   });
   const ESTIL_COMENTARIS = "Estil dels comentaris del professor (exemples reals): «24,25 / 29 = 8,36. Cuidado con la puntuación, referencias externas sin dejar claro dónde estamos, mayúsculas después del punto, errores ortográficos abundantes: vivía, tenía, huracán…» · «27,75 / 29 = 9,56. Correcta la estructuración. Pocas faltas.» · «Debes estructurar frase-punto, frase-punto. Ortografía, errores graves: …». Comentaris breus, directes, en la llengua del text, que comencen amb la puntuació si n'hi ha i després valoren estructura, puntuació i llisten les faltes d'ortografia entre comes.";
 
-  function selectorsAlumne(prefix) {
+  function selectorsAlumne(prefix, fets) {   // fets (opcional): nom de l'alumne → nota, per marcar els ja corregits amb ✓
     const q = Q(); if (!q.grups.length) return '<p class="font">Importa o crea primer algun grup per poder desar la nota a una columna.</p>';
     const g = q.grups[Math.min(Number(prefix.g || 0), q.grups.length - 1)];
     const f = g.fulls[Math.min(Number(prefix.f || 0), g.fulls.length - 1)] || { columnes: [], files: [] };
     return '<div class="fila-as"><label>Grup<select data-as="g">' + q.grups.map((x, i) => '<option value="' + i + '"' + (x === g ? " selected" : "") + ">" + esc(x.nom) + "</option>").join("") + "</select></label>" +
       '<label>Full<select data-as="f">' + g.fulls.map((x, i) => '<option value="' + i + '"' + (x === f ? " selected" : "") + ">" + esc(x.nom) + "</option>").join("") + "</select></label>" +
-      '<label>Alumne<select data-as="a"><option value="">—</option>' + f.files.map(r => '<option value="' + esc(r.nom) + '"' + (prefix.a === r.nom ? " selected" : "") + ">" + esc(r.nom.replace(/\s+DIS$/i, "")) + "</option>").join("") + "</select></label>" +
+      '<label>Alumne<select data-as="a"><option value="">—</option>' + f.files.map(r => '<option value="' + esc(r.nom) + '"' + (prefix.a === r.nom ? " selected" : "") + ">" + (fets && fets[r.nom] != null ? "✓ " : "") + esc(r.nom.replace(/\s+DIS$/i, "")) + (fets && fets[r.nom] != null ? " · " + coma(fets[r.nom]) : "") + "</option>").join("") + "</select></label>" +
       '<label>Columna<select data-as="c"><option value="">—</option>' + f.columnes.filter(c => c.tipus !== "calc").map(c => '<option value="' + esc(c.nom) + '"' + (prefix.c === c.nom ? " selected" : "") + ">" + esc(c.nom) + "</option>").join("") + "</select></label></div>";
   }
   let asSel = { g: 0, f: 0, a: "", c: "" };
@@ -3363,13 +3363,64 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     if (!falCorr || falCorr.id !== fal.id || falCorr.al !== k) { const p = k && fal.resp && fal.resp[k]; falCorr = { id: fal.id, al: k, d: p ? p.d.slice() : [], t: p ? p.t.slice() : [], p: p ? p.p.slice() : (pBo ? fal.perque.map((x, j) => j) : []) }; }
     const cl = falClaus(fal), er = falErrs(fal), nota = falNota(fal, falCorr);
     const xips = (part, ll) => { const bo = part === "p" && pBo; return '<div class="dic-xips' + (bo ? " bones" : "") + '">' + ll.map((x, i) => '<button type="button" data-asb="ei-falx" data-part="' + part + '" data-i="' + i + '" aria-pressed="' + (bo ? !falCorr[part].includes(i) : falCorr[part].includes(i)) + '">' + esc(x) + "</button>").join("") + "</div>"; };
-    h += "<h4>✅ Correcció</h4>" + selectorsAlumne(asSel);
+    const fets = {}; if (g) Object.keys(fal.resp || {}).forEach(x => { const i = x.indexOf("|"); if (x.slice(0, i) === g.nom) fets[x.slice(i + 1)] = falNota(fal, fal.resp[x]); });
+    h += falInformeBloc(fal) + "<h4>✅ Correcció</h4>" + selectorsAlumne(asSel, fets);
     if (!k) return h + '<p class="font">Tria l\'alumne.</p>';
     return h + '<p class="font"><b>Dictat</b>: toca les paraules que ha escrit malament.</p>' + xips("d", cl) +
       '<p class="font"><b>Text</b>: toca les faltes que no ha trobat o no ha corregit bé.</p>' + xips("t", er.map(x => x.mal + " → " + x.be)) +
       '<p class="font"><b>Per què?</b>: ' + (pBo ? "toca les que ha encertat." : "toca les que ha fallat.") + '</p>' + xips("p", fal.perque.map(x => x[0].replace(/\s*\(.*\)$/, "") + " (" + x[1] + ")")) +
       '<div class="fila-as"><div class="xifra" style="min-width:160px"><b style="font-size:1.8rem">' + coma(nota) + "</b><span>dictat " + (cl.length - falCorr.d.length) + "/" + cl.length + " · text " + (er.length - falCorr.t.length) + "/" + er.length + " · per què " + (fal.perque.length - falCorr.p.length) + "/" + fal.perque.length + "</span></div></div>" +
-      '<div class="alum-eines">' + eBoto("falnota", "💾 Desa la nota i passa al següent alumne") + "</div>";
+      '<div class="alum-eines">' + eBoto("falnota", "💾 Desa la nota i passa al següent alumne") + (fal.resp && fal.resp[k] ? eBoto("falinfal", "🖨️ Informe d'aquest alumne", true) : "") + "</div>";
+  }
+  // ---- Informe de les faltes (17.11.2026): per classe i per alumne, a partir del que s'ha marcat a la correcció ----
+  // A resp, d i t són les paraules fallades; p, les regles fallades (encara que a la pantalla es toquin les encertades).
+  function falDades(f) {
+    const cl = falClaus(f), er = falErrs(f), pq = f.perque, resp = f.resp || {};
+    const al = Object.keys(resp).map(k => { const i = k.indexOf("|"); return { k, g: k.slice(0, i), nom: k.slice(i + 1), r: resp[k], nota: falNota(f, resp[k]) }; })
+      .sort((a, b) => nomAl(a.nom).localeCompare(nomAl(b.nom), "ca"));
+    const g = Q().grups.find(x => x.nom === f.grup), noms = [];
+    if (g) g.fulls.forEach(x => x.files.forEach(r => { if (!noms.includes(r.nom)) noms.push(r.nom); }));
+    const pend = noms.filter(n => !resp[f.grup + "|" + n]).sort((a, b) => nomAl(a).localeCompare(nomAl(b), "ca"));
+    const items = [].concat(cl.map((w, i) => ({ part: "d", i, txt: w })), er.map((x, i) => ({ part: "t", i, txt: x.mal + " → " + x.be })),
+      pq.map((x, i) => ({ part: "p", i, txt: x[0].replace(/\s*\(.*\)$/, "") + " (" + x[1] + ")" })));
+    items.forEach(it => { it.qui = al.filter(a => (a.r[it.part] || []).includes(it.i)).map(a => nomAl(a.nom)); });
+    const mitjana = al.length ? Math.round(al.reduce((s, a) => s + a.nota, 0) / al.length * 100) / 100 : 0;
+    return { cl, er, pq, al, pend, items, mitjana, aprovats: al.filter(a => a.nota >= 5).length };
+  }
+  const FAL_PARTS = { d: "Dictat", t: "Text", p: "Per què?" };
+  function falHTMLClasse(f, pantalla) {
+    const D = falDades(f), td = 'style="border:1px solid #999;padding:3px 6px;vertical-align:top"';
+    let h = (pantalla ? "" : "<h3>Informe de la classe · " + esc(f.grup) + " · " + esc(falTx(f).sub) + " · " + dma(f.d) + "</h3>") +
+      "<p><b>" + D.al.length + "</b> alumnes corregits" + (D.pend.length ? " (falten " + D.pend.length + ")" : "") + " · nota mitjana <b>" + coma(D.mitjana) + "</b> · aprovats " + D.aprovats + "/" + D.al.length + "</p>";
+    if (!D.al.length) return h;
+    ["d", "t", "p"].forEach(pt => {
+      const ll = D.items.filter(it => it.part === pt).sort((a, b) => b.qui.length - a.qui.length);
+      h += "<h4>" + FAL_PARTS[pt] + (pt === "p" ? " (regles fallades)" : "") + '</h4><table style="border-collapse:collapse;width:100%;font-size:13px">' +
+        ll.map(it => "<tr><td " + td + ' width="26%"><b>' + esc(it.txt) + "</b></td><td " + td + ' width="12%">' + it.qui.length + "/" + D.al.length + " (" + Math.round(it.qui.length * 100 / D.al.length) + " %)</td><td " + td + ">" + esc(it.qui.join(", ")) + "</td></tr>").join("") + "</table>";
+    });
+    h += '<h4>Per alumne</h4><table style="border-collapse:collapse;width:100%;font-size:13px"><tr><th ' + td + ">Alumne</th><th " + td + ">Nota</th><th " + td + ">Dictat</th><th " + td + ">Text</th><th " + td + ">Per què?</th><th " + td + ">Fallades</th></tr>" +
+      D.al.map(a => "<tr><td " + td + ">" + esc(nomAl(a.nom)) + (a.g !== f.grup ? " (" + esc(a.g) + ")" : "") + "</td><td " + td + "><b>" + coma(a.nota) + "</b></td><td " + td + ">" + (D.cl.length - a.r.d.length) + "/" + D.cl.length + "</td><td " + td + ">" + (D.er.length - a.r.t.length) + "/" + D.er.length + "</td><td " + td + ">" + (D.pq.length - a.r.p.length) + "/" + D.pq.length + "</td><td " + td + ">" +
+        esc(a.r.d.map(i => D.cl[i]).concat(a.r.t.map(i => D.er[i].be)).join(", ")) + (a.r.p.length ? " · regles: " + esc(a.r.p.map(i => D.pq[i][1]).join(", ")) : "") + "</td></tr>").join("") + "</table>";
+    if (D.pend.length) h += "<p><b>Pendents de corregir:</b> " + esc(D.pend.map(nomAl).join(", ")) + "</p>";
+    return h;
+  }
+  function falHTMLAlumne(f, a) {
+    const D = falDades(f), es = f.lleng !== "català", reg = falReg(f), regT = l => (reg.find(r => r[0] === l) || ["", ""])[1];
+    const T = es ? { tit: "Informe de ortografía", nota: "Nota", d: "Dictado: palabras mal escritas", t: "Texto: faltas no encontradas o mal corregidas", p: "¿Por qué?: reglas falladas", cap: "Todo correcto.", rep: "Reglas que debes repasar" }
+      : { tit: "Informe d'ortografia", nota: "Nota", d: "Dictat: paraules mal escrites", t: "Text: faltes no trobades o mal corregides", p: "Per què?: regles fallades", cap: "Tot correcte.", rep: "Regles que has de repassar" };
+    const ll = (arr, fn) => arr.length ? "<ul>" + arr.map(fn).join("") + "</ul>" : "<p>" + T.cap + "</p>";
+    const regs = [...new Set(a.r.p.map(i => D.pq[i][1]))].sort();
+    return "<h3>" + T.tit + " · " + esc(f.grup) + " · " + dma(f.d) + "</h3><p><b>" + esc(nomAl(a.nom)) + "</b> · " + T.nota + ": <b>" + coma(a.nota) + "</b> (" + (D.cl.length - a.r.d.length) + "/" + D.cl.length + " · " + (D.er.length - a.r.t.length) + "/" + D.er.length + " · " + (D.pq.length - a.r.p.length) + "/" + D.pq.length + ")</p>" +
+      "<h4>" + T.d + "</h4>" + ll(a.r.d.slice().sort((x, y) => x - y), i => "<li><b>" + esc(D.cl[i]) + "</b></li>") +
+      "<h4>" + T.t + "</h4>" + ll(a.r.t.slice().sort((x, y) => x - y), i => "<li>" + esc(D.er[i].mal) + " → <b>" + esc(D.er[i].be) + "</b></li>") +
+      "<h4>" + T.p + "</h4>" + ll(a.r.p.slice().sort((x, y) => x - y), i => "<li>" + esc(D.pq[i][0].replace(/\s*\(.*\)$/, "")) + " → <b>" + D.pq[i][1] + "</b></li>") +
+      (regs.length ? "<h4>" + T.rep + "</h4>" + regs.map(l => "<p><b>" + l + ".</b> " + esc(regT(l)) + "</p>").join("") : "");
+  }
+  function falInformeBloc(f) {
+    const D = falDades(f);
+    if (!D.al.length) return "";
+    return '<details><summary class="font"><b>📊 Informe</b> · ' + D.al.length + " corregits" + (D.pend.length ? ", " + D.pend.length + " pendents" : "") + " · mitjana " + coma(D.mitjana) + "</summary>" + falHTMLClasse(f, true) + "</details>" +
+      '<div class="alum-eines">' + eBoto("falinfcl", "🖨️ Informe de la classe", true) + eBoto("falinfals", "🖨️ Informes per alumne (un full cadascun)", true) + "</div>";
   }
   function falNota(f, c) {
     const nd = falClaus(f).length || 1, nt = falErrs(f).length || 1, np = f.perque.length || 1;
@@ -3494,6 +3545,13 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     if (a === "falimp") { imprimeix(falTx(fal).sub + " · " + fal.grup, [falHTMLFitxa(fal)], false); return; }
     if (a === "falsol") { imprimeix(falTx(fal).sol + " · " + fal.grup, [falHTMLSol(fal)], false, true); return; }
     if (a === "falword" || a === "falsolword") return falWord(fal, a === "falsolword");
+    if (a === "falinfcl") { imprimeix("Informe de faltes · " + fal.grup, falHTMLClasse(fal), false, true); return; }
+    if (a === "falinfals" || a === "falinfal") {
+      let al = falDades(fal).al;
+      if (a === "falinfal") { const { g, fila } = triat(); al = al.filter(x => g && fila && x.k === clauAl(g, fila.nom)); }
+      if (!al.length) return;
+      imprimeix("Informes de faltes · " + fal.grup, al.map(x => falHTMLAlumne(fal, x)), false, true); return;
+    }
     if (a === "falx") { const p = b.dataset.part, i = Number(b.dataset.i), l = falCorr[p], j = l.indexOf(i); if (j >= 0) l.splice(j, 1); else l.push(i); return pintaAssistent(); }
     if (a === "falnota") {
       const { g, fila, col } = triat(), nota = falNota(fal, falCorr);
