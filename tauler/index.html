@@ -3370,7 +3370,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       '<p class="font"><b>Text</b>: toca les faltes que no ha trobat o no ha corregit bé.</p>' + xips("t", er.map(x => x.mal + " → " + x.be)) +
       '<p class="font"><b>Per què?</b>: ' + (pBo ? "toca les que ha encertat." : "toca les que ha fallat.") + '</p>' + xips("p", fal.perque.map(x => x[0].replace(/\s*\(.*\)$/, "") + " (" + x[1] + ")")) +
       '<div class="fila-as"><div class="xifra" style="min-width:160px"><b style="font-size:1.8rem">' + coma(nota) + "</b><span>dictat " + (cl.length - falCorr.d.length) + "/" + cl.length + " · text " + (er.length - falCorr.t.length) + "/" + er.length + " · per què " + (fal.perque.length - falCorr.p.length) + "/" + fal.perque.length + "</span></div></div>" +
-      '<div class="alum-eines">' + eBoto("falnota", "💾 Desa la nota i passa al següent alumne") + (fal.resp && fal.resp[k] ? eBoto("falinfal", "🖨️ Informe d'aquest alumne", true) : "") + "</div>";
+      '<div class="alum-eines">' + eBoto("falnota", "💾 Desa la nota i passa al següent alumne") + (fal.resp && fal.resp[k] ? eBoto("falinfal", "🖨️ Informe d'aquest alumne", true) + eBoto("falenval", (fal.env && fal.env[k] ? "✉️ Torna-li a enviar (enviat el " + dma(fal.env[k]) + ")" : "✉️ Envia-li l'informe"), true) : "") + "</div>";
   }
   // ---- Informe de les faltes (17.11.2026): per classe i per alumne, a partir del que s'ha marcat a la correcció ----
   // A resp, d i t són les paraules fallades; p, les regles fallades (encara que a la pantalla es toquin les encertades).
@@ -3398,8 +3398,8 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       h += "<h4>" + FAL_PARTS[pt] + (pt === "p" ? " (regles fallades)" : "") + '</h4><table style="border-collapse:collapse;width:100%;font-size:13px">' +
         ll.map(it => "<tr><td " + td + ' width="26%"><b>' + esc(it.txt) + "</b></td><td " + td + ' width="12%">' + it.qui.length + "/" + D.al.length + " (" + Math.round(it.qui.length * 100 / D.al.length) + " %)</td><td " + td + ">" + esc(it.qui.join(", ")) + "</td></tr>").join("") + "</table>";
     });
-    h += '<h4>Per alumne</h4><table style="border-collapse:collapse;width:100%;font-size:13px"><tr><th ' + td + ">Alumne</th><th " + td + ">Nota</th><th " + td + ">Dictat</th><th " + td + ">Text</th><th " + td + ">Per què?</th><th " + td + ">Fallades</th></tr>" +
-      D.al.map(a => "<tr><td " + td + ">" + esc(nomAl(a.nom)) + (a.g !== f.grup ? " (" + esc(a.g) + ")" : "") + "</td><td " + td + "><b>" + coma(a.nota) + "</b></td><td " + td + ">" + (D.cl.length - a.r.d.length) + "/" + D.cl.length + "</td><td " + td + ">" + (D.er.length - a.r.t.length) + "/" + D.er.length + "</td><td " + td + ">" + (D.pq.length - a.r.p.length) + "/" + D.pq.length + "</td><td " + td + ">" +
+    h += '<h4>Per alumne</h4><table style="border-collapse:collapse;width:100%;font-size:13px"><tr><th ' + td + ">Alumne</th>" + (pantalla ? "<th " + td + ">Enviat</th>" : "") + "<th " + td + ">Nota</th><th " + td + ">Dictat</th><th " + td + ">Text</th><th " + td + ">Per què?</th><th " + td + ">Fallades</th></tr>" +
+      D.al.map(a => "<tr><td " + td + ">" + esc(nomAl(a.nom)) + (a.g !== f.grup ? " (" + esc(a.g) + ")" : "") + "</td>" + (pantalla ? "<td " + td + ">" + ((f.env || {})[a.k] ? "✉️ " + dma(f.env[a.k]) : "—") + "</td>" : "") + "<td " + td + "><b>" + coma(a.nota) + "</b></td><td " + td + ">" + (D.cl.length - a.r.d.length) + "/" + D.cl.length + "</td><td " + td + ">" + (D.er.length - a.r.t.length) + "/" + D.er.length + "</td><td " + td + ">" + (D.pq.length - a.r.p.length) + "/" + D.pq.length + "</td><td " + td + ">" +
         esc(a.r.d.map(i => D.cl[i]).concat(a.r.t.map(i => D.er[i].be)).join(", ")) + (a.r.p.length ? " · regles: " + esc(a.r.p.map(i => D.pq[i][1]).join(", ")) : "") + "</td></tr>").join("") + "</table>";
     if (D.pend.length) h += "<p><b>Pendents de corregir:</b> " + esc(D.pend.map(nomAl).join(", ")) + "</p>";
     return h;
@@ -3416,11 +3416,49 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       "<h4>" + T.p + "</h4>" + ll(a.r.p.slice().sort((x, y) => x - y), i => "<li>" + esc(D.pq[i][0].replace(/\s*\(.*\)$/, "")) + " → <b>" + D.pq[i][1] + "</b></li>") +
       (regs.length ? "<h4>" + T.rep + "</h4>" + regs.map(l => "<p><b>" + l + ".</b> " + esc(regT(l)) + "</p>").join("") : "");
   }
+  // 17.11.2026: l'informe de cada alumne s'envia sol al seu correu (els de «✉️ Correus de l'alumnat») des del compte d'ieslabisbal.cat
+  function falTextAlumne(f, a) {
+    const D = falDades(f), es = f.lleng !== "català", reg = falReg(f), regT = l => (reg.find(r => r[0] === l) || ["", ""])[1];
+    const nom = nomAl(a.nom), pila = nom.includes(",") ? nom.split(",").slice(1).join(",").trim() : nom;
+    const T = es ? { hola: "Hola, " + pila + ":", intro: "Aquí tienes el informe de la ficha de ortografía «" + falTx(f).sub + "» del " + dma(f.d) + ".", nota: "Nota", dd: "dictado", tt: "texto", pp: "¿por qué?", d: "Dictado: palabras mal escritas", t: "Texto: faltas no encontradas o mal corregidas", p: "¿Por qué?: reglas falladas", cap: "Todo correcto.", rep: "Reglas que debes repasar", fi: "Repasa estas palabras: volverán a salir.", sal: "Un saludo," }
+      : { hola: "Hola, " + pila + ":", intro: "Aquí tens l'informe de la fitxa d'ortografia «" + falTx(f).sub + "» del " + dma(f.d) + ".", nota: "Nota", dd: "dictat", tt: "text", pp: "per què?", d: "Dictat: paraules mal escrites", t: "Text: faltes no trobades o mal corregides", p: "Per què?: regles fallades", cap: "Tot correcte.", rep: "Regles que has de repassar", fi: "Repassa aquestes paraules: tornaran a sortir.", sal: "Salutacions," };
+    const ll = (arr, fn) => arr.length ? arr.slice().sort((x, y) => x - y).map(i => "  - " + fn(i)).join("\n") : "  " + T.cap;
+    const regs = [...new Set(a.r.p.map(i => D.pq[i][1]))].sort();
+    return T.hola + "\n\n" + T.intro + "\n\n" + T.nota + ": " + coma(a.nota) + " (" + T.dd + " " + (D.cl.length - a.r.d.length) + "/" + D.cl.length + " · " + T.tt + " " + (D.er.length - a.r.t.length) + "/" + D.er.length + " · " + T.pp + " " + (D.pq.length - a.r.p.length) + "/" + D.pq.length + ")\n\n" +
+      T.d + "\n" + ll(a.r.d, i => D.cl[i]) + "\n\n" + T.t + "\n" + ll(a.r.t, i => D.er[i].mal + " → " + D.er[i].be) + "\n\n" + T.p + "\n" + ll(a.r.p, i => D.pq[i][0].replace(/\s*\(.*\)$/, "") + " → " + D.pq[i][1]) +
+      (regs.length ? "\n\n" + T.rep + "\n" + regs.map(l => "  " + l + ". " + regT(l)).join("\n") : "") + (a.r.d.length + a.r.t.length ? "\n\n" + T.fi : "") + "\n\n" + T.sal;
+  }
+  const falCorreuDe = a => { const g = Q().grups.find(x => x.nom === a.g); return (g && g.correus && g.correus[a.nom]) || ""; };
+  function falCompteSortida() { const c = compteIns(); if (c) return c; const l = ((dades.correu && dades.correu.comptes) || []).filter(x => x && x.url); return l[0] || null; }
+  async function falEnvia(f, llista) {
+    if (!llista.length) return;
+    const c = falCompteSortida();
+    if (!c) { alert("No hi ha cap compte de correu configurat al bloc Correu."); return; }
+    const amb = llista.filter(a => falCorreuDe(a)), sense = llista.filter(a => !falCorreuDe(a));
+    if (!amb.length) { alert("Cap d'aquests alumnes no té el correu posat. Carrega'ls amb «✉️ Correus de l'alumnat» a Alumnes i qualificacions."); return; }
+    if (!confirm("S'enviarà l'informe a " + amb.length + (amb.length === 1 ? " alumne" : " alumnes") + " des de " + (c.nom || "el compte del centre") + "." + (sense.length ? "\n\nSense correu (no se'ls enviarà): " + sense.map(a => nomAl(a.nom)).join(", ") + "." : "") + "\n\nVols enviar-los?")) return;
+    const assumpte = (f.lleng === "català" ? "Informe d'ortografia" : "Informe de ortografía") + " · " + falTx(f).sub + " · " + dma(f.d);
+    const sig = String(c.signatura || "").replace(/\s+$/, ""), ini = new Date();
+    eiMsg.fal = "Enviant " + amb.length + " informes (començat a les " + String(ini.getHours()).padStart(2, "0") + ":" + String(ini.getMinutes()).padStart(2, "0") + ")…"; pintaAssistent();
+    const cua = amb.slice(), fets = [], errs = [];
+    const treballa = async () => { while (cua.length) { const a = cua.shift(); try {
+      const r = await fetch(c.url, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, redirect: "follow",
+        body: JSON.stringify({ pin: clau, accio: "envia", a: falCorreuDe(a), assumpte: assumpte, cos: falTextAlumne(f, a) + (sig.trim() ? "\n" + sig : "") }) });
+      let d = {}; try { d = await r.json(); } catch (e) { throw new Error("l'Apps Script no ha respost bé"); }
+      if (!d.ok) throw new Error(d.error || "error desconegut");
+      f.env = f.env || {}; f.env[a.k] = avuiISO(); fets.push(a);
+    } catch (er) { errs.push(nomAl(a.nom) + " (" + er.message + ")"); } } };
+    await Promise.all([0, 1].map(treballa));
+    desa();
+    eiMsg.fal = (fets.length ? "✓ Informe enviat a " + fets.length + (fets.length === 1 ? " alumne." : " alumnes.") : "") + (errs.length ? " ⚠️ No s'ha pogut enviar a: " + esc(errs.join("; ")) + "." : "") + (sense.length ? " Sense correu: " + esc(sense.map(a => nomAl(a.nom)).join(", ")) + "." : "");
+    pintaAssistent();
+  }
   function falInformeBloc(f) {
     const D = falDades(f);
     if (!D.al.length) return "";
     return '<details><summary class="font"><b>📊 Informe</b> · ' + D.al.length + " corregits" + (D.pend.length ? ", " + D.pend.length + " pendents" : "") + " · mitjana " + coma(D.mitjana) + "</summary>" + falHTMLClasse(f, true) + "</details>" +
-      '<div class="alum-eines">' + eBoto("falinfcl", "🖨️ Informe de la classe", true) + eBoto("falinfals", "🖨️ Informes per alumne (un full cadascun)", true) + "</div>";
+      '<div class="alum-eines">' + eBoto("falinfcl", "🖨️ Informe de la classe", true) + eBoto("falinfals", "🖨️ Informes per alumne (un full cadascun)", true) +
+      eBoto("falenvals", "✉️ Envia l'informe a cada alumne" + (() => { const n = D.al.filter(a => !(f.env || {})[a.k]).length; return n < D.al.length ? " (" + n + " pendents)" : ""; })(), true) + "</div>";
   }
   function falNota(f, c) {
     const nd = falClaus(f).length || 1, nt = falErrs(f).length || 1, np = f.perque.length || 1;
@@ -3546,6 +3584,11 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     if (a === "falsol") { imprimeix(falTx(fal).sol + " · " + fal.grup, [falHTMLSol(fal)], false, true); return; }
     if (a === "falword" || a === "falsolword") return falWord(fal, a === "falsolword");
     if (a === "falinfcl") { imprimeix("Informe de faltes · " + fal.grup, falHTMLClasse(fal), false, true); return; }
+    if (a === "falenvals") {
+      const al = falDades(fal).al, pend = al.filter(x => !(fal.env || {})[x.k]);
+      return falEnvia(fal, pend.length ? pend : (confirm("Ja s'ha enviat l'informe a tots. Vols tornar-lo a enviar a tothom?") ? al : []));
+    }
+    if (a === "falenval") { const { g, fila } = triat(); const al = falDades(fal).al.filter(x => g && fila && x.k === clauAl(g, fila.nom)); return falEnvia(fal, al); }
     if (a === "falinfals" || a === "falinfal") {
       let al = falDades(fal).al;
       if (a === "falinfal") { const { g, fila } = triat(); al = al.filter(x => g && fila && x.k === clauAl(g, fila.nom)); }
