@@ -3334,6 +3334,11 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     FAL_INI.forEach((x, i) => e.fal.push({ id: "fal" + (i + 1) + "-20261115", d: "2026-11-15", grup: x.grup, lleng: "castellà", faltes: x.faltes, dictat: x.dictat.slice(), text: x.text, perque: x.perque.map(p => p.slice()), resp: {} }));
     e.falIni = 1; desa();
   }
+  // 17.11.2026: el desplegable i el botó «Obre» fan servir la mateixa llista i el mateix valor per defecte (abans «Obre» sense tocar el desplegable obria l'última fitxa, la de 1r J)
+  function falOrdenades() {
+    const ordG = falGrups().map(falNormG), posG = x => { const i = ordG.indexOf(falNormG(x.grup)); return i < 0 ? ordG.length : i; };
+    return EI().fal.slice().reverse().sort((a, b) => posG(a) - posG(b) || String(a.grup).localeCompare(String(b.grup), "ca") || String(b.d).localeCompare(String(a.d)));
+  }
   const falGrups = () => { const n = Q().grups.map(g => g.nom); return n.length ? n : ["1r A", "1r I", "1r J"]; };
   function pintaFal() {
     falSeed();
@@ -3341,8 +3346,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     let h = '<p class="font">Les faltes d\'un examen (foto de la pissarra o escrites a mà) es converteixen en una fitxa avaluable sobre 10: dictat de 20 paraules (5 punts), text amb 12 faltes per trobar (3 punts) i «per què?» amb la regla de 8 paraules (2 punts), amb el solucionari a part. Les paraules del dictat són les mateixes o similars (de la mateixa regla).</p>';
     if (!fal) {
       // Fitxes desades per l'ordre dels grups (1r A, 1r I, 1r J…) i, dins de cada grup, la més nova primer
-      const ordG = falGrups(), posG = x => { const i = ordG.indexOf(x.grup); return i < 0 ? ordG.length : i; };
-      const falOrd = e.fal.slice().reverse().sort((a, b) => posG(a) - posG(b) || String(a.grup).localeCompare(String(b.grup), "ca") || String(b.d).localeCompare(String(a.d)));
+      const falOrd = falOrdenades();
       if (e.fal.length) h += '<div class="fila-as"><label>Fitxes desades<select data-ei="fald">' + eOpts(falOrd.map(x => [x.id, dma(x.d) + " · " + x.grup + " · " + x.lleng]), fv("fald", falOrd[0].id)) + "</select></label>" +
         '<span style="align-self:end">' + eBoto("falobre", "Obre", true) + " " + eBoto("falwordd", "⬇️ Word", true) + " " + eBoto("falsolwordd", "⬇️ Solucionari en Word", true) + " " + eBoto("falesb", "Esborra", true) + "</span></div>";
       h += "<h4>➕ Fitxa nova</h4>" +
@@ -3554,7 +3558,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       }
       if (!millor || !millor.dictat.length) throw new Error("La IA no ha retornat la fitxa; torna-ho a provar.");
       fal = millor; falCorr = null; eiRes.fal = "";
-      const q = Q().grups.findIndex(x => x.nom === grup); if (q >= 0) asSel = { g: q, f: 0, a: "", c: "" };
+      const q = Q().grups.findIndex(x => falMateixGrup(x.nom, grup)); if (q >= 0) asSel = { g: q, f: 0, a: "", c: "" };
       const av = falComprova(fal);
       eiMsg.fal = av.length ? "" : "✓ Fitxa generada. Revisa-la i desa-la.";
     });
@@ -3609,9 +3613,9 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     const e = EI();
     if (a === "falgen") return falGenera();
     if (a === "falwordd" || a === "falsolwordd" || a === "falobre" || a === "falesb") {
-      const t = e.fal.find(x => x.id === fv("fald", "")) || e.fal[e.fal.length - 1]; if (!t) return;
+      const t = e.fal.find(x => x.id === fv("fald", "")) || falOrdenades()[0]; if (!t) return;
       if (a === "falwordd" || a === "falsolwordd") return falWord(t, a === "falsolwordd");
-      if (a === "falobre") { fal = t; falCorr = null; eiMsg.fal = ""; const q = Q().grups.findIndex(x => x.nom === t.grup); if (q >= 0 && Q().grups[asSel.g] !== Q().grups[q]) asSel = { g: q, f: 0, a: "", c: "" }; }
+      if (a === "falobre") { fal = t; falCorr = null; eiMsg.fal = ""; const q = Q().grups.findIndex(x => falMateixGrup(x.nom, t.grup)); if (q >= 0 && Q().grups[asSel.g] !== Q().grups[q]) asSel = { g: q, f: 0, a: "", c: "" }; }
       else if (confirm("Vols esborrar la fitxa de " + t.grup + " del " + dma(t.d) + " i les correccions?")) { e.fal.splice(e.fal.indexOf(t), 1); fput("fald", null); desa(); }
       return pintaAssistent();
     }
