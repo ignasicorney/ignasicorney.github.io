@@ -1222,6 +1222,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       const d = await crida({ accio: "institut-llegeix" });
       sha = d.sha || null;
       dades = normalitza(d.dades);
+      religaOberts();
       lsEscriu("tauler.dades", JSON.stringify(dades));
       llegit = true;
       estatSinc("ok", "Sincronitzat");
@@ -3305,6 +3306,13 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       perque: [["falleció", "A"], ["móvil", "B"], ["podían", "C"], ["raíces", "C"], ["más (Quiero más agua.)", "D"], ["escuchar", "E"], ["muchas", "E"], ["haber", "F"]] }
   ];
   let fal = null, falCorr = null, falFitxer = null, falLlegint = false;
+  // 17.11.2026: en tornar a la pestanya es recarreguen les dades; la fitxa de faltes i el control de lectura oberts s'han de tornar a lligar
+  // als objectes nous (pel seu id), si no la fitxa sembla no desada, s'obre «Revisa i edita» i la correcció desapareix
+  function religaOberts() {
+    const e = EI();
+    if (fal && fal.id) { const n = (e.fal || []).find(x => x.id === fal.id); if (n) fal = n; }
+    if (ctl && ctl.id) { const n = (e.ctl || []).find(x => x.id === ctl.id); if (n) ctl = n; }
+  }
   const FAL_MARCA = /\{([^{}|]+)\|([^{}|]+)\}/g;
   const falClaus = f => f.dictat.reduce((a, s) => a.concat((String(s).match(/\*[^*]+\*/g) || []).map(x => x.slice(1, -1))), []);
   const falErrs = f => { const r = []; String(f.text).replace(FAL_MARCA, (m, a, b) => { r.push({ mal: a, be: b }); return m; }); return r; };
