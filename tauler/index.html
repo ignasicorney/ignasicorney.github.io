@@ -3365,7 +3365,14 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       '<div class="alum-eines">' + eBoto("faldesa", desat ? "💾 Desa els canvis" : "💾 Desa la fitxa") + eBoto("falimp", "🖨️ Imprimeix la fitxa", true) + eBoto("falword", "⬇️ Fitxa en Word", true) + eBoto("falsol", "🖨️ Solucionari", true) + eBoto("falsolword", "⬇️ Solucionari en Word", true) + eBoto("faltanca", "✕ Tanca", true) + "</div>" + msgEi() + notaModel();
     if (!desat) return h + '<p class="font">Desa la fitxa per poder-la corregir.</p>';
     // Correcció: es toca el que l'alumne ha fallat; la nota va sola a la columna triada
-    const { g, fila } = triat(), k = fila && g ? clauAl(g, fila.nom) : "";
+    let { g, fila } = triat();
+    // 17.11.2026: la fitxa ha de ser la del grup triat a la correcció (1r I i 1r J tenen paraules diferents)
+    if (g && !falMateixGrup(g.nom, fal.grup)) {
+      const alt = e.fal.filter(x => falMateixGrup(x.grup, g.nom)).sort((a, b) => String(b.d).localeCompare(String(a.d)))[0];
+      if (alt) { fal = alt; falCorr = null; return pintaFal(); }
+      return h + "<h4>✅ Correcció</h4>" + selectorsAlumne(asSel) + '<p class="avis">⚠️ Aquesta fitxa és de ' + esc(fal.grup) + " i has triat " + esc(g.nom) + ". Per a " + esc(g.nom) + " no hi ha cap fitxa desada: torna a triar " + esc(fal.grup) + " o crea'n una per a " + esc(g.nom) + ".</p>";
+    }
+    const k = fila && g ? clauAl(g, fila.nom) : "";
     // 16.11.2026: al «per què?» es marquen les encertades (en verd), no les fallades; per dins es continuen desant les fallades
     const pBo = true;
     if (!falCorr || falCorr.id !== fal.id || falCorr.al !== k) { const p = k && fal.resp && fal.resp[k]; falCorr = { id: fal.id, al: k, d: p ? p.d.slice() : [], t: p ? p.t.slice() : [], p: p ? p.p.slice() : (pBo ? fal.perque.map((x, j) => j) : []) }; }
@@ -3382,18 +3389,21 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
   }
   // ---- Informe de les faltes (17.11.2026): per classe i per alumne, a partir del que s'ha marcat a la correcció ----
   // A resp, d i t són les paraules fallades; p, les regles fallades (encara que a la pantalla es toquin les encertades).
+  const falNormG = x => String(x || "").replace(/\s+/g, "").toLowerCase();
+  const falMateixGrup = (a, b) => falNormG(a) === falNormG(b);
   function falDades(f) {
     const cl = falClaus(f), er = falErrs(f), pq = f.perque, resp = f.resp || {};
-    const al = Object.keys(resp).map(k => { const i = k.indexOf("|"); return { k, g: k.slice(0, i), nom: k.slice(i + 1), r: resp[k], nota: falNota(f, resp[k]) }; })
+    const tots = Object.keys(resp).map(k => { const i = k.indexOf("|"); return { k, g: k.slice(0, i), nom: k.slice(i + 1), r: resp[k], nota: falNota(f, resp[k]) }; })
       .sort((a, b) => nomAl(a.nom).localeCompare(nomAl(b.nom), "ca"));
-    const g = Q().grups.find(x => x.nom === f.grup), noms = [];
+    const al = tots.filter(a => falMateixGrup(a.g, f.grup)), altres = tots.filter(a => !falMateixGrup(a.g, f.grup));
+    const g = Q().grups.find(x => falMateixGrup(x.nom, f.grup)), noms = [];
     if (g) g.fulls.forEach(x => x.files.forEach(r => { if (!noms.includes(r.nom)) noms.push(r.nom); }));
-    const pend = noms.filter(n => !resp[f.grup + "|" + n]).sort((a, b) => nomAl(a).localeCompare(nomAl(b), "ca"));
+    const pend = noms.filter(n => !al.some(a => a.nom === n)).sort((a, b) => nomAl(a).localeCompare(nomAl(b), "ca"));
     const items = [].concat(cl.map((w, i) => ({ part: "d", i, txt: w })), er.map((x, i) => ({ part: "t", i, txt: x.mal + " → " + x.be })),
       pq.map((x, i) => ({ part: "p", i, txt: x[0].replace(/\s*\(.*\)$/, "") + " (" + x[1] + ")" })));
     items.forEach(it => { it.qui = al.filter(a => (a.r[it.part] || []).includes(it.i)).map(a => nomAl(a.nom)); });
     const mitjana = al.length ? Math.round(al.reduce((s, a) => s + a.nota, 0) / al.length * 100) / 100 : 0;
-    return { cl, er, pq, al, pend, items, mitjana, aprovats: al.filter(a => a.nota >= 5).length };
+    return { cl, er, pq, al, altres, pend, items, mitjana, aprovats: al.filter(a => a.nota >= 5).length };
   }
   const FAL_PARTS = { d: "Dictat", t: "Text", p: "Per què?" };
   function falHTMLClasse(f, pantalla) {
@@ -3482,8 +3492,9 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
   }
   function falInformeBloc(f) {
     const D = falDades(f);
-    if (!D.al.length) return "";
-    return '<details><summary class="font"><b>📊 Informe</b> · ' + D.al.length + " corregits" + (D.pend.length ? ", " + D.pend.length + " pendents" : "") + " · mitjana " + coma(D.mitjana) + "</summary>" + falHTMLClasse(f, true) + "</details>" +
+    const avAltres = D.altres.length ? '<p class="avis">⚠️ Corregits amb aquesta fitxa però d\'un altre grup (amb les paraules de ' + esc(f.grup) + "): " + esc(D.altres.map(a => nomAl(a.nom) + " (" + a.g + ", " + coma(a.nota) + ")").join(", ")) + ". No compten a l'informe ni s'enviaran. Torna'ls a corregir amb la fitxa del seu grup (la nota de la columna es corregirà en desar-la). " + eBoto("faltreualt", "Treu-los d'aquesta fitxa", true) + "</p>" : "";
+    if (!D.al.length) return avAltres;
+    return avAltres + '<details><summary class="font"><b>📊 Informe</b> · ' + D.al.length + " corregits" + (D.pend.length ? ", " + D.pend.length + " pendents" : "") + " · mitjana " + coma(D.mitjana) + "</summary>" + falHTMLClasse(f, true) + "</details>" +
       '<div class="alum-eines">' + eBoto("falinfcl", "🖨️ Informe de la classe", true) + eBoto("falinfals", "🖨️ Informes per alumne (un full cadascun)", true) +
       eBoto("falenvals", "👁️ Previsualitza i envia l'informe a cada alumne" + (() => { const n = D.al.filter(a => !(f.env || {})[a.k]).length; return n < D.al.length ? " (" + n + " pendents)" : ""; })(), true) + "</div>" + falPrevBloc(f);
   }
@@ -3616,6 +3627,11 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       return falPrevisualitza(fal, pend.length ? pend : (confirm("Ja s'ha enviat l'informe a tots. Vols tornar-lo a enviar a tothom?") ? al : []));
     }
     if (a === "falenval") { const { g, fila } = triat(); const al = falDades(fal).al.filter(x => g && fila && x.k === clauAl(g, fila.nom)); return falPrevisualitza(fal, al); }
+    if (a === "faltreualt") {
+      const D = falDades(fal); if (!D.altres.length) return;
+      if (!confirm("Vols treure de la fitxa de " + fal.grup + " les correccions de " + D.altres.map(x => nomAl(x.nom)).join(", ") + "? (Les notes de la columna no es toquen.)")) return;
+      D.altres.forEach(x => { delete fal.resp[x.k]; if (fal.env) delete fal.env[x.k]; }); desa(); return pintaAssistent();
+    }
     if (a === "falprx" && falPrev) { const k = b.dataset.k, j = falPrev.fora.indexOf(k); if (j >= 0) falPrev.fora.splice(j, 1); else falPrev.fora.push(k); return pintaAssistent(); }
     if (a === "falprtanca") { falPrev = null; return pintaAssistent(); }
     if (a === "falprenv" && falPrev) { const p = falPrev, al = falDades(fal).al.filter(x => p.ks.includes(x.k) && !p.fora.includes(x.k)); falPrev = null; return falEnvia(fal, al); }
