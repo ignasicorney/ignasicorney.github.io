@@ -78,7 +78,8 @@ h3.bt{margin:0 0 8px;font-size:1rem;text-transform:uppercase}
 .taula td.apro{color:#2e7d32;font-weight:700}
 .taula td.calc,.taula th.calc{background:#f7f5ef}
 .taula td.ed{cursor:pointer}
-.taula td.ed.sel{outline:2px solid var(--accent);outline-offset:-2px}
+.taula td.nv{cursor:cell}
+.taula td.ed.sel,.taula td.nv.sel{outline:2px solid var(--accent);outline-offset:-2px}
 .taula td.ed:hover{outline:1px solid var(--accent);outline-offset:-1px}
 .taula td.txt{max-width:220px;overflow:hidden;text-overflow:ellipsis;text-align:left}
 .taula td.nomal{cursor:pointer}
@@ -4309,14 +4310,14 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
           if (c.tipus === "calc") {
             const n = numOpcional(v), ok = coincideix(v, r.o && r.o[c.nom]);
             const cls = ["calc"]; if (v && v.err) cls.push("susp"); else if (n !== null && /NOTA|GLOBAL|FINAL/i.test(c.nom)) cls.push(n < 5 ? "susp" : "apro");
-            return '<td class="' + cls.join(" ") + (v && v.err ? "" : ombra(c, v)) + '"' + (ok ? "" : ' title="A l\'Excel: ' + esc(r.o[c.nom]) + '"') + ">" + esc(txt) + (ok ? "" : " ⚠️") + "</td>";
+            return '<td class="nv ' + cls.join(" ") + (v && v.err ? "" : ombra(c, v)) + '" data-alumne="' + esc(r.nom) + '" data-c="' + esc(c.nom) + '"' + (ok ? "" : ' title="A l\'Excel: ' + esc(r.o[c.nom]) + '"') + ">" + esc(txt) + (ok ? "" : " ⚠️") + "</td>";
           }
           if (c.tipus === "rubrica") { const n = numOpcional(v); return '<td class="ed rub' + (n !== null && /NOTA|GLOBAL|FINAL/i.test(c.nom) ? (n < 5 ? " susp" : " apro") : "") + ombra(c, v) + '" data-alumne="' + esc(r.nom) + '" data-c="' + esc(c.nom) + '" title="Avalua amb la rúbrica">' + (txt ? esc(txt) : '<span class="font">📋</span>') + "</td>"; }
           const df = typeof r.v[c.nom] === "number" ? descompteFaltes(r, c) : null;
           if (df) return '<td class="ed ambf' + (/NOTA|GLOBAL|FINAL/i.test(c.nom) ? (v < 5 ? " susp" : " apro") : "") + ombra(c, v) + '" data-alumne="' + esc(r.nom) + '" data-c="' + esc(c.nom) + '" title="Nota de l\'examen ' + num2(r.v[c.nom]) + ' · ' + df.faltes + ' falt' + (df.faltes === 1 ? "a" : "es") + ' · −' + num2(df.resta) + '"><span class="nf-ini">' + num2(r.v[c.nom]) + " · −" + num2(df.resta) + " (" + df.faltes + " f.)</span><span class=\"nf-fin\">" + num2(v) + "</span></td>";
           return '<td class="ed' + (c.tipus === "text" ? " txt" : "") + (esExempt(v) ? " exempt" : "") + ombra(c, v) + '" data-alumne="' + esc(r.nom) + '" data-c="' + esc(c.nom) + '" title="' + esc(txt) + '">' + esc(txt) + "</td>";
         }).join("") + "</tr>"; }).join("") || '<tr><td colspan="' + (f.columnes.length + 2) + '" class="buit">Cap alumne no coincideix.</td></tr>') +
-        "</tbody></table></div><p class=\"font\">" + files.length + " alumnes · toca una nota per canviar-la (com a l\'Excel: les fletxes, Retorn i Tab es mouen per la graella; escriu per posar la nota, Supr per esborrar-la); toca el nom per canviar-lo o esborrar l'alumne; toca «📕 Deures» per apuntar faltes de deures" + (qDeures ? " (mode ràpid: cada toc posa o treu la falta d'avui)" : "") + ".</p>";
+        "</tbody></table></div><p class=\"font\">" + files.length + " alumnes · toca una nota per canviar-la (com a l\'Excel: les fletxes, Retorn i Tab es mouen per la graella, també per les columnes calculades; escriu per posar la nota, Supr per esborrar-la); toca el nom per canviar-lo o esborrar l'alumne; toca «📕 Deures» per apuntar faltes de deures" + (qDeures ? " (mode ràpid: cada toc posa o treu la falta d'avui)" : "") + ".</p>";
     }
     cos.innerHTML = h;
     marcaSel();
@@ -4326,16 +4327,18 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
   // les fletxes, Retorn i Tab hi passen d'una a l'altra; escriure-hi obre la casella amb el que s'escriu;
   // Retorn o F2 l'obren per editar-la; Supr o Retrocés l'esborren; Esc treu la marca.
   let celaSel = null;   // { alumne, c }
-  const celaTd = s => s ? Array.from($("alumCos").querySelectorAll("td.ed")).find(x => x.dataset.alumne === s.alumne && x.dataset.c === s.c) || null : null;
+  // 17.11.2026 (vespre): també les columnes calculades (mitjanes, SOBRE, NOTA FINAL…), que es poden triar però no editar
+  const CELES = "td.ed, td.nv";
+  const celaTd = s => s ? Array.from($("alumCos").querySelectorAll(CELES)).find(x => x.dataset.alumne === s.alumne && x.dataset.c === s.c) || null : null;
   function marcaSel() {
-    $("alumCos").querySelectorAll("td.ed.sel").forEach(x => x.classList.remove("sel"));
+    $("alumCos").querySelectorAll("td.sel").forEach(x => x.classList.remove("sel"));
     const td = celaTd(celaSel); if (td) td.classList.add("sel");
   }
   function triaCela(td) { celaSel = td ? { alumne: td.dataset.alumne, c: td.dataset.c } : null; marcaSel(); if (td) td.scrollIntoView({ block: "nearest", inline: "nearest" }); }
   // Casella veïna: dalt/baix a la mateixa columna, dreta/esquerra a la mateixa fila; Tab segueix l'ordre de lectura
   function veina(td, mou) {
     const vert = mou === "avall" || mou === "amunt", horit = mou === "dreta" || mou === "esquerra";
-    const cel = Array.from($("alumCos").querySelectorAll("td.ed")).filter(x => vert ? x.dataset.c === td.dataset.c : horit ? x.dataset.alumne === td.dataset.alumne : true);
+    const cel = Array.from($("alumCos").querySelectorAll(CELES)).filter(x => vert ? x.dataset.c === td.dataset.c : horit ? x.dataset.alumne === td.dataset.alumne : true);
     const i = cel.findIndex(x => x.dataset.alumne === td.dataset.alumne && x.dataset.c === td.dataset.c);
     return i < 0 ? null : cel[i + (vert ? (mou === "avall" ? 1 : -1) : horit ? (mou === "dreta" ? 1 : -1) : mou)] || null;
   }
@@ -4353,7 +4356,8 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     if (fletxa || e.key === "Tab") {
       e.preventDefault();
       const seg = veina(td, fletxa || (e.shiftKey ? -1 : 1)); if (seg) triaCela(seg);
-    } else if (e.key === "Enter" || e.key === "F2") { e.preventDefault(); obreCela(td); }
+    } else if (td.classList.contains("nv")) { if (e.key === "Escape") triaCela(null); return; }   // calculada: només s'hi passa
+    else if (e.key === "Enter" || e.key === "F2") { e.preventDefault(); obreCela(td); }
     else if (e.key === "Escape") triaCela(null);
     else if ((e.key === "Delete" || e.key === "Backspace") && !td.classList.contains("rub")) {
       e.preventDefault();
@@ -4362,7 +4366,12 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     } else if (e.key.length === 1 && !td.classList.contains("rub")) { e.preventDefault(); editaCela(td, e.key); }
   });
   // Un clic fora de la graella treu la marca (perquè les fletxes tornin a moure la pàgina)
-  document.addEventListener("mousedown", e => { if (celaSel && !e.target.closest("#alumCos td.ed")) triaCela(null); });
+  document.addEventListener("mousedown", e => {
+    const nv = e.target.closest("#alumCos td.nv");
+    // Un clic a una casella calculada la tria (per moure-s'hi amb les fletxes); després que es tanqui la que s'editava
+    if (nv) { const s = { alumne: nv.dataset.alumne, c: nv.dataset.c }; setTimeout(() => triaCela(celaTd(s)), 0); return; }
+    if (celaSel && !e.target.closest("#alumCos td.ed")) triaCela(null);
+  });
   function editaCela(td, inicial) {
     const g = grupActual(), f = fullActual(g); if (!f) return;
     const fila = f.files.find(r => r.nom === td.dataset.alumne), col = f.columnes.find(c => c.nom === td.dataset.c);
