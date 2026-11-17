@@ -1825,7 +1825,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
         '<div class="alum-eines"><button type="button" class="boto" data-asb="activitat">📚 Genera l\'activitat</button></div>';
     } else if (asEina === "video") {
       const vo = (llista, v) => llista.map(o => "<option" + (o === v ? " selected" : "") + ">" + o + "</option>").join("");
-      h = '<p class="font">Comprensió audiovisual: un fragment de 4 a 5 minuts d\'un vídeo de YouTube, amb preguntes de diversos tipus (test, vertader o fals, completar amb les paraules exactes del fragment i alguna d\'oberta sobre una cita textual) en el nivell que triïs o en tots tres (i, si vols, la versió DIS/PSI). Se\'n fa un qüestionari que es corregeix sol, es publica al Classroom i la nota va a la columna que triïs (CO, EO1…).</p>' +
+      h = '<p class="font">Comprensió audiovisual: un fragment de 4 a 5 minuts d\'un vídeo de YouTube, amb preguntes de diversos tipus (test, vertader o fals, completar amb les paraules exactes del fragment i alguna d\'oberta sobre una cita textual) en el nivell que triïs o en tots tres (i, si vols, la versió DIS/PSI). Se\'n fa un qüestionari que es corregeix sol, es publica al Classroom i la nota va a la columna de comprensió oral que triïs (CO1 per defecte, o CO2, CO3…).</p>' +
         // 15.11.2026: el que ja hi ha fet (transcripcions i qüestionaris) es veu a dalt de tot, abans de demanar res de nou
         llistaTranscripcions() + llistaVideos() +
         '<div class="fila-as"><label style="flex:1 1 100%">Enllaç de YouTube<input type="url" id="vUrl" value="' + esc(asVid.url) + '" placeholder="https://www.youtube.com/watch?v=…"></label></div>' +
@@ -2710,15 +2710,17 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
   }
   // ---------- ✍️ Correcció en paper dels qüestionaris de vídeo (16.11.2026) ----------
   // L'alumnat respon el full imprès; s'hi marca el que ha respost cada alumne i la nota (sobre 10) va a la columna
-  // triada (per defecte EO1). Test i resposta múltiple es corregeixen sols; completar i obertes: ✓ 1 · ½ · ✗ 0.
+  // triada (per defecte CO1, comprensió oral; o la darrera CO que s'hi hagi posat). Test i resposta múltiple es corregeixen sols; completar i obertes: ✓ 1 · ½ · ✗ 0.
   let vdCorr = null;   // { vid, obert, niv, g, f, col, al, r, msg }
+  // 17.11.2026: la nota dels vídeos és de comprensió oral: per defecte CO1, o la darrera CO triada (CO2, CO3…)
+  const colVideoDef = () => /^CO\d+$/.test(String(dades.colVideo || "").trim().toUpperCase()) ? String(dades.colVideo).trim().toUpperCase() : "CO1";
   const vdTrimFull = g => { const tA = trimDe(avuiISO()); const i = g.fulls.findIndex(x => { const m = String(x.nom).match(/([123])\s*(r|n|er|º|a)?\s*trim/i); return !!m && TRIMESTRES[Number(m[1]) - 1] === tA; }); return i >= 0 ? i : 0; };
   const vdIgual = (a, b) => { const x = a.slice().sort(), y = b.slice().sort(); return x.length === y.length && x.every((v, k) => v === y[k]); };
   function vdCorrEstat() {
     const vd = asDades && asDades.video; if (!vd) return null;
     if (!vdCorr || vdCorr.vid !== vd) {
       const q = Q(), g = Math.min(Number(dades.vdCorrG || 0), Math.max(q.grups.length - 1, 0));
-      vdCorr = { vid: vd, obert: false, niv: vd.nivells.length >= 3 ? 1 : 0, g: g, f: q.grups[g] ? vdTrimFull(q.grups[g]) : 0, col: "EO1", al: "", r: [], msg: "" };
+      vdCorr = { vid: vd, obert: false, niv: vd.nivells.length >= 3 ? 1 : 0, g: g, f: q.grups[g] ? vdTrimFull(q.grups[g]) : 0, col: colVideoDef(), al: "", r: [], msg: "" };
     }
     return vdCorr;
   }
@@ -2804,7 +2806,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
   function vdCorrCanvi(el) {
     const c = vdCorrEstat(); if (!c) return;
     const q = Q(), k = el.dataset.vdc;
-    if (k === "col") { c.col = el.value.trim().toUpperCase() || "EO1"; return; }
+    if (k === "col") { c.col = el.value.trim().toUpperCase() || "CO1"; if (/^CO\d+$/.test(c.col)) { dades.colVideo = c.col; desa(); } return; }
     if (k === "g") { c.g = Number(el.value); c.f = q.grups[c.g] ? vdTrimFull(q.grups[c.g]) : 0; vdCarregaAl(c, null, ""); c.msg = ""; }
     else if (k === "f") { c.f = Number(el.value); vdCarregaAl(c, null, ""); }
     else if (k === "al") vdCarregaAl(c, q.grups[c.g], el.value);
@@ -5943,10 +5945,10 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       escurcaVideo(null, true);   // 16.11.2026: l'enllaç del fragment, curt (si l'escurçador no respon, queda el llarg i surt el botó 🔗)
     } catch (e) { fet('<p class="avis">' + esc(e.message) + "</p>"); }
   }
-  // Enllaça el qüestionari del vídeo a la columna EO1 del grup de la classe del Classroom (full del trimestre actual).
+  // Enllaça el qüestionari del vídeo a la columna triada (CO1 per defecte) del grup de la classe del Classroom (full del trimestre actual).
   // Si el grup ja hi té un altre nivell del mateix vídeo, s'hi afegeix: cada alumne té la nota del que ha respost.
   function enllacaEO1(curs, nomClasse, formId, titol, colNom) {
-    const CN = String(colNom || "EO1").trim().toUpperCase();
+    const CN = String(colNom || "CO1").trim().toUpperCase();
     const clauC = String(nomClasse || "").replace(/\s+/g, "").toLowerCase();
     const g = Q().grups.find(x => { const k = nomGrup(x.nom).replace(/\s+/g, "").toLowerCase(); return k && clauC.endsWith(k); }) || Q().grups.find(x => { const k = nomGrup(x.nom).replace(/\s+/g, "").toLowerCase(); return k && clauC.includes(k); });
     if (!g || !g.fulls.length) return "No he trobat el grup d'aquesta classe a la Bitàcola; posa la nota amb el botó «Classroom» del full.";
@@ -5988,7 +5990,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       asDades.qr = { titol: titol, url: d.url, svg: svg, id: d.id };
       const pub = cs.cursos.length ? '<div class="clspub alum-eines" style="margin:8px 0 0"><select id="pubCurs" aria-label="Classe del Classroom"><option value="">Classe del Classroom…</option>' + cs.cursos.map(x => '<option value="' + x.id + '">' + esc(x.nom + (x.seccio ? " · " + x.seccio : "")) + "</option>").join("") + "</select>" +
         '<label class="font" title="Data de lliurament (opcional)">Lliurament <input type="date" id="pubData"></label><label class="font"><input type="checkbox" id="pubEsb"> En esborrany</label><label class="font" title="Opcional: la tasca es publicarà sola aquell dia i hora">Programa la publicació <input type="date" id="pubProgData"> <input type="time" id="pubProgHora" value="08:00"></label><label class="font" title="Les respostes del formulari es tanquen a les 23:59 del dia de lliurament"><input type="checkbox" id="pubTanca" checked> Tanca el formulari en acabar el termini</label>' +
-        (asDades.video ? '<label class="font" title="Columna del full del trimestre on anirà la nota (si no existeix, es crea)">Nota a la columna <input type="text" id="pubCol" value="' + esc(dades.colVideo || "CO") + '" style="width:5em"></label>' : "") +
+        (asDades.video ? '<label class="font" title="Columna del full del trimestre on anirà la nota (si no existeix, es crea)">Nota a la columna <input type="text" id="pubCol" value="' + esc(colVideoDef()) + '" style="width:5em"></label>' : "") +
         '<button type="button" class="boto" data-asb="clspub"><img src="https://www.gstatic.com/classroom/logo_square_rounded.svg" alt="" class="ico-cls"> Publica-la al Classroom</button></div>' : "";
       const bloc = '<div class="qr-bloc"><div class="qr">' + svg + '</div><div><b>' + esc(titol) + '</b><br><a href="' + esc(d.url) + '" target="_blank" rel="noopener">' + esc(d.url) + '</a><p class="font" style="margin:6px 0">' + pr.length + (pr.length === 1 ? " pregunta." : " preguntes.") + (pr.some(x => x.tipus === "oberta") ? " Les tancades i les de completar es corregeixen soles; les obertes les puntues tu al formulari (Respostes > Individual) i la nota s'hi suma quan tornes a passar les notes." : " Es corregeixen soles.") + " L'alumnat hi entra amb el compte de l'institut i les notes es poden passar a una columna amb el botó «Classroom».</p>" +
         '<div class="alum-eines" style="margin:0"><button type="button" class="boto" data-asb="qrimp">🖨️ Imprimeix el QR</button><a class="boto clar" href="' + esc(d.edita) + '" target="_blank" rel="noopener">✏️ Revisa el formulari</a><button type="button" class="boto clar" data-asb="qresb">🗑️ Esborra el formulari</button></div>' + pub + "</div></div>";
@@ -6036,7 +6038,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
         catch (e) { tancat = " · no s'ha pogut programar el tancament (" + e.message + ")"; }
       }
       // 15.11.2026: la nota del vídeo va a la columna que triï el professor (CO, EO1…), no sempre a EO1
-      const colV = ((($("pubCol") || {}).value || dades.colVideo || "CO").trim().toUpperCase()) || "CO";
+      const colV = ((($("pubCol") || {}).value || colVideoDef()).trim().toUpperCase()) || "CO1";
       if (vid) { dades.colVideo = colV; desa(); }
       const eo = vid ? enllacaEO1(sel.value, classe.split(" · ")[0], q.id, q.titol, colV) : "";
       const progTxt = prog ? "Programada a " + esc(classe) + " per " + (/^(01|11)\./.test(dma(pData)) ? "a l'" : "al ") + dma(pData) + " a les " + pHora : "";
