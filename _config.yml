@@ -18,3 +18,7 @@ exclude:
 defaults:
   - scope: { path: "", type: posts }
     values: { layout: entrada }
+  - scope: { path: "tauler" }
+    values: { sitemap: false }
+  - scope: { path: "editor" }
+    values: { sitemap: false }
