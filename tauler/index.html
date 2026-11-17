@@ -3432,16 +3432,18 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       : { tit: "Informe d'ortografia", nota: "Nota", d: "Dictat: paraules mal escrites", t: "Text: faltes no trobades o mal corregides", p: "Per què?: regles fallades", cap: "Tot correcte.", rep: "Regles que has de repassar" };
     const ll = (arr, fn) => arr.length ? "<ul>" + arr.map(fn).join("") + "</ul>" : "<p>" + T.cap + "</p>";
     const regs = [...new Set(a.r.p.map(i => D.pq[i][1]))].sort();
-    return "<h3>" + T.tit + " · " + esc(f.grup) + " · " + dma(f.d) + "</h3><p><b>" + esc(nomAl(a.nom)) + "</b> · " + T.nota + ": <b>" + coma(a.nota) + "</b> (" + (D.cl.length - a.r.d.length) + "/" + D.cl.length + " · " + (D.er.length - a.r.t.length) + "/" + D.er.length + " · " + (D.pq.length - a.r.p.length) + "/" + D.pq.length + ")</p>" +
+    return "<h3>" + T.tit + " · " + esc(f.grup) + " · " + dma(f.d) + "</h3><p><b>" + esc(falNomNet(a.nom)) + "</b> · " + T.nota + ": <b>" + coma(a.nota) + "</b> (" + (D.cl.length - a.r.d.length) + "/" + D.cl.length + " · " + (D.er.length - a.r.t.length) + "/" + D.er.length + " · " + (D.pq.length - a.r.p.length) + "/" + D.pq.length + ")</p>" +
       "<h4>" + T.d + "</h4>" + ll(a.r.d.slice().sort((x, y) => x - y), i => "<li><b>" + esc(D.cl[i]) + "</b></li>") +
       "<h4>" + T.t + "</h4>" + ll(a.r.t.slice().sort((x, y) => x - y), i => "<li>" + esc(D.er[i].mal) + " → <b>" + esc(D.er[i].be) + "</b></li>") +
       "<h4>" + T.p + "</h4>" + ll(a.r.p.slice().sort((x, y) => x - y), i => "<li>" + esc(D.pq[i][0].replace(/\s*\(.*\)$/, "")) + " → <b>" + D.pq[i][1] + "</b></li>") +
       (regs.length ? "<h4>" + T.rep + "</h4>" + regs.map(l => "<p><b>" + l + ".</b> " + esc(regT(l)) + "</p>").join("") : "");
   }
   // 17.11.2026: l'informe de cada alumne s'envia sol al seu correu (els de «✉️ Correus de l'alumnat») des del compte d'ieslabisbal.cat
+  // 17.11.2026: les marques PSI i DIS són només per al professor: no surten en el que rep l'alumne (correu i full imprès)
+  const falNomNet = n => String(n || "").replace(/\s+(PSI|DIS)\b/gi, "").replace(/\s+/g, " ").trim();
   function falTextAlumne(f, a) {
     const D = falDades(f), es = f.lleng !== "català", reg = falReg(f), regT = l => (reg.find(r => r[0] === l) || ["", ""])[1];
-    const nom = nomAl(a.nom), pila = nom.includes(",") ? nom.split(",").slice(1).join(",").trim() : nom;
+    const nom = falNomNet(a.nom), pila = nom.includes(",") ? nom.split(",").slice(1).join(",").trim() : nom;
     const T = es ? { hola: "Hola, " + pila + ":", intro: "Aquí tienes el informe de la ficha de ortografía «" + falTx(f).sub + "» del " + dma(f.d) + ".", nota: "Nota", dd: "dictado", tt: "texto", pp: "¿por qué?", d: "Dictado: palabras mal escritas", t: "Texto: faltas no encontradas o mal corregidas", p: "¿Por qué?: reglas falladas", cap: "Todo correcto.", rep: "Reglas que debes repasar", fi: "Repasa estas palabras: volverán a salir.", sal: "Un saludo," }
       : { hola: "Hola, " + pila + ":", intro: "Aquí tens l'informe de la fitxa d'ortografia «" + falTx(f).sub + "» del " + dma(f.d) + ".", nota: "Nota", dd: "dictat", tt: "text", pp: "per què?", d: "Dictat: paraules mal escrites", t: "Text: faltes no trobades o mal corregides", p: "Per què?: regles fallades", cap: "Tot correcte.", rep: "Regles que has de repassar", fi: "Repassa aquestes paraules: tornaran a sortir.", sal: "Salutacions," };
     const ll = (arr, fn) => arr.length ? arr.slice().sort((x, y) => x - y).map(i => "  - " + fn(i)).join("\n") : "  " + T.cap;
