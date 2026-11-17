@@ -79,7 +79,7 @@ h3.bt{margin:0 0 8px;font-size:1rem;text-transform:uppercase}
 .taula td.calc,.taula th.calc{background:#f7f5ef}
 .taula td.ed{cursor:pointer}
 .taula td.nv{cursor:cell}
-.taula td.ed.sel,.taula td.nv.sel{outline:2px solid var(--accent);outline-offset:-2px}
+.taula td.sel{outline:2px solid var(--accent);outline-offset:-2px}
 .taula td.ed:hover{outline:1px solid var(--accent);outline-offset:-1px}
 .taula td.txt{max-width:220px;overflow:hidden;text-overflow:ellipsis;text-align:left}
 .taula td.nomal{cursor:pointer}
@@ -3726,7 +3726,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       " · Incidències: " + p + " punts" + (p >= 27 ? " (reunió del tutor i el coordinador de nivell)" : p >= 15 && esESO(g) ? " (pot fer serveis a la comunitat)" : "") + ". Toca per afegir-ne.";
     const pos = c.reduce((a, x) => a + (x.etq || []).filter(t => signeEtq(t) === "pos").length, 0), neg = c.reduce((a, x) => a + (x.etq || []).filter(t => signeEtq(t) === "neg").length, 0);
     const txt = [c.length ? '<span class="cm">💬 ' + c.length + (pos ? " 👍" + pos : "") + (neg ? " 👎" + neg : "") + "</span>" : "", n ? "⚖️ " + p : ""].filter(Boolean).join(" · ");
-    return '<td class="pts' + (!n && !c.length ? " zero" : p >= 27 ? " p27" : p >= 15 ? " p15" : "") + '" data-pts="' + esc(nom) + '" title="' + esc(tit) + '">' + (txt || "–") + "</td>";
+    return '<td class="pts' + (!n && !c.length ? " zero" : p >= 27 ? " p27" : p >= 15 ? " p15" : "") + '" data-pts="' + esc(nom) + '" data-alumne="' + esc(nom) + '" data-c="__pts" title="' + esc(tit) + '">' + (txt || "–") + "</td>";
   }
   function obreSancions(g, nom) {
     let dlg = $("dlgSan");
@@ -4305,7 +4305,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       const ombra = (c, v) => { if (!tcol[c.nom]) return ""; if (esExempt(v)) return " n-ex"; const n = numOpcional(v); if (n === null) return ""; if (tcol[c.nom] === "sobre") return " n-sobre"; return tcol[c.nom] === "form" ? (n === 0 ? " f-0" : " f-1") : " " + colorNota(n); };
       const tD = trimDeures(f), dAvui = avuiISO();
       h += '<div class="taula' + (qDeures ? " passa" : "") + '"><table><thead><tr><th>Alumne/a</th><th class="deu" title="Faltes de deures del ' + tD.nom + ' trimestre. Toca la xifra per afegir-ne o treure\'n.">📕 Deures ' + tD.nom + '</th><th class="pts" title="Comentaris sobre l\'alumne (com treballa, participa…) i incidències del sistema de punts del centre. Toca la casella per afegir-ne.">💬 Comentaris</th>' + f.columnes.map(c => "<th" + (c.tipus === "calc" ? ' class="calc" title="' + esc(c.formula) + '"' : "") + ">" + esc(c.nom) + (desquadres[c.nom] ? " ⚠️" : "") + "</th>").join("") + "</tr></thead><tbody>" +
-        (files.map(r => { const psi = (g.psi || []).includes(r.nom) || !!psiDocDe(g, r.nom), dis = /\sDIS$/i.test(r.nom); return '<tr><td class="nomal' + (psi ? " psi" : "") + '" data-alumne="' + esc(r.nom) + '" title="' + (psi ? "PSI" : "") + (psi && dis ? " · " : "") + (dis ? "Dislèxia" : "") + '">' + esc(dis ? r.nom.replace(/\s+DIS$/i, "") : r.nom) + (psi || psiDocDe(g, r.nom) ? ' <span class="marca-al psi" data-psidoc="' + esc(r.nom) + '" role="button" title="' + (psiDocDe(g, r.nom) ? "Obre el PSI" : "Encara no hi ha el document del PSI: toca per pujar-lo") + '">PSI' + (psiDocDe(g, r.nom) ? "" : "?") + "</span>" : "") + (dis ? ' <span class="marca-al">DIS</span>' : "") + (g.correus && g.correus[r.nom] ? ' <a href="#" class="mail-al" data-mail="' + esc(g.correus[r.nom]) + '" title="Escriu a ' + esc(g.correus[r.nom]) + '" aria-label="Escriu un correu a ' + esc(dis ? r.nom.replace(/\s+DIS$/i, "") : r.nom) + '">✉️</a>' : "") + (origenDe(g, r.nom) ? '<span class="al-extra"><span class="orig-al" title="Grup d\'origen' + (tutorDe(origenDe(g, r.nom)) ? " i tutor/a" : "") + '">(' + esc(origenDe(g, r.nom)) + (tutorDe(origenDe(g, r.nom)) ? " · " + esc(tutorDe(origenDe(g, r.nom))) + mailTutor(tutorDe(origenDe(g, r.nom))) : "") + ")</span></span>" : "") + "</td>" + (() => { const ds = deuresDe(g, r.nom), n = ds.filter(d => d >= tD.de && d <= tD.fins).length, av = ds.includes(dAvui); return '<td class="deu' + (n ? "" : " zero") + (av ? " avui" : "") + '" data-deu="' + esc(r.nom) + '" title="' + n + " falt" + (n === 1 ? "a" : "es") + " de deures al " + tD.nom + " trimestre" + (av ? " (una d'avui)" : "") + '">' + (n || "–") + "</td>"; })() + celaPunts(g, r.nom) + f.columnes.map(c => {
+        (files.map(r => { const psi = (g.psi || []).includes(r.nom) || !!psiDocDe(g, r.nom), dis = /\sDIS$/i.test(r.nom); return '<tr><td class="nomal' + (psi ? " psi" : "") + '" data-alumne="' + esc(r.nom) + '" data-c="__nom" title="' + (psi ? "PSI" : "") + (psi && dis ? " · " : "") + (dis ? "Dislèxia" : "") + '">' + esc(dis ? r.nom.replace(/\s+DIS$/i, "") : r.nom) + (psi || psiDocDe(g, r.nom) ? ' <span class="marca-al psi" data-psidoc="' + esc(r.nom) + '" role="button" title="' + (psiDocDe(g, r.nom) ? "Obre el PSI" : "Encara no hi ha el document del PSI: toca per pujar-lo") + '">PSI' + (psiDocDe(g, r.nom) ? "" : "?") + "</span>" : "") + (dis ? ' <span class="marca-al">DIS</span>' : "") + (g.correus && g.correus[r.nom] ? ' <a href="#" class="mail-al" data-mail="' + esc(g.correus[r.nom]) + '" title="Escriu a ' + esc(g.correus[r.nom]) + '" aria-label="Escriu un correu a ' + esc(dis ? r.nom.replace(/\s+DIS$/i, "") : r.nom) + '">✉️</a>' : "") + (origenDe(g, r.nom) ? '<span class="al-extra"><span class="orig-al" title="Grup d\'origen' + (tutorDe(origenDe(g, r.nom)) ? " i tutor/a" : "") + '">(' + esc(origenDe(g, r.nom)) + (tutorDe(origenDe(g, r.nom)) ? " · " + esc(tutorDe(origenDe(g, r.nom))) + mailTutor(tutorDe(origenDe(g, r.nom))) : "") + ")</span></span>" : "") + "</td>" + (() => { const ds = deuresDe(g, r.nom), n = ds.filter(d => d >= tD.de && d <= tD.fins).length, av = ds.includes(dAvui); return '<td class="deu' + (n ? "" : " zero") + (av ? " avui" : "") + '" data-deu="' + esc(r.nom) + '" data-alumne="' + esc(r.nom) + '" data-c="__deu" title="' + n + " falt" + (n === 1 ? "a" : "es") + " de deures al " + tD.nom + " trimestre" + (av ? " (una d'avui)" : "") + '">' + (n || "–") + "</td>"; })() + celaPunts(g, r.nom) + f.columnes.map(c => {
           const v = valor(f, r, c), txt = mostraValor(v);
           if (c.tipus === "calc") {
             const n = numOpcional(v), ok = coincideix(v, r.o && r.o[c.nom]);
@@ -4317,7 +4317,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
           if (df) return '<td class="ed ambf' + (/NOTA|GLOBAL|FINAL/i.test(c.nom) ? (v < 5 ? " susp" : " apro") : "") + ombra(c, v) + '" data-alumne="' + esc(r.nom) + '" data-c="' + esc(c.nom) + '" title="Nota de l\'examen ' + num2(r.v[c.nom]) + ' · ' + df.faltes + ' falt' + (df.faltes === 1 ? "a" : "es") + ' · −' + num2(df.resta) + '"><span class="nf-ini">' + num2(r.v[c.nom]) + " · −" + num2(df.resta) + " (" + df.faltes + " f.)</span><span class=\"nf-fin\">" + num2(v) + "</span></td>";
           return '<td class="ed' + (c.tipus === "text" ? " txt" : "") + (esExempt(v) ? " exempt" : "") + ombra(c, v) + '" data-alumne="' + esc(r.nom) + '" data-c="' + esc(c.nom) + '" title="' + esc(txt) + '">' + esc(txt) + "</td>";
         }).join("") + "</tr>"; }).join("") || '<tr><td colspan="' + (f.columnes.length + 2) + '" class="buit">Cap alumne no coincideix.</td></tr>') +
-        "</tbody></table></div><p class=\"font\">" + files.length + " alumnes · toca una nota per canviar-la (com a l\'Excel: les fletxes, Retorn i Tab es mouen per la graella, també per les columnes calculades; escriu per posar la nota, Supr per esborrar-la); toca el nom per canviar-lo o esborrar l'alumne; toca «📕 Deures» per apuntar faltes de deures" + (qDeures ? " (mode ràpid: cada toc posa o treu la falta d'avui)" : "") + ".</p>";
+        "</tbody></table></div><p class=\"font\">" + files.length + " alumnes · toca una nota per canviar-la (com a l\'Excel: les fletxes, Retorn i Tab es mouen per la graella, també pel nom, els deures, els comentaris i les columnes calculades; escriu per posar la nota, Supr per esborrar-la); toca el nom per canviar-lo o esborrar l'alumne; toca «📕 Deures» per apuntar faltes de deures" + (qDeures ? " (mode ràpid: cada toc posa o treu la falta d'avui)" : "") + ".</p>";
     }
     cos.innerHTML = h;
     marcaSel();
@@ -4328,7 +4328,9 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
   // Retorn o F2 l'obren per editar-la; Supr o Retrocés l'esborren; Esc treu la marca.
   let celaSel = null;   // { alumne, c }
   // 17.11.2026 (vespre): també les columnes calculades (mitjanes, SOBRE, NOTA FINAL…), que es poden triar però no editar
-  const CELES = "td.ed, td.nv";
+  // i també el nom, els deures i els comentaris (Retorn hi fa el mateix que un clic)
+  const CELES = "td.ed, td.nv, td[data-c^='__']";
+  const esEspecial = td => td.dataset.c.startsWith("__");
   const celaTd = s => s ? Array.from($("alumCos").querySelectorAll(CELES)).find(x => x.dataset.alumne === s.alumne && x.dataset.c === s.c) || null : null;
   function marcaSel() {
     $("alumCos").querySelectorAll("td.sel").forEach(x => x.classList.remove("sel"));
@@ -4338,7 +4340,8 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
   // Casella veïna: dalt/baix a la mateixa columna, dreta/esquerra a la mateixa fila; Tab segueix l'ordre de lectura
   function veina(td, mou) {
     const vert = mou === "avall" || mou === "amunt", horit = mou === "dreta" || mou === "esquerra";
-    const cel = Array.from($("alumCos").querySelectorAll(CELES)).filter(x => vert ? x.dataset.c === td.dataset.c : horit ? x.dataset.alumne === td.dataset.alumne : true);
+    // dreta/esquerra segueixen l'ordre de lectura: al final d'una fila es passa a la següent (i a l'inici, a l'anterior)
+    const cel = Array.from($("alumCos").querySelectorAll(CELES)).filter(x => vert ? x.dataset.c === td.dataset.c : true);
     const i = cel.findIndex(x => x.dataset.alumne === td.dataset.alumne && x.dataset.c === td.dataset.c);
     return i < 0 ? null : cel[i + (vert ? (mou === "avall" ? 1 : -1) : horit ? (mou === "dreta" ? 1 : -1) : mou)] || null;
   }
@@ -4356,6 +4359,9 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     if (fletxa || e.key === "Tab") {
       e.preventDefault();
       const seg = veina(td, fletxa || (e.shiftKey ? -1 : 1)); if (seg) triaCela(seg);
+    } else if (esEspecial(td)) {   // nom, deures o comentaris: Retorn fa el mateix que un clic
+      if (e.key === "Enter" || e.key === "F2") { e.preventDefault(); td.click(); } else if (e.key === "Escape") triaCela(null);
+      return;
     } else if (td.classList.contains("nv")) { if (e.key === "Escape") triaCela(null); return; }   // calculada: només s'hi passa
     else if (e.key === "Enter" || e.key === "F2") { e.preventDefault(); obreCela(td); }
     else if (e.key === "Escape") triaCela(null);
@@ -4367,7 +4373,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
   });
   // Un clic fora de la graella treu la marca (perquè les fletxes tornin a moure la pàgina)
   document.addEventListener("mousedown", e => {
-    const nv = e.target.closest("#alumCos td.nv");
+    const nv = e.target.closest("#alumCos td.nv, #alumCos td[data-c^='__']");
     // Un clic a una casella calculada la tria (per moure-s'hi amb les fletxes); després que es tanqui la que s'editava
     if (nv) { const s = { alumne: nv.dataset.alumne, c: nv.dataset.c }; setTimeout(() => triaCela(celaTd(s)), 0); return; }
     if (celaSel && !e.target.closest("#alumCos td.ed")) triaCela(null);
