@@ -1051,8 +1051,8 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     ["Caps de departament", [["Llengua catalana", "Íria Masó"], ["Llengua castellana", "Anna Lozano"], ["Llengües estrangeres", "Meritxell Martínez"], ["Ciències socials", "Cristina Abadia"], ["Matemàtiques", "Llorenç Rubió"], ["Biologia i Geologia", "Anna Bou"], ["Física i Química", "Adrià Puig"], ["Tecnologia", "Rachid el Bekkaoui"],
       ["Educació visual i plàstica", "Marta Alsina"], ["Música", "Joan Gay"], ["Orientació educativa", "Natàlia Coderch"], ["Educació física", "Jaume Català"], ["Serveis a la comunitat", "Anna Pruneda"], ["Administratiu", "Carles Cortada"], ["Jardineria", "Mariona Isern"], ["Arts Plàstiques", "Josep Motas"]]]
   ];
-  // Els seus grups i els caps dels seus dos departaments, destacats
-  const ORG_MEUS = ["1r A", "4t B", "4t C", "4t D", "4t G", "Llengua catalana", "Llengua castellana"];
+  // Els seus grups (tots els 1rs menys 1r B) i el cap del seu departament, destacats
+  const ORG_MEUS = ["1r A", "1r C", "1r D", "1r E", "1r F", "1r G", "4t B", "4t C", "4t D", "4t G", "Llengua castellana"];
   const tutorDe = grup => { const k = String(grup || "").replace(/\s+/g, "").toLowerCase(); const t = ORG[2][1].find(([c]) => c.replace(/\s+/g, "").toLowerCase() === k); return t ? t[1] : ""; };
   const senseAccents = t => String(t).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
   function pintaOrg() {
