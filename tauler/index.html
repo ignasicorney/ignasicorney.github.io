@@ -710,14 +710,15 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     </div>
     <div class="f1-proper" id="f1Proper"><p class="buit">Carregant…</p></div>
     <div class="f1-graella">
-      <div class="f1-caixa">
+      <details class="f1-caixa">
+        <summary><h3>Pilots, equips i darrer GP</h3></summary>
         <div class="f1-pest" id="f1Pest"><button type="button" data-t="pilots" class="actiu">Pilots</button><button type="button" data-t="equips">Equips</button><button type="button" data-t="darrer">Darrer GP</button></div>
         <div id="f1Taula"></div>
-      </div>
-      <div class="f1-caixa">
-        <h3>Calendari de la temporada</h3>
+      </details>
+      <details class="f1-caixa" id="f1CalCaixa">
+        <summary><h3>Calendari de la temporada</h3></summary>
         <ol class="f1-cal" id="f1Cal"></ol>
-      </div>
+      </details>
     </div>
     <div class="f1-directe">
       <div class="f1-dir-cap"><h3>📡 Directe</h3><span id="f1Candau" title="Amb la clau de La TdG">🔒</span></div>
@@ -7204,7 +7205,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
   if (clau && lsLlegeix("tauler.obert") === "1") obre();
 })();
 </script>
-<script src="f1.js?v=2" defer></script>
+<script src="f1.js?v=3" defer></script>
 <script src="dates-ca.js?v=4"></script>
 <script>
 // =============================================================================

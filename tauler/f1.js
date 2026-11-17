@@ -47,7 +47,13 @@
 .f1-graella{display:grid;gap:12px;margin-top:12px}
 @media (min-width:860px){.f1-graella{grid-template-columns:1.3fr 1fr}}
 .f1-caixa{border:1px solid var(--linia);border-radius:12px;padding:12px;min-width:0}
-.f1-caixa h3{margin:0 0 8px;font-size:1rem}
+.f1-caixa h3{margin:0;font-size:1rem;display:inline}
+.f1-caixa>summary{cursor:pointer;list-style:none;display:flex;align-items:center;gap:8px}
+.f1-caixa>summary::-webkit-details-marker{display:none}
+.f1-caixa>summary::before{content:"▸";color:var(--suau);transition:transform .15s}
+.f1-caixa[open]>summary::before{transform:rotate(90deg)}
+.f1-caixa[open]>summary{margin-bottom:8px}
+.f1-graella{align-items:start}
 .f1-pest{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
 .f1-pest button{font:inherit;font-size:.85rem;padding:3px 10px;border:1px solid var(--linia);border-radius:999px;background:var(--targeta);color:var(--text);cursor:pointer}
 .f1-pest button.actiu{background:var(--accent);border-color:var(--accent);color:#fff}
@@ -218,9 +224,13 @@
       return '<li class="' + (fet ? "fet" : "") + (r === PROPER ? " proper" : "") + '"><b class="r">R' + esc(r.round) + "</b><span><b>" + esc(nomGP(r)) + "</b>" + (r.Sprint ? '<span class="f1-sprint">S</span>' : "") + "</span>" +
         '<span class="gu">' + esc(dies) + " · " + esc(lloc(r)) + (g ? " · 🏆 " + esc(g) : "") + "</span></li>";
     }).join("");
+    alProper();
+  }
+  function alProper() {
     const p = $("f1Cal").querySelector(".proper");
     if (p) $("f1Cal").scrollTop = Math.max(0, p.offsetTop - $("f1Cal").offsetTop - 60);
   }
+  $("f1CalCaixa").addEventListener("toggle", () => { if ($("f1CalCaixa").open) alProper(); });
 
   // ---------------- Classificacions i darrer GP ----------------
   let pest = "pilots";
