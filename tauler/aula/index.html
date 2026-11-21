@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow, noarchive">
+<title>Textos per a l'aula — Bitàcola</title>
+<style>
+:root{--fons:#f6f5f1;--carta:#fff;--text:#1d1d1b;--suau:#6b6b66;--linia:#deddd6;--accent:#0f6e6e;--ca:#b3261e;--es:#8a5a00}
+@media (prefers-color-scheme:dark){:root{--fons:#151614;--carta:#1f201d;--text:#ecebe6;--suau:#a3a29b;--linia:#353631;--accent:#5cc2c2;--ca:#ff8a80;--es:#ffcc66}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--fons);color:var(--text);font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+header{padding:18px 20px 8px;max-width:1200px;margin:auto;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+header h1{font-size:1.35rem;margin:0}
+header a{color:var(--accent);text-decoration:none;font-size:.95rem}
+main{max-width:1200px;margin:auto;padding:0 20px 40px}
+.filtres{display:flex;flex-wrap:wrap;gap:8px;background:var(--carta);border:1px solid var(--linia);border-radius:12px;padding:12px;position:sticky;top:0;z-index:2}
+.filtres input[type=search]{flex:1 1 260px}
+input,select,button{font:inherit;color:inherit;background:var(--fons);border:1px solid var(--linia);border-radius:8px;padding:6px 10px}
+button{cursor:pointer}
+button.prim{background:var(--accent);color:#fff;border-color:var(--accent)}
+label.chk{display:flex;align-items:center;gap:6px;font-size:.9rem;color:var(--suau)}
+#info{color:var(--suau);font-size:.9rem;margin:10px 2px}
+.graella{display:grid;grid-template-columns:minmax(280px,1fr) minmax(0,1.5fr);gap:14px;align-items:start}
+@media (max-width:820px){.graella{grid-template-columns:1fr}}
+#llista{display:flex;flex-direction:column;gap:8px}
+.fitxa{background:var(--carta);border:1px solid var(--linia);border-radius:10px;padding:10px 12px;cursor:pointer;text-align:left;width:100%}
+.fitxa:hover,.fitxa.sel{border-color:var(--accent)}
+.fitxa h3{margin:0 0 2px;font-size:1rem}
+.meta{font-size:.82rem;color:var(--suau);display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.ll{font-weight:700;font-size:.72rem;padding:1px 6px;border-radius:5px;border:1px solid}
+.ll.ca{color:var(--ca)}.ll.es{color:var(--es)}
+.tg{font-size:.74rem;border:1px solid var(--linia);border-radius:20px;padding:0 7px}
+.res{font-size:.88rem;color:var(--suau);margin:4px 0 0}
+#lector{background:var(--carta);border:1px solid var(--linia);border-radius:12px;padding:18px 22px;position:sticky;top:76px;max-height:calc(100vh - 90px);overflow:auto}
+#lector h2{margin:0 0 4px;font-size:1.3rem}
+#lector .text p{margin:0 0 .8em;text-align:justify;hyphens:auto}
+.accions{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 14px}
+.cita{font-size:.82rem;color:var(--suau);border-top:1px solid var(--linia);padding-top:8px;margin-top:14px}
+.buit{color:var(--suau);text-align:center;padding:30px}
+#mes{margin:6px auto}
+@media print{header,.filtres,#info,#llista,.accions,#mes{display:none!important}.graella{display:block}#lector{position:static;max-height:none;border:0;padding:0}body{background:#fff;color:#000}}
+</style>
+</head>
+<body>
+<header>
+  <a href="../" title="Torna a la Bitàcola">← Bitàcola</a>
+  <h1>📚 Textos per a l'aula</h1>
+  <span class="meta" id="actualitzat"></span>
+</header>
+<main>
+  <div class="filtres">
+    <input type="search" id="q" placeholder="Cerca per títol, autor o tema…" aria-label="Cerca">
+    <select id="fl" aria-label="Llengua"><option value="">Totes les llengües</option><option value="ca">Català</option><option value="es">Castellà</option></select>
+    <select id="fa" aria-label="Any"><option value="">Tots els anys</option></select>
+    <select id="ft" aria-label="Tema"><option value="">Tots els temes</option></select>
+    <select id="fp" aria-label="Llargada"><option value="">Qualsevol llargada</option><option value="c">Curt (fins a 600 paraules)</option><option value="m">Mitjà (600-1.200)</option><option value="g">Llarg (més de 1.200)</option></select>
+    <select id="fn" aria-label="Nivell"><option value="">Qualsevol nivell</option><option>Assequible</option><option>Mitjà</option><option>Exigent</option></select>
+    <label class="chk"><input type="checkbox" id="fx"> Cerca també dins els textos</label>
+    <label class="chk"><input type="checkbox" id="fs"> Només desats ★</label>
+  </div>
+  <p id="info">Carregant…</p>
+  <div class="graella">
+    <div><div id="llista"></div><button type="button" id="mes" hidden>Mostra'n més</button></div>
+    <article id="lector"><p class="buit">Tria un text de la llista per llegir-lo.</p></article>
+  </div>
+</main>
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const norm = s => String(s || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+  const NOM_LL = { ca: "Català", es: "Castellà" };
+  let INDEX = [], filtrats = [], mostra = 60, sel = null;
+  const cauText = {};
+  let desats = new Set();
+  try { desats = new Set(JSON.parse(localStorage.getItem("aulaDesats") || "[]")); } catch (e) {}
+  const desa = () => { try { localStorage.setItem("aulaDesats", JSON.stringify([...desats])); } catch (e) {} };
+
+  async function textosDe(clau) {
+    if (!cauText[clau]) cauText[clau] = fetch(`textos/${clau}.json`).then(r => r.ok ? r.json() : {}).catch(() => ({}));
+    return cauText[clau];
+  }
+
+  async function filtra() {
+    const q = norm($("q").value.trim()), l = $("fl").value, a = $("fa").value, t = $("ft").value,
+      p = $("fp").value, n = $("fn").value, dins = $("fx").checked, nomesDesats = $("fs").checked;
+    let r = INDEX.filter(x => (!l || x.l === l) && (!a || String(x.a) === a) && (!t || x.tg.includes(t)) &&
+      (!n || x.n === n) && (!nomesDesats || desats.has(x.id)) &&
+      (!p || (p === "c" ? x.p <= 600 : p === "m" ? x.p > 600 && x.p <= 1200 : x.p > 1200)));
+    if (q) {
+      const paraules = q.split(/\s+/);
+      const coincideix = s => paraules.every(w => s.includes(w));
+      const perFitxa = r.filter(x => coincideix(norm(`${x.t} ${x.au} ${x.tg.join(" ")} ${x.r}`)));
+      if (dins) {
+        $("info").textContent = "Cercant dins els textos…";
+        const claus = [...new Set(r.map(x => `${x.a}-${x.l}`))];
+        const tots = await Promise.all(claus.map(textosDe));
+        const mapa = Object.assign({}, ...tots);
+        const ja = new Set(perFitxa.map(x => x.id));
+        r = perFitxa.concat(r.filter(x => !ja.has(x.id) && mapa[x.id] && coincideix(norm(mapa[x.id].join(" ")))));
+      } else r = perFitxa;
+    }
+    filtrats = r; mostra = 60; pinta();
+  }
+
+  function pinta() {
+    const ca = filtrats.filter(x => x.l === "ca").length;
+    $("info").textContent = INDEX.length
+      ? `${filtrats.length.toLocaleString("ca")} textos (${ca} en català, ${filtrats.length - ca} en castellà)`
+      : "Encara no hi ha textos.";
+    $("llista").innerHTML = filtrats.slice(0, mostra).map(x => `
+      <button type="button" class="fitxa${sel === x.id ? " sel" : ""}" data-id="${x.id}">
+        <h3>${desats.has(x.id) ? "★ " : ""}${esc(x.t)}</h3>
+        <div class="meta"><span class="ll ${x.l}">${x.l.toUpperCase()}</span><span>${x.a}</span>${x.au ? `<span>· ${esc(x.au)}</span>` : ""}<span>· ${x.p.toLocaleString("ca")} paraules · ${x.n}</span></div>
+        <div class="meta" style="margin-top:3px">${x.tg.map(g => `<span class="tg">${esc(g)}</span>`).join("")}</div>
+        <p class="res">${esc(x.r.slice(0, 170))}…</p>
+      </button>`).join("") || `<p class="buit">Cap text no coincideix amb els filtres.</p>`;
+    $("mes").hidden = filtrats.length <= mostra;
+  }
+
+  async function obre(id) {
+    const x = INDEX.find(e => e.id === id); if (!x) return;
+    sel = id; pinta();
+    const L = $("lector");
+    L.innerHTML = `<p class="buit">Carregant el text…</p>`;
+    const par = (await textosDe(`${x.a}-${x.l}`))[id] || [];
+    const nomEd = x.l === "ca" ? "Agenda Llatinoamericana Mundial" : "Agenda Latinoamericana Mundial";
+    const cita = `${x.au ? x.au + ": " : ""}«${x.t}». ${nomEd} ${x.a}, p. ${x.pg}.`;
+    L.innerHTML = `
+      <h2>${esc(x.t)}</h2>
+      <div class="meta"><span class="ll ${x.l}">${NOM_LL[x.l]}</span><span>${x.a}</span>${x.au ? `<span>· ${esc(x.au)}</span>` : ""}<span>· ${x.p.toLocaleString("ca")} paraules · nivell ${x.n.toLowerCase()}</span></div>
+      <div class="accions">
+        <button type="button" class="prim" data-acc="copia">📋 Copia el text</button>
+        <button type="button" data-acc="desa">${desats.has(id) ? "★ Desat" : "☆ Desa"}</button>
+        <button type="button" data-acc="imprimeix">🖨️ Imprimeix</button>
+        <a href="${esc(x.f)}#page=${x.pg}" target="_blank" rel="noopener"><button type="button">📄 Original (PDF)</button></a>
+      </div>
+      <div class="text">${par.map(p => `<p>${esc(p)}</p>`).join("") || "<p class='buit'>No s'ha trobat el text.</p>"}</div>
+      <p class="cita">Font: ${esc(cita)} Els continguts de l'Agenda es poden copiar, citar, reproduir i difondre lliurement amb finalitat no comercial.</p>`;
+    L.scrollTop = 0;
+    L.onclick = async ev => {
+      const b = ev.target.closest("button[data-acc]"); if (!b) return;
+      const acc = b.dataset.acc;
+      if (acc === "copia") {
+        const txt = `${x.t}\n${x.au ? x.au + "\n" : ""}\n${par.join("\n\n")}\n\nFont: ${cita}`;
+        try { await navigator.clipboard.writeText(txt); b.textContent = "✅ Copiat"; } catch (e) { b.textContent = "No s'ha pogut copiar"; }
+        setTimeout(() => { b.textContent = "📋 Copia el text"; }, 1800);
+      } else if (acc === "desa") {
+        desats.has(id) ? desats.delete(id) : desats.add(id); desa();
+        b.textContent = desats.has(id) ? "★ Desat" : "☆ Desa"; pinta();
+      } else if (acc === "imprimeix") window.print();
+    };
+    if (window.innerWidth <= 820) L.scrollIntoView({ behavior: "smooth" });
+  }
+
+  $("llista").addEventListener("click", e => { const f = e.target.closest(".fitxa"); if (f) obre(f.dataset.id); });
+  $("mes").addEventListener("click", () => { mostra += 60; pinta(); });
+  let t0; $("q").addEventListener("input", () => { clearTimeout(t0); t0 = setTimeout(filtra, 250); });
+  ["fl", "fa", "ft", "fp", "fn", "fx", "fs"].forEach(id => $(id).addEventListener("change", filtra));
+
+  Promise.all([
+    fetch("index.json", { cache: "no-cache" }).then(r => r.ok ? r.json() : []).catch(() => []),
+    fetch("estat.json", { cache: "no-cache" }).then(r => r.ok ? r.json() : null).catch(() => null),
+  ]).then(([idx, estat]) => {
+    INDEX = idx;
+    if (estat && estat.actualitzat) $("actualitzat").textContent = `Actualitzat ${/^(01|11)\./.test(estat.actualitzat) ? "l'" : "el "}${estat.actualitzat}`;
+    const anys = [...new Set(idx.map(x => x.a))].sort((a, b) => b - a);
+    $("fa").insertAdjacentHTML("beforeend", anys.map(a => `<option>${a}</option>`).join(""));
+    const temes = [...new Set(idx.flatMap(x => x.tg))].sort((a, b) => a.localeCompare(b, "ca"));
+    $("ft").insertAdjacentHTML("beforeend", temes.map(t => `<option>${esc(t)}</option>`).join(""));
+    if (!idx.length) { $("info").textContent = "La base de dades s'està generant. Torna-hi d'aquí a una estona."; return; }
+    filtra();
+  });
+})();
+</script>
+</body>
+</html>
