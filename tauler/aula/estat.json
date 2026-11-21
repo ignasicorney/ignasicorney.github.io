@@ -1,6 +1,6 @@
 {
  "actualitzat": "21.11.2026",
- "total": 4653,
+ "total": 4641,
  "per_any": {
   "0-ca": 955,
   "0-es": 203,
@@ -25,13 +25,13 @@
   "2006-es": 50,
   "2007-ca": 53,
   "2007-es": 53,
-  "2008-ca": 72,
+  "2008-ca": 68,
   "2008-es": 62,
   "2009-ca": 56,
   "2009-es": 59,
   "2010-ca": 54,
   "2010-es": 58,
-  "2011-ca": 62,
+  "2011-ca": 59,
   "2011-es": 53,
   "2012-ca": 58,
   "2012-es": 67,
@@ -47,7 +47,7 @@
   "2017-es": 66,
   "2018-ca": 63,
   "2018-es": 66,
-  "2019-ca": 69,
+  "2019-ca": 66,
   "2019-es": 56,
   "2020-ca": 62,
   "2020-es": 66,
@@ -60,10 +60,10 @@
   "2024-ca": 71,
   "2024-es": 64,
   "2025-ca": 65,
-  "2025-es": 60,
+  "2025-es": 58,
   "2026-ca": 55,
-  "2026-es": 53,
-  "2027-ca": 70
+  "2026-es": 52,
+  "2027-ca": 71
  },
  "fonts": [
   {
@@ -458,7 +458,7 @@
    "url": "https://agendalatinoamericana.red/wp-content/uploads/2025/06/veredictosyconvocatorias2025.pdf",
    "any": 2025,
    "estat": "ok",
-   "textos": 3
+   "textos": 1
   },
   {
    "url": "https://agendalatinoamericana.red/wp-content/uploads/2025/06/veredictosyconvocatorias2026.pdf",
@@ -470,7 +470,7 @@
    "url": "https://agendalatinoamericana.red/wp-content/uploads/2026/02/AgendaLatinoamericanaMundial2026.pdf",
    "any": 2026,
    "estat": "ok",
-   "textos": 50
+   "textos": 49
   },
   {
    "url": "https://llatinoamericana.org/MemoriaAgenda2008.pdf",
@@ -1153,7 +1153,7 @@
    "url": "https://llatinoamericana.org/wp-content/uploads/2026/09/Llibre-Articles_Agenda-Llatinoamericana_2027_CATALA_FINAL_web.pdf",
    "any": 2027,
    "estat": "ok",
-   "textos": 0
+   "textos": 1
   },
   {
    "url": "https://llatinoamericana.org/wp-content/uploads/2026/09/PUNT-DE-LLIBRE-2027-catala.pdf",
@@ -1273,7 +1273,7 @@
    "url": "https://www.latinoamericana.org/digital/2008AgendaLlatinoamericanaCatala.pdf",
    "any": 2008,
    "estat": "ok",
-   "textos": 13
+   "textos": 9
   },
   {
    "url": "https://www.latinoamericana.org/digital/2008LatinAmericanAgenda.pdf",
@@ -1411,7 +1411,7 @@
    "url": "https://www.latinoamericana.org/digital/2019AgendaLlatinoamericana.pdf",
    "any": 2019,
    "estat": "ok",
-   "textos": 6
+   "textos": 3
   },
   {
    "url": "https://www.latinoamericana.org/digital/Antologia1992-2011AgendaLatinoamericana.pdf",
@@ -1468,7 +1468,7 @@
    "url": "https://www.latinoamericana.org/digital/2011AgendaLlatinoamericanaCatala(SoloTextos).pdf",
    "any": 2011,
    "estat": "ok",
-   "textos": 15
+   "textos": 12
   }
  ]
 }
