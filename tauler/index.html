@@ -696,6 +696,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       <button type="button" data-as="corregir">✍️ Corregir</button>
       <button type="button" data-as="cb">🧪 Competències bàsiques</button>
       <button type="button" data-as="activitats">📚 Activitats</button>
+      <button type="button" data-as="aula">📰 Textos per a l'aula</button>
       <button type="button" data-as="video">🎬 Vídeo</button>
       <button type="button" data-as="adaptar">🧩 Adaptar</button>
       <button type="button" data-as="rubrica">📋 Rúbrica</button>
@@ -722,11 +723,6 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     </form>
     <div class="cons-llista" id="consLlista"></div>
     <p class="font">Escriu la paraula i tria on la vols buscar: s'obre en una pestanya nova. Amb Intro es busca al DIEC2.</p>
-  </div>
-  <div class="bloc" id="aula">
-    <h3 class="bt">📚 Textos per a l'aula</h3>
-    <p style="margin:0 0 8px">Articles de l'Agenda Llatinoamericana (en català i castellà, tots els anys) per a comprensió lectora, educació en ciutadania, drets humans i pensament crític. Es poden filtrar per tema, llengua, any, llargada i nivell.</p>
-    <p style="margin:0"><a class="boto" href="aula/" target="_blank" rel="noopener">Obre el repositori de textos</a></p>
   </div>
       <p class="font"><button type="button" class="boto clar" id="sincDesconnecta">Oblida la clau en aquest aparell</button></p>
     </div>
@@ -1999,6 +1995,9 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
         '<textarea id="asText" placeholder="Enganxa aquí el text de la redacció…" rows="8"></textarea>' +
         '<div class="alum-eines"><label class="boto clar" style="display:inline-block">📷 Foto del full<input type="file" id="asFoto" accept="image/*" capture="environment" hidden></label><span class="font" id="asFotoNom"></span></div>' +
         '<div class="alum-eines"><button type="button" class="boto clar" data-asb="ortografia">🔤 Només ortografia</button><button type="button" class="boto" data-asb="corregeix">✍️ Corregeix amb IA</button></div>';
+    } else if (asEina === "aula") {
+      h = '<p class="font">Corpus de textos de l\'Agenda Llatinoamericana (català i castellà) per a comprensions lectores, exàmens, dictats i exercicis. Filtra per curs, llengua, tema i tipologia. <a href="aula/" target="_blank" rel="noopener">Obre-ho en una pestanya nova ↗</a></p>' +
+        '<iframe src="aula/" title="Textos per a l\'aula" style="width:100%;height:78vh;border:1px solid var(--linia,#ddd);border-radius:10px;background:transparent" loading="lazy"></iframe>';
     } else if (asEina === "activitats") {
       const ao = (llista, v) => llista.map(o => "<option" + (o === v ? " selected" : "") + ">" + o + "</option>").join("");
       h = '<p class="font">Genera una activitat en tres nivells (bàsic, mitjà i avançat) amb solucionari.</p>' +

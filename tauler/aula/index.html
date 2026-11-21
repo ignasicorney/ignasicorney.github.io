@@ -69,6 +69,7 @@ label.chk{display:flex;align-items:center;gap:6px;font-size:.9rem;color:var(--su
 <script>
 (() => {
   const $ = id => document.getElementById(id);
+  try { if (window.top !== window) document.querySelector("header").hidden = true; } catch (e) {}   // dins de l'Assistent: sense capçalera
   const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
   const norm = s => String(s || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
   const NOM_LL = { ca: "Català", es: "Castellà" };
