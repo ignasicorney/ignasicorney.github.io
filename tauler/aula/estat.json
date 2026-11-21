@@ -1,68 +1,68 @@
 {
  "actualitzat": "21.11.2026",
- "total": 3428,
+ "total": 4657,
  "per_any": {
-  "0-ca": 358,
-  "0-es": 111,
-  "1992-es": 74,
+  "0-ca": 367,
+  "0-es": 122,
+  "1992-es": 73,
   "1993-ca": 1,
-  "1993-es": 80,
+  "1993-es": 101,
   "1994-ca": 2,
   "1994-es": 46,
   "1995-ca": 70,
-  "1995-es": 16,
+  "1995-es": 66,
   "1996-ca": 1,
   "1996-es": 90,
-  "1997-es": 32,
-  "1998-es": 33,
-  "1999-es": 31,
-  "2000-es": 54,
-  "2001-es": 41,
-  "2002-es": 45,
-  "2003-es": 54,
-  "2004-es": 55,
-  "2005-es": 43,
-  "2006-es": 46,
-  "2007-ca": 46,
-  "2007-es": 45,
-  "2008-ca": 48,
-  "2008-es": 45,
-  "2009-ca": 48,
-  "2009-es": 47,
-  "2010-ca": 48,
-  "2010-es": 51,
-  "2011-ca": 47,
-  "2011-es": 49,
-  "2012-ca": 44,
-  "2012-es": 44,
-  "2013-ca": 54,
-  "2013-es": 52,
-  "2014-ca": 49,
-  "2014-es": 46,
-  "2015-ca": 48,
-  "2015-es": 45,
-  "2016-ca": 43,
-  "2016-es": 51,
-  "2017-ca": 52,
-  "2017-es": 69,
-  "2018-ca": 60,
-  "2018-es": 56,
-  "2019-ca": 63,
-  "2019-es": 52,
-  "2020-ca": 57,
-  "2020-es": 44,
-  "2021-ca": 61,
-  "2021-es": 52,
+  "1997-es": 58,
+  "1998-es": 52,
+  "1999-es": 53,
+  "2000-es": 79,
+  "2001-es": 65,
+  "2002-es": 57,
+  "2003-es": 79,
+  "2004-es": 75,
+  "2005-es": 76,
+  "2006-es": 77,
+  "2007-ca": 82,
+  "2007-es": 84,
+  "2008-ca": 86,
+  "2008-es": 81,
+  "2009-ca": 69,
+  "2009-es": 73,
+  "2010-ca": 75,
+  "2010-es": 74,
+  "2011-ca": 79,
+  "2011-es": 79,
+  "2012-ca": 73,
+  "2012-es": 70,
+  "2013-ca": 82,
+  "2013-es": 77,
+  "2014-ca": 77,
+  "2014-es": 73,
+  "2015-ca": 84,
+  "2015-es": 77,
+  "2016-ca": 69,
+  "2016-es": 81,
+  "2017-ca": 79,
+  "2017-es": 97,
+  "2018-ca": 61,
+  "2018-es": 90,
+  "2019-ca": 64,
+  "2019-es": 82,
+  "2020-ca": 58,
+  "2020-es": 94,
+  "2021-ca": 62,
+  "2021-es": 83,
   "2022-ca": 58,
-  "2022-es": 51,
+  "2022-es": 78,
   "2023-ca": 59,
-  "2023-es": 55,
+  "2023-es": 79,
   "2024-ca": 67,
-  "2024-es": 58,
+  "2024-es": 78,
   "2025-ca": 61,
-  "2025-es": 52,
+  "2025-es": 69,
   "2026-ca": 50,
-  "2026-es": 50,
+  "2026-es": 65,
   "2027-ca": 68
  },
  "fonts": [
@@ -130,7 +130,7 @@
    "url": "https://agendalatinoamericana.red/archivos/agendas/1995AgendaLatinoamericana.pdf",
    "any": 1995,
    "estat": "ok",
-   "textos": 12
+   "textos": 62
   },
   {
    "url": "https://agendalatinoamericana.red/archivos/agendas/1996AgendaLatinoamericana.pdf",
@@ -142,163 +142,163 @@
    "url": "https://agendalatinoamericana.red/archivos/agendas/1997AgendaLatinoamericana.pdf",
    "any": 1997,
    "estat": "ok",
-   "textos": 32
+   "textos": 58
   },
   {
    "url": "https://agendalatinoamericana.red/archivos/agendas/1998_Agenda_Latinoamericana_solo_textos.pdf",
    "any": 1998,
    "estat": "ok",
-   "textos": 33
+   "textos": 52
   },
   {
    "url": "https://agendalatinoamericana.red/archivos/agendas/1999AgendaLatinoamericana.pdf",
    "any": 1999,
    "estat": "ok",
-   "textos": 31
+   "textos": 54
   },
   {
    "url": "https://agendalatinoamericana.red/archivos/agendas/2000AgendaLatinoamericana.pdf",
    "any": 2000,
    "estat": "ok",
-   "textos": 54
+   "textos": 79
   },
   {
    "url": "https://agendalatinoamericana.red/archivos/agendas/2001AgendaLatinoamericana.pdf",
    "any": 2001,
    "estat": "ok",
-   "textos": 41
+   "textos": 65
   },
   {
    "url": "https://agendalatinoamericana.red/archivos/agendas/2002AgendaLatinoamericana.pdf",
    "any": 2002,
    "estat": "ok",
-   "textos": 45
+   "textos": 57
   },
   {
    "url": "https://agendalatinoamericana.red/archivos/agendas/2003AgendaLatinoamericana.pdf",
    "any": 2003,
    "estat": "ok",
-   "textos": 54
+   "textos": 79
   },
   {
    "url": "https://agendalatinoamericana.red/archivos/agendas/2004AgendaLatinoamericana.pdf",
    "any": 2004,
    "estat": "ok",
-   "textos": 55
+   "textos": 75
   },
   {
    "url": "https://agendalatinoamericana.red/archivos/agendas/2005AgendaLatinoamericana.pdf",
    "any": 2005,
    "estat": "ok",
-   "textos": 43
+   "textos": 77
   },
   {
    "url": "https://agendalatinoamericana.red/archivos/agendas/2006AgendaLatinoamericana.pdf",
    "any": 2006,
    "estat": "ok",
-   "textos": 46
+   "textos": 77
   },
   {
    "url": "https://agendalatinoamericana.red/archivos/agendas/2007AgendaLatinoamericana.pdf",
    "any": 2007,
    "estat": "ok",
-   "textos": 45
+   "textos": 83
   },
   {
    "url": "https://agendalatinoamericana.red/archivos/agendas/2008AgendaLatinoamericana.pdf",
    "any": 2008,
    "estat": "ok",
-   "textos": 44
+   "textos": 81
   },
   {
    "url": "https://agendalatinoamericana.red/archivos/agendas/2009AgendaLatinoamericana.pdf",
    "any": 2009,
    "estat": "ok",
-   "textos": 44
+   "textos": 67
   },
   {
    "url": "https://agendalatinoamericana.red/archivos/agendas/2010AgendaLatinoamericana.pdf",
    "any": 2010,
    "estat": "ok",
-   "textos": 50
+   "textos": 73
   },
   {
    "url": "https://agendalatinoamericana.red/archivos/agendas/2011AgendaLatinoamericana.pdf",
    "any": 2011,
    "estat": "ok",
-   "textos": 49
+   "textos": 75
   },
   {
    "url": "https://agendalatinoamericana.red/archivos/agendas/2012AgendaLatinoamericana.pdf",
    "any": 2012,
    "estat": "ok",
-   "textos": 41
+   "textos": 69
   },
   {
    "url": "https://agendalatinoamericana.red/archivos/agendas/2013AgendaLatinoamericana.pdf",
    "any": 2013,
    "estat": "ok",
-   "textos": 50
+   "textos": 74
   },
   {
    "url": "https://agendalatinoamericana.red/archivos/agendas/2014AgendaLatinoamericana.pdf",
    "any": 2014,
    "estat": "ok",
-   "textos": 47
+   "textos": 74
   },
   {
    "url": "https://agendalatinoamericana.red/archivos/agendas/2015AgendaLatinoamericana.pdf",
    "any": 2015,
    "estat": "ok",
-   "textos": 45
+   "textos": 77
   },
   {
    "url": "https://agendalatinoamericana.red/archivos/agendas/2016AgendaLatinoamericana.pdf",
    "any": 2016,
    "estat": "ok",
-   "textos": 47
+   "textos": 78
   },
   {
    "url": "https://agendalatinoamericana.red/archivos/agendas/2017AgendaLatinoamericana.pdf",
    "any": 2017,
    "estat": "ok",
-   "textos": 51
+   "textos": 79
   },
   {
    "url": "https://agendalatinoamericana.red/archivos/agendas/2018AgendaLatinoamericana.pdf",
    "any": 2018,
    "estat": "ok",
-   "textos": 54
+   "textos": 88
   },
   {
    "url": "https://agendalatinoamericana.red/archivos/agendas/2019AgendaLatinoamericana.pdf",
    "any": 2019,
    "estat": "ok",
-   "textos": 52
+   "textos": 82
   },
   {
    "url": "https://agendalatinoamericana.red/archivos/agendas/2020AgendaLatinoamericana.pdf",
    "any": 2020,
    "estat": "ok",
-   "textos": 45
+   "textos": 95
   },
   {
    "url": "https://agendalatinoamericana.red/archivos/agendas/2021AgendaLatinoamericana.pdf",
    "any": 2021,
    "estat": "ok",
-   "textos": 54
+   "textos": 86
   },
   {
    "url": "https://agendalatinoamericana.red/archivos/agendas/2022AgendaLatinoamericana.pdf",
    "any": 2022,
    "estat": "ok",
-   "textos": 50
+   "textos": 79
   },
   {
    "url": "https://agendalatinoamericana.red/archivos/agendas/2024AgendaLatinoamericana.pdf",
    "any": 2024,
    "estat": "ok",
-   "textos": 54
+   "textos": 75
   },
   {
    "url": "https://agendalatinoamericana.red/archivos/agendas/BASC1996AgendaLatinamerikarra.pdf",
@@ -322,19 +322,19 @@
    "url": "https://agendalatinoamericana.red/archivos/agendas/ENG2009LatinAmericanAgenda.pdf",
    "any": 2009,
    "estat": "ok",
-   "textos": 0
+   "textos": 3
   },
   {
    "url": "https://agendalatinoamericana.red/archivos/agendas/ENG2012LatinAmericanAgenda.pdf",
    "any": 2012,
    "estat": "ok",
-   "textos": 2
+   "textos": 1
   },
   {
    "url": "https://agendalatinoamericana.red/archivos/agendas/ENG2013WorldLatinAmericanAgenda.pdf",
    "any": 2013,
    "estat": "ok",
-   "textos": 1
+   "textos": 2
   },
   {
    "url": "https://agendalatinoamericana.red/archivos/agendas/ENG2014WorldLatinAmericanAgenda.pdf",
@@ -380,13 +380,13 @@
    "url": "https://agendalatinoamericana.red/archivos/agendas/Latinoamericana%202023%20PDF%20WEB.pdf",
    "any": 2023,
    "estat": "ok",
-   "textos": 56
+   "textos": 82
   },
   {
    "url": "https://agendalatinoamericana.red/materiales/Antologia20.pdf",
    "any": 0,
    "estat": "ok",
-   "textos": 106
+   "textos": 136
   },
   {
    "url": "https://agendalatinoamericana.red/materiales/Deuda_Europa.pdf",
@@ -446,7 +446,7 @@
    "url": "https://agendalatinoamericana.red/wp-content/uploads/2025/01/AgendaLatinoamericanaMundial2025.pdf",
    "any": 2025,
    "estat": "ok",
-   "textos": 53
+   "textos": 71
   },
   {
    "url": "https://agendalatinoamericana.red/wp-content/uploads/2025/06/Pancarta2026.pdf",
@@ -470,7 +470,7 @@
    "url": "https://agendalatinoamericana.red/wp-content/uploads/2026/02/AgendaLatinoamericanaMundial2026.pdf",
    "any": 2026,
    "estat": "ok",
-   "textos": 48
+   "textos": 64
   },
   {
    "url": "https://llatinoamericana.org/MemoriaAgenda2008.pdf",
@@ -553,91 +553,91 @@
    "url": "https://llatinoamericana.org/arxius/agendes/Agenda2007-cat.pdf",
    "any": 2007,
    "estat": "ok",
-   "textos": 46
+   "textos": 83
   },
   {
    "url": "https://llatinoamericana.org/arxius/agendes/Agenda2008-cat.pdf",
    "any": 2008,
    "estat": "ok",
-   "textos": 43
+   "textos": 79
   },
   {
    "url": "https://llatinoamericana.org/arxius/agendes/Agenda2009-cat.pdf",
    "any": 2009,
    "estat": "ok",
-   "textos": 44
+   "textos": 65
   },
   {
    "url": "https://llatinoamericana.org/arxius/agendes/Agenda2010-cat.pdf",
    "any": 2010,
    "estat": "ok",
-   "textos": 51
+   "textos": 78
   },
   {
    "url": "https://llatinoamericana.org/arxius/agendes/Agenda2011-cat.pdf",
    "any": 2011,
    "estat": "ok",
-   "textos": 39
+   "textos": 73
   },
   {
    "url": "https://llatinoamericana.org/arxius/agendes/Agenda2012-cat.pdf",
    "any": 2012,
    "estat": "ok",
-   "textos": 45
+   "textos": 74
   },
   {
    "url": "https://llatinoamericana.org/arxius/agendes/Agenda2013-cat.pdf",
    "any": 2013,
    "estat": "ok",
-   "textos": 51
+   "textos": 76
   },
   {
    "url": "https://llatinoamericana.org/arxius/agendes/Agenda2014-cat.pdf",
    "any": 2014,
    "estat": "ok",
-   "textos": 50
+   "textos": 78
   },
   {
    "url": "https://llatinoamericana.org/arxius/agendes/Agenda2015-cat.pdf",
    "any": 2015,
    "estat": "ok",
-   "textos": 47
+   "textos": 83
   },
   {
    "url": "https://llatinoamericana.org/arxius/agendes/Agenda2016-cat.pdf",
    "any": 2016,
    "estat": "ok",
-   "textos": 46
+   "textos": 72
   },
   {
    "url": "https://llatinoamericana.org/arxius/agendes/Agenda2017-cat.pdf",
    "any": 2017,
    "estat": "ok",
-   "textos": 53
+   "textos": 79
   },
   {
    "url": "https://llatinoamericana.org/arxius/agendes/Agenda2018-cat.pdf",
    "any": 2018,
    "estat": "ok",
-   "textos": 59
+   "textos": 60
   },
   {
    "url": "https://llatinoamericana.org/arxius/agendes/Agenda2019-cat.pdf",
    "any": 2019,
    "estat": "ok",
-   "textos": 63
+   "textos": 64
   },
   {
    "url": "https://llatinoamericana.org/arxius/agendes/Agenda2020-cat.pdf",
    "any": 2020,
    "estat": "ok",
-   "textos": 57
+   "textos": 58
   },
   {
    "url": "https://llatinoamericana.org/arxius/agendes/Agenda2021-cat.pdf",
    "any": 2021,
    "estat": "ok",
-   "textos": 62
+   "textos": 63
   },
   {
    "url": "https://llatinoamericana.org/arxius/agendes/Agenda2022-cat.pdf",
@@ -1273,7 +1273,7 @@
    "url": "https://www.latinoamericana.org/digital/2008AgendaLlatinoamericanaCatala.pdf",
    "any": 2008,
    "estat": "ok",
-   "textos": 0
+   "textos": 2
   },
   {
    "url": "https://www.latinoamericana.org/digital/2008LatinAmericanAgenda.pdf",
@@ -1321,7 +1321,7 @@
    "url": "https://www.latinoamericana.org/digital/2012AgendaLlatinoamericanaCatala.pdf",
    "any": 2012,
    "estat": "ok",
-   "textos": 0
+   "textos": 1
   },
   {
    "url": "https://www.latinoamericana.org/digital/2013AgendaLatinoamericana.pdf",
@@ -1333,7 +1333,7 @@
    "url": "https://www.latinoamericana.org/digital/2013AgendaLlatinoamericanaCatala.pdf",
    "any": 2013,
    "estat": "ok",
-   "textos": 5
+   "textos": 9
   },
   {
    "url": "https://www.latinoamericana.org/digital/2014AgendaLatinoamericana.pdf",
@@ -1345,7 +1345,7 @@
    "url": "https://www.latinoamericana.org/digital/2014AgendaLlatinoamericana.pdf",
    "any": 2014,
    "estat": "ok",
-   "textos": 0
+   "textos": 1
   },
   {
    "url": "https://www.latinoamericana.org/digital/2015AgendaLatinoamericana.pdf",
@@ -1381,7 +1381,7 @@
    "url": "https://www.latinoamericana.org/digital/2017AgendaLlatinoamericana.pdf",
    "any": 2017,
    "estat": "ok",
-   "textos": 0
+   "textos": 1
   },
   {
    "url": "https://www.latinoamericana.org/digital/2018AgendaLatinoamericana.pdf",
@@ -1417,13 +1417,13 @@
    "url": "https://www.latinoamericana.org/digital/Antologia1992-2011AgendaLatinoamericana.pdf",
    "any": 0,
    "estat": "ok",
-   "textos": 49
+   "textos": 55
   },
   {
    "url": "https://www.latinoamericana.org/digital/Antologia1992-2011AgendaLlatinoamericanaCatala.pdf",
    "any": 0,
    "estat": "ok",
-   "textos": 127
+   "textos": 146
   },
   {
    "url": "https://www.latinoamericana.org/digital/IndicesCompletos1992-2011.pdf",
@@ -1434,7 +1434,7 @@
    "url": "https://www.latinoamericana.org/digital/1993AgendaLatinoamericana(SoloTexto).pdf",
    "any": 1993,
    "estat": "ok",
-   "textos": 19
+   "textos": 43
   },
   {
    "url": "https://www.latinoamericana.org/digital/1997AgendaLatinoamericana(SoloTextos).pdf",
@@ -1462,13 +1462,13 @@
    "url": "https://www.latinoamericana.org/digital/2011AgendaLatinoamericanaSoloTextos.pdf",
    "any": 2011,
    "estat": "ok",
-   "textos": 0
+   "textos": 3
   },
   {
    "url": "https://www.latinoamericana.org/digital/2011AgendaLlatinoamericanaCatala(SoloTextos).pdf",
    "any": 2011,
    "estat": "ok",
-   "textos": 10
+   "textos": 11
   }
  ]
 }
