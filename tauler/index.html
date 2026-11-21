@@ -102,8 +102,10 @@ h3.bt{margin:0 0 8px;font-size:1rem;text-transform:uppercase}
 dialog#dlgOrg{width:min(860px,calc(100vw - 24px))}
 .foto-mini{display:inline-block;width:24px;height:24px;border-radius:50%;overflow:hidden;vertical-align:middle;margin-right:6px;flex:none;cursor:zoom-in;background:var(--linia);box-shadow:0 0 0 1px rgba(0,0,0,.08)}
 .foto-mini img{width:100%;height:100%;object-fit:cover;object-position:50% 30%;display:block}
-.org-llista .org-nom{align-items:center}
-.org-llista .foto-mini{width:22px;height:22px;margin-right:2px}
+.org-llista li{align-items:center}
+.org-llista li>span:first-child{flex:1 1 auto}
+.org-llista .org-foto{flex:0 0 24px;width:24px;height:24px;display:flex;justify-content:flex-end}
+.org-llista .foto-mini{width:24px;height:24px;margin:0}
 #fotoGran{position:fixed;z-index:2147483000;pointer-events:none;background:#fff;color:#222;padding:6px;border-radius:10px;box-shadow:0 8px 28px rgba(0,0,0,.32);text-align:center;font-size:.8rem;line-height:1.25;width:212px;box-sizing:border-box}
 #fotoGran img{display:block;width:200px;height:220px;object-fit:cover;object-position:50% 30%;border-radius:6px;margin:0 0 5px}
 .orla-graella{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:12px 10px;margin:4px 0 14px}
@@ -1103,9 +1105,9 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     if (!orles) carregaOrles();
     const h = ORG.map(([sec, files]) => {
       const fs = q ? files.filter(([c, n]) => senseAccents(sec + " " + c + " " + n).includes(q)) : files;
-      return fs.length ? '<section class="org-sec"><h3>' + esc(sec) + '</h3><ul class="org-llista">' + fs.map(([c, n]) => '<li' + (ORG_MEUS.includes(c) && (sec.startsWith("Tutors d'ESO") || sec.startsWith("Caps")) ? ' class="meu"' : "") + "><span>" + esc(c) + '</span><span class="org-nom">' + htmlFoto(fotoProf(n), n) + esc(n) +
+      return fs.length ? '<section class="org-sec"><h3>' + esc(sec) + '</h3><ul class="org-llista">' + fs.map(([c, n]) => '<li' + (ORG_MEUS.includes(c) && (sec.startsWith("Tutors d'ESO") || sec.startsWith("Caps")) ? ' class="meu"' : "") + "><span>" + esc(c) + '</span><span class="org-nom">' + esc(n) +
         (orgMail(n) ? ' <a href="#" class="org-mail" data-orgmail="' + esc(orgMail(n)) + '" title="Escriu a ' + esc(orgMail(n)) + '">✉️</a>' : "") +
-        ' <button type="button" class="org-ed" data-orged="' + esc(n) + '" title="' + (orgMail(n) ? "Canvia el correu" : "Posa-hi el correu a mà") + '">✏️</button></span></li>').join("") + "</ul></section>" : "";
+        ' <button type="button" class="org-ed" data-orged="' + esc(n) + '" title="' + (orgMail(n) ? "Canvia el correu" : "Posa-hi el correu a mà") + '">✏️</button></span><span class="org-foto">' + htmlFoto(fotoProf(n), n) + "</span></li>").join("") + "</ul></section>" : "";
     }).join("");
     // 16.11.2026: a dalt, sempre, els que encara no tenen correu (un clic per posar-l'hi a mà)
     const falten = q ? [] : ORG_NOMS.filter(n => !orgMail(n));
