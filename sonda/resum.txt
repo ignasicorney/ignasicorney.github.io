@@ -1,0 +1,243 @@
+### catalan/manyos.php (10529 bytes, 21 enllaços)
+  Koinonia -> https://servicioskoinonia.org/
+  Koinonía -> https://servicioskoinonia.org/
+  Agenda -> https://servicioskoinonia.org/agenda/archivo/index.php
+  Portal Koinonia -> https://servicioskoinonia.org/
+  Bíblico -> https://servicioskoinonia.org/biblico
+  Páginas Neobíblicas -> https://servicioskoinonia.org/neobiblicas
+  El Evangelio de cada día -> https://servicioskoinonia.org/evangelio
+  Calendario litúrgico -> https://servicioskoinonia.org/calendario
+  Pag. de Cerezo -> https://servicioskoinonia.org/cerezo
+  RELaT -> https://servicioskoinonia.org/relat
+  LOGOS -> https://servicioskoinonia.org/logos
+  Biblioteca -> https://servicioskoinonia.org/biblioteca
+  Información -> https://servicioskoinonia.org/informacion
+  Martirologio Latinoamericano -> https://servicioskoinonia.org/martirologio
+  Página de Mons. Romero -> https://servicioskoinonia.org/romero
+  Posters -> https://servicioskoinonia.org/posters
+  Galería -> https://servicioskoinonia.org/galeria
+  Página de Casaldáliga -> https://servicioskoinonia.org/Casaldaliga
+  La columna de Boff -> https://servicioskoinonia.org/boff
+  Agenda Latinoamericana -> http://latinoamericana.org
+  Cuentos cortos latinoamericanos -> https://servicioskoinonia.org/cuentoscortos
+### manyos.php (10772 bytes, 21 enllaços)
+  Koinonia -> https://servicioskoinonia.org/
+  Koinonía -> https://servicioskoinonia.org/
+  Agenda -> https://servicioskoinonia.org/agenda/archivo/index.php
+  Portal Koinonia -> https://servicioskoinonia.org/
+  Bíblico -> https://servicioskoinonia.org/biblico
+  Páginas Neobíblicas -> https://servicioskoinonia.org/neobiblicas
+  El Evangelio de cada día -> https://servicioskoinonia.org/evangelio
+  Calendario litúrgico -> https://servicioskoinonia.org/calendario
+  Pag. de Cerezo -> https://servicioskoinonia.org/cerezo
+  RELaT -> https://servicioskoinonia.org/relat
+  LOGOS -> https://servicioskoinonia.org/logos
+  Biblioteca -> https://servicioskoinonia.org/biblioteca
+  Información -> https://servicioskoinonia.org/informacion
+  Martirologio Latinoamericano -> https://servicioskoinonia.org/martirologio
+  Página de Mons. Romero -> https://servicioskoinonia.org/romero
+  Posters -> https://servicioskoinonia.org/posters
+  Galería -> https://servicioskoinonia.org/galeria
+  Página de Casaldáliga -> https://servicioskoinonia.org/Casaldaliga
+  La columna de Boff -> https://servicioskoinonia.org/boff
+  Agenda Latinoamericana -> http://latinoamericana.org
+  Cuentos cortos latinoamericanos -> https://servicioskoinonia.org/cuentoscortos
+### catalan/mtemas.php (12751 bytes, 21 enllaços)
+  Koinonia -> https://servicioskoinonia.org/
+  Koinonía -> https://servicioskoinonia.org/
+  Agenda -> https://servicioskoinonia.org/agenda/archivo/index.php
+  Portal Koinonia -> https://servicioskoinonia.org/
+  Bíblico -> https://servicioskoinonia.org/biblico
+  Páginas Neobíblicas -> https://servicioskoinonia.org/neobiblicas
+  El Evangelio de cada día -> https://servicioskoinonia.org/evangelio
+  Calendario litúrgico -> https://servicioskoinonia.org/calendario
+  Pag. de Cerezo -> https://servicioskoinonia.org/cerezo
+  RELaT -> https://servicioskoinonia.org/relat
+  LOGOS -> https://servicioskoinonia.org/logos
+  Biblioteca -> https://servicioskoinonia.org/biblioteca
+  Información -> https://servicioskoinonia.org/informacion
+  Martirologio Latinoamericano -> https://servicioskoinonia.org/martirologio
+  Página de Mons. Romero -> https://servicioskoinonia.org/romero
+  Posters -> https://servicioskoinonia.org/posters
+  Galería -> https://servicioskoinonia.org/galeria
+  Página de Casaldáliga -> https://servicioskoinonia.org/Casaldaliga
+  La columna de Boff -> https://servicioskoinonia.org/boff
+  Agenda Latinoamericana -> http://latinoamericana.org
+  Cuentos cortos latinoamericanos -> https://servicioskoinonia.org/cuentoscortos
+### catalan/ma.php (11666 bytes, 21 enllaços)
+  Koinonia -> https://servicioskoinonia.org/
+  Koinonía -> https://servicioskoinonia.org/
+  Agenda -> https://servicioskoinonia.org/agenda/archivo/index.php
+  Portal Koinonia -> https://servicioskoinonia.org/
+  Bíblico -> https://servicioskoinonia.org/biblico
+  Páginas Neobíblicas -> https://servicioskoinonia.org/neobiblicas
+  El Evangelio de cada día -> https://servicioskoinonia.org/evangelio
+  Calendario litúrgico -> https://servicioskoinonia.org/calendario
+  Pag. de Cerezo -> https://servicioskoinonia.org/cerezo
+  RELaT -> https://servicioskoinonia.org/relat
+  LOGOS -> https://servicioskoinonia.org/logos
+  Biblioteca -> https://servicioskoinonia.org/biblioteca
+  Información -> https://servicioskoinonia.org/informacion
+  Martirologio Latinoamericano -> https://servicioskoinonia.org/martirologio
+  Página de Mons. Romero -> https://servicioskoinonia.org/romero
+  Posters -> https://servicioskoinonia.org/posters
+  Galería -> https://servicioskoinonia.org/galeria
+  Página de Casaldáliga -> https://servicioskoinonia.org/Casaldaliga
+  La columna de Boff -> https://servicioskoinonia.org/boff
+  Agenda Latinoamericana -> http://latinoamericana.org
+  Cuentos cortos latinoamericanos -> https://servicioskoinonia.org/cuentoscortos
+
+### LLISTA https://servicioskoinonia.org/agenda/archivo/catalan/listanyos.php?select=1&opcion=s&Submit=Consultar (649143 bytes, 3053 enllaços)
+  rtf -> https://servicioskoinonia.org/agenda/archivo/catalan/texto/rtf/1992CAT002.zip
+  Crec en D√©u amb rostre de dona -> https://servicioskoinonia.org/agenda/archivo/catalan/obra.php?ncodigo=831
+  rtf -> https://servicioskoinonia.org/agenda/archivo/catalan/texto/rtf/1992CAT039.zip
+  Declaraci√≥ dels Pobles Ind√≠genes del m√≥n -> https://servicioskoinonia.org/agenda/archivo/catalan/obra.php?ncodigo=821
+  rtf -> https://servicioskoinonia.org/agenda/archivo/catalan/texto/rtf/1992CAT030a.zip
+  Descobrir la nostra identitat en la nostra hist√≤ria -> https://servicioskoinonia.org/agenda/archivo/catalan/obra.php?ncodigo=792
+  rtf -> https://servicioskoinonia.org/agenda/archivo/catalan/texto/rtf/1992CAT04.zip
+  Economia de Tahuantinsuyu -> https://servicioskoinonia.org/agenda/archivo/catalan/obra.php?ncodigo=818
+  rtf -> https://servicioskoinonia.org/agenda/archivo/catalan/texto/rtf/1992CAT028.zip
+  El cacic Hatuey prefereix l‚Äôinfern -> https://servicioskoinonia.org/agenda/archivo/catalan/obra.php?ncodigo=805
+  rtf -> https://servicioskoinonia.org/agenda/archivo/catalan/texto/rtf/1992CAT015.zip
+  El nom d‚Äô ‚ÄúAbya Yala‚Äù -> https://servicioskoinonia.org/agenda/archivo/catalan/obra.php?ncodigo=798
+  rtf -> https://servicioskoinonia.org/agenda/archivo/catalan/texto/rtf/1992CAT09a.zip
+  El nom d‚Äô ‚ÄúAm√®rica‚Äù -> https://servicioskoinonia.org/agenda/archivo/catalan/obra.php?ncodigo=797
+  rtf -> https://servicioskoinonia.org/agenda/archivo/catalan/texto/rtf/1992CAT009.zip
+  El problema dels esclaus africans -> https://servicioskoinonia.org/agenda/archivo/catalan/obra.php?ncodigo=823
+  rtf -> https://servicioskoinonia.org/agenda/archivo/catalan/texto/rtf/1992CAT032.zip
+  El serm√≥ de Montesinos 21 de desembre de 1511 -> https://servicioskoinonia.org/agenda/archivo/catalan/obra.php?ncodigo=813
+  rtf -> https://servicioskoinonia.org/agenda/archivo/catalan/texto/rtf/1992CAT023.zip
+  El testimoni del cronista Gonz√°lez de Oviedo -> https://servicioskoinonia.org/agenda/archivo/catalan/obra.php?ncodigo=800
+  rtf -> https://servicioskoinonia.org/agenda/archivo/catalan/texto/rtf/1992CAT010.zip
+  El ‚ÄúRequeriment‚Äù -> https://servicioskoinonia.org/agenda/archivo/catalan/obra.php?ncodigo=793
+  rtf -> https://servicioskoinonia.org/agenda/archivo/catalan/texto/rtf/1992CAT005.zip
+  Els Papes i l‚Äôinici de la conquesta -> https://servicioskoinonia.org/agenda/archivo/catalan/obra.php?ncodigo=827
+  rtf -> https://servicioskoinonia.org/agenda/archivo/catalan/texto/rtf/1992CAT035.zip
+  III Consulta ind√≠gena ecum√®nica llatinoameriana -> https://servicioskoinonia.org/agenda/archivo/catalan/obra.php?ncodigo=795
+  rtf -> https://servicioskoinonia.org/agenda/archivo/catalan/texto/rtf/1992CAT007.zip
+  La b√≠blia i els indis -> https://servicioskoinonia.org/agenda/archivo/catalan/obra.php?ncodigo=806
+  rtf -> https://servicioskoinonia.org/agenda/archivo/catalan/texto/rtf/1992CAT016.zip
+  La cara ind√≠gena d‚ÄôAm√®rica -> https://servicioskoinonia.org/agenda/archivo/catalan/obra.php?ncodigo=790
+  rtf -> https://servicioskoinonia.org/agenda/archivo/catalan/texto/rtf/1992CAT002.zip
+candidats 3034
+
+### TEXT https://servicioskoinonia.org/agenda/archivo/catalan/obra.php?ncodigo=826
+Arxiu de l¥Agenda Llatinoamericana / 12 d‚Äôoctubre de 1492 Diari d‚Äôabord de Colom(An√≥nimo)
+Koinonia
+Vd 
+      esta aquÌ:
+KoinonÌa
+>
+Agenda
+>
+Informacion sobre los Servicios Koinonia
+Suscripcion al boletin de novedades
+*************
+Servicio Biblico Latinoamericano
+- Consulta por semanas
+- Consulta por dias
+Suscripcion para recibir el servicio biblico
+Evangelio del dia
+Calendario liturgico 2003-2036
+P·ginas neobiblicas
+Biblioteca, sala biblica
+*************
+RELaT, Revista Electronica Latinoamericana de Teologia
+LOGOS, textos cortos varios
+La columna semanal de Leonardo Boff
+Agenda Latinoamericana
+*************
+Biblioteca
+- Sala general
+- Sala biblica
+- Sala pastoral
+- Sala teologica
+*************
+Martirologio Latinoamericano
+Jornadas Indoafrolatinoamericanas
+Fechas de la Patria Grande (Eduardo GALEANO)
+*************
+La Pagina de Mons. Romero
+Homilias de Mons. Romero
+*************
+Pagina de Pedro Casaldaliga
+Obras de poesia de Pedro Casaldaliga
+Articulos de Pedro Casaldaliga
+Cartas de Pedro Casaldaliga
+*************
+Pagina de Cerezo Barredo
+*************
+Un tal Jesus
+*************
+TAMBO, para dialogar en el espiritu de la Patria Grande
+*************
+Comunidad Cristiana Virtual
+*************
+Descargar 
+        este artÌculo: PDF
+RTF
+AUTOR: An√≥nimo
+AGENDA LATINOAMERICANA AÑO: 1992
+12 d’octubre de 1492
+Diari d’abord de Colom
+A las dos horas despu√©s de media noche pareci√≥ la tierra, de la cual 
+		estar√≠an dos leguas. Amainaron todas las velas, y quedaron temporizando 
+		hasta el d√≠a viernes que llegaron a una isleta de los lucayos, que se 
+		llamaba en lengua de indios Guanahan√≠. Luego vieron gente desnuda, y el 
+		Almirante sali√≥ a tierra en la barca armada y Mart√≠n Alonso Pinz√≥n y 
+		Vicente Anes, su hermano,que era capit√°n de la Ni√±a. Sac√≥ el Almirante 
+		la bandera real y los capitanes con dos banderas de la Cruz Verde, que 
+		llevaba el Almirante en todos los nav√≠os por se√±a, con una F y una I, 
+		encima de cada letra su corona, una de un cabo de la + y otra de otro. 
+		Puestos en tierra vieron √°rboles muy verdes y aguas muchas y frutas de 
+		diversas maneras. El Almirante llam√≥ a los dos capitanes y a los dem√°s 
+		que saltaron a tierra, y a Rodrigo d’Escobedo escribano de toda la 
+		armada, y a Rodrigo S√°nches de Segovia, y dijo que le diesen por fe y 
+		testimonio c√≥mo √©l por ante todos tomaba, como de hecho tom√≥, posesi√≥n 
+		de la dicha isla por el Rey e por la Reina sus se√±ores, haciendo las 
+		protestaciones qu
+
+### LLISTA https://servicioskoinonia.org/agenda/archivo/listanyos.php?select=1&opcion=s&Submit=Consultar (621286 bytes, 3222 enllaços)
+  rtf -> https://servicioskoinonia.org/agenda/archivo/texto/rtf/1992ES188.zip
+  pdf -> https://servicioskoinonia.org/agenda/archivo/texto/pdf/1992ES188.zip
+  Carta al Rey de Espa√±a -> https://servicioskoinonia.org/agenda/archivo/obra.php?ncodigo=17
+  rtf -> https://servicioskoinonia.org/agenda/archivo/texto/rtf/1992ES068.zip
+  pdf -> https://servicioskoinonia.org/agenda/archivo/texto/pdf/1992ES068.zip
+  Concepto maya de la Conquista -> https://servicioskoinonia.org/agenda/archivo/obra.php?ncodigo=16
+  rtf -> https://servicioskoinonia.org/agenda/archivo/texto/rtf/1992ES063.zip
+  pdf -> https://servicioskoinonia.org/agenda/archivo/texto/pdf/1992ES063.zip
+  Continente de excluidos, Tierra de solidarios -> https://servicioskoinonia.org/agenda/archivo/obra.php?ncodigo=7
+  rtf -> https://servicioskoinonia.org/agenda/archivo/texto/rtf/1992ES020.zip
+  pdf -> https://servicioskoinonia.org/agenda/archivo/texto/pdf/1992ES020.zip
+  Creo en Dios con rostro de mujer -> https://servicioskoinonia.org/agenda/archivo/obra.php?ncodigo=37
+  rtf -> https://servicioskoinonia.org/agenda/archivo/texto/rtf/1992ES173.zip
+  pdf -> https://servicioskoinonia.org/agenda/archivo/texto/pdf/1992ES173.zip
+  Declaraci√≥n solemne de los Pueblos Ind√≠genas del mundo -> https://servicioskoinonia.org/agenda/archivo/obra.php?ncodigo=28
+  rtf -> https://servicioskoinonia.org/agenda/archivo/texto/rtf/1992ES132.zip
+  pdf -> https://servicioskoinonia.org/agenda/archivo/texto/pdf/1992ES132.zip
+  Econom√≠a de Tahuantinsuyu -> https://servicioskoinonia.org/agenda/archivo/obra.php?ncodigo=25
+  rtf -> https://servicioskoinonia.org/agenda/archivo/texto/rtf/1992ES112.zip
+  pdf -> https://servicioskoinonia.org/agenda/archivo/texto/pdf/1992ES112.zip
+  El cacique Hatuey prefiere el infierno -> https://servicioskoinonia.org/agenda/archivo/obra.php?ncodigo=14
+  rtf -> https://servicioskoinonia.org/agenda/archivo/texto/rtf/1992ES056.zip
+  pdf -> https://servicioskoinonia.org/agenda/archivo/texto/pdf/1992ES056.zip
+  El fen√≥meno de las sectas en Am√©rica Latina y el Tercer Mundo -> https://servicioskoinonia.org/agenda/archivo/obra.php?ncodigo=26
+  rtf -> https://servicioskoinonia.org/agenda/archivo/texto/rtf/1992ES120.zip
+  pdf -> https://servicioskoinonia.org/agenda/archivo/texto/pdf/1992ES120.zip
+  El Imperio Inca -> https://servicioskoinonia.org/agenda/archivo/obra.php?ncodigo=21
+  rtf -> https://servicioskoinonia.org/agenda/archivo/texto/rtf/1992ES094.zip
+  pdf -> https://servicioskoinonia.org/agenda/archivo/texto/pdf/1992ES094.zip
+  El nombre de Abya Yala -> https://servicioskoinonia.org/agenda/archivo/obra.php?ncodigo=125
+  rtf -> https://servicioskoinonia.org/agenda/archivo/texto/rtf/1992ES030B.zip
+candidats 3204
+
+### TEXT https://servicioskoinonia.org/agenda/archivo/texto/pdf/2012ES038.zip
+PK   2�h?ȏ�z�  YR    2012ES038.pdfԻuX�M�7H�(Ұ�$6�`��)!�Ԧ��"""%-��tH�4RJ#�tȷ�+���~��9�����9׬��f�o֚s6���4�F�2;�7H��� 썭������v#'K�) T�yyA|@e �@�`>� TG��`�,@ �Bx`~~}"���y;�_��ܜfD��`|D<��w{��#������B���?���_h0��u�<�_i~�_h�p�/4>8�/48?�?��``�/���./�/||�3�7|0(�?��g�����_�@<`���@ 0�籀@��r�@P���������_�� ��4(�/��x탗�?�y����1�ya|?����y.��P����~�!�Y^��s�(?�g9 0�e�B��R��Y6?�/r@�a����������/z��&�g٠ �/:��x����B���
+����Q ��+���8�g]A��n���_4��������P��� ���#�6���3��`��zB q8�Ph'%)��Po�b)iqHR
+5 ��j�
+���GTL{�N�6޵	2���,W����*�*JJ�XK�'��e��R�����&�p�����/D��&�ॎw�p��a�B��>��Z����W�^&w��B��,q�;�Z\���ڼ;��%S�3XZ4c��'y��6_�R�K �K/���|�.��EG[����-���.s1w��6idj�4B�F��bd�P42F�8@��(��ŋ��(�ⷱ7jZ"�#�P�e�pBؙ �Q�IZ:!L���v@E������E�g�bNHq{7=n��(?/7/ �q��x���6��吰�C"��z��q ��	����8P���=�~O.8Q-8�;��.d��] |ߕpaji�_�U�P:@���;g{��*����wRs02A���� ��DeA��e
+@�	(冔QC���#s��}Mɜ����`�?إQ�8�A�P���Qy �3����C Пy( ��g�B�hP���D���\�:���V6�B���z����|�D�ޱ?(���di�_�ra.�����u��ڄ���^��Aw��x���ͯ1�3؞�ՕNd��F.��!nYgcQ����U��E���ऍ��98��S����{C��Q����{���ի�vAg󕵯՞?��Zr0�X7���)���^�4?{�1�8�������,��R�x�?f��	L�u=���gY_��Բ�I�v}*%R���ã��zEۥ%׺#Ӥ�>還/��ޟ��A����E�ğ0�u2�Ėһ�=�v	�Th���Ǧ�C�x�T��<*̵��᪯�-���b�w���Ʊ�x�ɇx��@Vo_�F�V��y��"TZ=|��E�;�aHc��5�~�^R�أ'�d��+<�c�_���d��=!>؇��}�A��=�zN�zJ��a��Z~�7�A�#}��(���J6Zv&�֎	����Jf� χ��6���'#��;ަ�66}r�'S�fr���~q"��q���2�İ�m#��6E��7��C����'9s������:�%#E;h��Hr6;���߳j���_�F?�>��^�I@q�4��
+ߖ����'�_0��;��N�������U��IB��حT��ZxH��8��h�f^{`&:��q9F/-w�z�lz8Ӹ)O̎�q5�|�2��f��~���0)~�b��^fM[ÿD`2k{M�=h���9��������������O������03I�L��L�NFH̼�ޜ���-�NW�A��%�o�"|Ub��z,���M��$Gpo⽋�#�����ӌ���E��h�{j>��y�����|�93ۧh��dL����e�Y.na��֮�S|4��k�o��+����|P���za���s�#(@�
+ ^��2*���M�� \] q�� �oq��U\��������� 8����Â�/` ��������~P��������n�)�� ��TV �\���� b���n9[�8Q}}o�O�hbtQ������<
+��IH�Kd
+�^������S�s5�G$��������ҖN��s��R3�e��P4����#χ.�n�agy�lQ������(�,M��z0T������ *�@�JT��?�(	Q1*�Y���E9�� ^T�t����c(t�sN�ȣ�����=������}�*BA��� �?�����~��g�y���?������Q��\�?i?>`>�w��ՆR/�w��UCup�V>�����9�E�(�CE��<�O�_H|�-�V�S?���.�Gi���P�Eٹ���s\����2�s��C���W��A׹��x����Q��0RԌ��uQ����9�/����/���@�~6Пa�o���x��Oȿ^�{�o�����x~0���?���P؏;x��p�8��yQ7E���1���~�k��;�l�4���EZd�ϓv��L�ط���6;&[(��SeS6�,���}
