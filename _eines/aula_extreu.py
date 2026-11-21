@@ -12,6 +12,9 @@ Sortida (a tauler/aula/):
 import collections, datetime, hashlib, json, os, re, sys, time, unicodedata
 from urllib.parse import urljoin, urlparse
 
+import html as htmlmod
+from concurrent.futures import ThreadPoolExecutor
+
 import fitz  # PyMuPDF
 import requests
 from bs4 import BeautifulSoup
@@ -447,13 +450,186 @@ def articles_pdf(cami):
     return [a for a in arts if a["par"]]
 
 
+# ---------- arxiu en línia de l'Agenda (un article per pàgina) ----------
+ARXIU = "https://servicioskoinonia.org/agenda/archivo/"
+ARXIU_LL = {"ca": "catalan/", "es": ""}
+
+
+def descodifica(b):
+    try:
+        return b.decode("utf-8")
+    except UnicodeDecodeError:
+        out = []
+        for l in b.split(b"\n"):
+            try:
+                out.append(l.decode("utf-8"))
+            except UnicodeDecodeError:
+                out.append(l.decode("cp1252", "replace"))
+        return "\n".join(out)
+
+
+def baixa_bytes(url):
+    for i in range(4):
+        try:
+            r = ses.get(url, timeout=60)
+            if r.status_code == 200:
+                return r.content
+            if r.status_code == 404:
+                return None
+        except Exception as e:
+            print(f"  error {url}: {e}")
+        time.sleep(3 * (i + 1))
+    return None
+
+
+def llista_arxiu(pre):
+    b = baixa_bytes(ARXIU + pre + "listanyos.php?select=1&opcion=s&Submit=Consultar")
+    if not b:
+        return {}
+    sp = BeautifulSoup(descodifica(b), "html.parser")
+    codis = {}
+    for a in sp.find_all("a", href=True):
+        m = re.search(r"obra\.php\?ncodigo=(\d+)", a["href"])
+        if m:
+            codis[int(m.group(1))] = neteja(a.get_text(" "))
+    return codis
+
+
+def temes_arxiu(pre):
+    """Tema oficial de l'arxiu per a cada article."""
+    b = baixa_bytes(ARXIU + pre + "mtemas.php")
+    if not b:
+        return {}
+    sp = BeautifulSoup(descodifica(b), "html.parser")
+    sel = sp.find("select", attrs={"name": "tematica"})
+    temes = [o.get("value") for o in sel.find_all("option")] if sel else []
+    per_codi = collections.defaultdict(list)
+
+    def un(t):
+        b2 = baixa_bytes(ARXIU + pre + "listtemas.php?tematica=" + requests.utils.quote(t.encode("cp1252", "ignore")))
+        if not b2:
+            return t, []
+        return t, [int(x) for x in re.findall(rb"obra\.php\?ncodigo=(\d+)", b2)]
+
+    with ThreadPoolExecutor(4) as ex:
+        for t, codis in ex.map(un, temes):
+            for c in codis:
+                if neteja(t) not in per_codi[c]:
+                    per_codi[c].append(neteja(t))
+    return per_codi
+
+
+def article_arxiu(pre, codi):
+    url = f"{ARXIU}{pre}obra.php?ncodigo={codi}"
+    b = baixa_bytes(url)
+    if not b:
+        return None
+    h = descodifica(b)
+    sp = BeautifulSoup(h, "html.parser")
+    pla = htmlmod.unescape(sp.get_text(" "))
+    au = re.search(r"AUTOR:\s*(.+?)\s{2,}", pla)
+    an = re.search(r"AÑO:\s*(\d{4})", pla)
+    h2 = sp.find("h2")
+    if not h2:
+        return None
+    titol = neteja(h2.get_text(" — ")).strip(" —")
+    td = h2.find_parent("td") or sp
+    par = []
+    for p in td.find_all("p"):
+        t = neteja(p.get_text(" "))
+        if t and not re.fullmatch(r"[\W\d]{0,3}", t):
+            par.append(t)
+    if not par:  # text sense <p>: talla pels <br> dobles
+        t = td.get_text("\n")
+        t = t.split(h2.get_text(), 1)[-1]
+        par = [neteja(x) for x in re.split(r"\n\s*\n", t) if neteja(x)]
+    while par and re.match(r"(\(?\s*)?(texto|text|vea|vegeu|véase|ver|més|más|original|versión|versió|descargar)\b.{0,160}(https?://|\.org|\.com|pdf|rtf)", par[-1], re.I):
+        par.pop()
+    autor = neteja(au.group(1)) if au else ""
+    if autor.lower() in ("anónimo", "anònim", "anonimo"):
+        autor = "Anònim"
+    return {"codi": codi, "t": titol, "au": autor, "a": int(an.group(1)) if an else 0, "par": par, "url": url}
+
+
+def recull_arxiu(anteriors):
+    """Articles de l'arxiu; els que ja teníem de l'any passat no es tornen a baixar."""
+    res = []
+    for ll, pre in ARXIU_LL.items():
+        codis = llista_arxiu(pre)
+        print(f"Arxiu {ll}: {len(codis)} articles a la llista")
+        if not codis:
+            continue
+        temes_of = temes_arxiu(pre)
+        nous = [c for c in codis if (ll, c) not in anteriors]
+        print(f"  ja els teníem: {len(codis) - len(nous)}; a baixar: {len(nous)}")
+        with ThreadPoolExecutor(6) as ex:
+            for art in ex.map(lambda c: article_arxiu(pre, c), nous):
+                if art:
+                    art["l_arxiu"] = ll
+                    res.append(art)
+        for c in codis:
+            if (ll, c) in anteriors:
+                art = dict(anteriors[(ll, c)])
+                res.append(art)
+        for art in res:
+            if art.get("l_arxiu") == ll:
+                art["to"] = temes_of.get(art["codi"], [])
+    return res
+
+
+def carrega_anteriors():
+    """Articles de l'arxiu que ja hi ha a tauler/aula (per no tornar-los a baixar)."""
+    try:
+        idx = json.load(open(f"{SORTIDA}/index.json", encoding="utf-8"))
+    except Exception:
+        return {}
+    textos = {}
+    for f in os.listdir(f"{SORTIDA}/textos") if os.path.isdir(f"{SORTIDA}/textos") else []:
+        try:
+            textos.update(json.load(open(f"{SORTIDA}/textos/{f}", encoding="utf-8")))
+        except Exception:
+            pass
+    ant = {}
+    for x in idx:
+        m = re.search(r"ncodigo=(\d+)", x.get("f", ""))
+        if m and x["id"] in textos:
+            ll = "ca" if "/catalan/" in x["f"] else "es"
+            ant[(ll, int(m.group(1)))] = {"codi": int(m.group(1)), "t": x["t"], "au": x["au"], "a": x["a"],
+                                          "par": textos[x["id"]], "url": x["f"], "l_arxiu": ll}
+    return ant
+
+
 def main():
     os.makedirs(CAU, exist_ok=True)
     os.makedirs(f"{SORTIDA}/textos", exist_ok=True)
+    anteriors = carrega_anteriors()
+    arxiu = recull_arxiu(anteriors)
     pdfs = cerca_pdfs()
     print(f"PDF trobats: {len(pdfs)}")
     fonts, index, textos = [], [], collections.defaultdict(dict)
     vistos = set()
+    max_arxiu = collections.Counter()
+    for art in arxiu:
+        text = " ".join(art["par"])
+        par = len(text.split())
+        if par < 80 or par > 9000:
+            continue
+        ll = llengua(text) or art["l_arxiu"]
+        if ll not in ("ca", "es"):
+            continue
+        any_ = art["a"]
+        if any_:
+            max_arxiu[ll] = max(max_arxiu[ll], any_)
+        vistos.add((any_, ll, re.sub(r"\W+", "", art["t"].lower())[:60]))
+        id_ = f"{any_}-{ll}-k{art['codi']}"
+        index.append({
+            "id": id_, "a": any_, "l": ll, "t": art["t"], "au": art["au"],
+            "tg": temes(text), "to": art.get("to", []), "p": par, "n": "", "ti": tipus(art["t"], art["par"], text, ll),
+            "_d": dificultat(par, text), "ok": 1, "pg": 0, "f": art["url"], "r": text[:240],
+        })
+        textos[f"{any_}-{ll}"][id_] = art["par"]
+    print(f"Arxiu: {len(index)} textos; darrer any a l'arxiu: {dict(max_arxiu)}")
+    fonts.append({"url": ARXIU, "estat": "ok", "textos": len(index)})
     # primer les edicions completes, després les «només textos» (per no duplicar)
     ordre = sorted(pdfs.items(), key=lambda kv: ("solotext" in kv[0].lower(), kv[0]))
     for url, etiqueta in ordre:
@@ -473,6 +649,8 @@ def main():
             continue
         n = 0
         for a in arts:
+            if any_ and max_arxiu and any_ <= max(max_arxiu.values()):
+                break  # aquest any ja és a l'arxiu, article per article
             text = " ".join(a["par"])
             par = len(text.split())
             a["t"] = bon_titol(a["t"])

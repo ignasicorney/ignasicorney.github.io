@@ -94,7 +94,7 @@ label.chk{display:flex;align-items:center;gap:6px;font-size:.9rem;color:var(--su
     if (q) {
       const paraules = q.split(/\s+/);
       const coincideix = s => paraules.every(w => s.includes(w));
-      const perFitxa = r.filter(x => coincideix(norm(`${x.t} ${x.au} ${x.tg.join(" ")} ${x.r}`)));
+      const perFitxa = r.filter(x => coincideix(norm(`${x.t} ${x.au} ${x.tg.join(" ")} ${(x.to || []).join(" ")} ${x.r}`)));
       if (dins) {
         $("info").textContent = "Cercant dins els textos…";
         const claus = [...new Set(r.map(x => `${x.a}-${x.l}`))];
@@ -129,17 +129,20 @@ label.chk{display:flex;align-items:center;gap:6px;font-size:.9rem;color:var(--su
     L.innerHTML = `<p class="buit">Carregant el text…</p>`;
     const par = (await textosDe(`${x.a}-${x.l}`))[id] || [];
     const nomEd = x.l === "ca" ? "Agenda Llatinoamericana Mundial" : "Agenda Latinoamericana Mundial";
-    const cita = x.a
-      ? `${x.au ? x.au + ": " : ""}«${x.t}». ${nomEd} ${x.a}, p. ${x.pg}.`
-      : `${x.au ? x.au + ": " : ""}«${x.t}». ${nomEd}, recull o material (${decodeURIComponent(x.f.split("/").pop())}), p. ${x.pg}.`;
+    const cita = x.f.includes("ncodigo=")
+      ? `${x.au ? x.au + ": " : ""}«${x.t}». ${nomEd}${x.a ? " " + x.a : ""}. Arxiu de l'Agenda (Servicios Koinonía).`
+      : x.a
+      ? `${x.au ? x.au + ": " : ""}«${x.t}». ${nomEd} ${x.a}${x.pg ? ", p. " + x.pg : ""}.`
+      : `${x.au ? x.au + ": " : ""}«${x.t}». ${nomEd}, recull o material (${decodeURIComponent(x.f.split("/").pop())})${x.pg ? ", p. " + x.pg : ""}.`;
     L.innerHTML = `
       <h2>${esc(x.t)}</h2>
       <div class="meta"><span class="ll ${x.l}">${NOM_LL[x.l]}</span><span>${nomAny(x.a)}</span>${x.au ? `<span>· ${esc(x.au)}</span>` : ""}<span>· ${x.p.toLocaleString("ca")} paraules · ${x.ti || ""} · curs orientatiu: ${x.n}</span></div>
+      ${(x.to || []).length ? `<div class="meta" style="margin-top:4px">Temes de l'Agenda: ${x.to.map(esc).join(" · ")}</div>` : ""}
       <div class="accions">
         <button type="button" class="prim" data-acc="copia">📋 Copia el text</button>
         <button type="button" data-acc="desa">${desats.has(id) ? "★ Desat" : "☆ Desa"}</button>
         <button type="button" data-acc="imprimeix">🖨️ Imprimeix</button>
-        <a href="${esc(x.f)}#page=${x.pg}" target="_blank" rel="noopener"><button type="button">📄 Original (PDF)</button></a>
+        <a href="${esc(x.f)}${x.pg ? "#page=" + x.pg : ""}" target="_blank" rel="noopener"><button type="button">📄 Original</button></a>
       </div>
       <div class="text">${par.map(p => `<p>${esc(p)}</p>`).join("") || "<p class='buit'>No s'ha trobat el text.</p>"}</div>
       <p class="cita">Font: ${esc(cita)} Els continguts de l'Agenda es poden copiar, citar, reproduir i difondre lliurement amb finalitat no comercial.</p>`;

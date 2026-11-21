@@ -13,7 +13,7 @@ concurrency:
 jobs:
   extreu:
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: 240
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -21,13 +21,6 @@ jobs:
           python-version: '3.12'
       - name: Dependències
         run: pip install -q pymupdf requests beautifulsoup4
-      - name: Comprovar l'arxiu en línia de l'Agenda
-        continue-on-error: true
-        run: |
-          for u in https://servicioskoinonia.org/agenda/archivo/ http://servicioskoinonia.org/agenda/archivo/ https://www.servicioskoinonia.org/agenda/archivo/obra.php https://latinoamericana.org/2015/textos/ https://www.latinoamericana.org/2010/textos/ https://latinoamericana.org/2004/textos/ https://servicioskoinonia.org/agenda/archivo/portada.php https://llatinoamericana.org/arxiu/ ; do
-            c=$(curl -sL -m 25 -o /tmp/p.html -w '%{http_code} %{url_effective}' "$u"); echo "SONDA $u -> $c $(wc -c </tmp/p.html) bytes"
-            grep -oiE 'href="[^"]+"' /tmp/p.html | head -25 | sed 's/^/SONDA   /'
-          done
       - name: Baixar les edicions i extreure'n els textos
         run: python _eines/aula_extreu.py tauler/aula
       - name: Desar al repositori
