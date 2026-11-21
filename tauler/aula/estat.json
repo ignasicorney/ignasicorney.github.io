@@ -1,79 +1,78 @@
 {
  "actualitzat": "21.11.2026",
- "total": 3023,
+ "total": 3296,
  "per_any": {
-  "0-ca": 106,
-  "0-es": 96,
-  "1992-ca": 35,
-  "1992-es": 43,
+  "0-ca": 117,
+  "0-es": 105,
+  "1992-ca": 37,
+  "1992-es": 51,
   "1993-ca": 40,
-  "1993-es": 50,
-  "1994-ca": 38,
-  "1994-es": 31,
-  "1995-ca": 51,
-  "1995-es": 51,
-  "1996-ca": 25,
-  "1996-es": 28,
-  "1997-ca": 32,
-  "1997-es": 37,
-  "1998-ca": 31,
-  "1998-es": 33,
-  "1999-ca": 36,
-  "1999-es": 38,
-  "2000-ca": 41,
-  "2000-es": 36,
-  "2001-ca": 43,
-  "2001-es": 34,
-  "2002-ca": 44,
-  "2002-es": 40,
-  "2003-ca": 42,
-  "2003-es": 34,
-  "2004-ca": 43,
+  "1993-es": 58,
+  "1994-ca": 48,
+  "1994-es": 45,
+  "1995-ca": 53,
+  "1995-es": 66,
+  "1996-ca": 28,
+  "1996-es": 32,
+  "1997-ca": 33,
+  "1997-es": 49,
+  "1998-ca": 36,
+  "1998-es": 39,
+  "1999-ca": 37,
+  "1999-es": 41,
+  "2000-ca": 45,
+  "2000-es": 47,
+  "2001-ca": 44,
+  "2001-es": 42,
+  "2002-ca": 49,
+  "2002-es": 54,
+  "2003-ca": 45,
+  "2003-es": 41,
+  "2004-ca": 47,
   "2004-es": 30,
   "2005-ca": 34,
   "2005-es": 33,
-  "2006-ca": 35,
-  "2006-es": 38,
-  "2007-ca": 37,
-  "2007-es": 37,
-  "2008-ca": 36,
-  "2008-es": 37,
-  "2009-ca": 32,
-  "2009-es": 33,
-  "2010-ca": 37,
-  "2010-es": 38,
-  "2011-ca": 35,
-  "2011-es": 38,
-  "2012-ca": 43,
-  "2012-es": 40,
-  "2013-ca": 42,
-  "2013-es": 37,
+  "2006-ca": 37,
+  "2006-es": 57,
+  "2007-ca": 40,
+  "2007-es": 46,
+  "2008-ca": 38,
+  "2008-es": 40,
+  "2009-ca": 34,
+  "2009-es": 34,
+  "2010-ca": 38,
+  "2010-es": 41,
+  "2011-ca": 37,
+  "2011-es": 39,
+  "2012-ca": 46,
+  "2012-es": 41,
+  "2013-ca": 47,
+  "2013-es": 49,
   "2014-ca": 42,
   "2014-es": 40,
-  "2015-ca": 42,
-  "2015-es": 42,
-  "2016-ca": 44,
-  "2016-es": 43,
-  "2017-ca": 32,
-  "2017-es": 34,
-  "2018-ca": 47,
-  "2018-es": 44,
-  "2019-ca": 48,
-  "2019-es": 42,
-  "2020-ca": 40,
-  "2020-es": 42,
-  "2021-ca": 45,
-  "2021-es": 42,
-  "2022-ca": 41,
-  "2022-es": 42,
-  "2023-ca": 47,
-  "2023-es": 50,
-  "2024-ca": 53,
-  "2024-es": 49,
-  "2025-ca": 49,
-  "2025-es": 39,
-  "2026-ca": 36,
-  "2026-es": 38,
+  "2015-ca": 44,
+  "2015-es": 45,
+  "2016-ca": 48,
+  "2016-es": 44,
+  "2017-ca": 35,
+  "2017-es": 36,
+  "2018-ca": 49,
+  "2018-es": 46,
+  "2019-ca": 49,
+  "2019-es": 43,
+  "2020-ca": 54,
+  "2020-es": 43,
+  "2021-ca": 56,
+  "2021-es": 50,
+  "2022-ca": 54,
+  "2022-es": 31,
+  "2023-ca": 57,
+  "2023-es": 16,
+  "2024-ca": 63,
+  "2024-es": 52,
+  "2025-ca": 52,
+  "2025-es": 54,
+  "2026-es": 43,
   "2027-ca": 59,
   "2027-es": 1
  },
@@ -81,7 +80,7 @@
   {
    "url": "https://servicioskoinonia.org/agenda/archivo/",
    "estat": "ok",
-   "textos": 2171
+   "textos": 3174
   },
   {
    "url": "http://latinoamericana.org/2010/info/docs/CartilhaPopularDaAgenda2010.pdf",
@@ -297,25 +296,25 @@
    "url": "https://agendalatinoamericana.red/archivos/agendas/2020AgendaLatinoamericana.pdf",
    "any": 2020,
    "estat": "ok",
-   "textos": 42
+   "textos": 0
   },
   {
    "url": "https://agendalatinoamericana.red/archivos/agendas/2021AgendaLatinoamericana.pdf",
    "any": 2021,
    "estat": "ok",
-   "textos": 43
+   "textos": 0
   },
   {
    "url": "https://agendalatinoamericana.red/archivos/agendas/2022AgendaLatinoamericana.pdf",
    "any": 2022,
    "estat": "ok",
-   "textos": 41
+   "textos": 0
   },
   {
    "url": "https://agendalatinoamericana.red/archivos/agendas/2024AgendaLatinoamericana.pdf",
    "any": 2024,
    "estat": "ok",
-   "textos": 46
+   "textos": 0
   },
   {
    "url": "https://agendalatinoamericana.red/archivos/agendas/BASC1996AgendaLatinamerikarra.pdf",
@@ -397,7 +396,7 @@
    "url": "https://agendalatinoamericana.red/archivos/agendas/Latinoamericana%202023%20PDF%20WEB.pdf",
    "any": 2023,
    "estat": "ok",
-   "textos": 52
+   "textos": 0
   },
   {
    "url": "https://agendalatinoamericana.red/materiales/Antologia20.pdf",
@@ -457,13 +456,13 @@
    "url": "https://agendalatinoamericana.red/wp-content/uploads/2024/09/Mapa-Peters-2024.pdf",
    "any": 2024,
    "estat": "ok",
-   "textos": 2
+   "textos": 0
   },
   {
    "url": "https://agendalatinoamericana.red/wp-content/uploads/2025/01/AgendaLatinoamericanaMundial2025.pdf",
    "any": 2025,
    "estat": "ok",
-   "textos": 39
+   "textos": 0
   },
   {
    "url": "https://agendalatinoamericana.red/wp-content/uploads/2025/06/Pancarta2026.pdf",
@@ -481,13 +480,13 @@
    "url": "https://agendalatinoamericana.red/wp-content/uploads/2025/06/veredictosyconvocatorias2026.pdf",
    "any": 2026,
    "estat": "ok",
-   "textos": 2
+   "textos": 0
   },
   {
    "url": "https://agendalatinoamericana.red/wp-content/uploads/2026/02/AgendaLatinoamericanaMundial2026.pdf",
    "any": 2026,
    "estat": "ok",
-   "textos": 36
+   "textos": 0
   },
   {
    "url": "https://llatinoamericana.org/MemoriaAgenda2008.pdf",
@@ -564,7 +563,7 @@
    "url": "https://llatinoamericana.org/MemoriaAgenda2020.pdf",
    "any": 2020,
    "estat": "ok",
-   "textos": 1
+   "textos": 0
   },
   {
    "url": "https://llatinoamericana.org/arxius/agendes/Agenda2007-cat.pdf",
@@ -648,31 +647,31 @@
    "url": "https://llatinoamericana.org/arxius/agendes/Agenda2020-cat.pdf",
    "any": 2020,
    "estat": "ok",
-   "textos": 40
+   "textos": 0
   },
   {
    "url": "https://llatinoamericana.org/arxius/agendes/Agenda2021-cat.pdf",
    "any": 2021,
    "estat": "ok",
-   "textos": 45
+   "textos": 0
   },
   {
    "url": "https://llatinoamericana.org/arxius/agendes/Agenda2022-cat.pdf",
    "any": 2022,
    "estat": "ok",
-   "textos": 40
+   "textos": 0
   },
   {
    "url": "https://llatinoamericana.org/arxius/agendes/Agenda2023-cat.pdf",
    "any": 2023,
    "estat": "ok",
-   "textos": 47
+   "textos": 0
   },
   {
    "url": "https://llatinoamericana.org/arxius/anada-tornada/Ida%20y%20Vuelta%202020.pdf",
    "any": 2020,
    "estat": "ok",
-   "textos": 1
+   "textos": 0
   },
   {
    "url": "https://llatinoamericana.org/arxius/anada-tornada/Ida_y_Vuelta_2019.pdf",
@@ -1008,19 +1007,19 @@
    "url": "https://llatinoamericana.org/wp-content/uploads/2026/02/Agenda-Llatinoamericana-2026_CATALA_FINAL_web.pdf",
    "any": 2026,
    "estat": "ok",
-   "textos": 36
+   "textos": 0
   },
   {
    "url": "https://llatinoamericana.org/wp-content/uploads/2026/02/Agenda-Llatinoamericana_2025_CATALA_FINAL_web.pdf",
    "any": 2025,
    "estat": "ok",
-   "textos": 49
+   "textos": 0
   },
   {
    "url": "https://llatinoamericana.org/wp-content/uploads/2026/02/Agenda2024-cat.pdf",
    "any": 2024,
    "estat": "ok",
-   "textos": 52
+   "textos": 0
   },
   {
    "url": "https://llatinoamericana.org/wp-content/uploads/2026/02/Auca_JoanAlsina.pdf",
@@ -1068,13 +1067,13 @@
    "url": "https://llatinoamericana.org/wp-content/uploads/2026/02/Ida-y-Vuelta-2024-final.pdf",
    "any": 2024,
    "estat": "ok",
-   "textos": 1
+   "textos": 0
   },
   {
    "url": "https://llatinoamericana.org/wp-content/uploads/2026/02/Mapa-Peters-2024-CAT.pdf",
    "any": 2024,
    "estat": "ok",
-   "textos": 1
+   "textos": 0
   },
   {
    "url": "https://llatinoamericana.org/wp-content/uploads/2026/02/Mapa_conflictesArmats_2023_1.pdf",
@@ -1086,7 +1085,7 @@
    "url": "https://llatinoamericana.org/wp-content/uploads/2026/02/MemoriaAgenda2022.pdf",
    "any": 2022,
    "estat": "ok",
-   "textos": 2
+   "textos": 0
   },
   {
    "url": "https://llatinoamericana.org/wp-content/uploads/2026/02/Memoria_Agenda2023.pdf",
