@@ -146,6 +146,10 @@ def bon_titol(t):
         if len(res.split()) >= 2 and (pri.lower().startswith(res.lower()) or res.lower().startswith(pri.lower())):
             t = pri if len(pri) >= len(res) else res
             break
+    w = t.split()
+    for k in range(len(w) // 2, 1, -1):  # «… del Bé Comú (EBC) del Bé Comú (EBC)»
+        if [x.lower() for x in w[-k:]] == [x.lower() for x in w[-2 * k:-k]]:
+            t = " ".join(w[:-k]); break
     lletres = [c for c in t if c.isalpha()]
     raros = re.search(r"[a-zà-ÿ][A-ZÀ-Þ]", t)
     if lletres and (sum(c.isupper() for c in lletres) / len(lletres) > 0.6 or raros):
@@ -263,6 +267,8 @@ def main():
             text = " ".join(a["par"])
             par = len(text.split())
             a["t"] = bon_titol(a["t"])
+            if not re.search(r"[A-Za-zÀ-ÿ]{2}", a["au"]):
+                a["au"] = ""
             if par < 200 or par > 7000 or TITOLS_FORA.match(a["t"]) or DIES.search(a["t"]) or a["t"].count(":") >= 3:
                 continue
             ll = llengua(text)
