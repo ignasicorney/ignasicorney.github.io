@@ -724,6 +724,16 @@ def article_web(fila):
         par.pop()
     if not par:
         return None
+    if not titol.strip():  # títol dins del primer paràgraf (sovint amb l'autor al final)
+        pri = par[0]
+        if fila["au"] and pri.lower().endswith(fila["au"].lower()):
+            pri = pri[: -len(fila["au"])].strip()
+        if len(pri.split()) <= 20 and len(par) > 1:
+            titol = pri
+            par = par[1:]
+        else:
+            w = re.split(r"(?<=[.!?…])\s", par[0])[0].split()
+            titol = " ".join(w[:9]) + ("…" if len(w) > 9 else "")
     return {"codi": fila["url"], "t": titol, "au": fila["au"], "a": fila["a"], "par": par, "url": fila["url"], "to": fila["to"]}
 
 
@@ -762,7 +772,7 @@ def carrega_anteriors():
             pass
     ant = {}
     for x in idx:
-        if "archivosagenda.org" in x.get("f", "") and x["id"] in textos and not re.match(r"https?://", x["t"]):
+        if "archivosagenda.org" in x.get("f", "") and x["id"] in textos and x["t"].strip() and not re.match(r"https?://", x["t"]):
             ant[("web", x["f"])] = {"codi": x["f"], "t": x["t"], "au": x["au"], "a": x["a"], "par": textos[x["id"]],
                                     "url": x["f"], "l_arxiu": x["l"], "to": x.get("to", [])}
             continue
