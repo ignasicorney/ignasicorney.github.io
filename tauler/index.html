@@ -37,6 +37,15 @@ button{font:inherit;cursor:pointer}
 .boto.perill{background:var(--targeta);color:#a3161b;border-color:#a3161b}
 input[type=text],input[type=time],input[type=search],input[type=password],select,textarea{font:inherit;padding:6px 8px;border:1px solid var(--linia);border-radius:8px;background:var(--targeta);color:var(--text)}
 textarea{width:100%;min-height:90px;resize:vertical}
+/* 21.11.2026: Notes de feina amb format i fitxers adjunts */
+.rt-eines{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:6px}
+.rt-eines button{font:inherit;font-size:.9rem;min-width:34px;padding:3px 9px;border:1px solid var(--linia);border-radius:8px;background:var(--targeta);color:var(--text);cursor:pointer}
+.rt-eines button.on{background:#f8e6df;border-color:var(--accent);color:var(--accent)}
+.rt{min-height:160px;max-height:70vh;overflow:auto;resize:vertical;padding:8px 10px;border:1px solid var(--linia);border-radius:8px;background:var(--targeta);line-height:1.5;outline:none;overflow-wrap:anywhere}
+.rt:focus{border-color:var(--text)}
+.rt:empty::before{content:attr(data-ph);color:var(--suau)}
+.rt p{margin:0 0 .6em}.rt h3{font-size:1.05rem;margin:.6em 0 .3em}.rt ul,.rt ol{margin:0 0 .6em;padding-left:1.4em}
+.rt a{color:var(--accent)}
 .capcalera{display:flex;align-items:center;gap:12px}
 .capcalera h1{margin-right:auto;min-width:0}
 @media (max-width:600px){.capcalera h1{font-size:1.25rem}.panells{gap:9px}.panells a{font-size:1.25rem}}
@@ -606,7 +615,19 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     <div id="institutCos" hidden>
   <div class="bloc" id="notes">
     <h3 class="bt">📝 Notes de feina</h3>
-    <textarea id="notesText" placeholder="Escriu aquí el que vulguis recordar…"></textarea>
+    <div class="rt-eines" id="notesEines">
+      <button type="button" data-rt="bold" title="Negreta (Ctrl+B)"><b>N</b></button>
+      <button type="button" data-rt="italic" title="Cursiva (Ctrl+I)"><i>C</i></button>
+      <button type="button" data-rt="underline" title="Subratllat (Ctrl+U)"><u>S</u></button>
+      <button type="button" data-rt="titol" title="Títol">T</button>
+      <button type="button" data-rt="insertUnorderedList" title="Llista amb pics">•</button>
+      <button type="button" data-rt="insertOrderedList" title="Llista numerada">1.</button>
+      <button type="button" data-rt="enllac" title="Enllaç (selecciona el text primer)">🔗</button>
+      <button type="button" data-rt="removeFormat" title="Treu el format del que hagis seleccionat">✕ format</button>
+      <button type="button" data-rt="fitxer" title="Adjunta imatges o fitxers (també els pots arrossegar o enganxar a la caixa)">📎</button>
+    </div>
+    <div class="rt" id="notesText" contenteditable="true" spellcheck="true" lang="ca" data-ph="Escriu aquí el que vulguis recordar… També hi pots arrossegar o enganxar imatges i fitxers."></div>
+    <p class="font">Els fitxers adjunts es desen al repo privat latdg/noticies. Ctrl+clic en un enllaç per obrir-lo.</p>
   </div>
   <div class="bloc" id="tasques">
     <h3 class="bt">✅ Tasques</h3>
@@ -826,6 +847,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
 </dialog>
 
 <script src="correu.js?v=11"></script>
+<script src="fitxers.js?v=1"></script>
 <script>
 (function () {
   "use strict";
@@ -1167,6 +1189,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       if (Array.isArray(d.activitats)) r.activitats = d.activitats.filter(a => a && esISO(a.data));
       if (Array.isArray(d.reunions)) r.reunions = d.reunions.filter(a => a && esISO(a.data));
       if (typeof d.notes === "string") r.notes = d.notes;
+      if (typeof d.notesHtml === "string") r.notesHtml = d.notesHtml;   // 21.11.2026: notes de feina amb format i fitxers
       if (typeof d.sembrat === "string") r.sembrat = d.sembrat;
       if (typeof d.sembratHorari === "string") r.sembratHorari = d.sembratHorari;
       if (typeof d.sembratActes === "string") r.sembratActes = d.sembratActes;
@@ -1217,6 +1240,8 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     if (!r.ok || !d.ok) { const e = new Error(d.error || ("HTTP " + r.status)); e.estat = r.status; e.conflicte = !!d.conflicte; throw e; }
     return d;
   }
+  // 21.11.2026: fitxers adjunts a les notes (mateix token i magatzem que Notícies del guió)
+  Fitxers.configura({ crida: crida });
   // Retorna "ok", "clau" (clau incorrecta) o "xarxa"
   async function baixa() {
     if (!clau) return "clau";
@@ -5211,7 +5236,114 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
   }
 
   // ================= Notes =================
-  $("notesText").addEventListener("input", () => { dades.notes = $("notesText").value; desa(); });
+  // --- Notes de feina amb format (21.11.2026) ---
+  // Es desen com a HTML net a dades.notesHtml; dades.notes en guarda el text pla.
+  function netejaNotes(html) {
+    const t = document.createElement("template");
+    t.innerHTML = String(html || "");
+    const PERMESOS = { P: "p", DIV: "p", BR: "br", B: "b", STRONG: "b", I: "i", EM: "i", U: "u", H1: "h3", H2: "h3", H3: "h3", H4: "h3", UL: "ul", OL: "ol", LI: "li", A: "a" };
+    const surt = document.createElement("div");
+    const copia = (de, a) => {
+      de.childNodes.forEach(n => {
+        if (n.nodeType === 3) { a.appendChild(document.createTextNode(n.nodeValue)); return; }
+        if (n.nodeType !== 1) return;
+        if (n.classList.contains("fx")) {
+          if (n.dataset.fitxer) { const t2 = document.createElement("template"); t2.innerHTML = Fitxers.htmlElement({ cami: n.dataset.fitxer, nom: n.dataset.nom, tipus: n.dataset.tipus, mida: n.dataset.mida }); a.appendChild(t2.content); }
+          return;
+        }
+        if (/^(SCRIPT|STYLE|IFRAME|OBJECT|EMBED|IMG|SVG|TEMPLATE)$/.test(n.tagName)) return;
+        const tag = PERMESOS[n.tagName];
+        if (!tag) { copia(n, a); return; }
+        const el = document.createElement(tag);
+        if (tag === "a") {
+          const h = n.getAttribute("href") || "";
+          if (/^(https?:|mailto:)/i.test(h)) { el.setAttribute("href", h); el.setAttribute("target", "_blank"); el.setAttribute("rel", "noopener"); }
+        }
+        if (tag !== "br") copia(n, el);
+        a.appendChild(el);
+      });
+    };
+    copia(t.content, surt);
+    return surt.innerHTML;
+  }
+  function textNotes(html) {
+    if (!html) return "";
+    const t = document.createElement("div");
+    t.innerHTML = html;
+    t.querySelectorAll(".fx").forEach(x => x.replaceWith("[" + (x.dataset.nom || "fitxer") + "]"));
+    t.querySelectorAll("p, h3, li, br").forEach(x => x.after("\n"));
+    return t.textContent.replace(/\n{3,}/g, "\n\n").trim();
+  }
+  function htmlDeNotes() {
+    if (typeof dades.notesHtml === "string") return dades.notesHtml;
+    return String(dades.notes || "").split(/\n/).map(l => "<p>" + (l ? esc(l) : "<br>") + "</p>").join("");
+  }
+  let notesPintades = null;
+  function pintaNotes() {
+    const h = htmlDeNotes();
+    if (h === notesPintades) return;
+    notesPintades = h;
+    $("notesText").innerHTML = h === "<p><br></p>" ? "" : h;
+    Fitxers.resol($("notesText"));
+  }
+  function notesCanviades() {
+    const net = netejaNotes($("notesText").innerHTML);
+    dades.notesHtml = net;
+    dades.notes = textNotes(net);
+    notesPintades = net;
+    desa();
+  }
+  $("notesText").addEventListener("input", notesCanviades);
+  Fitxers.activa($("notesText"), { canvi: notesCanviades });
+  $("notesText").addEventListener("paste", e => {
+    if (e.defaultPrevented) return;   // fitxers: ja ho fa Fitxers
+    const cd = e.clipboardData;
+    if (!cd) return;
+    const html = cd.getData("text/html");
+    e.preventDefault();
+    if (html) { document.execCommand("insertHTML", false, netejaNotes(html)); Fitxers.resol($("notesText")); }
+    else document.execCommand("insertText", false, cd.getData("text/plain").replace(/\r\n/g, "\n"));
+  });
+  $("notesText").addEventListener("click", e => {
+    const a = e.target.closest("a[href]");
+    if (a && (e.ctrlKey || e.metaKey)) { e.preventDefault(); window.open(a.href, "_blank", "noopener"); }
+  });
+  $("notesEines").addEventListener("mousedown", e => { if (e.target.closest("button")) e.preventDefault(); });
+  $("notesEines").addEventListener("click", e => {
+    const b = e.target.closest("button[data-rt]");
+    if (!b) return;
+    const caixa = $("notesText"), sel = getSelection();
+    if (!sel.anchorNode || !caixa.contains(sel.anchorNode)) caixa.focus();
+    const c = b.dataset.rt;
+    try { document.execCommand("defaultParagraphSeparator", false, "p"); } catch (err) {}
+    if (c === "fitxer") { Fitxers.tria(caixa, { canvi: notesCanviades }); return; }
+    if (c === "titol") document.execCommand("formatBlock", false, document.queryCommandValue("formatBlock").toLowerCase() === "h3" ? "p" : "h3");
+    else if (c === "enllac") {
+      if (sel.isCollapsed) { alert("Selecciona primer el text que ha de fer d'enllaç."); return; }
+      const r = sel.getRangeAt(0);
+      let u = prompt("Adreça de l'enllaç:", "https://");
+      if (!u || u === "https://") return;
+      if (!/^(https?:|mailto:)/i.test(u)) u = "https://" + u;
+      sel.removeAllRanges(); sel.addRange(r);
+      document.execCommand("createLink", false, u);
+    } else document.execCommand(c, false, null);
+    notesCanviades(); estatEinesNotes();
+  });
+  function estatEinesNotes() {
+    const sel = getSelection(), dins = sel.anchorNode && $("notesText").contains(sel.anchorNode);
+    $("notesEines").querySelectorAll("button[data-rt]").forEach(b => {
+      const c = b.dataset.rt;
+      let on = false;
+      if (dins) {
+        try {
+          if (/^(bold|italic|underline|insertUnorderedList|insertOrderedList)$/.test(c)) on = document.queryCommandState(c);
+          else if (c === "titol") on = document.queryCommandValue("formatBlock").toLowerCase() === "h3";
+        } catch (err) {}
+      }
+      b.classList.toggle("on", on);
+    });
+  }
+  document.addEventListener("selectionchange", estatEinesNotes);
 
   // ================= Classroom i qüestionaris en línia (compte d'ieslabisbal.cat) =================
   // Fan servir el mateix script del correu d'aquell compte (_eines/CorreuTauler.gs), amb el servei de Classroom
@@ -7190,7 +7322,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     if (!$("calCos").contains(document.activeElement)) pintaCalendari();
     if (!gestorCorreu) muntaCorreu(); else gestorCorreu.pinta();
     if (obert && gestorCorreu && !correuCarregat) { correuCarregat = true; gestorCorreu.carrega(); }
-    if (document.activeElement !== $("notesText")) $("notesText").value = dades.notes || "";
+    if (document.activeElement !== $("notesText")) pintaNotes();
   }
   let darrerDia = avuiISO();
   setInterval(() => {
