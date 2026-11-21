@@ -2002,7 +2002,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
         '<iframe src="aula/" title="Textos per a l\'aula" style="width:100%;height:78vh;border:1px solid var(--linia,#ddd);border-radius:10px;background:transparent" loading="lazy"></iframe>';
     } else if (asEina === "activitats") {
       const ao = (llista, v) => llista.map(o => "<option" + (o === v ? " selected" : "") + ">" + o + "</option>").join("");
-      h = '<p class="font">Genera una activitat en tres nivells (bàsic, mitjà i avançat) amb solucionari.</p>' +
+      h = '<p class="font">Genera una activitat en tres nivells (bàsic, mitjà i avançat) amb solucionari.</p>' + llistaMaterials("act") +
         '<div class="fila-as"><label>Curs<select id="asCurs">' + ao(["1r d'ESO", "2n d'ESO", "3r d'ESO", "4t d'ESO", "1r de batxillerat", "2n de batxillerat"], asAct.curs) + '</select></label><label>Llengua<select id="asLleng"><option value="català"' + (asAct.lleng === "català" ? " selected" : "") + '>Català</option><option value="castellà"' + (asAct.lleng === "castellà" ? " selected" : "") + '>Castellà</option></select></label>' +
         '<label>Tipus<select id="asTipus">' + ao(["Comprensió lectora", "Model d'examen (complet, amb puntuació)", "Propietats textuals (adequació, coherència, cohesió i correcció)", "Comentari de text (model de selectivitat)", "Ortografia", "Gramàtica", "Vocabulari", "Expressió escrita (consignes)", "Qüestionari tipus test", "Literatura"], asAct.tipus) + '</select></label><label>Preguntes<input type="text" id="asN" value="' + esc(asAct.n) + '" inputmode="numeric" style="width:4em"></label></div>' +
         '<textarea id="asText" placeholder="Tema, objectius o text de partida (pots enganxar-hi un text)…" rows="6"></textarea>' +
@@ -2047,7 +2047,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     if (asOcupat && !asInici) asInici = new Date();
     if (!asOcupat) { asInici = null; asProgres = ""; asPas = ""; }
     const hInici = asInici ? asInici.toLocaleTimeString("ca-ES", { hour: "2-digit", minute: "2-digit", second: "2-digit" }) : "";
-    h += '<div id="asSortida">' + (asOcupat ? '<p class="cr-buit">Treballant… (començat a les ' + hInici + ')' + (asProgres ? " · " + esc(asProgres) : "") + '</p>' : (asEina === "video" ? vdAmbEines(asResultat) : asResultat) + (asResultat && asModel ? '<p class="font">Fet amb el model de reserva (' + esc(asModel) + ') perquè Gemini estava saturat.</p>' : "")) + "</div>";
+    h += '<div id="asSortida">' + (asOcupat ? '<p class="cr-buit">Treballant… (començat a les ' + hInici + ')' + (asProgres ? " · " + esc(asProgres) : "") + '</p>' : (asEina === "video" ? vdAmbEines(asResultat) : asEina === "activitats" ? mcAmbEines(asResultat) : asResultat) + (asResultat && asModel ? '<p class="font">Fet amb el model de reserva (' + esc(asModel) + ') perquè Gemini estava saturat.</p>' : "")) + "</div>";
     cos.innerHTML = h;
     if (asEina === "cb") pintaCB();
     if (EINES_DESPRES[asEina]) EINES_DESPRES[asEina]();
@@ -2091,6 +2091,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     if (a === "vdobre" || a === "vdesb") { accioVideoDesat(a, b.dataset.id); return; }
     if (a === "vdescurca") { escurcaVideo(b); return; }
     if (a.indexOf("vdc") === 0) { vdCorrAccio(a, b); return; }
+    if (a.indexOf("mc") === 0) { mcAccio(a, b); return; }
     if (a === "videoword" || a === "videosolword") { videoWord(a === "videosolword"); return; }
     if (a === "imprimeixsol") { if (asDades && asDades.sol) imprimeix(asDades.titol + " · Solucionari", asDades.sol, false, false, true); return; }
     if (a === "imprimeix") { imprimeix(asDades.titol, asDades.html, false); return; }
@@ -2171,7 +2172,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
           (/selectivitat/i.test(F.tipus) ? " Segueix el model de l'examen de selectivitat (PAU) de Catalunya: preguntes de comprensió del text, resum, tema i tesi, estructura, recursos lingüístics, vocabulari en context i una producció escrita argumentativa sobre el tema del text, amb la puntuació de cada pregunta." : "") +
           " Usa format Markdown senzill (##, llistes numerades, **negreta**). No posis cap introducció ni comentari fora de l'activitat.";
         const r = await ia(sistema, txtA);
-        asDades = { titol: F.tipus + " · " + F.curs, text: r, html: md(r) };
+        asDades = { titol: F.tipus + " · " + F.curs, text: r, html: md(r), tipusAct: F.tipus, curs: F.curs };
         return fet('<div class="alum-eines"><button type="button" class="boto clar" data-asb="copia">Copia</button><button type="button" class="boto clar" data-asb="imprimeix">🖨️ Imprimeix / PDF</button><button type="button" class="boto clar" data-asb="imprimeixdis">🖨️ Format DIS</button>' + (compteIns() ? BOTO_QR : "") + '</div><div class="as-doc">' + capcaleraDoc() + asDades.html + "</div>");
       }
       if (a === "adapta") {
@@ -2223,6 +2224,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     else if (el.dataset.as === "a") asSel.a = el.value;
     else if (el.dataset.as === "c") asSel.c = el.value;
     else if (el.dataset.vdc) vdCorrCanvi(el);
+    else if (el.dataset.mcc) mcCanvi(el);
     else if (el.id === "asFoto") $("asFotoNom").textContent = el.files[0] ? el.files[0].name : "";
   });
 
@@ -3046,6 +3048,216 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     const i = res.indexOf('<div class="as-doc">');
     return i >= 0 ? res.slice(0, i) + vdCorrHTML() + res.slice(i) : res + vdCorrHTML();
   }
+  // ---------- ✍️ Correcció digital dels materials generats (21.11.2026) ----------
+  // Activitats (comprensió lectora, model d'examen, propietats textuals, gramàtica…) i variants d'examen:
+  // la IA en treu una sola vegada la clau de correcció (per nivells o per models); es marca el que ha respost
+  // cada alumne i la nota (sobre 10) va a la columna i al grup triats. Els materials en correcció es desen
+  // (dades.materials) per poder-los reprendre un altre dia o des de l'altre portàtil.
+  // Columna per defecte: la darrera usada per a aquest tipus de material; la primera vegada, CL1 a la comprensió lectora.
+  let mc = null;   // { mat, obert, niv, g, f, col, al, r, msg }
+  const MC_NOM = s => String(s || "").trim().toUpperCase();
+  function mcColDef(tipus) {
+    const d = dades.colAct && dades.colAct[tipus];
+    if (d) return d;
+    return /comprensi[óo] lectora/i.test(tipus || "") ? "CL1" : "";
+  }
+  // Grup per defecte: el de la darrera correcció d'aquest material o el primer grup del mateix curs
+  function mcGrupDef(mat) {
+    const q = Q(); if (!q.grups.length) return 0;
+    if (mat.g != null && q.grups[mat.g]) return mat.g;
+    const i = q.grups.findIndex(g => cursDeGrup(g) === mat.curs);
+    return i >= 0 ? i : 0;
+  }
+  const mcPunts = p => (Number(p.punts) > 0 ? Number(p.punts) : 1);
+  function mcPuntua(nv, r) {
+    let p = 0, tot = 0, pend = 0;
+    nv.preguntes.forEach((q, i) => {
+      const x = r[i], pt = mcPunts(q); tot += pt;
+      if (q.tipus === "test") { if (x === q.correctes[0]) p += pt; }
+      else if (q.tipus === "multiple") { if (Array.isArray(x) && vdIgual(x, q.correctes)) p += pt; }
+      else if (x == null) pend++; else p += (Number(x) || 0) * pt;
+    });
+    return { punts: Math.round(p * 100) / 100, total: Math.round(tot * 100) / 100, pend: pend, nota: tot ? Math.round(p / tot * 1000) / 100 : 0 };
+  }
+  // Clau de correcció a partir del text (activitat amb el solucionari o models amb els seus solucionaris)
+  async function mcClau(text, noms) {
+    const sistema = "Ets un professor de llengua de secundària. Et passo un material d'aula amb el seu solucionari. Extreu-ne la CLAU DE CORRECCIÓ per corregir el full de cada alumne. " +
+      (noms && noms.length ? "El material té aquestes parts, i l'alumne en fa només una: " + JSON.stringify(noms) + ". Fes una entrada per a cada part, amb aquest nom exacte. " :
+        "Si el material té nivells («Nivell bàsic», «Nivell mitjà», «Nivell avançat», «Versió adaptada (DIS/PSI)»…), fes una entrada per nivell amb aquest nom; si és un sol examen, una sola entrada amb el nom «Examen». ") +
+      "Respon només JSON: {\"nivells\": [{\"nom\": text, \"preguntes\": [{\"num\": la numeració tal com surt al full (\"1\", \"2a\"…), \"enunciat\": text breu, \"tipus\": \"test\" (una sola correcta) | \"multiple\" (més d'una de correcta) | \"completa\" (omplir buits o resposta d'una o poques paraules) | \"oberta\", " +
+      "\"opcions\": [textos de les opcions, només a test i multiple; als vertader o fals, [\"V\", \"F\"]], \"correctes\": [índexs de les correctes des de 0, només a test i multiple], \"respostes\": [resposta o respostes acceptades, a completa], \"resposta\": resposta model i criteri de correcció (a oberta), \"punts\": la puntuació de la pregunta si el material la indica; si no, 1}]}]}. " +
+      "Mantén les preguntes en el mateix ordre i amb la mateixa numeració que al full; no en canviïs el tipus (una pregunta oberta continua sent oberta) i no n'inventis cap. Si una pregunta té apartats amb puntuació pròpia, posa cada apartat com una pregunta. Fes servir el solucionari per a les respostes. Escriu en la llengua del material.";
+    const r = await ia(sistema, text, { json: true });
+    const nivells = (r && Array.isArray(r.nivells) ? r.nivells : []).map(n => ({
+      nom: String(n.nom || "Examen"),
+      preguntes: (Array.isArray(n.preguntes) ? n.preguntes : []).filter(p => p && p.enunciat).map(p => {
+        const tipus = ["test", "multiple", "completa", "oberta"].includes(p.tipus) ? p.tipus : "oberta";
+        const q = { num: String(p.num || ""), enunciat: String(p.enunciat), tipus: tipus, punts: mcPunts(p) };
+        if (tipus === "test" || tipus === "multiple") {
+          const op = Array.isArray(p.opcions) ? p.opcions.map(String) : [], co = (Array.isArray(p.correctes) ? p.correctes : []).map(Number).filter(i => i >= 0 && i < op.length);
+          if (op.length >= 2 && co.length) return Object.assign(q, { opcions: op, correctes: tipus === "test" ? [co[0]] : co });
+          q.tipus = "oberta";
+        }
+        if (q.tipus === "completa") q.respostes = (Array.isArray(p.respostes) ? p.respostes : [p.respostes]).filter(Boolean).map(String);
+        q.resposta = String(p.resposta || (q.respostes || []).join(" / ") || "");
+        return q;
+      })
+    })).filter(n => n.preguntes.length);
+    if (!nivells.length) throw new Error("La IA no ha retornat la clau de correcció; torna-ho a provar.");
+    return { nivells };
+  }
+  // Desa (o actualitza) el material a la llista de materials en correcció
+  function mcDesaMat(mat) {
+    dades.materials = dades.materials || [];
+    if (!dades.materials.includes(mat)) dades.materials.unshift(mat);
+    desa();
+  }
+  // Obre la correcció del material que hi ha a l'Assistent (activitat) o de les variants d'examen
+  async function mcObre(origen, b) {
+    if (mc && mc.mat.origen === origen && (origen === "var" ? !!vari && vari.matId === mc.mat.id : mc.mat.id === (asDades && asDades.matId))) {
+      mc.obert = !mc.obert; mc.msg = ""; pintaAssistent(); mcVes(); return;
+    }
+    let mat = null;
+    if (origen === "act") {
+      if (!asDades || !asDades.text) return;
+      mat = asDades.matId && (dades.materials || []).find(x => x.id === asDades.matId);
+      if (!mat) {
+        const t0 = b ? b.textContent : ""; if (b) { b.disabled = true; b.textContent = "Preparant la clau de correcció…"; }
+        try { mat = { id: nouId(), origen: "act", titol: asDades.titol, tipus: asDades.tipusAct || "", curs: asDades.curs || "", data: avuiISO(), text: asDades.text, html: asResultat, clau: await mcClau(asDades.text), corr: {} }; }
+        catch (e) { if (b) { b.disabled = false; b.textContent = t0; } alert(e.message); return; }
+        asDades.matId = mat.id; mat.dades = Object.assign({}, asDades); mcDesaMat(mat);
+      }
+    } else {
+      if (!vari) return;
+      mat = vari.matId && (dades.materials || []).find(x => x.id === vari.matId);
+      if (!mat) {
+        const noms = vari.models.map((m, i) => "Model " + LLETRES[i]);
+        const text = vari.models.map((m, i) => "## " + noms[i] + "\n\n" + m.text + (m.sol ? "\n\n### Solucionari del " + noms[i] + "\n\n" + m.sol : "")).join("\n\n");
+        const t0 = b ? b.textContent : ""; if (b) { b.disabled = true; b.textContent = "Preparant la clau de correcció…"; }
+        try { mat = { id: nouId(), origen: "var", titol: vari.titol, tipus: "Examen", curs: "", data: avuiISO(), varDades: { titol: vari.titol, models: vari.models }, clau: await mcClau(text, noms), corr: {} }; }
+        catch (e) { if (b) { b.disabled = false; b.textContent = t0; } alert(e.message); return; }
+        vari.matId = mat.id; mcDesaMat(mat);
+      }
+    }
+    const q = Q(), g = mcGrupDef(mat);
+    mc = { mat: mat, obert: true, niv: mat.clau.nivells.length >= 3 ? 1 : 0, g: g, f: q.grups[g] ? vdTrimFull(q.grups[g]) : 0, col: mat.col || mcColDef(mat.tipus), al: "", r: [], msg: "" };
+    pintaAssistent(); mcVes();
+  }
+  const mcVes = () => { const o = mc && mc.obert && document.querySelector(".mc-corr"); if (o) o.scrollIntoView({ behavior: "smooth", block: "start" }); };
+  function mcCarregaAl(g, nom) { mc.al = nom || ""; const p = nom && g && mc.mat.corr[clauAl(g, nom)]; mc.r = p ? p.r.slice() : []; if (p) mc.niv = p.niv; }
+  function mcHTML(origen) {
+    const c = mc; if (!c || !c.obert || c.mat.origen !== origen) return "";
+    if (origen === "act" && (!asDades || asDades.matId !== c.mat.id)) return "";
+    if (origen === "var" && !(vari && vari.matId === c.mat.id)) return "";
+    const mat = c.mat, q = Q();
+    if (!q.grups.length) return '<div class="vd-corr mc-corr"><h4>✍️ Correcció</h4><p class="font">Primer cal tenir algun grup a «Alumnes i qualificacions».</p></div>';
+    c.g = Math.min(c.g, q.grups.length - 1);
+    const g = q.grups[c.g], f = g.fulls[Math.min(c.f, Math.max(g.fulls.length - 1, 0))] || { nom: "", columnes: [], files: [] };
+    const nv = mat.clau.nivells[Math.min(c.niv, mat.clau.nivells.length - 1)], corr = mat.corr || {};
+    let h = '<div class="vd-corr mc-corr"><h4>✍️ Correcció</h4><p class="font">Marca el que ha respost cada alumne. Les de test es corregeixen soles; les altres les puntues tu. La nota, sobre 10, va a la columna i al grup que triïs (si el full no té la columna, es crea).</p>' +
+      '<div class="fila-as"><label>Grup<select data-mcc="g">' + q.grups.map((x, i) => '<option value="' + i + '"' + (x === g ? " selected" : "") + ">" + esc(x.nom) + "</option>").join("") + "</select></label>" +
+      '<label>Full<select data-mcc="f">' + g.fulls.map((x, i) => '<option value="' + i + '"' + (x === f ? " selected" : "") + ">" + esc(x.nom) + "</option>").join("") + "</select></label>" +
+      '<label>Columna<input type="text" data-mcc="col" list="mccCols" value="' + esc(c.col) + '" placeholder="p. ex. CL1" style="width:5em"><datalist id="mccCols">' + f.columnes.filter(x => x.tipus === "nota").map(x => '<option value="' + esc(x.nom) + '">').join("") + "</datalist></label>" +
+      '<label>Alumne<select data-mcc="al"><option value="">—</option>' + alumnesOrdenats(f).map(r => { const k = corr[clauAl(g, r.nom)]; return '<option value="' + esc(r.nom) + '"' + (c.al === r.nom ? " selected" : "") + ">" + (k ? "✓ " : "") + esc(nomAl(r.nom)) + (k ? " · " + coma(k.nota) : "") + "</option>"; }).join("") + "</select></label></div>" +
+      (c.msg ? '<p class="font" style="color:#1f6b2a;font-weight:600">' + c.msg + "</p>" : "");
+    if (mat.clau.nivells.length > 1) h += '<div class="vistes" role="group" aria-label="Nivell" style="margin:6px 0;flex-wrap:wrap">' + mat.clau.nivells.map((x, i) => '<button type="button" data-asb="mcniv" data-i="' + i + '" aria-pressed="' + (x === nv) + '">' + esc(x.nom) + "</button>").join("") + "</div>";
+    if (!c.al) return h + '<p class="font">Tria l\'alumne.</p></div>';
+    h += '<div class="vd-corr-l">' + nv.preguntes.map((p, i) => {
+      const x = c.r[i], pt = mcPunts(p); let cl, ops;
+      if (p.opcions) {
+        const sel = p.tipus === "multiple" ? (Array.isArray(x) ? x : []) : (x == null ? [] : [x]);
+        cl = !sel.length ? "buida" : (p.tipus === "multiple" ? vdIgual(sel, p.correctes) : x === p.correctes[0]) ? "be" : "malament";
+        ops = p.opcions.map((o, j) => '<button type="button" data-asb="mcr" data-q="' + i + '" data-l="' + j + '" aria-pressed="' + sel.includes(j) + '" title="' + esc(o) + '">' + (p.opcions.length === 2 && /^(v|f)$/i.test(o) ? esc(o.toUpperCase()) : "abcdefgh"[j]) + "</button>").join("");
+      } else {
+        cl = x == null ? "buida" : x === 1 ? "be" : x === 0 ? "malament" : "mig";
+        const graus = pt > 1 ? [[1, "✓"], [0.75, "¾"], [0.5, "½"], [0.25, "¼"], [0, "✗"]] : [[1, "✓"], [0.5, "½"], [0, "✗"]];
+        ops = graus.map(([v, t]) => '<button type="button" data-asb="mcp" data-q="' + i + '" data-v="' + v + '" aria-pressed="' + (x === v) + '">' + t + "</button>").join("");
+      }
+      const pista = p.tipus === "completa" ? "Ha de posar: " + (p.respostes || []).join(" / ") : p.tipus === "oberta" ? "Resposta model: " + p.resposta : p.tipus === "multiple" ? "(més d'una de correcta)" : "";
+      return '<div class="cb-it ' + cl + '"><span>' + esc(p.num || String(i + 1)) + '</span><span class="cb-ops">' + ops + "</span>" + (pt !== 1 ? '<small class="font">' + coma(pt) + " p.</small>" : "") + (pista ? '<small class="vd-pista">' + esc(pista) + "</small>" : "") + "</div>";
+    }).join("") + "</div>";
+    const r = mcPuntua(nv, c.r);
+    return h + '<div class="fila-as"><div class="xifra" style="min-width:140px"><b style="font-size:1.8rem">' + coma(r.nota) + "</b><span>" + coma(r.punts) + " punts de " + coma(r.total) + (r.pend ? " · " + r.pend + " per puntuar" : "") + "</span></div></div>" +
+      '<div class="alum-eines"><button type="button" class="boto" data-asb="mcdesa">💾 Desa la nota i passa al següent alumne</button></div></div>';
+  }
+  function mcAccio(a, b) {
+    if (a === "mcact" || a === "mcvar") return mcObre(a === "mcact" ? "act" : "var", b);
+    if (a === "mcobre" || a === "mcesb") { mcDesat(a, b.dataset.id); return; }
+    const c = mc; if (!c) return;
+    const nv = c.mat.clau.nivells[Math.min(c.niv, c.mat.clau.nivells.length - 1)];
+    if (a === "mcniv") { c.niv = Number(b.dataset.i); c.r = []; return pintaAssistent(); }
+    if (a === "mcr") {
+      const i = Number(b.dataset.q), l = Number(b.dataset.l), p = nv.preguntes[i]; if (!p) return;
+      if (p.tipus === "multiple") { const s = Array.isArray(c.r[i]) ? c.r[i].slice() : [], k = s.indexOf(l); if (k >= 0) s.splice(k, 1); else s.push(l); c.r[i] = s.length ? s : null; }
+      else c.r[i] = c.r[i] === l ? null : l;
+      return pintaAssistent();
+    }
+    if (a === "mcp") { const i = Number(b.dataset.q), v = Number(b.dataset.v); c.r[i] = c.r[i] === v ? null : v; return pintaAssistent(); }
+    if (a === "mcdesa") {
+      const q = Q(), g = q.grups[c.g], f = g && g.fulls[c.f], fila = f && f.files.find(r => r.nom === c.al);
+      if (!fila) { alert("Tria el grup, el full i l'alumne."); return; }
+      const CN = MC_NOM(c.col); if (!CN) { alert("Escriu la columna on va la nota (p. ex. CL1)."); return; }
+      const r = mcPuntua(nv, c.r);
+      if (r.pend && !confirm("Hi ha " + r.pend + (r.pend > 1 ? " preguntes" : " pregunta") + " per puntuar (compten com a 0). Vols desar la nota igualment?")) return;
+      let col = f.columnes.find(x => MC_NOM(x.nom) === CN);
+      if (col && col.tipus !== "nota") { alert("La columna " + col.nom + " del full «" + f.nom + "» no és de notes."); return; }
+      if (!col) { if (!confirm("El full «" + f.nom + "» no té la columna " + CN + ". Vols crear-la?")) return; col = { nom: CN, tipus: "nota" }; f.columnes.push(col); }
+      fila.v = fila.v || {};
+      const k = clauAl(g, fila.nom), ja = fila.v[col.nom], abans = c.mat.corr[k];
+      // si ja hi ha una nota que no és d'aquesta correcció (p. ex. la del qüestionari en línia), es pregunta quina es queda
+      if (ja != null && ja !== "" && Number(ja) !== r.nota && !(abans && abans.col === col.nom && abans.nota === ja) &&
+        !confirm(nomAl(fila.nom) + " ja té " + coma(ja) + " a " + col.nom + ". Vols substituir-la per " + coma(r.nota) + "?")) return;
+      fila.v[col.nom] = r.nota; oblidaExcel(fila);
+      c.mat.corr[k] = { niv: c.niv, r: c.r.slice(), nota: r.nota, col: col.nom, data: avuiISO() };
+      c.mat.g = c.g; c.mat.col = col.nom; c.col = col.nom;
+      if (c.mat.tipus) { dades.colAct = dades.colAct || {}; dades.colAct[c.mat.tipus] = col.nom; }
+      mcDesaMat(c.mat); pintaAlumnes();
+      c.msg = "✓ " + esc(nomAl(fila.nom)) + ": " + coma(r.nota) + " a " + esc(col.nom) + " (" + esc(nomGrup(g.nom)) + ").";
+      const l = alumnesOrdenats(f), i = l.findIndex(x => x.nom === c.al);
+      mcCarregaAl(g, i >= 0 && i < l.length - 1 ? l[i + 1].nom : "");
+      return pintaAssistent();
+    }
+  }
+  function mcCanvi(el) {
+    const c = mc; if (!c) return;
+    const q = Q(), k = el.dataset.mcc;
+    if (k === "col") { c.col = MC_NOM(el.value); return; }
+    if (k === "g") { c.g = Number(el.value); c.f = q.grups[c.g] ? vdTrimFull(q.grups[c.g]) : 0; mcCarregaAl(null, ""); c.msg = ""; }
+    else if (k === "f") { c.f = Number(el.value); mcCarregaAl(null, ""); }
+    else if (k === "al") mcCarregaAl(q.grups[c.g], el.value);
+    pintaAssistent();
+  }
+  // Llista dels materials en correcció (a Activitats i a Variants d'examen), per reprendre'ls
+  function llistaMaterials(origen) {
+    const l = (dades.materials || []).filter(x => x.origen === origen);
+    if (!l.length) return "";
+    const obert = x => (origen === "act" ? asDades && asDades.matId === x.id : vari && vari.matId === x.id);
+    return '<details class="vd-desats" style="margin:8px 0"><summary><b>📂 Materials en correcció</b> <span class="font">(' + l.length + ')</span></summary><ul style="margin:6px 0 0;padding-left:1.2em">' +
+      l.map(x => { const n = Object.keys(x.corr || {}).length; return '<li style="margin:4px 0">' + esc(x.titol) + ' <span class="font">· ' + dma(x.data) + " · " + n + (n === 1 ? " alumne corregit" : " alumnes corregits") + (x.col ? " · " + esc(x.col) : "") + "</span> " +
+        (obert(x) ? '<b class="font" style="color:#2e7d32">✓ és el que tens obert</b>' : '<button type="button" class="boto clar" data-asb="mcobre" data-id="' + esc(x.id) + '">Obre</button>') +
+        ' <button type="button" class="boto perill" data-asb="mcesb" data-id="' + esc(x.id) + '">Esborra</button></li>'; }).join("") + "</ul></details>";
+  }
+  function mcDesat(a, id) {
+    const l = dades.materials || [], x = l.find(y => y.id === id); if (!x) return;
+    if (a === "mcesb") {
+      if (!confirm("Vols esborrar «" + x.titol + "» dels materials en correcció? Les notes ja posades a les columnes no s'esborren.")) return;
+      dades.materials = l.filter(y => y !== x); if (mc && mc.mat === x) mc = null; desa(); pintaAssistent(); return;
+    }
+    if (x.origen === "act") { asDades = Object.assign({}, x.dades || { titol: x.titol, text: x.text }, { matId: x.id }); asResultat = x.html || ""; }
+    else vari = { titol: x.varDades.titol, models: x.varDades.models, matId: x.id };
+    const q = Q(), g = mcGrupDef(x);
+    mc = { mat: x, obert: true, niv: x.clau.nivells.length >= 3 ? 1 : 0, g: g, f: q.grups[g] ? vdTrimFull(q.grups[g]) : 0, col: x.col || mcColDef(x.tipus), al: "", r: [], msg: "" };
+    pintaAssistent(); mcVes();
+  }
+  // Botó i bloc de correcció dins del resultat de l'activitat
+  function mcAmbEines(res) {
+    if (!res || !asDades || !asDades.text || asDades.video || !asDades.tipusAct) return res;
+    const ob = mc && mc.obert && mc.mat.origen === "act" && mc.mat.id === asDades.matId;
+    const boto = '<button type="button" class="boto clar" data-asb="mcact">' + (ob ? "✕ Tanca la correcció" : "✍️ Corregeix (nota a la graella)") + "</button>";
+    res = res.replace('data-asb="imprimeixdis">🖨️ Format DIS</button>', m => m + boto);
+    const i = res.indexOf('<div class="as-doc">');
+    return i >= 0 ? res.slice(0, i) + mcHTML("act") + res.slice(i) : res + mcHTML("act");
+  }
   // 14.11.2026: el qüestionari del vídeo en Word editable (un nivell per secció, amb la capçalera del centre) i el solucionari a part
   async function videoWord(sol) {
     const vd = asDades && asDades.video; if (!vd) return;
@@ -3229,8 +3441,10 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       eArea("ex", "…o enganxa aquí l'examen", 8) +
       '<div class="fila-as">' + eSel("n", "Models nous", [["1", "1 (B)"], ["2", "2 (B i C)"], ["3", "3 (B, C i D)"]], "1") + eSel("mode", "Com", [["ia", "Amb IA: canvia el contingut i fa el solucionari"], ["ordre", "Sense IA: només barreja l'ordre"]], "ia") + "</div>" +
       '<div class="alum-eines">' + eBoto("vargen", "🔀 Fes els models") + "</div>";
+    h += llistaMaterials("var");
     if (vari) {
-      h += "<h4>" + esc(vari.titol) + "</h4>" + '<div class="alum-eines">' + eBoto("varimp", "🖨️ Imprimeix tots els models", true) + (vari.models.some(m => m.sol) ? eBoto("varsol", "🖨️ Solucionaris", true) : "") + "</div>" +
+      h += "<h4>" + esc(vari.titol) + "</h4>" + '<div class="alum-eines">' + eBoto("varimp", "🖨️ Imprimeix tots els models", true) + (vari.models.some(m => m.sol) ? eBoto("varsol", "🖨️ Solucionaris", true) : "") +
+        '<button type="button" class="boto clar" data-asb="mcvar">' + (mc && mc.obert && vari.matId === mc.mat.id ? "✕ Tanca la correcció" : "✍️ Corregeix (nota a la graella)") + "</button></div>" + mcHTML("var") +
         vari.models.map((m, i) => '<details class="rub-bloc"' + (i === 1 ? " open" : "") + '><summary><b>Model ' + LLETRES[i] + "</b>" + (i ? "" : " (original)") + '</summary><div class="as-doc">' + textExamen(m.text) + (m.sol ? '<hr><div class="font"><b>Solucionari</b>' + md(m.sol) + "</div>" : "") + "</div></details>").join("");
     }
     return h + (eiRes.var || "") + notaModel();
@@ -6536,7 +6750,8 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       asDades.qr = { titol: titol, url: d.url, svg: svg, id: d.id };
       const pub = cs.cursos.length ? '<div class="clspub alum-eines" style="margin:8px 0 0"><select id="pubCurs" aria-label="Classe del Classroom"><option value="">Classe del Classroom…</option>' + cs.cursos.map(x => '<option value="' + x.id + '">' + esc(x.nom + (x.seccio ? " · " + x.seccio : "")) + "</option>").join("") + "</select>" +
         '<label class="font" title="Data de lliurament (opcional)">Lliurament <input type="date" id="pubData"></label><label class="font"><input type="checkbox" id="pubEsb"> En esborrany</label><label class="font" title="Opcional: la tasca es publicarà sola aquell dia i hora">Programa la publicació <input type="date" id="pubProgData"> <input type="time" id="pubProgHora" value="08:00"></label><label class="font" title="Les respostes del formulari es tanquen a les 23:59 del dia de lliurament"><input type="checkbox" id="pubTanca" checked> Tanca el formulari en acabar el termini</label>' +
-        (asDades.video ? '<label class="font" title="Columna del full del trimestre on anirà la nota (si no existeix, es crea)">Nota a la columna <input type="text" id="pubCol" value="' + esc(colVideoDef()) + '" style="width:5em"></label>' : "") +
+        // 21.11.2026: també les activitats (comprensió lectora…) porten la nota a una columna (per defecte la darrera del mateix tipus; CL1 a la comprensió lectora)
+        '<label class="font" title="Columna del full del trimestre on anirà la nota (si no existeix, es crea)">Nota a la columna <input type="text" id="pubCol" value="' + esc(asDades.video ? colVideoDef() : mcColDef(asDades.tipusAct)) + '" placeholder="p. ex. CL1" style="width:5em"></label>' +
         '<button type="button" class="boto" data-asb="clspub"><img src="https://www.gstatic.com/classroom/logo_square_rounded.svg" alt="" class="ico-cls"> Publica-la al Classroom</button></div>' : "";
       const bloc = '<div class="qr-bloc"><div class="qr">' + svg + '</div><div><b>' + esc(titol) + '</b><br><a href="' + esc(d.url) + '" target="_blank" rel="noopener">' + esc(d.url) + '</a><p class="font" style="margin:6px 0">' + pr.length + (pr.length === 1 ? " pregunta." : " preguntes.") + (pr.some(x => x.tipus === "oberta") ? " Les tancades i les de completar es corregeixen soles; les obertes les puntues tu al formulari (Respostes > Individual) i la nota s'hi suma quan tornes a passar les notes." : " Es corregeixen soles.") + " L'alumnat hi entra amb el compte de l'institut i les notes es poden passar a una columna amb el botó «Classroom».</p>" +
         '<div class="alum-eines" style="margin:0"><button type="button" class="boto" data-asb="qrimp">🖨️ Imprimeix el QR</button><a class="boto clar" href="' + esc(d.edita) + '" target="_blank" rel="noopener">✏️ Revisa el formulari</a><button type="button" class="boto clar" data-asb="qresb">🗑️ Esborra el formulari</button></div>' + pub + "</div></div>";
@@ -6584,9 +6799,10 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
         catch (e) { tancat = " · no s'ha pogut programar el tancament (" + e.message + ")"; }
       }
       // 15.11.2026: la nota del vídeo va a la columna que triï el professor (CO, EO1…), no sempre a EO1
-      const colV = ((($("pubCol") || {}).value || colVideoDef()).trim().toUpperCase()) || "CO1";
+      const colV = vid ? ((($("pubCol") || {}).value || colVideoDef()).trim().toUpperCase()) || "CO1" : (($("pubCol") || {}).value || "").trim().toUpperCase();
       if (vid) { dades.colVideo = colV; desa(); }
-      const eo = vid ? enllacaEO1(sel.value, classe.split(" · ")[0], q.id, q.titol, colV) : "";
+      else if (colV && asDades.tipusAct) { dades.colAct = dades.colAct || {}; dades.colAct[asDades.tipusAct] = colV; desa(); }
+      const eo = vid || colV ? enllacaEO1(sel.value, classe.split(" · ")[0], q.id, q.titol, colV) : "";
       const progTxt = prog ? "Programada a " + esc(classe) + " per " + (/^(01|11)\./.test(dma(pData)) ? "a l'" : "al ") + dma(pData) + " a les " + pHora : "";
       const fet = '<p class="font" style="margin:8px 0 0">✓ ' + (prog ? progTxt : (esb ? "Desada en esborrany" : "Publicada") + " a " + esc(classe)) + (data ? " · lliurament " + dma(data) : "") + esc(tancat) + (r.enllac ? ' · <a href="' + esc(r.enllac) + '" target="_blank" rel="noopener">obre la tasca</a>' : "") + (eo ? "<br>" + esc(eo) : "") + "</p>";
       asResultat = asResultat.replace(/<div class="clspub[\s\S]*?<\/button><\/div>/, fet);
