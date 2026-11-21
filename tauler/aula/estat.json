@@ -1,6 +1,6 @@
 {
  "actualitzat": "21.11.2026",
- "total": 3157,
+ "total": 3158,
  "per_any": {
   "0-ca": 117,
   "0-es": 102,
@@ -52,7 +52,7 @@
   "2014-es": 40,
   "2015-ca": 42,
   "2015-es": 44,
-  "2016-ca": 46,
+  "2016-ca": 47,
   "2016-es": 40,
   "2017-ca": 32,
   "2017-es": 34,
@@ -80,7 +80,7 @@
   {
    "url": "https://servicioskoinonia.org/agenda/archivo/",
    "estat": "ok",
-   "textos": 3024
+   "textos": 3025
   },
   {
    "url": "http://latinoamericana.org/2010/info/docs/CartilhaPopularDaAgenda2010.pdf",
