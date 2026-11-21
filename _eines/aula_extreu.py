@@ -574,7 +574,10 @@ def titol_net(t, text):
     for w in parts:
         if not w.strip() or w == "—":
             out.append(w); primera = primera or w == "—"; continue
-        out.append(paraula(w, primera)); primera = bool(re.search(r"[.:?!]$", w))
+        nova = paraula(w, primera)
+        if primera:
+            nova = nova[:1].upper() + nova[1:]
+        out.append(nova); primera = bool(re.search(r"[.:?!]$", w))
     return "".join(out)
 
 
