@@ -31,18 +31,16 @@ jobs:
               open("sonda/" + pag.replace("/", "_") + ".html", "w").write(h)
               links = [(a.get_text(" ", strip=True)[:60], urljoin(B + pag, a["href"])) for a in sp.find_all("a", href=True)]
               out.write(f"### {pag} ({len(h)} bytes, {len(links)} enllaços)\n" + "\n".join(f"  {t} -> {u}" for t, u in links[:60]) + "\n")
-          # segueix un any català i un text
-          h = get(B + "catalan/manyos.php"); sp = BeautifulSoup(h, "html.parser")
-          anys = [urljoin(B + "catalan/manyos.php", a["href"]) for a in sp.find_all("a", href=True) if re.search(r"(19|20)\d\d", a.get_text() + a["href"])]
-          out.write(f"\nANYS {len(anys)}: {anys[:5]}\n")
-          if anys:
-              u = anys[len(anys)//2]; h2 = get(u); sp2 = BeautifulSoup(h2, "html.parser")
-              ll = [(a.get_text(" ", strip=True)[:70], urljoin(u, a["href"])) for a in sp2.find_all("a", href=True)]
-              out.write(f"\n### ANY {u} ({len(ll)} enllaços)\n" + "\n".join(f"  {t} -> {x}" for t, x in ll[:50]) + "\n")
-              cand = [x for t, x in ll if "obra" in x.lower() or "?" in x]
+          for ll in ("catalan/", ""):
+              u = B + ll + "listanyos.php?select=1"; h2 = get(u); open("sonda/" + ll.strip("/") + "llista.html", "w").write(h2)
+              sp2 = BeautifulSoup(h2, "html.parser")
+              ll2 = [(a.get_text(" ", strip=True)[:70], urljoin(u, a["href"])) for a in sp2.find_all("a", href=True)]
+              out.write(f"\n### LLISTA {u} ({len(h2)} bytes, {len(ll2)} enllaços)\n" + "\n".join(f"  {t} -> {x}" for t, x in ll2[20:45]) + "\n")
+              cand = [x for t, x in ll2 if "servicioskoinonia.org/agenda" in x and "list" not in x and "index" not in x and not x.endswith(".php")]
+              out.write(f"candidats {len(cand)}\n")
               if cand:
-                  h3 = get(cand[0]); open("sonda/text.html", "w").write(h3)
-                  out.write(f"\n### TEXT {cand[0]}\n" + BeautifulSoup(h3, "html.parser").get_text("\n", strip=True)[:3000] + "\n")
+                  h3 = get(cand[5]); open("sonda/" + ll.strip("/") + "text.html", "w").write(h3)
+                  out.write(f"\n### TEXT {cand[5]}\n" + BeautifulSoup(h3, "html.parser").get_text("\n", strip=True)[:2500] + "\n")
           out.close(); print(open("sonda/resum.txt").read()[:3000])
       - run: |
           git config user.name bot; git config user.email bot@x; git checkout -b sonda; git add -f sonda; git commit -qm s; git push -f origin sonda
