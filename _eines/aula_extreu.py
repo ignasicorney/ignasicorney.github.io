@@ -126,12 +126,31 @@ def temes(text):
     return [k for _, k in sorted(r, reverse=True)[:3]]
 
 
+CURSOS = ["1r ESO", "2n ESO", "3r ESO", "4t ESO", "1r Batx.", "2n Batx."]
+
+
+def sil·labes(w):
+    return max(1, len(re.findall(r"[aeiouáéíóúàèòïüy]+", w.lower())))
+
+
+def llegibilitat(text):
+    """Índex de Fernández Huerta (més alt = més fàcil), vàlid per al castellà i orientatiu per al català."""
+    paraules = re.findall(r"[A-Za-zÀ-ÿ·']+", text)
+    if not paraules:
+        return 0
+    frases = max(1, len(re.findall(r"[.!?…]+(\s|$)", text)))
+    p = 100 * sum(sil·labes(w) for w in paraules) / len(paraules)
+    f = 100 * frases / len(paraules)
+    return 206.84 - 0.60 * p - 1.02 * f
+
+
 def nivell(paraules, text):
-    frases = [f for f in re.split(r"[.!?…]+\s", text) if f.strip()]
-    mfr = paraules / max(1, len(frases))
-    mpar = sum(len(w) for w in text.split()) / max(1, paraules)
-    punts = (mfr > 24) + (mfr > 32) + (mpar > 5.2) + (paraules > 1500)
-    return ["Assequible", "Mitjà", "Exigent", "Exigent", "Exigent"][punts]
+    """Curs orientatiu: llegibilitat del text i, en menor mesura, llargada."""
+    d = llegibilitat(text) - max(0, paraules - 700) / 250  # els textos llargs pugen de curs
+    for llindar, curs in ((70, 0), (64, 1), (59, 2), (54, 3), (49, 4)):
+        if d >= llindar:
+            return CURSOS[curs]
+    return CURSOS[5]
 
 
 # ---------- extracció ----------
@@ -159,83 +178,175 @@ def bon_titol(t):
 TITOLS_FORA = re.compile(r"^(índice|índex|indice|sumario|sumari|calendari|calendario|agenda|enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre|gener|febrer|març|maig|juny|juliol|setembre|novembre|desembre)\b", re.I)
 
 
+CJK_ASCII = re.compile(r"[ -鿿]")
+LLIGADURA = re.compile(r"(?<=[a-zà-ÿ])(fl|fi|ff|ffi|ffl) (?=[a-zà-ÿ])")
+PARTICIO = re.compile(r"([a-zà-ÿ])[-‐‑¬] (?!(i|y|o|e|u|ni)\b)([a-zà-ÿ])")
+CONT = re.compile(r"\(?\s*(viene de la p[aá]g(?:ina)?\.?|ve de la p[aà]g(?:ina)?\.?|v[ée] de la p[aà]g\.?)\s*(\d+)\s*\)?", re.I)
+SEGUEIX = re.compile(r"\(?\s*(sigue en la p[aá]g(?:ina)?\.?|contin[uú]a en la p[aá]g(?:ina)?\.?|contin[uú]a a la p[aà]g(?:ina)?\.?|segueix a la p[aà]g(?:ina)?\.?)\s*(\d+)\s*\)?\.?", re.I)
+
+
+def arregla_glif(c):
+    cp = ord(c)
+    # fonts amb el ToUnicode trencat: «琀» (U+7400) = «t», «椀» (U+6900) = «i»
+    if 0x2000 <= cp <= 0x9FFF and cp & 0xFF == 0 and 0x20 <= cp >> 8 <= 0x7E:
+        return chr(cp >> 8)
+    return c
+
+
 def neteja(t):
-    t = unicodedata.normalize("NFC", t).replace("­", "").replace("ﬁ", "fi").replace("ﬂ", "fl")
-    return re.sub(r"\s+", " ", t).strip()
+    t = unicodedata.normalize("NFC", t).replace("­", "").replace("ﬁ", "fi").replace("ﬂ", "fl").replace("ﬀ", "ff")
+    t = CJK_ASCII.sub(lambda m: arregla_glif(m.group()), t)
+    t = re.sub(r"\s+", " ", t).strip()
+    t = LLIGADURA.sub(r"\1", t)
+    t = PARTICIO.sub(r"\1\3", t)
+    return t
 
 
-def articles_pdf(cami):
-    doc = fitz.open(cami)
-    pagines, mides = [], collections.Counter()
+def uneix_linies(linies):
+    txt = ""
+    for t in linies:
+        t = t.rstrip()
+        if re.search(r"[a-zà-ÿ][-‐‑¬]$", txt) and re.match(r"\s*[a-zà-ÿ]", t):
+            txt = txt[:-1] + t.lstrip()
+        else:
+            txt = (txt + " " + t.strip()) if txt else t.strip()
+    return neteja(txt)
+
+
+def llegeix(doc):
+    """Línies útils de cada pàgina: (pàgina, text, mida, font, negreta, y)."""
+    pagines, mides, lithos = [], collections.Counter(), 0
     for np_, pag in enumerate(doc):
-        d = pag.get_text("dict")
-        text_pag = pag.get_text()
-        if len(DIES.findall(text_pag)) >= 3:  # pàgina de calendari
+        if len(DIES.findall(pag.get_text())) >= 3:  # pàgina de calendari
             pagines.append((np_, []))
             continue
         blocs = []
-        for b in d["blocks"]:
+        for b in pag.get_text("dict")["blocks"]:
             if b.get("type") != 0:
                 continue
+            ant = None
             linies = []
             for l in b["lines"]:
                 sp = [s for s in l["spans"] if s["text"].strip()]
                 if not sp:
                     continue
                 t = "".join(s["text"] for s in l["spans"])
+                clau = (t.strip(), round(l["bbox"][1]))
+                if clau == ant:  # línia duplicada (ombra del títol)
+                    continue
+                ant = clau
+                s0 = max(sp, key=lambda s: len(s["text"]))
                 mida = max(s["size"] for s in sp)
-                for s in sp:
-                    mides[round(s["size"], 1)] += len(s["text"])
-                linies.append((t, mida))
+                font = s0["font"]
+                if "Lithos-Black" in font or "LithosPro-Black" in font:
+                    lithos += 1
+                if "Revue" not in font and not re.search(r"Dingbat", font):
+                    for s in sp:
+                        mides[round(s["size"], 1)] += len(s["text"])
+                linies.append({"t": t, "m": mida, "f": font, "b": bool(s0["flags"] & 16) or "Bold" in font, "y": l["bbox"][1]})
             if linies:
                 blocs.append(linies)
         pagines.append((np_, blocs))
-    if not mides:
-        return []
-    cos = mides.most_common(1)[0][0]
-    arts, act = [], None
+    cos = mides.most_common(1)[0][0] if mides else 10
+    return pagines, cos, lithos
 
-    def tanca():
-        if act and act["par"]:
-            arts.append(act)
+
+def articles_pdf(cami):
+    doc = fitz.open(cami)
+    pagines, cos, lithos = llegeix(doc)
+    mode_font = lithos >= 10
+    arts = []
+    act = None
+    estat = "res"  # res | titol | autor | cos | tancat
+
+    def nou(titol, np_):
+        nonlocal act, estat
+        act = {"t": titol, "pg": np_ + 1, "par": [], "au": "", "tancat": False, "segueix": None}
+        arts.append(act)
+        estat = "titol"
+
+    def afegeix(art, txt):
+        m = SEGUEIX.search(txt)
+        if m:
+            art["segueix"] = int(m.group(2))
+            txt = SEGUEIX.sub("", txt).strip()
+        if txt and not re.fullmatch(r"[\d\W]{0,4}", txt):
+            art["par"].append(txt)
 
     for np_, blocs in pagines:
-        if not blocs:
-            continue
         for linies in blocs:
-            gran = [t for t, m in linies if m >= cos * 1.35]
-            text_bloc = neteja(" ".join(t for t, _ in linies))
-            if gran and len(gran) == len(linies) and act and act["par"] and SUBTITOL.match(text_bloc):
-                act["par"].append(text_bloc)  # subapartat (I. Veure, 2. …) dins del mateix article
+            text_bloc = neteja(" ".join(l["t"] for l in linies))
+            if not text_bloc:
                 continue
-            if gran and len(gran) == len(linies) and 4 <= len(text_bloc) <= 160 and not re.fullmatch(r"[\d\W]+", text_bloc):
-                if act and not act["par"]:
-                    act["t"] = neteja(act["t"] + " " + text_bloc)  # títol en diverses línies
-                    continue
-                tanca()
-                act = {"t": text_bloc, "pg": np_ + 1, "par": [], "au": ""}
+            fonts = {l["f"] for l in linies}
+            if all("Revue" in f for f in fonts):  # números de pàgina
                 continue
-            if act is None:
+            if any(re.search(r"Dingbat", f) for f in fonts) and len(text_bloc) <= 2:
+                if act:
+                    act["tancat"] = True
+                estat = "tancat"
                 continue
-            if max(m for _, m in linies) < cos * 0.8:  # notes al peu, capçaleres petites
-                continue
-            # desguionat de línies
-            txt = ""
-            for t, _ in linies:
-                t = t.rstrip()
-                if txt.endswith("-") and re.search(r"[a-zà-ÿ]-$", txt):
-                    txt = txt[:-1] + t.lstrip()
+            if mode_font:
+                es_titol = all("Lithos-Black" in l["f"] or "LithosPro-Black" in l["f"] for l in linies) and max(l["m"] for l in linies) >= cos
+                es_subtitol = all("Lithos" in l["f"] and "Bold" not in l["f"] and "Black" not in l["f"] for l in linies)
+                es_autor = all("Lithos" in l["f"] and "Bold" in l["f"] for l in linies)
+            else:
+                gran = all(l["m"] >= cos * 1.35 for l in linies)
+                es_titol = gran and 4 <= len(text_bloc) <= 160 and not re.fullmatch(r"[\d\W]+", text_bloc)
+                es_subtitol = es_autor = False
+            italica = all("Italic" in l["f"] or l["f"].endswith("I") or "Oblique" in l["f"] for l in linies)
+
+            if es_titol and len(text_bloc) <= 200:
+                if act and estat == "titol" and act["pg"] == np_ + 1:
+                    act["t"] = neteja(act["t"] + " " + text_bloc)
+                elif act and act["par"] and not mode_font and SUBTITOL.match(text_bloc):
+                    act["par"].append(text_bloc)
                 else:
-                    txt = (txt + " " + t.strip()) if txt else t.strip()
-            txt = neteja(txt)
-            if not txt or re.fullmatch(r"\d{1,3}", txt):
+                    nou(text_bloc, np_)
                 continue
-            if not act["par"] and not act["au"] and len(txt.split()) <= 12 and not txt.endswith((".", ":", ";")) and not re.match(r"(tabla|índice|índex|nombre|nom):?", txt, re.I):
-                act["au"] = txt
+            if act and estat == "titol" and es_subtitol and len(text_bloc) <= 160:
+                act["t"] = neteja(act["t"] + ": " + text_bloc)
                 continue
-            act["par"].append(txt)
-    tanca()
-    return arts
+            if act and estat in ("titol", "autor") and es_autor and len(text_bloc) <= 120:
+                act["au"] = neteja((act["au"] + ", " if act["au"] else "") + text_bloc)
+                estat = "autor"
+                continue
+            if act and estat == "autor" and italica and len(text_bloc) <= 80 and not act["par"]:
+                act["au"] = neteja(act["au"] + " (" + text_bloc + ")")
+                continue
+            if not mode_font and act and estat == "titol" and not act["au"] and not act["par"] and len(text_bloc.split()) <= 12 \
+                    and not text_bloc.endswith((".", ":", ";")) and not re.match(r"(tabla|índice|índex|nombre|nom):?", text_bloc, re.I):
+                act["au"] = text_bloc
+                estat = "autor"
+                continue
+            if max(l["m"] for l in linies) < cos * 0.8:  # notes al peu, peus de foto
+                continue
+            # continuació d'un article d'una altra pàgina
+            m = CONT.search(text_bloc)
+            if m:
+                pag_orig = int(m.group(2))
+                dest = next((a for a in reversed(arts) if not a["tancat"] and a["segueix"] == np_ + 1), None) \
+                    or next((a for a in reversed(arts) if not a["tancat"] and a["pg"] <= pag_orig + 2 and a["pg"] >= pag_orig - 4), None)
+                if dest:
+                    act, estat = dest, "cos"
+                    resta = CONT.sub("", text_bloc).strip()
+                    if resta:
+                        afegeix(act, uneix_linies([l["t"] for l in linies]).replace(m.group(0), "").strip())
+                continue
+            if act is None or estat == "tancat":
+                continue
+            afegeix(act, uneix_linies([l["t"] for l in linies]))
+            estat = "cos"
+    # uneix paràgrafs partits pel salt de pàgina o de columna (acaben sense punt i el següent comença en minúscula)
+    for a in arts:
+        net = []
+        for ptxt in a["par"]:
+            if net and not re.search(r"[.!?:;»”\")…]$", net[-1]) and re.match(r"[a-zà-ÿ]", ptxt):
+                net[-1] = (net[-1][:-1] + ptxt) if re.search(r"[a-zà-ÿ]-$", net[-1]) else (net[-1] + " " + ptxt)
+            else:
+                net.append(ptxt)
+        a["par"] = net
+    return [a for a in arts if a["par"]]
 
 
 def main():
@@ -289,8 +400,28 @@ def main():
         fonts.append({"url": url, "any": any_, "estat": "ok", "textos": n})
         print(f"  {any_} {url.rsplit('/', 1)[-1]}: {n} textos")
 
+    # duplicats: el mateix text en diverses fonts (edició, llibre d'articles, antologia, recull)
+    grups = collections.defaultdict(list)
+    for x in index:
+        cap = re.sub(r"\W", "", " ".join(textos[f"{x['a']}-{x['l']}"][x["id"]])[:400].lower())
+        grups[(x["l"], cap)].append(x)
+    fora = set()
+    for g in grups.values():
+        if len(g) < 2:
+            continue
+        if len({x["a"] for x in g if x["a"]}) >= 3:  # text fix que es repeteix cada any (fitxes, presentacions)
+            fora.update(x["id"] for x in g)
+            continue
+        g.sort(key=lambda x: (x["a"] == 0, -x["a"]))
+        fora.update(x["id"] for x in g[1:])
+    index = [x for x in index if x["id"] not in fora]
+    textos = {k: {i: v for i, v in d.items() if i not in fora} for k, d in textos.items()}
     index.sort(key=lambda x: (x["a"] == 0, -x["a"], x["l"], x["f"], x["pg"]))
+    for f in os.listdir(f"{SORTIDA}/textos"):
+        os.remove(f"{SORTIDA}/textos/{f}")
     for k, v in textos.items():
+        if not v:
+            continue
         with open(f"{SORTIDA}/textos/{k}.json", "w", encoding="utf-8") as fh:
             json.dump(v, fh, ensure_ascii=False, separators=(",", ":"))
     with open(f"{SORTIDA}/index.json", "w", encoding="utf-8") as fh:

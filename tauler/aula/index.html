@@ -55,7 +55,7 @@ label.chk{display:flex;align-items:center;gap:6px;font-size:.9rem;color:var(--su
     <select id="fa" aria-label="Any"><option value="">Tots els anys</option></select>
     <select id="ft" aria-label="Tema"><option value="">Tots els temes</option></select>
     <select id="fp" aria-label="Llargada"><option value="">Qualsevol llargada</option><option value="c">Curt (fins a 600 paraules)</option><option value="m">Mitjà (600-1.200)</option><option value="g">Llarg (més de 1.200)</option></select>
-    <select id="fn" aria-label="Nivell"><option value="">Qualsevol nivell</option><option>Assequible</option><option>Mitjà</option><option>Exigent</option></select>
+    <select id="fn" aria-label="Curs"><option value="">Tots els cursos</option><option>1r ESO</option><option>2n ESO</option><option>3r ESO</option><option>4t ESO</option><option>1r Batx.</option><option>2n Batx.</option></select>
     <label class="chk"><input type="checkbox" id="fx"> Cerca també dins els textos</label>
     <label class="chk"><input type="checkbox" id="fs"> Només desats ★</label>
   </div>
@@ -132,7 +132,7 @@ label.chk{display:flex;align-items:center;gap:6px;font-size:.9rem;color:var(--su
       : `${x.au ? x.au + ": " : ""}«${x.t}». ${nomEd}, recull o material (${decodeURIComponent(x.f.split("/").pop())}), p. ${x.pg}.`;
     L.innerHTML = `
       <h2>${esc(x.t)}</h2>
-      <div class="meta"><span class="ll ${x.l}">${NOM_LL[x.l]}</span><span>${nomAny(x.a)}</span>${x.au ? `<span>· ${esc(x.au)}</span>` : ""}<span>· ${x.p.toLocaleString("ca")} paraules · nivell ${x.n.toLowerCase()}</span></div>
+      <div class="meta"><span class="ll ${x.l}">${NOM_LL[x.l]}</span><span>${nomAny(x.a)}</span>${x.au ? `<span>· ${esc(x.au)}</span>` : ""}<span>· ${x.p.toLocaleString("ca")} paraules · curs orientatiu: ${x.n}</span></div>
       <div class="accions">
         <button type="button" class="prim" data-acc="copia">📋 Copia el text</button>
         <button type="button" data-acc="desa">${desats.has(id) ? "★ Desat" : "☆ Desa"}</button>

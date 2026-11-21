@@ -4,7 +4,7 @@ on:
   push:
     paths: ['_eines/aula_extreu.py', '.github/workflows/recursos-aula.yml']
   schedule:
-    - cron: '17 4 3 * *'   # un cop al mes, per si surten edicions noves
+    - cron: '17 4 28 11 *'   # un cop l'any, a finals de novembre (quan es presenta l'Agenda de l'any següent)
 permissions:
   contents: write
 concurrency:
