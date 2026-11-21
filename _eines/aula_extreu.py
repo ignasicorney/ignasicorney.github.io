@@ -590,6 +590,31 @@ def autor_net(au):
     return "; ".join(un(x) for x in re.split(r";", au) if x.strip()).strip(" ,;")
 
 
+FINAL_OK = re.compile(r"[.!?»”\")…]$")
+
+
+def poleix(par, titol):
+    """Treu del principi el títol repetit i del final els llocs, signatures, enllaços i notes."""
+    par = [x for x in par if x.strip()]
+    clau = re.sub(r"\W", "", titol.lower())
+    while par and re.sub(r"\W", "", par[0].lower()) == clau:
+        par.pop(0)
+    while par:
+        fi = par[-1]
+        curt = len(fi.split()) <= 14 and not FINAL_OK.search(fi)
+        enllac = re.search(r"https?://|www\.|\.(org|com|net|br|es|cat)\b", fi) and len(fi.split()) <= 25
+        nota = re.match(r"(\[?\d{1,2}[\].)]\s|\*|notas?\b|notes?\b|bibliograf)", fi, re.I) and len(par) > 3
+        if curt or enllac or nota:
+            par.pop()
+        else:
+            break
+    return par
+
+
+def complet(par):
+    return bool(par) and bool(re.match(r"[«“\"'‘¿¡(\[—–\-A-ZÀ-ÚÑÇ0-9…]", par[0])) and bool(FINAL_OK.search(par[-1]))
+
+
 def recull_arxiu(anteriors):
     """Articles de l'arxiu; els que ja teníem de l'any passat no es tornen a baixar."""
     res = []
@@ -759,6 +784,9 @@ def main():
     max_arxiu = collections.Counter()
     cobert = collections.Counter()
     for art in arxiu:
+        art["par"] = poleix(art["par"], art["t"])
+        if not complet(art["par"]):
+            continue
         text = " ".join(art["par"])
         par = len(text.split())
         if par < 80 or par > 9000:
