@@ -696,6 +696,9 @@ def article_web(fila):
         return None
     clau_t = re.sub(r"\W", "", fila["t"].lower())[:30]
     h1 = next((h for h in h1s if re.sub(r"\W", "", h.get_text().lower())[:30] == clau_t), h1s[-1])
+    titol = fila["t"]
+    if re.match(r"https?://|www\.", titol) or len(titol) < 3:  # a la llista, l'enllaç és l'adreça: el títol és el de la pàgina
+        titol = neteja(h1.get_text(" "))
     cont = h1
     while cont.parent is not None and len(cont.find_all("p")) < 3:
         cont = cont.parent
@@ -721,7 +724,7 @@ def article_web(fila):
         par.pop()
     if not par:
         return None
-    return {"codi": fila["url"], "t": fila["t"], "au": fila["au"], "a": fila["a"], "par": par, "url": fila["url"], "to": fila["to"]}
+    return {"codi": fila["url"], "t": titol, "au": fila["au"], "a": fila["a"], "par": par, "url": fila["url"], "to": fila["to"]}
 
 
 def recull_web(anteriors):
@@ -759,7 +762,7 @@ def carrega_anteriors():
             pass
     ant = {}
     for x in idx:
-        if "archivosagenda.org" in x.get("f", "") and x["id"] in textos:
+        if "archivosagenda.org" in x.get("f", "") and x["id"] in textos and not re.match(r"https?://", x["t"]):
             ant[("web", x["f"])] = {"codi": x["f"], "t": x["t"], "au": x["au"], "a": x["a"], "par": textos[x["id"]],
                                     "url": x["f"], "l_arxiu": x["l"], "to": x.get("to", [])}
             continue

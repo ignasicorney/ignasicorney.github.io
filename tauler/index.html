@@ -2004,7 +2004,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       const ao = (llista, v) => llista.map(o => "<option" + (o === v ? " selected" : "") + ">" + o + "</option>").join("");
       h = '<p class="font">Genera una activitat en tres nivells (bàsic, mitjà i avançat) amb solucionari.</p>' +
         '<div class="fila-as"><label>Curs<select id="asCurs">' + ao(["1r d'ESO", "2n d'ESO", "3r d'ESO", "4t d'ESO", "1r de batxillerat", "2n de batxillerat"], asAct.curs) + '</select></label><label>Llengua<select id="asLleng"><option value="català"' + (asAct.lleng === "català" ? " selected" : "") + '>Català</option><option value="castellà"' + (asAct.lleng === "castellà" ? " selected" : "") + '>Castellà</option></select></label>' +
-        '<label>Tipus<select id="asTipus">' + ao(["Comprensió lectora", "Ortografia", "Gramàtica", "Vocabulari", "Expressió escrita (consignes)", "Qüestionari tipus test", "Literatura"], asAct.tipus) + '</select></label><label>Preguntes<input type="text" id="asN" value="' + esc(asAct.n) + '" inputmode="numeric" style="width:4em"></label></div>' +
+        '<label>Tipus<select id="asTipus">' + ao(["Comprensió lectora", "Propietats textuals (adequació, coherència, cohesió i correcció)", "Comentari de text (model de selectivitat)", "Ortografia", "Gramàtica", "Vocabulari", "Expressió escrita (consignes)", "Qüestionari tipus test", "Literatura"], asAct.tipus) + '</select></label><label>Preguntes<input type="text" id="asN" value="' + esc(asAct.n) + '" inputmode="numeric" style="width:4em"></label></div>' +
         '<textarea id="asText" placeholder="Tema, objectius o text de partida (pots enganxar-hi un text)…" rows="6"></textarea>' +
         '<label class="font"><input type="checkbox" id="asDisAct"' + (asAct.dis ? " checked" : "") + '> Afegeix també una versió adaptada DIS/PSI</label>' +
         '<div class="alum-eines"><button type="button" class="boto" data-asb="activitat">📚 Genera l\'activitat</button></div>';
@@ -2142,13 +2142,21 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
           '<div class="alum-eines"><button type="button" class="boto clar" data-asb="copia">Copia el comentari</button><button type="button" class="boto" data-asb="desaNota">Desa la nota a la columna</button></div>');
       }
       if (a === "activitat") {
-        if (!txt) return fet('<p class="avis">Escriu el tema o enganxa el text de partida.</p>');
+        // Si no hi ha text de partida (camp buit o només un tema), s'agafa un text del corpus de l'aula
+        let txtA = txt, fontA = null;
+        if (txt.split(/\s+/).filter(Boolean).length < 40 && window.CorpusAula) {
+          fontA = await window.CorpusAula.tria({ lleng: F.lleng, curs: F.curs, q: txt, min: 250 });
+          if (fontA) txtA = (txt ? "Tema demanat: " + txt + "\n\n" : "") + "Text de partida (article de l'Agenda Llatinoamericana; fes-lo servir com a text de lectura, sencer o en un fragment coherent, i posa al final del text la font: " + fontA.cita + "):\n\n" + fontA.x.t + "\n\n" + fontA.par.join("\n\n");
+        }
+        if (!txtA) return fet('<p class="avis">Escriu el tema o enganxa el text de partida.</p>');
         const dis = F.dis;
         const sistema = "Ets un professor de llengua de secundària a Catalunya. Prepara una activitat de tipus «" + F.tipus + "» per a " + F.curs + ", redactada en " + F.lleng + ", amb " + (F.n || 6) + " preguntes o exercicis per nivell. " +
           "Fes TRES NIVELLS: «## Nivell bàsic», «## Nivell mitjà», «## Nivell avançat», cadascun amb les seves instruccions i preguntes numerades. Si cal un text de lectura, posa'l al principi amb «## Text». Al final, «## Solucionari» amb les respostes de cada nivell." +
           (dis ? " Després, «## Versió adaptada (DIS/PSI)»: frases curtes, una instrucció per frase, vocabulari senzill, preguntes més guiades i un petit glossari." : "") +
+          (/propietats textuals/i.test(F.tipus) ? " Treballa les quatre propietats textuals a partir del text: adequació (registre, finalitat, destinatari), coherència (tema, idees, estructura), cohesió (connectors, referents, puntuació) i correcció (ortografia, morfologia, sintaxi, lèxic). Inclou exercicis de detectar i esmenar errors, ordenar fragments, triar connectors i reescriure." : "") +
+          (/selectivitat/i.test(F.tipus) ? " Segueix el model de l'examen de selectivitat (PAU) de Catalunya: preguntes de comprensió del text, resum, tema i tesi, estructura, recursos lingüístics, vocabulari en context i una producció escrita argumentativa sobre el tema del text, amb la puntuació de cada pregunta." : "") +
           " Usa format Markdown senzill (##, llistes numerades, **negreta**). No posis cap introducció ni comentari fora de l'activitat.";
-        const r = await ia(sistema, txt);
+        const r = await ia(sistema, txtA);
         asDades = { titol: F.tipus + " · " + F.curs, text: r, html: md(r) };
         return fet('<div class="alum-eines"><button type="button" class="boto clar" data-asb="copia">Copia</button><button type="button" class="boto clar" data-asb="imprimeix">🖨️ Imprimeix / PDF</button><button type="button" class="boto clar" data-asb="imprimeixdis">🖨️ Format DIS</button>' + (compteIns() ? BOTO_QR : "") + '</div><div class="as-doc">' + capcaleraDoc() + asDades.html + "</div>");
       }
@@ -2352,7 +2360,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       const desats = e.ftx.filter(t => t.curs === curs);
       h += '<div class="fila-as">' + eInp("tema", "Tema del text (opcional)", "", "min-width:16em") + "</div>" +
         eArea("text", "…o enganxa aquí un text teu (un fragment de la novel·la de lectura, per exemple)", 5) +
-        '<div class="alum-eines">' + eBoto("flgen", "🪄 Genera un text del nivell") + eBoto("flusa", "📄 Fes servir el meu text", true) + "</div>" +
+        '<div class="alum-eines">' + eBoto("flcorpus", "📰 Text del corpus") + eBoto("flgen", "🪄 Genera un text del nivell", true) + eBoto("flusa", "📄 Fes servir el meu text", true) + "</div>" +
         (desats.length ? '<div class="fila-as"><label>Textos desats de ' + esc(curs) + '<select data-ei="ftx">' + eOpts(desats.map(t => [t.id, t.titol || t.text.slice(0, 40)]), fv("ftx", desats[0].id)) + "</select></label>" +
           '<span style="align-self:end">' + eBoto("flobre", "Obre", true) + " " + eBoto("flesb", "Esborra", true) + "</span></div>" : "");
       return h + (eiRes.flu || "");
@@ -2392,6 +2400,15 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
   eiCalc.flu = () => { const el = $("flRes"); if (el && flu) el.innerHTML = fluResHTML(fluCalc()); };
   async function fluAccio(a, b) {
     const e = EI();
+    if (a === "flcorpus") {
+      if (!window.CorpusAula) return;
+      const d = fluDur(), n = Math.max(120, d ? Math.round(fluObj() * d / 60 * 1.3) : 250);
+      window.CorpusAula.obre({ curs: fluCurs(), lleng: fv("lleng", "castellà") }, (x, par) => {
+        fluNou(window.CorpusAula.fragment(par, n), x.t + " · " + window.CorpusAula.cita(x));
+        eiRes.flu = ""; pintaAssistent();
+      });
+      return;
+    }
     if (a === "flgen") return eiIA(async () => {
       const curs = fluCurs(), lleng = fv("lleng", "castellà"), d = fluDur(), obj = fluObj();
       const n = d ? Math.round(obj * d / 60 * 1.35) : 180;
@@ -2529,13 +2546,15 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
         eSel("niv", "Nivell", ["Bàsic", "Mitjà", "Avançat"], "Mitjà") + eSel("tema", "Norma", TEMES_DIC[lleng], TEMES_DIC[lleng][0]) +
         eSel("llarg", "Llargada", [["80", "Curt (~80 paraules)"], ["130", "Mitjà (~130)"], ["190", "Llarg (~190)"], ["250", "Molt llarg (~250)"]], "130") + "</div>" +
         '<div class="fila-as">' + eInp("temat", "Temàtica (opcional)", "", "min-width:18em") + "</div>" +
+        '<p class="font">📰 ' + (fv("inedit", false) ? "Dictat inèdit: la IA l'escriu de zero." : fv("dicidT", "") ? "Text del corpus triat: <b>" + esc(fv("dicidT", "")) + "</b> " + eBoto("dictriax", "✕", true) : "Es farà a partir d'un fragment d'un article del corpus de l'aula del curs i la llengua triats (i de la temàtica, si n'hi poses).") + "</p>" +
+        '<div class="fila-as">' + eBoto("dictria", "📰 Tria el text del corpus", true) + eChk("inedit", "Dictat inèdit (sense text del corpus)", false, true) + "</div>" +
         '<div class="alum-eines">' + eBoto("dicgen", "✏️ Genera el dictat") + "</div>";
       if (e.dic.length) h += '<div class="fila-as"><label>Dictats desats<select data-ei="dicd">' + eOpts(e.dic.slice().reverse().map(x => [x.id, dma(x.d) + " · " + x.curs + " · " + x.tema + " · " + x.titol]), fv("dicd", e.dic[e.dic.length - 1].id)) + "</select></label>" +
         '<span style="align-self:end">' + eBoto("dicobre", "Obre", true) + " " + eBoto("dicesb", "Esborra", true) + "</span></div>";
       return h + (eiRes.dic || "") + notaModel();
     }
     const fr = dic.fr, vs = veusDe(dic.lleng);
-    h += "<h4>" + esc(dic.titol) + ' <span class="font">· ' + esc(dic.curs + " · " + dic.niv + " · " + dic.tema) + "</span></h4>";
+    h += "<h4>" + esc(dic.titol) + ' <span class="font">· ' + esc(dic.curs + " · " + dic.niv + " · " + dic.tema) + "</span></h4>" + (dic.font ? '<p class="font">📰 A partir de: ' + esc(dic.font) + "</p>" : "");
     h += '<div class="as-doc dic-text">' + fr.map((x, i) => '<span class="dic-fr' + (i === dicI ? " act" : "") + '" data-asb="ei-dicsalta" data-i="' + i + '">' + esc(x.t) + "</span>" + (x.par ? "<br><br>" : " ")).join("") + "</div>";
     if (dic.norma) h += '<p class="font"><b>Norma:</b> ' + esc(dic.norma) + "</p>";
     h += '<details class="font"><summary>Paraules clau (' + dic.clau.length + ")</summary><ul>" + dic.clau.map(c => "<li><b>" + esc(c.paraula) + "</b>: " + esc(c.norma || "") + "</li>").join("") + "</ul></details>";
@@ -2558,17 +2577,23 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     const e = EI();
     if (a === "dicgen") return eiIA(async () => {
       const lleng = fv("lleng", "castellà"), curs = fv("curs", cursDeGrup(triat().g)), niv = fv("niv", "Mitjà"), tema = fv("tema", TEMES_DIC[lleng][0]), n = fv("llarg", "130"), temat = fv("temat", "");
-      const r = await ia("Ets professor de llengua " + lleng + " de secundària a Catalunya. Prepara un dictat inèdit per a " + curs + ", nivell " + niv.toLowerCase() + ", d'unes " + n + " paraules" + (temat ? ", sobre la temàtica «" + temat + "»" : "") + ", que treballi especialment la norma «" + tema + "». " +
+      let fc = null;
+      if (!fv("inedit", false) && window.CorpusAula) fc = fv("dicid", "") ? await window.CorpusAula.perId(fv("dicid", "")) : await window.CorpusAula.tria({ lleng, curs, q: temat, min: Number(n) });
+      const baseC = fc ? "Prepara un dictat a partir d'aquest fragment d'un article de l'Agenda Llatinoamericana (" + fc.cita + "): «" + window.CorpusAula.fragment(fc.par, Math.round(Number(n) * 1.5)) + "». Fes-ne una versió d'unes " + n + " paraules: escurça-la o adapta-la al nivell mantenint el sentit, les idees i, tant com puguis, les frases de l'autor, i fes que hi surtin paraules que practiquin la norma. El dictat és per a " : "Prepara un dictat inèdit per a ";
+      const r = await ia("Ets professor de llengua " + lleng + " de secundària a Catalunya. " + baseC + curs + ", nivell " + niv.toLowerCase() + ", d'unes " + n + " paraules" + (temat ? ", sobre la temàtica «" + temat + "»" : "") + ", que treballi especialment la norma «" + tema + "». " +
         "El text ha de ser natural, coherent, ortogràficament impecable i amb moltes paraules que practiquin la norma, en paràgrafs separats per una línia en blanc. Tots els camps en " + lleng + ". " +
         "Respon només JSON: {\"titol\": text curt, \"text\": el dictat, \"norma\": explicació de la norma en 2 a 4 frases per repassar-la abans, \"paraules_clau\": [{\"paraula\": tal com surt al text, \"norma\": per què s'escriu així, molt curt}] (entre 10 i 20), \"preparacio\": [6 frases curtes noves per practicar la norma abans del dictat]}.", "Genera el dictat.", { json: true });
       if (!r || !r.text) throw new Error("La IA no ha retornat el dictat; torna-ho a provar.");
       const text = String(r.text).trim();
       const clau = (Array.isArray(r.paraules_clau) ? r.paraules_clau : []).filter(x => x && x.paraula && text.toLowerCase().includes(String(x.paraula).toLowerCase())).map(x => ({ paraula: String(x.paraula), norma: String(x.norma || "") }));
-      dic = { id: nouId(), d: avuiISO(), curs, lleng, niv, tema, temat, titol: String(r.titol || "Dictat"), text, norma: String(r.norma || ""), clau, prep: (Array.isArray(r.preparacio) ? r.preparacio : []).map(String) };
+      dic = { id: nouId(), d: avuiISO(), curs, lleng, niv, tema, temat, titol: String(r.titol || "Dictat"), text, norma: String(r.norma || ""), clau, prep: (Array.isArray(r.preparacio) ? r.preparacio : []).map(String), font: fc ? fc.cita : "" };
+      fput("dicid", null); fput("dicidT", null);
       dic.fr = dicFragments(text); dicI = 0; dicFall = [];
       e.dic.push(Object.assign({}, dic, { fr: undefined })); desa();
       eiRes.dic = "";
     });
+    if (a === "dictria") { window.CorpusAula && window.CorpusAula.obre({ curs: fv("curs", cursDeGrup(triat().g)), lleng: fv("lleng", "castellà") }, x => { fput("dicid", x.id); fput("dicidT", x.t); fput("inedit", false); pintaAssistent(); }); return; }
+    if (a === "dictriax") { fput("dicid", null); fput("dicidT", null); pintaAssistent(); return; }
     if (a === "dicobre" || a === "dicesb") {
       const t = e.dic.find(x => x.id === fv("dicd", "")) || e.dic[e.dic.length - 1]; if (!t) return;
       if (a === "dicobre") { dic = Object.assign({}, t, { fr: dicFragments(t.text) }); dicI = 0; dicFall = []; }
@@ -7837,22 +7862,20 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     return (await corpusAula.textos[k])[x.id] || [];
   }
   // curs i llengua de l'eina activa de l'Assistent
+  const cursDe = v => { v = norm(v); const m = v.match(/^(\d)/); return m ? (v.includes("batx") ? `${m[1]}r Batx.`.replace("2r", "2n") : CURSOS[+m[1] - 1] || "") : ""; };
+  const llDe = v => /^(es|castel)/i.test(v || "") ? "es" : /^(ca|catal)/i.test(v || "") ? "ca" : "";
+  let ctxExtern = null;
   function context() {
+    if (ctxExtern) return ctxExtern;
     const c = document.getElementById("asCurs"), l = document.getElementById("asLleng");
-    let curs = "", ll = "";
-    if (c) {
-      const v = norm(c.value);
-      const m = v.match(/^(\d)/);
-      if (m) curs = v.includes("batx") ? `${m[1]}r Batx.`.replace("2r", "2n") : CURSOS[+m[1] - 1] || "";
-    }
-    if (l) ll = /^(ca|catal)/i.test(l.value) ? "ca" : /^(es|castel)/i.test(l.value) ? "es" : "";
-    return { curs, ll };
+    return { curs: c ? cursDe(c.value) : "", ll: l ? llDe(l.value) : "" };
   }
   function citaDe(x) {
     const ed = x.l === "ca" ? "Agenda Llatinoamericana Mundial" : "Agenda Latinoamericana Mundial";
     return `${x.au ? x.au + ": " : ""}«${x.t}». ${ed}${x.a ? " " + x.a : ""}.`;
   }
   async function posa(ta, x) {
+    if (typeof ta === "function") return ta(x, await text(x));
     const par = await text(x);
     const bloc = `${x.t}\n${x.au ? x.au + "\n" : ""}\n${par.join("\n\n")}\n\nFont: ${citaDe(x)}`;
     ta.value = ta.value.trim() ? ta.value.trimEnd() + "\n\n" + bloc : bloc;
@@ -7872,8 +7895,10 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     if (!r.length) return alert("No s'ha pogut carregar el corpus de textos.");
     obre(ta, r[Math.floor(Math.random() * r.length)]);
   }
-  async function obre(ta, triat) {
+  async function obre(ta, triat, ctx) {
+    ctxExtern = ctx || null;
     const idx = await index(), c = context();
+    ctxExtern = null;
     const temes = [...new Set(idx.flatMap(x => x.tg))].sort((a, b) => a.localeCompare(b, "ca"));
     const op = (arr, v, buit) => `<option value="">${buit}</option>` + arr.map(a => `<option${a === v ? " selected" : ""}>${esc(a)}</option>`).join("");
     const fons = document.createElement("div");
@@ -7939,6 +7964,39 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
   }
   const cos = document.getElementById("asCos");
   if (cos) { new MutationObserver(afegeix).observe(cos, { childList: true, subtree: true }); afegeix(); }
+  // Ús des de les eines de l'Assistent (dictats, fluïdesa, activitats…)
+  function fragment(par, n) {
+    const tot = par.reduce((a, p) => a + p.split(/\s+/).length, 0);
+    if (tot <= n * 1.15) return par.join("\n\n");
+    const opcions = [];
+    for (let i = 0; i < par.length; i++) {
+      let w = 0, j = i;
+      while (j < par.length && w < n) { w += par[j].split(/\s+/).length; j++; }
+      if (w >= n * 0.7) opcions.push([i, j, Math.abs(w - n)]);
+    }
+    if (!opcions.length) return par.join("\n\n");
+    opcions.sort((a, b) => a[2] - b[2]);
+    const [i, j] = opcions[Math.floor(Math.random() * Math.min(3, opcions.length))];
+    return par.slice(i, j).join("\n\n");
+  }
+  window.CorpusAula = {
+    cursDe, llDe, fragment, cita: citaDe,
+    async perId(id) { const x = (await index()).find(e => e.id === id); return x ? { x, par: await text(x), cita: citaDe(x) } : null; },
+    async tria({ lleng, curs, q, min } = {}) {
+      const idx = await index(), ll = llDe(lleng), cu = cursDe(curs || ""), mn = min || 120;
+      const paraules = norm(q || "").split(/\s+/).filter(w => w.length > 3);
+      const passa = (x, ambCurs, ambQ) => (!ll || x.l === ll) && x.p >= mn && (!ambCurs || !cu || x.n === cu) &&
+        (!ambQ || !paraules.length || paraules.some(w => norm(`${x.t} ${x.tg.join(" ")} ${(x.to || []).join(" ")} ${x.r}`).includes(w)));
+      let r = idx.filter(x => passa(x, true, true));
+      if (!r.length && paraules.length) r = idx.filter(x => passa(x, false, true));
+      if (!r.length && paraules.length) return null;   // tema sense cap text al corpus
+      if (!r.length) r = idx.filter(x => passa(x, false, false));
+      if (!r.length) return null;
+      const x = r[Math.floor(Math.random() * r.length)];
+      return { x, par: await text(x), cita: citaDe(x) };
+    },
+    obre(ctx, fn) { obre(fn, null, { curs: cursDe(ctx && ctx.curs || ""), ll: llDe(ctx && ctx.lleng || "") }); },
+  };
 })();
 </script>
 </body>
