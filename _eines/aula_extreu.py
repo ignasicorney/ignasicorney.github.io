@@ -616,6 +616,108 @@ def recull_arxiu(anteriors):
     return res
 
 
+# ---------- web nova: archivosagenda.org (arxius digitalitzats, fins a l'any en curs) ----------
+WEB = "https://www.archivosagenda.org/"
+WEB_LLISTES = {"es": WEB + "es/articulos-espanol", "ca": WEB + "ca/articicles-catala"}
+
+
+def files_llista_web(url):
+    b = baixa_bytes(url)
+    if not b:
+        return []
+    sp = BeautifulSoup(descodifica(b), "html.parser")
+    res = []
+    for tr in sp.find_all("tr"):
+        tds = tr.find_all("td")
+        if len(tds) < 2:
+            continue
+        m = re.search(r"(19|20)\d\d", tds[0].get_text())
+        enll = None
+        for td in tds[1:]:
+            a = td.find("a", href=True)
+            if a and len(a.get_text(strip=True)) > 3:
+                enll = a
+                break
+        if not m or not enll:
+            continue
+        au = neteja(tds[2].get_text(" ")) if len(tds) > 2 else ""
+        tema = neteja(tds[3].get_text(" ")) if len(tds) > 3 else ""
+        res.append({"url": urljoin(url, enll["href"]), "a": int(m.group(0)), "t": neteja(enll.get_text(" ")),
+                    "au": au, "to": [tema] if tema else []})
+    return res
+
+
+def llista_web(ll):
+    base = WEB_LLISTES[ll]
+    files = files_llista_web(base)
+    if len(files) < 200:  # si la taula es carrega per parts, any per any
+        vistos = {f["url"] for f in files}
+        for any_ in range(1992, datetime.date.today().year + 2):
+            for f in files_llista_web(f"{base}?year={any_}"):
+                if f["url"] not in vistos:
+                    vistos.add(f["url"]); files.append(f)
+    return list({f["url"]: f for f in files}.values())
+
+
+def article_web(fila):
+    b = baixa_bytes(fila["url"])
+    if not b:
+        return None
+    sp = BeautifulSoup(descodifica(b), "html.parser")
+    for x in sp.find_all(["script", "style", "nav", "header", "footer", "form"]):
+        x.decompose()
+    h1s = sp.find_all("h1")
+    if not h1s:
+        return None
+    clau_t = re.sub(r"\W", "", fila["t"].lower())[:30]
+    h1 = next((h for h in h1s if re.sub(r"\W", "", h.get_text().lower())[:30] == clau_t), h1s[-1])
+    cont = h1
+    while cont.parent is not None and len(cont.find_all("p")) < 3:
+        cont = cont.parent
+    par, inici = [], True
+    au_net = re.sub(r"\W", "", fila["au"].lower())
+    for p in cont.find_all(["p", "h2", "h3", "h4", "blockquote", "li"]):
+        if p.find_parent(["p", "blockquote", "li"]) is not None and p.name != "blockquote":
+            continue
+        if h1 in p.parents:
+            continue
+        t = neteja(p.get_text(" "))
+        if not t or re.fullmatch(r"[\W\d]{0,3}", t):
+            continue
+        # capçalera de l'article: autor i lloc, abans del primer paràgraf llarg
+        if inici and (re.sub(r"\W", "", t.lower()) == au_net or (len(t.split()) <= 8 and not re.search(r"[.!?»]$", t))):
+            continue
+        inici = False
+        if not par or par[-1] != t:
+            par.append(t)
+    while par and re.match(r"(\(?\s*)?(texto|text|vea|vegeu|véase|ver|més|más|original|versión|versió|descargar|descarregar)\b.{0,160}(https?://|\.org|\.com|pdf)", par[-1], re.I):
+        par.pop()
+    if not par:
+        return None
+    return {"codi": fila["url"], "t": fila["t"], "au": fila["au"], "a": fila["a"], "par": par, "url": fila["url"], "to": fila["to"]}
+
+
+def recull_web(anteriors):
+    res = []
+    for ll in WEB_LLISTES:
+        files = llista_web(ll)
+        print(f"Web nova {ll}: {len(files)} articles a la llista")
+        nous = [f for f in files if ("web", f["url"]) not in anteriors]
+        print(f"  ja els teníem: {len(files) - len(nous)}; a baixar: {len(nous)}")
+        with ThreadPoolExecutor(6) as ex:
+            for art in ex.map(article_web, nous):
+                if art:
+                    art["l_arxiu"] = ll
+                    res.append(art)
+        for f in files:
+            if ("web", f["url"]) in anteriors:
+                res.append(dict(anteriors[("web", f["url"])], to=f["to"]))
+        mostra = next((a for a in res if a["l_arxiu"] == ll), None)
+        if mostra:
+            print(f"  mostra: {mostra['a']} «{mostra['t'][:60]}» — {mostra['au'][:40]} — {len(mostra['par'])} paràgrafs — «{mostra['par'][0][:80]}» … «{mostra['par'][-1][-60:]}»")
+    return res
+
+
 def carrega_anteriors():
     """Articles de l'arxiu que ja hi ha a tauler/aula (per no tornar-los a baixar)."""
     try:
@@ -630,6 +732,10 @@ def carrega_anteriors():
             pass
     ant = {}
     for x in idx:
+        if "archivosagenda.org" in x.get("f", "") and x["id"] in textos:
+            ant[("web", x["f"])] = {"codi": x["f"], "t": x["t"], "au": x["au"], "a": x["a"], "par": textos[x["id"]],
+                                    "url": x["f"], "l_arxiu": x["l"], "to": x.get("to", [])}
+            continue
         m = re.search(r"ncodigo=(\d+)", x.get("f", ""))
         if m and x["id"] in textos:
             ll = "ca" if "/catalan/" in x["f"] else "es"
@@ -642,12 +748,14 @@ def main():
     os.makedirs(CAU, exist_ok=True)
     os.makedirs(f"{SORTIDA}/textos", exist_ok=True)
     anteriors = carrega_anteriors()
-    arxiu = recull_arxiu(anteriors)
+    web = recull_web(anteriors)
+    arxiu = web + recull_arxiu(anteriors)  # primer la web nova; de l'arxiu antic, només el que no hi sigui
     pdfs = cerca_pdfs()
     print(f"PDF trobats: {len(pdfs)}")
     fonts, index, textos = [], [], collections.defaultdict(dict)
     vistos = set()
     max_arxiu = collections.Counter()
+    cobert = collections.Counter()
     for art in arxiu:
         text = " ".join(art["par"])
         par = len(text.split())
@@ -659,8 +767,15 @@ def main():
         any_ = art["a"]
         if any_:
             max_arxiu[ll] = max(max_arxiu[ll], any_)
-        vistos.add((any_, ll, re.sub(r"\W+", "", art["t"].lower())[:60]))
-        id_ = f"{any_}-{ll}-k{art['codi']}"
+        vistos.add(clau_t)
+        if isinstance(art["codi"], str):
+            id_ = f"{any_}-{ll}-w{hashlib.md5(art['codi'].encode()).hexdigest()[:8]}"
+        else:
+            id_ = f"{any_}-{ll}-k{art['codi']}"
+        clau_t = (any_, ll, re.sub(r"\W+", "", art["t"].lower())[:60])
+        if clau_t in vistos:
+            continue
+        cobert[(any_, ll)] += 1
         index.append({
             "id": id_, "a": any_, "l": ll, "t": titol_net(art["t"], text), "au": autor_net(art["au"]),
             "tg": temes(text), "to": art.get("to", []), "p": par, "n": "", "ti": tipus(art["t"], art["par"], text, ll),
@@ -688,8 +803,8 @@ def main():
             continue
         n = 0
         for a in arts:
-            if any_ and max_arxiu and any_ <= max(max_arxiu.values()):
-                break  # aquest any ja és a l'arxiu, article per article
+            if any_ and cobert[(any_, "ca")] + cobert[(any_, "es")] >= 20:
+                break  # aquest any ja és a les webs de l'Agenda, article per article
             text = " ".join(a["par"])
             par = len(text.split())
             a["t"] = bon_titol(a["t"])
