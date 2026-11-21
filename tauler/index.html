@@ -1194,6 +1194,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       if (typeof d.sembratHorari === "string") r.sembratHorari = d.sembratHorari;
       if (typeof d.sembratActes === "string") r.sembratActes = d.sembratActes;
       if (d.guardiesBlau) r.guardiesBlau = true;
+      if (typeof d.sembratNotesMes === "string") r.sembratNotesMes = d.sembratNotesMes;
       if (Array.isArray(d.rubriques)) r.rubriques = d.rubriques;
       if (d.rubriquesInicials) r.rubriquesInicials = true;
       if (d.orgCorreus && typeof d.orgCorreus === "object") r.orgCorreus = d.orgCorreus;   // 16.11.2026: correus de l'organigrama
@@ -1286,6 +1287,15 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
             dades.activitats.push({ id: nouId(), titol: t, tipus: tipus, lloc: "", data: d, fins: f || "", hora: hi || "", horaFi: hf || "", repeteix: false, repFins: "", excepcions: [], notes: "" });
         });
         dades.sembratActes = "actes-2026-2027";
+        desa();
+      }
+      if (dades.sembratNotesMes !== "2026-11-21") {   // 21.11.2026: exàmens del llibre de lectura (01.12 i 04.12)
+        dades.agenda = dades.agenda && typeof dades.agenda === "object" ? dades.agenda : {};
+        const mm = dades.agenda.mensual = dades.agenda.mensual || {};
+        [["2026-12-01", "EX. 4TB LLIBRE LECTURA"], ["2026-12-04", "EX. 4TC, 4TD I 4TG LLIBRE LECTURA"]].forEach(([d, t]) => {
+          if (!String(mm[d] || "").includes(t)) mm[d] = mm[d] ? mm[d] + "\n" + t : t;
+        });
+        dades.sembratNotesMes = "2026-11-21";
         desa();
       }
       return "ok";
@@ -1445,7 +1455,8 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
           h += '<div class="cel' + (fora ? " fora" : "") + (iso === avui ? " avui" : "") + (dsem(iso) >= 5 || esNoLectiu(iso) ? " nolectiu" : "") + '"><span class="dn" data-dia="' + iso + '" title="Obre el dia">' + Number(iso.slice(8)) + "</span>" +
             (marca && !fora ? '<span class="marca">' + esc(marca) + "</span>" : "") +
             llista.map(e => '<span class="xip" style="background:' + colorDe(e.tipus) + '"' + atrEsdev(e) + ' title="' + esc((e.hora ? e.hora + (e.horaFi ? "–" + e.horaFi : "") + " " : "") + e.titol + (e.lloc ? " · " + e.lloc : "")) + '">' + esc((e.hora ? e.hora + " " : "") + e.titol) + "</span>").join("") +
-            (fora ? "" : '<textarea rows="2" maxlength="1000" data-agc="mensual" data-k="' + iso + '" aria-label="' + dma(iso) + '" placeholder="…">' + esc(a.mensual[iso] || "") + "</textarea>") + "</div>";
+            // 21.11.2026: també es pot escriure als dies del mes del costat que surten a la graella (p. ex. de l'01.12 al 04.12 a la vista de novembre)
+            '<textarea rows="2" maxlength="1000" data-agc="mensual" data-k="' + iso + '" aria-label="' + dma(iso) + '" placeholder="…">' + esc(a.mensual[iso] || "") + "</textarea></div>";
         }
         h += '<div class="cel obj"><textarea rows="3" maxlength="1000" data-agc="objectius" data-k="' + dl + '" aria-label="Objectius de la setmana del ' + dm(dl) + '" placeholder="Objectius…">' + esc(a.objectius[dl] || "") + "</textarea></div>";
       }
