@@ -233,10 +233,46 @@
       const im = document.createElement("img");
       im.alt = nom; im.draggable = false;
       el.appendChild(im);
-      url(el.dataset.fitxer, tipus).then(u => { im.src = u; }).catch(() => { el.classList.add("fx-err"); el.textContent = "🖼️ " + nom + " (no s'ha pogut carregar)"; });
+      url(el.dataset.fitxer, tipus).then(u => { im.src = u; }).catch(() => { el.classList.add("fx-err"); el.textContent = "🖼️ " + nom + " (no s'ha pogut carregar)"; el.appendChild(botoTreu()); });
     } else {
       el.textContent = icona(tipus, nom) + " " + nom + (el.dataset.mida ? " · " + midaText(el.dataset.mida) : "");
     }
+    el.appendChild(botoTreu());
+  }
+  function botoTreu() {
+    const b = document.createElement("span");
+    b.className = "fx-treu"; b.textContent = "✕";
+    b.title = "Esborra el fitxer (de la nota i del magatzem)";
+    return b;
+  }
+  // Esborra el fitxer del repo privat. Si ja no hi és, no passa res.
+  async function esborraDelRepo(cami) {
+    const t = await llegeixToken();
+    if (!t) throw new Error("No hi ha token de GitHub.");
+    const cap = { Authorization: "Bearer " + t, Accept: "application/vnd.github+json", "Content-Type": "application/json" };
+    const r = await fetch(API + camiApi(cami), { headers: cap, cache: "no-store" });
+    if (r.status === 404) return;
+    if (!r.ok) throw new Error("GitHub ha respost " + r.status + ".");
+    const j = await r.json();
+    const d = await fetch(API + camiApi(cami), { method: "DELETE", headers: cap, body: JSON.stringify({ message: "Esborra el fitxer adjunt: " + cami.split("/").pop(), sha: j.sha }) });
+    if (!d.ok && d.status !== 404) throw new Error("GitHub no l'ha esborrat (" + d.status + ").");
+  }
+  async function esborra(el, opcions) {
+    const nom = el.dataset.nom || "fitxer";
+    if (!confirm("Vols esborrar «" + nom + "»?\n\nEs treu de la nota i s'esborra del magatzem.")) return;
+    el.classList.add("fx-espera");
+    try {
+      await esborraDelRepo(el.dataset.fitxer);
+    } catch (e) {
+      el.classList.remove("fx-espera");
+      alert("📎 No s'ha pogut esborrar «" + nom + "»: " + e.message);
+      return;
+    }
+    const seg = el.nextSibling;
+    if (seg && seg.nodeType === 3 && seg.nodeValue === "\u00a0") seg.remove();
+    cache.delete(el.dataset.fitxer);
+    el.remove();
+    if (opcions && opcions.canvi) opcions.canvi();
   }
   function resol(cont) {
     if (!cont) return;
@@ -335,6 +371,8 @@
       insereix(caixa, fs, opcions);
     }, true);
     caixa.addEventListener("click", e => {
+      const x = e.target.closest(".fx-treu");
+      if (x && caixa.contains(x)) { e.preventDefault(); e.stopPropagation(); const f = x.closest(".fx[data-fitxer]"); if (f) esborra(f, opcions); return; }
       const el = e.target.closest(".fx[data-fitxer]");
       if (el && caixa.contains(el)) { e.preventDefault(); obre(el); }
     });
@@ -351,7 +389,10 @@
   const css = document.createElement("style");
   css.textContent =
     ".fx{cursor:pointer;user-select:none}" +
-    ".fx-img{display:block;margin:8px 0;max-width:100%}" +
+    ".fx-img{display:block;margin:8px 0;max-width:100%;position:relative;width:fit-content}" +
+    ".fx-treu{display:inline-block;margin-left:6px;padding:0 6px;border-radius:999px;color:#a3161b;font-weight:bold;cursor:pointer}" +
+    ".fx-treu:hover{background:#f8e0dc}" +
+    ".fx-img .fx-treu{position:absolute;top:6px;right:6px;margin:0;background:rgba(255,255,255,.92);border:1px solid #d8d6cf}" +
     ".fx-img img{display:block;max-width:100%;max-height:420px;border-radius:6px;border:1px solid #e3e1db}" +
     ".fx-doc,.fx-espera{display:inline-block;margin:2px 0;padding:3px 10px;border:1px solid #d8d6cf;border-radius:999px;background:#f4f3ef;font-size:.9em;line-height:1.5;white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis;vertical-align:middle}" +
     ".fx-espera{color:#6b6b66;cursor:default}" +
