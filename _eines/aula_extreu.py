@@ -611,7 +611,7 @@ def poleix(par, titol):
     return par
 
 
-def complet(par):
+def es_complet(par):
     return bool(par) and bool(re.match(r"[«“\"'‘¿¡(\[—–\-A-ZÀ-ÚÑÇ0-9…]", par[0])) and bool(FINAL_OK.search(par[-1]))
 
 
@@ -785,7 +785,7 @@ def main():
     cobert = collections.Counter()
     for art in arxiu:
         art["par"] = poleix(art["par"], art["t"])
-        if not complet(art["par"]):
+        if not es_complet(art["par"]):
             continue
         text = " ".join(art["par"])
         par = len(text.split())
