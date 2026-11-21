@@ -26,8 +26,9 @@ jobs:
               return ""
           out = open("sonda/resum.txt", "w")
           B = "https://servicioskoinonia.org/agenda/archivo/"
-          for pag in ["catalan/manyos.php", "manyos.php", "catalan/mtemas.php"]:
+          for pag in ["catalan/manyos.php", "manyos.php", "catalan/mtemas.php", "catalan/ma.php"]:
               h = get(B + pag); sp = BeautifulSoup(h, "html.parser")
+              open("sonda/" + pag.replace("/", "_") + ".html", "w").write(h)
               links = [(a.get_text(" ", strip=True)[:60], urljoin(B + pag, a["href"])) for a in sp.find_all("a", href=True)]
               out.write(f"### {pag} ({len(h)} bytes, {len(links)} enllaços)\n" + "\n".join(f"  {t} -> {u}" for t, u in links[:60]) + "\n")
           # segueix un any català i un text
