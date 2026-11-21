@@ -587,7 +587,7 @@ def autor_net(au):
         x = x.strip()
         m = re.fullmatch(r"([^,]+),\s*([^,]+)", x)
         return f"{m.group(2).strip()} {m.group(1).strip()}" if m and len(x.split()) <= 6 else x
-    return "; ".join(un(x) for x in re.split(r";", au) if x.strip())
+    return "; ".join(un(x) for x in re.split(r";", au) if x.strip()).strip(" ,;")
 
 
 def recull_arxiu(anteriors):
