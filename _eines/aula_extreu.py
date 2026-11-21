@@ -681,14 +681,16 @@ def article_web(fila):
             continue
         if h1 in p.parents:
             continue
-        t = neteja(p.get_text(" "))
-        if not t or re.fullmatch(r"[\W\d]{0,3}", t):
+        trossos = [neteja(x) for x in re.split(r"(?<=[.!?»”:])\s*\n+", p.get_text("\n"))] if p.find("br") else [neteja(p.get_text(" "))]
+        for t in trossos:
+          t = neteja(t.replace("\n", " "))
+          if not t or re.fullmatch(r"[\W\d]{0,3}", t):
             continue
-        # capçalera de l'article: autor i lloc, abans del primer paràgraf llarg
-        if inici and (re.sub(r"\W", "", t.lower()) == au_net or (len(t.split()) <= 8 and not re.search(r"[.!?»]$", t))):
+          # capçalera de l'article: autor i lloc, abans del primer paràgraf llarg
+          if inici and (re.sub(r"\W", "", t.lower()) == au_net or (len(t.split()) <= 8 and not re.search(r"[.!?»]$", t))):
             continue
-        inici = False
-        if not par or par[-1] != t:
+          inici = False
+          if not par or par[-1] != t:
             par.append(t)
     while par and re.match(r"(\(?\s*)?(texto|text|vea|vegeu|véase|ver|més|más|original|versión|versió|descargar|descarregar)\b.{0,160}(https?://|\.org|\.com|pdf)", par[-1], re.I):
         par.pop()
@@ -767,7 +769,7 @@ def main():
         any_ = art["a"]
         if any_:
             max_arxiu[ll] = max(max_arxiu[ll], any_)
-        vistos.add(clau_t)
+
         if isinstance(art["codi"], str):
             id_ = f"{any_}-{ll}-w{hashlib.md5(art['codi'].encode()).hexdigest()[:8]}"
         else:
@@ -776,6 +778,7 @@ def main():
         if clau_t in vistos:
             continue
         cobert[(any_, ll)] += 1
+        vistos.add(clau_t)
         index.append({
             "id": id_, "a": any_, "l": ll, "t": titol_net(art["t"], text), "au": autor_net(art["au"]),
             "tg": temes(text), "to": art.get("to", []), "p": par, "n": "", "ti": tipus(art["t"], art["par"], text, ll),
