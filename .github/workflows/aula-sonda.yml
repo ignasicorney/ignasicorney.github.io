@@ -9,13 +9,39 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - run: pip install -q requests beautifulsoup4
+      - shell: python
+        run: |
+          import requests, re, os, time
+          from urllib.parse import urljoin
+          from bs4 import BeautifulSoup
+          os.makedirs("sonda", exist_ok=True)
+          S = requests.Session(); S.headers["User-Agent"] = "Mozilla/5.0"
+          def get(u):
+              for i in range(4):
+                  try:
+                      r = S.get(u, timeout=40); r.encoding = r.apparent_encoding; return r.text
+                  except Exception as e:
+                      print("ERR", u, e); time.sleep(5)
+              return ""
+          out = open("sonda/resum.txt", "w")
+          B = "https://servicioskoinonia.org/agenda/archivo/"
+          for pag in ["catalan/manyos.php", "manyos.php", "catalan/mtemas.php"]:
+              h = get(B + pag); sp = BeautifulSoup(h, "html.parser")
+              links = [(a.get_text(" ", strip=True)[:60], urljoin(B + pag, a["href"])) for a in sp.find_all("a", href=True)]
+              out.write(f"### {pag} ({len(h)} bytes, {len(links)} enllaços)\n" + "\n".join(f"  {t} -> {u}" for t, u in links[:60]) + "\n")
+          # segueix un any català i un text
+          h = get(B + "catalan/manyos.php"); sp = BeautifulSoup(h, "html.parser")
+          anys = [urljoin(B + "catalan/manyos.php", a["href"]) for a in sp.find_all("a", href=True) if re.search(r"(19|20)\d\d", a.get_text() + a["href"])]
+          out.write(f"\nANYS {len(anys)}: {anys[:5]}\n")
+          if anys:
+              u = anys[len(anys)//2]; h2 = get(u); sp2 = BeautifulSoup(h2, "html.parser")
+              ll = [(a.get_text(" ", strip=True)[:70], urljoin(u, a["href"])) for a in sp2.find_all("a", href=True)]
+              out.write(f"\n### ANY {u} ({len(ll)} enllaços)\n" + "\n".join(f"  {t} -> {x}" for t, x in ll[:50]) + "\n")
+              cand = [x for t, x in ll if "obra" in x.lower() or "?" in x]
+              if cand:
+                  h3 = get(cand[0]); open("sonda/text.html", "w").write(h3)
+                  out.write(f"\n### TEXT {cand[0]}\n" + BeautifulSoup(h3, "html.parser").get_text("\n", strip=True)[:3000] + "\n")
+          out.close(); print(open("sonda/resum.txt").read()[:3000])
       - run: |
-          mkdir -p sonda; B=https://servicioskoinonia.org/agenda/archivo
-          curl -sL -m 30 "$B/catalan/manyos.php" -o sonda/cat_anys.html
-          curl -sL -m 30 "$B/manyos.php" -o sonda/es_anys.html
-          a=$(grep -oiE 'href="[^"]+"' sonda/cat_anys.html | sed 's/href="//I;s/"$//' | grep -iv 'css\|index\|^/\|http' | sed -n '8p')
-          echo "any: $a"; curl -sL -m 30 "$B/catalan/$a" -o sonda/cat_any.html
-          t=$(grep -oiE 'href="[^"]+"' sonda/cat_any.html | sed 's/href="//I;s/"$//' | grep -i 'obra\|texto\|text\|\.php?' | sed -n '3p')
-          echo "text: $t"; curl -sL -m 30 "$(python3 -c "import sys,urllib.parse as u;print(u.urljoin('$B/catalan/$a','$t'))")" -o sonda/cat_text.html
-          ls -la sonda
           git config user.name bot; git config user.email bot@x; git checkout -b sonda; git add -f sonda; git commit -qm s; git push -f origin sonda
