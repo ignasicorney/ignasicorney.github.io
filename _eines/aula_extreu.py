@@ -127,7 +127,7 @@ def temes(text):
 
 
 ARG = re.compile(r"\b(debemos|hay que|creo que|considero|por (lo )?tanto|sin embargo|es necesario|no podemos|deber[ií]amos|en definitiva|propongo|es urgente|hem de|cal\b|caldria|crec que|per tant|tanmateix|és necessari|no podem|proposo|és urgent|hauríem)\b", re.I)
-NARR_ES = re.compile(r"\b\w{3,}(aron|ieron|aba|aban|ía|ían)\b")
+NARR_ES = re.compile(r"\b(\w{3,}(aron|ieron|aba|aban|ábamos)|fue|fueron|era|eran|había|habían|dijo|llegó|vivía)\b", re.I)
 NARR_CA = re.compile(r"\bva(ren|m|u)? \w+(ar|er|ir|re)\b")
 
 
@@ -434,6 +434,12 @@ def articles_pdf(cami):
         a["par"] = net
         while a["par"] and re.match(r"(\(?\s*)?(texto|text|vea|vegeu|véase|ver|més|más|original|versión|versió)\b.{0,160}(https?://|latinoamericana\.org|\.org|\.com)", a["par"][-1], re.I):
             a["par"].pop()  # notes finals amb enllaços
+        # signatura al final: «Nom Cognom, Ciutat, País»
+        if a["par"] and not a["au"]:
+            fi = a["par"][-1]
+            if len(fi.split()) <= 12 and not re.search(r"[.!?;:»”]$", fi) and re.match(r"[A-ZÀ-ÚÑ][\w'’.-]+ [A-ZÀ-ÚÑ]", fi):
+                a["au"] = fi
+                a["par"].pop()
         if a.get("sense_titol") and a["par"]:
             frase = re.split(r"(?<=[.!?…])\s", a["par"][0])[0]
             w = frase.split()
@@ -486,6 +492,7 @@ def main():
                 "id": id_, "a": any_, "l": ll, "t": a["t"], "au": a["au"],
                 "tg": temes(text), "p": par, "n": "", "ti": tipus(a["t"], a["par"], text, ll),
                 "_d": dificultat(par, text),
+                "ok": int(bool(re.match(r"[«“\"¿¡(\[—–A-ZÀ-ÚÑÇ0-9]", a["par"][0])) and bool(re.search(r"[.!?»”\")…]$", a["par"][-1]))),
                 "pg": a["pg"], "f": url, "r": text[:240],
             })
             textos[f"{any_}-{ll}"][id_] = a["par"]
