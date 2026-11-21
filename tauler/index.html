@@ -7801,5 +7801,145 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
   };
 })();
 </script>
+
+<!-- Textos per a l'aula: corpus de l'Agenda Llatinoamericana com a font de text de l'Assistent -->
+<style>
+.cp-barra{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 6px}
+.cp-fons{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;display:flex;align-items:center;justify-content:center;padding:12px}
+.cp-caixa{background:var(--carta,#fff);color:inherit;border-radius:12px;max-width:980px;width:100%;max-height:92vh;display:flex;flex-direction:column;box-shadow:0 10px 40px rgba(0,0,0,.3)}
+.cp-cap{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:12px;border-bottom:1px solid var(--linia,#ddd)}
+.cp-cap input[type=search]{flex:1 1 200px}
+.cp-cos{display:grid;grid-template-columns:minmax(240px,1fr) minmax(0,1.4fr);gap:10px;padding:10px 12px;overflow:hidden;flex:1;min-height:0}
+@media (max-width:760px){.cp-cos{grid-template-columns:1fr}}
+.cp-llista,.cp-vista{overflow:auto;min-height:0}
+.cp-item{display:block;width:100%;text-align:left;border:1px solid var(--linia,#ddd);border-radius:8px;padding:6px 8px;margin-bottom:6px;background:transparent;color:inherit;cursor:pointer}
+.cp-item.sel,.cp-item:hover{border-color:currentColor}
+.cp-item b{display:block}
+.cp-meta{font-size:.8rem;opacity:.75}
+.cp-vista p{margin:0 0 .7em;text-align:justify}
+.cp-peu{display:flex;gap:6px;justify-content:flex-end;padding:10px 12px;border-top:1px solid var(--linia,#ddd)}
+</style>
+<script>
+(() => {
+  const corpusAula = { idx: null, textos: {} };
+  const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const norm = s => String(s || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+  const CURSOS = ["1r ESO", "2n ESO", "3r ESO", "4t ESO", "1r Batx.", "2n Batx."];
+  const TIPUS = ["Argumentatiu", "Expositiu", "Narració", "Poesia", "Carta", "Entrevista"];
+
+  async function index() {
+    if (!corpusAula.idx) corpusAula.idx = fetch("aula/index.json", { cache: "no-cache" }).then(r => r.ok ? r.json() : []).catch(() => []);
+    return corpusAula.idx;
+  }
+  async function text(x) {
+    const k = `${x.a}-${x.l}`;
+    if (!corpusAula.textos[k]) corpusAula.textos[k] = fetch(`aula/textos/${k}.json`).then(r => r.ok ? r.json() : {}).catch(() => ({}));
+    return (await corpusAula.textos[k])[x.id] || [];
+  }
+  // curs i llengua de l'eina activa de l'Assistent
+  function context() {
+    const c = document.getElementById("asCurs"), l = document.getElementById("asLleng");
+    let curs = "", ll = "";
+    if (c) {
+      const v = norm(c.value);
+      const m = v.match(/^(\d)/);
+      if (m) curs = v.includes("batx") ? `${m[1]}r Batx.`.replace("2r", "2n") : CURSOS[+m[1] - 1] || "";
+    }
+    if (l) ll = /^(ca|catal)/i.test(l.value) ? "ca" : /^(es|castel)/i.test(l.value) ? "es" : "";
+    return { curs, ll };
+  }
+  function citaDe(x) {
+    const ed = x.l === "ca" ? "Agenda Llatinoamericana Mundial" : "Agenda Latinoamericana Mundial";
+    return `${x.au ? x.au + ": " : ""}«${x.t}». ${ed}${x.a ? " " + x.a : ""}.`;
+  }
+  async function posa(ta, x) {
+    const par = await text(x);
+    const bloc = `${x.t}\n${x.au ? x.au + "\n" : ""}\n${par.join("\n\n")}\n\nFont: ${citaDe(x)}`;
+    ta.value = ta.value.trim() ? ta.value.trimEnd() + "\n\n" + bloc : bloc;
+    ta.dispatchEvent(new Event("input", { bubbles: true }));
+    ta.focus();
+  }
+  function filtra(idx, f) {
+    const q = norm(f.q).split(/\s+/).filter(Boolean);
+    return idx.filter(x => (!f.ll || x.l === f.ll) && (!f.curs || x.n === f.curs) && (!f.ti || x.ti === f.ti) &&
+      (!f.tema || x.tg.includes(f.tema) || (x.to || []).includes(f.tema)) &&
+      (!q.length || q.every(w => norm(`${x.t} ${x.au} ${x.tg.join(" ")} ${(x.to || []).join(" ")} ${x.r}`).includes(w))));
+  }
+  async function proposa(ta) {
+    const idx = await index(), c = context();
+    let r = filtra(idx, { ll: c.ll, curs: c.curs, q: "" });
+    if (!r.length) r = filtra(idx, { ll: c.ll, q: "" });
+    if (!r.length) return alert("No s'ha pogut carregar el corpus de textos.");
+    obre(ta, r[Math.floor(Math.random() * r.length)]);
+  }
+  async function obre(ta, triat) {
+    const idx = await index(), c = context();
+    const temes = [...new Set(idx.flatMap(x => x.tg))].sort((a, b) => a.localeCompare(b, "ca"));
+    const op = (arr, v, buit) => `<option value="">${buit}</option>` + arr.map(a => `<option${a === v ? " selected" : ""}>${esc(a)}</option>`).join("");
+    const fons = document.createElement("div");
+    fons.className = "cp-fons";
+    fons.innerHTML = `<div class="cp-caixa" role="dialog" aria-label="Tria un text del corpus">
+      <div class="cp-cap"><b>📰 Textos per a l'aula</b>
+        <input type="search" class="cp-q" placeholder="Cerca per títol, autor o tema…">
+        <select class="cp-ll"><option value="">Totes les llengües</option><option value="ca"${c.ll === "ca" ? " selected" : ""}>Català</option><option value="es"${c.ll === "es" ? " selected" : ""}>Castellà</option></select>
+        <select class="cp-curs">${op(CURSOS, c.curs, "Tots els cursos")}</select>
+        <select class="cp-tema">${op(temes, "", "Tots els temes")}</select>
+        <select class="cp-ti">${op(TIPUS, "", "Totes les tipologies")}</select>
+        <button type="button" class="boto cp-atzar">🎲</button>
+      </div>
+      <div class="cp-cos"><div class="cp-llista"></div><div class="cp-vista"><p class="cp-meta">Tria un text de la llista.</p></div></div>
+      <div class="cp-peu"><button type="button" class="boto cp-tanca">Tanca</button><button type="button" class="boto cp-usa" disabled>Fes servir aquest text</button></div>
+    </div>`;
+    document.body.appendChild(fons);
+    const $ = s => fons.querySelector(s);
+    let sel = null, res = [];
+    const pintaLlista = () => {
+      res = filtra(idx, { q: $(".cp-q").value, ll: $(".cp-ll").value, curs: $(".cp-curs").value, tema: $(".cp-tema").value, ti: $(".cp-ti").value });
+      $(".cp-llista").innerHTML = `<p class="cp-meta">${res.length.toLocaleString("ca")} textos</p>` + res.slice(0, 80).map(x =>
+        `<button type="button" class="cp-item${sel && sel.id === x.id ? " sel" : ""}" data-id="${x.id}"><b>${esc(x.t)}</b><span class="cp-meta">${x.l.toUpperCase()} · ${x.a || "Recull"} · ${x.n} · ${x.ti} · ${x.p} paraules${x.au ? " · " + esc(x.au) : ""}</span></button>`).join("");
+    };
+    const mostra = async x => {
+      sel = x; pintaLlista();
+      $(".cp-vista").innerHTML = `<p class="cp-meta">Carregant…</p>`;
+      const par = await text(x);
+      $(".cp-vista").innerHTML = `<h3 style="margin:0 0 4px">${esc(x.t)}</h3><p class="cp-meta">${esc(citaDe(x))} · ${x.n} · ${x.ti} · ${x.p} paraules</p>` + par.map(p => `<p>${esc(p)}</p>`).join("");
+      $(".cp-vista").scrollTop = 0;
+      $(".cp-usa").disabled = false;
+    };
+    const tanca = () => fons.remove();
+    let t0;
+    $(".cp-q").addEventListener("input", () => { clearTimeout(t0); t0 = setTimeout(pintaLlista, 200); });
+    fons.querySelectorAll("select").forEach(s => s.addEventListener("change", pintaLlista));
+    $(".cp-llista").addEventListener("click", e => { const b = e.target.closest(".cp-item"); if (b) mostra(idx.find(x => x.id === b.dataset.id)); });
+    $(".cp-atzar").addEventListener("click", () => { if (res.length) mostra(res[Math.floor(Math.random() * res.length)]); });
+    $(".cp-tanca").addEventListener("click", tanca);
+    fons.addEventListener("click", e => { if (e.target === fons) tanca(); });
+    document.addEventListener("keydown", function k(e) { if (e.key === "Escape") { tanca(); document.removeEventListener("keydown", k); } });
+    $(".cp-usa").addEventListener("click", async () => { if (sel) { await posa(ta, sel); tanca(); } });
+    pintaLlista();
+    if (triat) mostra(triat);
+    $(".cp-q").focus();
+  }
+  // botons a sobre del camp de text de les eines de l'Assistent (no a la correcció de redaccions ni a la transcripció de vídeos)
+  function afegeix() {
+    const cos = document.getElementById("asCos");
+    if (!cos) return;
+    cos.querySelectorAll("textarea#asText").forEach(ta => {
+      if (ta.dataset.corpus) return;
+      ta.dataset.corpus = "1";
+      if (/redacció|transcripció/i.test(ta.placeholder || "")) return;
+      const barra = document.createElement("div");
+      barra.className = "cp-barra";
+      barra.innerHTML = `<button type="button" class="boto" title="Tria un text del corpus de l'Agenda Llatinoamericana, filtrat pel curs i la llengua de l'activitat">📰 Text del corpus</button><button type="button" class="boto" title="Proposa un text del corpus a l'atzar per al curs i la llengua triats">🎲 Proposa'n un</button>`;
+      const [b1, b2] = barra.querySelectorAll("button");
+      b1.addEventListener("click", () => obre(ta));
+      b2.addEventListener("click", () => proposa(ta));
+      ta.parentNode.insertBefore(barra, ta);
+    });
+  }
+  const cos = document.getElementById("asCos");
+  if (cos) { new MutationObserver(afegeix).observe(cos, { childList: true, subtree: true }); afegeix(); }
+})();
+</script>
 </body>
 </html>
