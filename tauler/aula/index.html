@@ -59,7 +59,6 @@ label.chk{display:flex;align-items:center;gap:6px;font-size:.9rem;color:var(--su
     <select id="fy" aria-label="Tipologia"><option value="">Totes les tipologies</option><option>Argumentatiu</option><option>Expositiu</option><option>Narració</option><option>Poesia</option><option>Carta</option><option>Entrevista</option></select>
     <label class="chk"><input type="checkbox" id="fx"> Cerca també dins els textos</label>
     <label class="chk"><input type="checkbox" id="fs"> Només desats ★</label>
-    <label class="chk" title="Textos que l'extracció no ha pogut separar del tot bé (comencen o acaben a mitja frase)"><input type="checkbox" id="fi"> Inclou textos incomplets</label>
   </div>
   <p id="info">Carregant…</p>
   <div class="graella">
@@ -87,9 +86,9 @@ label.chk{display:flex;align-items:center;gap:6px;font-size:.9rem;color:var(--su
 
   async function filtra() {
     const q = norm($("q").value.trim()), l = $("fl").value, a = $("fa").value, t = $("ft").value,
-      p = $("fp").value, n = $("fn").value, ty = $("fy").value, dins = $("fx").checked, nomesDesats = $("fs").checked, incomplets = $("fi").checked;
+      p = $("fp").value, n = $("fn").value, ty = $("fy").value, dins = $("fx").checked, nomesDesats = $("fs").checked;
     let r = INDEX.filter(x => (!l || x.l === l) && (!a || String(x.a) === a) && (!t || x.tg.includes(t)) &&
-      (!n || x.n === n) && (incomplets || x.ok !== 0) && (!ty || x.ti === ty) && (!nomesDesats || desats.has(x.id)) &&
+      (!n || x.n === n) && (!ty || x.ti === ty) && (!nomesDesats || desats.has(x.id)) &&
       (!p || (p === "c" ? x.p <= 600 : p === "m" ? x.p > 600 && x.p <= 1200 : x.p > 1200)));
     if (q) {
       const paraules = q.split(/\s+/);
@@ -114,7 +113,7 @@ label.chk{display:flex;align-items:center;gap:6px;font-size:.9rem;color:var(--su
       : "Encara no hi ha textos.";
     $("llista").innerHTML = filtrats.slice(0, mostra).map(x => `
       <button type="button" class="fitxa${sel === x.id ? " sel" : ""}" data-id="${x.id}">
-        <h3>${desats.has(x.id) ? "★ " : ""}${esc(x.t)}${x.ok === 0 ? ' <span class="tg" title="Pot començar o acabar a mitja frase">incomplet</span>' : ""}</h3>
+        <h3>${desats.has(x.id) ? "★ " : ""}${esc(x.t)}</h3>
         <div class="meta"><span class="ll ${x.l}">${x.l.toUpperCase()}</span><span>${nomAny(x.a)}</span>${x.au ? `<span>· ${esc(x.au)}</span>` : ""}<span>· ${x.p.toLocaleString("ca")} paraules · ${x.n} · ${x.ti || ""}</span></div>
         <div class="meta" style="margin-top:3px">${x.tg.map(g => `<span class="tg">${esc(g)}</span>`).join("")}</div>
         <p class="res">${esc(x.r.slice(0, 170))}…</p>
@@ -162,7 +161,7 @@ label.chk{display:flex;align-items:center;gap:6px;font-size:.9rem;color:var(--su
   $("llista").addEventListener("click", e => { const f = e.target.closest(".fitxa"); if (f) obre(f.dataset.id); });
   $("mes").addEventListener("click", () => { mostra += 60; pinta(); });
   let t0; $("q").addEventListener("input", () => { clearTimeout(t0); t0 = setTimeout(filtra, 250); });
-  ["fl", "fa", "ft", "fp", "fn", "fy", "fx", "fs", "fi"].forEach(id => $(id).addEventListener("change", filtra));
+  ["fl", "fa", "ft", "fp", "fn", "fy", "fx", "fs"].forEach(id => $(id).addEventListener("change", filtra));
 
   Promise.all([
     fetch("index.json", { cache: "no-cache" }).then(r => r.ok ? r.json() : []).catch(() => []),

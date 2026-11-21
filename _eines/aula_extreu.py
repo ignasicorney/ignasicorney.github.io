@@ -483,6 +483,9 @@ def main():
             ll = llengua(text)
             if ll not in ("ca", "es"):
                 continue
+            complet = bool(re.match(r"[«“\"¿¡(\[—–A-ZÀ-ÚÑÇ0-9]", a["par"][0])) and bool(re.search(r"[.!?»”\")…]$", a["par"][-1]))
+            if not complet:  # comença o acaba a mitja frase: fora
+                continue
             clau = (any_, ll, re.sub(r"\W+", "", a["t"].lower())[:60])
             if clau in vistos:
                 continue
