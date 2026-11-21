@@ -100,6 +100,18 @@ h3.bt{margin:0 0 8px;font-size:1rem;text-transform:uppercase}
 .capinst-esq{display:flex;align-items:center;justify-content:flex-start}
 .org-boto{font-size:.85rem;padding:4px 10px}
 dialog#dlgOrg{width:min(860px,calc(100vw - 24px))}
+.foto-mini{display:inline-block;width:24px;height:24px;border-radius:50%;overflow:hidden;vertical-align:middle;margin-right:6px;flex:none;cursor:zoom-in;background:var(--linia);box-shadow:0 0 0 1px rgba(0,0,0,.08)}
+.foto-mini img{width:100%;height:100%;object-fit:cover;object-position:50% 30%;display:block}
+.org-llista .org-nom{align-items:center}
+.org-llista .foto-mini{width:22px;height:22px;margin-right:2px}
+#fotoGran{position:fixed;z-index:2147483000;pointer-events:none;background:#fff;color:#222;padding:6px;border-radius:10px;box-shadow:0 8px 28px rgba(0,0,0,.32);text-align:center;font-size:.8rem;line-height:1.25;width:212px;box-sizing:border-box}
+#fotoGran img{display:block;width:200px;height:220px;object-fit:cover;object-position:50% 30%;border-radius:6px;margin:0 0 5px}
+.orla-graella{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:12px 10px;margin:4px 0 14px}
+.orla-fitxa{margin:0;text-align:center;font-size:.85rem;line-height:1.2}
+.orla-fitxa img,.orla-ini{display:block;width:96px;height:118px;margin:0 auto 4px;border-radius:8px;object-fit:cover;object-position:50% 25%;cursor:zoom-in;background:var(--linia)}
+.orla-ini{display:flex;align-items:center;justify-content:center;font-size:1.6rem;font-weight:700;color:var(--suau);cursor:default}
+.orla-fitxa small{display:block;color:var(--suau);font-size:.78em;margin-top:2px}
+.orla-clau{max-width:520px}
 #orgCos{display:grid;gap:12px}
 .org-sec h3{margin:0 0 4px;font-size:.8rem;text-transform:uppercase;letter-spacing:.05em;color:var(--suau)}
 .org-llista{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:2px 16px;margin:0;padding:0;list-style:none;font-size:.92rem}
@@ -819,7 +831,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
 <dialog id="dlgOrg">
   <form method="dialog">
     <div class="fila" style="align-items:center;justify-content:space-between"><h2>Organigrama · curs 2026-27</h2><button type="submit" class="boto clar">Tanca</button></div>
-    <div class="fila" style="align-items:center"><input type="search" id="orgCerca" placeholder="Cerca un nom, un grup o un càrrec…" style="flex:1 1 220px"><button type="button" class="boto clar" id="orgDir" title="Busca el correu de cada persona al directori del compte d'ieslabisbal.cat">🔎 Correus del directori</button></div>
+    <div class="fila" style="align-items:center"><input type="search" id="orgCerca" placeholder="Cerca un nom, un grup o un càrrec…" style="flex:1 1 220px"><button type="button" class="boto clar" id="orgOrla" title="Les fotos del professorat i del PAS, per departaments">🖼️ Orla del claustre</button><button type="button" class="boto clar" id="orgDir" title="Busca el correu de cada persona al directori del compte d'ieslabisbal.cat">🔎 Correus del directori</button></div>
     <div id="orgDirRes" class="font"></div>
     <div id="orgCos"></div>
   </form>
@@ -1084,9 +1096,13 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
   const senseAccents = t => String(t).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
   function pintaOrg() {
     const q = senseAccents(($("orgCerca").value || "").trim());
+    $("orgOrla").textContent = orgVista === "orla" ? "👥 Organigrama" : "🖼️ Orla del claustre";
+    $("orgDir").hidden = orgVista === "orla"; $("orgDirRes").hidden = orgVista === "orla";
+    if (orgVista === "orla") { $("orgCos").innerHTML = htmlOrla(q); return; }
+    if (!orles) carregaOrles();
     const h = ORG.map(([sec, files]) => {
       const fs = q ? files.filter(([c, n]) => senseAccents(sec + " " + c + " " + n).includes(q)) : files;
-      return fs.length ? '<section class="org-sec"><h3>' + esc(sec) + '</h3><ul class="org-llista">' + fs.map(([c, n]) => '<li' + (ORG_MEUS.includes(c) && (sec.startsWith("Tutors d'ESO") || sec.startsWith("Caps")) ? ' class="meu"' : "") + "><span>" + esc(c) + '</span><span class="org-nom">' + esc(n) +
+      return fs.length ? '<section class="org-sec"><h3>' + esc(sec) + '</h3><ul class="org-llista">' + fs.map(([c, n]) => '<li' + (ORG_MEUS.includes(c) && (sec.startsWith("Tutors d'ESO") || sec.startsWith("Caps")) ? ' class="meu"' : "") + "><span>" + esc(c) + '</span><span class="org-nom">' + htmlFoto(fotoProf(n), n) + esc(n) +
         (orgMail(n) ? ' <a href="#" class="org-mail" data-orgmail="' + esc(orgMail(n)) + '" title="Escriu a ' + esc(orgMail(n)) + '">✉️</a>' : "") +
         ' <button type="button" class="org-ed" data-orged="' + esc(n) + '" title="' + (orgMail(n) ? "Canvia el correu" : "Posa-hi el correu a mà") + '">✏️</button></span></li>').join("") + "</ul></section>" : "";
     }).join("");
@@ -1097,10 +1113,18 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
   }
   let orgCercat = false;   // 16.11.2026: la primera vegada que s'obre (per sessió), busca sol els correus que falten
   $("orgBoto").addEventListener("click", () => {
-    $("orgCerca").value = ""; pintaOrgRes(null); pintaOrg(); $("dlgOrg").showModal();
+    orgVista = "llista"; $("orgCerca").value = ""; pintaOrgRes(null); pintaOrg(); $("dlgOrg").showModal();
     if (!orgCercat && typeof dades !== "undefined" && dades && compteIns() && ORG_NOMS.some(n => !orgMail(n))) { orgCercat = true; $("orgDir").click(); }
   });
   $("orgCerca").addEventListener("input", pintaOrg);
+  $("orgOrla").addEventListener("click", () => { orgVista = orgVista === "orla" ? "llista" : "orla"; pintaOrg(); });
+  $("orgCos").addEventListener("click", ev => {
+    if (!ev.target.closest("#orlaClauDesa")) return;
+    const v = ($("orlaClau").value || "").trim().replace(/^.*orles=/, "");
+    if (!/^[A-Za-z0-9_-]{40,}$/.test(v)) { alert("Aquesta clau no sembla la de les fotos."); return; }
+    lsEscriu("tauler.orlesClau", v); if (llegit) { dades.orlesClau = v; desa(); }
+    orles = null; orlesErr = ""; carregaOrles(true); pintaOrg();
+  });
   // Correus de l'organigrama (16.11.2026): del directori del compte d'ieslabisbal.cat, o a mà amb ✏️
   // 16.11.2026: ✉️ al costat del tutor (grup i grup d'origen), amb el correu de l'organigrama
   const mailTutor = n => orgMail(n) ? ' <a href="#" class="mail-al" data-mail="' + esc(orgMail(n)) + '" title="Escriu a ' + esc(n) + " (" + esc(orgMail(n)) + ')" aria-label="Escriu un correu a ' + esc(n) + '">✉️</a>' : "";
@@ -1190,6 +1214,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       if (Array.isArray(d.reunions)) r.reunions = d.reunions.filter(a => a && esISO(a.data));
       if (typeof d.notes === "string") r.notes = d.notes;
       if (typeof d.notesHtml === "string") r.notesHtml = d.notesHtml;   // 21.11.2026: notes de feina amb format i fitxers
+      if (typeof d.orlesClau === "string") r.orlesClau = d.orlesClau;   // 21.11.2026: clau de les fotos de les orles
       if (typeof d.sembrat === "string") r.sembrat = d.sembrat;
       if (typeof d.sembratHorari === "string") r.sembratHorari = d.sembratHorari;
       if (typeof d.sembratActes === "string") r.sembratActes = d.sembratActes;
@@ -1384,9 +1409,121 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
   $("sincClau").addEventListener("keydown", e => { if (e.key === "Enter") $("sincConnecta").click(); });
   $("sincDesconnecta").addEventListener("click", () => {
     clau = ""; sha = null; dades = BUIDES(); correuCarregat = false; if (gestorCorreu) { $("correuCos").replaceWith(Object.assign(document.createElement("div"), { id: "correuCos" })); gestorCorreu = null; } if ($("correuNum")) { $("correuNum").hidden = true; $("correuNum").textContent = ""; }
-    lsEscriu("tauler.clau", null); lsEscriu("tauler.dades", null);
+    lsEscriu("tauler.clau", null); lsEscriu("tauler.dades", null); lsEscriu("tauler.orlesClau", null); orles = null; orlesErr = "";
     mostraInstitut(false);
   });
+
+  // ================= Orles (21.11.2026): fotos de l'alumnat i del claustre =================
+  // Les fotos són a orles.bin, xifrades (AES-GCM). La clau de les fotos no és al repo: es desa amb les dades privades
+  // de l'Institut (dades.orlesClau) i, per tant, només es pot llegir després d'obrir l'Institut amb la clau de La TdG.
+  (() => { const m = /[#&]orles=([A-Za-z0-9_-]{40,})/.exec(location.hash); if (m) { lsEscriu("tauler.orlesClau", m[1]); history.replaceState(null, "", location.pathname + location.search); } })();
+  let orles = null, orlesPromesa = null, orlesErr = "", orgVista = "llista";
+  const orlesClau = () => (typeof dades !== "undefined" && dades && dades.orlesClau) || lsLlegeix("tauler.orlesClau") || "";
+  const toksNom = t => senseAccents(String(t || "").replace(/\s+DIS$/i, "")).replace(/[·.,'’()]/g, " ").replace(/-/g, " ").split(/\s+/).filter(Boolean);
+  function carregaOrles(forca) {
+    if (orles) return Promise.resolve(orles);
+    if (orlesPromesa) return orlesPromesa;
+    if (orlesErr && !forca) return null;
+    const k = orlesClau(); if (!k || !llegit) return null;
+    if (!dades.orlesClau) { dades.orlesClau = k; desa(); }   // així també la té l'altre ordinador
+    orlesPromesa = (async () => {
+      try {
+        const b64 = k.replace(/-/g, "+").replace(/_/g, "/");
+        const kb = Uint8Array.from(atob(b64 + "===".slice((b64.length + 3) % 4)), c => c.charCodeAt(0));
+        const key = await crypto.subtle.importKey("raw", kb, "AES-GCM", false, ["decrypt"]);
+        const r = await fetch("orles.bin?v=1"); if (!r.ok) throw new Error("HTTP " + r.status);
+        const buf = new Uint8Array(await r.arrayBuffer());
+        const d = JSON.parse(new TextDecoder().decode(await crypto.subtle.decrypt({ name: "AES-GCM", iv: buf.slice(0, 12) }, key, buf.slice(12))));
+        const blob = b => b ? URL.createObjectURL(new Blob([Uint8Array.from(atob(b), c => c.charCodeAt(0))], { type: "image/webp" })) : "";
+        const o = { al: {}, prof: [], claustre: d.claustre || [], cache: new Map() };
+        for (const [g, l] of Object.entries(d.alumnes || {})) o.al[g] = l.map(x => ({ nom: x.nom, t: toksNom(x.nom), src: blob(x.img) }));
+        o.claustre.forEach(s => s.gent.forEach(p => { p.src = blob(p.img); delete p.img; p.t = toksNom(p.nom); o.prof.push(p); }));
+        orles = o; orlesErr = "";
+      } catch (e) {
+        orlesErr = e && e.name === "OperationError" ? "La clau de les fotos no és correcta." : "No s'han pogut carregar les fotos (" + (e && e.message || e) + ").";
+      }
+      orlesPromesa = null;
+      try { pintaAlumnes(); } catch (e) {}
+      if ($("dlgOrg").open) pintaOrg();
+      return orles;
+    })();
+    return orlesPromesa;
+  }
+  // Busca la persona: primer el nom exacte (sense accents ni ordre), després un nom que contingui l'altre, si només n'hi ha un
+  function trobaOrla(llista, t) {
+    if (!t.length) return null;
+    const k = t.slice().sort().join(" ");
+    const ex = llista.filter(p => p.t.slice().sort().join(" ") === k);
+    if (ex.length === 1) return ex[0];
+    const inc = llista.filter(p => t.every(x => p.t.includes(x)) || (p.t.length >= 2 && p.t.every(x => t.includes(x))));
+    return inc.length === 1 ? inc[0] : null;
+  }
+  function fotoAlumne(gNom, nom) {
+    if (!orles) return null;
+    const ck = "a|" + gNom + "|" + nom;
+    if (orles.cache.has(ck)) return orles.cache.get(ck);
+    const t = toksNom(nom), g = nomGrup(gNom).replace(/\s+/g, "");
+    let p = orles.al[g] ? trobaOrla(orles.al[g], t) : null;
+    if (!p) p = trobaOrla([].concat(...Object.values(orles.al)), t);
+    orles.cache.set(ck, p); return p;
+  }
+  // Noms de l'organigrama que a l'orla surten d'una altra manera
+  const ORLA_ALIES = { "Toni Rocha": "Antonio Rocha", "Meritxell Martínez": "Xell Martínez", "Jordi Ferrer B": "Jordi Ferrer Bonet", "Rachid el Bekkaoui": "Rachid El Bakkaoui" };
+  function fotoProf(nom) {
+    if (!orles) return null;
+    const ck = "p|" + nom;
+    if (orles.cache.has(ck)) return orles.cache.get(ck);
+    const t = toksNom(ORLA_ALIES[nom] || nom);
+    let p = orles.prof.filter(x => x.t.slice().sort().join(" ") === t.slice().sort().join(" "));
+    p = p.length === 1 ? p[0] : (() => { const c = orles.prof.filter(x => x.t[0] === t[0] && t.slice(1).every(y => x.t.includes(y))); return c.length === 1 ? c[0] : null; })();
+    orles.cache.set(ck, p); return p;
+  }
+  const htmlFoto = (p, nom) => p && p.src ? '<span class="foto-mini" data-foto="' + esc(p.src) + '" data-fotonom="' + esc(nom) + '" role="button" aria-label="Foto de ' + esc(nom) + '"><img src="' + esc(p.src) + '" alt="" loading="lazy"></span>' : "";
+  // Foto gran: en passar-hi per sobre (ordinador) o tocant la miniatura (mòbil)
+  let fotoFixa = null;
+  function mostraFotoGran(el) {
+    let fg = $("fotoGran");
+    if (!fg) { fg = document.createElement("div"); fg.id = "fotoGran"; fg.innerHTML = '<img alt=""><span></span>'; }
+    const pare = el.closest("dialog[open]") || document.body;
+    if (fg.parentNode !== pare) pare.appendChild(fg);
+    fg.firstChild.src = el.dataset.foto; fg.lastChild.textContent = el.dataset.fotonom || "";
+    fg.hidden = false;
+    const r = el.getBoundingClientRect(), w = 224, h = fg.offsetHeight || 280;
+    let x = r.right + 10; if (x + w > innerWidth - 6) x = Math.max(6, r.left - w - 10);
+    let y = r.top + r.height / 2 - h / 2; y = Math.max(6, Math.min(y, innerHeight - h - 6));
+    fg.style.left = x + "px"; fg.style.top = y + "px";
+  }
+  const amagaFotoGran = () => { const fg = $("fotoGran"); if (fg) fg.hidden = true; fotoFixa = null; };
+  document.addEventListener("mouseover", ev => { const el = ev.target.closest && ev.target.closest("[data-foto]"); if (el && !fotoFixa) mostraFotoGran(el); });
+  document.addEventListener("mouseout", ev => { const el = ev.target.closest && ev.target.closest("[data-foto]"); if (el && !fotoFixa && !(ev.relatedTarget && el.contains(ev.relatedTarget))) amagaFotoGran(); });
+  document.addEventListener("click", ev => {
+    const el = ev.target.closest && ev.target.closest("[data-foto]");
+    if (!el) { if (fotoFixa) amagaFotoGran(); return; }
+    ev.preventDefault(); ev.stopPropagation();   // que no s'obri el canvi de nom de l'alumne
+    if (fotoFixa === el) { amagaFotoGran(); return; }
+    mostraFotoGran(el); fotoFixa = el;
+  }, true);
+  addEventListener("scroll", () => { if (!fotoFixa) amagaFotoGran(); }, true);
+  // Rols de l'organigrama de cada persona (per a l'orla)
+  function rolsDe(p) {
+    const r = [];
+    ORG.forEach(([sec, files]) => files.forEach(([c, n]) => { if (fotoProf(n) === p) r.push(/^Tutors/.test(sec) ? "Tutor/a " + c : /^Caps de dep/.test(sec) ? "Cap de " + c.toLowerCase() : /^Coordinacions de nivell/.test(sec) ? "Coord. " + c : /^Altres/.test(sec) ? "Coord. " + c : c); }));
+    return r;
+  }
+  function htmlOrla(q) {
+    if (!orlesClau()) return '<div class="orla-clau"><p>Per veure les fotos cal posar una sola vegada la clau de les fotos (la tens al xat on es van preparar les orles). Després ja queda desada a l\'Institut, també per a l\'altre ordinador.</p><div class="fila"><input type="password" id="orlaClau" placeholder="Clau de les fotos" style="flex:1 1 240px"><button type="button" class="boto" id="orlaClauDesa">Desa</button></div></div>';
+    if (orlesErr) return '<div class="orla-clau"><p class="avis">' + esc(orlesErr) + '</p><div class="fila"><input type="password" id="orlaClau" placeholder="Clau de les fotos" style="flex:1 1 240px"><button type="button" class="boto" id="orlaClauDesa">Torna-ho a provar</button></div></div>';
+    if (!orles) { carregaOrles(); return '<p class="buit">Carregant les fotos…</p>'; }
+    const h = orles.claustre.map(s => {
+      const gent = q ? s.gent.filter(p => senseAccents(s.dept + " " + p.nom + " " + rolsDe(p).join(" ")).includes(q)) : s.gent;
+      return gent.length ? '<section class="org-sec"><h3>' + esc(s.dept) + '</h3><div class="orla-graella">' + gent.map(p => {
+        const rols = rolsDe(p), ini = p.nom.split(/\s+/).map(x => x[0]).slice(0, 2).join("");
+        return '<figure class="orla-fitxa">' + (p.src ? '<img src="' + esc(p.src) + '" alt="" loading="lazy" data-foto="' + esc(p.src) + '" data-fotonom="' + esc(p.nom) + '">' : '<span class="orla-ini" title="Sense foto a l\'orla">' + esc(ini) + "</span>") +
+          "<figcaption>" + esc(p.nom) + (rols.length ? "<small>" + esc(rols.join(" · ")) + "</small>" : "") + "</figcaption></figure>";
+      }).join("") + "</div></section>" : "";
+    }).join("");
+    return h || '<p class="buit">No hi ha cap coincidència.</p>';
+  }
 
   // ================= Agenda mestra =================
   // Les set tècniques: planificació anual, mensual, blocs horaris setmanals, focus no negociable,
@@ -4449,6 +4586,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     return "nota";
   }
   function pintaAlumnes() {
+    if (!orles) carregaOrles();
     try { pintaCB(); } catch (e) { /* el mòdul encara no s'ha carregat */ }
     { const q = Q(), act = q.grups[qGrup]; q.grups.sort(ordenaGrups); if (act) qGrup = q.grups.indexOf(act); }
     const cos = $("alumCos"), g = grupActual(), f = fullActual(g);
@@ -4497,7 +4635,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       const ombra = (c, v) => { if (!tcol[c.nom]) return ""; if (esExempt(v)) return " n-ex"; const n = numOpcional(v); if (n === null) return ""; if (tcol[c.nom] === "sobre") return " n-sobre"; return tcol[c.nom] === "form" ? (n === 0 ? " f-0" : " f-1") : " " + colorNota(n); };
       const tD = trimDeures(f), dAvui = avuiISO();
       h += '<div class="taula' + (qDeures ? " passa" : "") + '"><table><thead><tr><th>Alumne/a</th><th class="deu" title="Faltes de deures del ' + tD.nom + ' trimestre. Toca la xifra per afegir-ne o treure\'n.">📕 Deures ' + tD.nom + '</th><th class="pts" title="Comentaris sobre l\'alumne (com treballa, participa…) i incidències del sistema de punts del centre. Toca la casella per afegir-ne.">💬 Comentaris</th>' + f.columnes.map(c => "<th" + (c.tipus === "calc" ? ' class="calc" title="' + esc(c.formula) + '"' : "") + ">" + esc(c.nom) + (desquadres[c.nom] ? " ⚠️" : "") + "</th>").join("") + "</tr></thead><tbody>" +
-        (files.map(r => { const psi = (g.psi || []).includes(r.nom) || !!psiDocDe(g, r.nom), dis = /\sDIS$/i.test(r.nom); return '<tr><td class="nomal' + (psi ? " psi" : "") + '" data-alumne="' + esc(r.nom) + '" data-c="__nom" title="' + (psi ? "PSI" : "") + (psi && dis ? " · " : "") + (dis ? "Dislèxia" : "") + '">' + esc(dis ? r.nom.replace(/\s+DIS$/i, "") : r.nom) + (psi || psiDocDe(g, r.nom) ? ' <span class="marca-al psi" data-psidoc="' + esc(r.nom) + '" role="button" title="' + (psiDocDe(g, r.nom) ? "Obre el PSI" : "Encara no hi ha el document del PSI: toca per pujar-lo") + '">PSI' + (psiDocDe(g, r.nom) ? "" : "?") + "</span>" : "") + (dis ? ' <span class="marca-al">DIS</span>' : "") + (g.correus && g.correus[r.nom] ? ' <a href="#" class="mail-al" data-mail="' + esc(g.correus[r.nom]) + '" title="Escriu a ' + esc(g.correus[r.nom]) + '" aria-label="Escriu un correu a ' + esc(dis ? r.nom.replace(/\s+DIS$/i, "") : r.nom) + '">✉️</a>' : "") + (origenDe(g, r.nom) ? '<span class="al-extra"><span class="orig-al" title="Grup d\'origen' + (tutorDe(origenDe(g, r.nom)) ? " i tutor/a" : "") + '">(' + esc(origenDe(g, r.nom)) + (tutorDe(origenDe(g, r.nom)) ? " · " + esc(tutorDe(origenDe(g, r.nom))) + mailTutor(tutorDe(origenDe(g, r.nom))) : "") + ")</span></span>" : "") + "</td>" + (() => { const ds = deuresDe(g, r.nom), n = ds.filter(d => d >= tD.de && d <= tD.fins).length, av = ds.includes(dAvui); return '<td class="deu' + (n ? "" : " zero") + (av ? " avui" : "") + '" data-deu="' + esc(r.nom) + '" data-alumne="' + esc(r.nom) + '" data-c="__deu" title="' + n + " falt" + (n === 1 ? "a" : "es") + " de deures al " + tD.nom + " trimestre" + (av ? " (una d'avui)" : "") + '">' + (n || "–") + "</td>"; })() + celaPunts(g, r.nom) + f.columnes.map(c => {
+        (files.map(r => { const psi = (g.psi || []).includes(r.nom) || !!psiDocDe(g, r.nom), dis = /\sDIS$/i.test(r.nom); return '<tr><td class="nomal' + (psi ? " psi" : "") + '" data-alumne="' + esc(r.nom) + '" data-c="__nom" title="' + (psi ? "PSI" : "") + (psi && dis ? " · " : "") + (dis ? "Dislèxia" : "") + '">' + htmlFoto(fotoAlumne(g.nom, r.nom), r.nom.replace(/\s+DIS$/i, "")) + esc(dis ? r.nom.replace(/\s+DIS$/i, "") : r.nom) + (psi || psiDocDe(g, r.nom) ? ' <span class="marca-al psi" data-psidoc="' + esc(r.nom) + '" role="button" title="' + (psiDocDe(g, r.nom) ? "Obre el PSI" : "Encara no hi ha el document del PSI: toca per pujar-lo") + '">PSI' + (psiDocDe(g, r.nom) ? "" : "?") + "</span>" : "") + (dis ? ' <span class="marca-al">DIS</span>' : "") + (g.correus && g.correus[r.nom] ? ' <a href="#" class="mail-al" data-mail="' + esc(g.correus[r.nom]) + '" title="Escriu a ' + esc(g.correus[r.nom]) + '" aria-label="Escriu un correu a ' + esc(dis ? r.nom.replace(/\s+DIS$/i, "") : r.nom) + '">✉️</a>' : "") + (origenDe(g, r.nom) ? '<span class="al-extra"><span class="orig-al" title="Grup d\'origen' + (tutorDe(origenDe(g, r.nom)) ? " i tutor/a" : "") + '">(' + esc(origenDe(g, r.nom)) + (tutorDe(origenDe(g, r.nom)) ? " · " + esc(tutorDe(origenDe(g, r.nom))) + mailTutor(tutorDe(origenDe(g, r.nom))) : "") + ")</span></span>" : "") + "</td>" + (() => { const ds = deuresDe(g, r.nom), n = ds.filter(d => d >= tD.de && d <= tD.fins).length, av = ds.includes(dAvui); return '<td class="deu' + (n ? "" : " zero") + (av ? " avui" : "") + '" data-deu="' + esc(r.nom) + '" data-alumne="' + esc(r.nom) + '" data-c="__deu" title="' + n + " falt" + (n === 1 ? "a" : "es") + " de deures al " + tD.nom + " trimestre" + (av ? " (una d'avui)" : "") + '">' + (n || "–") + "</td>"; })() + celaPunts(g, r.nom) + f.columnes.map(c => {
           const v = valor(f, r, c), txt = mostraValor(v);
           if (c.tipus === "calc") {
             const n = numOpcional(v), ok = coincideix(v, r.o && r.o[c.nom]);
