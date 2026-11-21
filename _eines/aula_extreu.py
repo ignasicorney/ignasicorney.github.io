@@ -126,6 +126,34 @@ def temes(text):
     return [k for _, k in sorted(r, reverse=True)[:3]]
 
 
+ARG = re.compile(r"\b(debemos|hay que|creo que|considero|por (lo )?tanto|sin embargo|es necesario|no podemos|deber[ií]amos|en definitiva|propongo|es urgente|hem de|cal\b|caldria|crec que|per tant|tanmateix|és necessari|no podem|proposo|és urgent|hauríem)\b", re.I)
+NARR_ES = re.compile(r"\b\w{3,}(aron|ieron|aba|aban|ía|ían)\b")
+NARR_CA = re.compile(r"\bva(ren|m|u)? \w+(ar|er|ir|re)\b")
+
+
+def tipus(titol, par, text, ll):
+    t = titol.lower()
+    if re.search(r"poema|poes[ií]a|po[eè]tic|salmo|\bsalm\b|oraci[oó]n|pregària|credo|cántico|càntic|canci[oó]n|cançó|himno|\bhimne", t):
+        return "Poesia"
+    mitj = len(text.split()) / max(1, len(par))
+    if len(par) >= 8 and mitj < 18:
+        return "Poesia"
+    if re.search(r"\bentrevista\b", t) or text.count("?") >= 8 and re.search(r"[—–-]\s*¿", text):
+        return "Entrevista"
+    if re.search(r"^carta\b|\bcarta (a|al|abierta|oberta)\b", t):
+        return "Carta"
+    if re.search(r"cuento|\bconte\b|relato|\brelat\b|f[áa]bula|faula|parábola|paràbola|leyenda|llegenda", t):
+        return "Narració"
+    n = max(1, len(text.split())) / 1000
+    narr = len((NARR_CA if ll == "ca" else NARR_ES).findall(text)) / n
+    arg = len(ARG.findall(text)) / n
+    if narr >= 14 and narr > arg * 2:
+        return "Narració"
+    if arg >= 3:
+        return "Argumentatiu"
+    return "Expositiu"
+
+
 CURSOS = ["1r ESO", "2n ESO", "3r ESO", "4t ESO", "1r Batx.", "2n Batx."]
 
 
@@ -144,13 +172,42 @@ def llegibilitat(text):
     return 206.84 - 0.60 * p - 1.02 * f
 
 
-def nivell(paraules, text):
-    """Curs orientatiu: llegibilitat del text i, en menor mesura, llargada."""
-    d = llegibilitat(text) - max(0, paraules - 700) / 250  # els textos llargs pugen de curs
-    for llindar, curs in ((70, 0), (64, 1), (59, 2), (54, 3), (49, 4)):
-        if d >= llindar:
-            return CURSOS[curs]
-    return CURSOS[5]
+def dificultat(paraules, text):
+    """Mesures de dificultat: paraules per frase, síl·labes per paraula, % de paraules llargues i llargada."""
+    w = re.findall(r"[A-Za-zÀ-ÿ·']+", text)
+    if not w:
+        return [0, 0, 0, 0]
+    frases = max(1, len(re.findall(r"[.!?…]+(\s|$)", text)))
+    sil = [sil·labes(x) for x in w]
+    return [len(w) / frases, sum(sil) / len(w), sum(1 for x in sil if x >= 4) / len(w), paraules]
+
+
+# proporció de textos per curs (de més fàcil a més difícil): els textos de l'Agenda són d'adults
+QUOTES = [0.10, 0.15, 0.20, 0.20, 0.20, 0.15]
+
+
+def assigna_cursos(index):
+    for ll in ("ca", "es"):
+        g = [x for x in index if x["l"] == ll]
+        if not g:
+            continue
+        rangs = []
+        for k, pes in ((0, 1.0), (1, 1.0), (2, 1.0), (3, 0.5)):
+            ordre = sorted(range(len(g)), key=lambda i: g[i]["_d"][k])
+            r = [0] * len(g)
+            for pos, i in enumerate(ordre):
+                r[i] = pos / max(1, len(g) - 1) * pes
+            rangs.append(r)
+        punt = [sum(r[i] for r in rangs) for i in range(len(g))]
+        ordre = sorted(range(len(g)), key=lambda i: punt[i])
+        lim, acum = [], 0
+        for q in QUOTES:
+            acum += q
+            lim.append(acum * len(g))
+        for pos, i in enumerate(ordre):
+            g[i]["n"] = CURSOS[next(c for c, l in enumerate(lim) if pos < l or c == 5)]
+    for x in index:
+        x.pop("_d", None)
 
 
 # ---------- extracció ----------
@@ -273,13 +330,33 @@ def articles_pdf(cami):
         if txt and not re.fullmatch(r"[\d\W]{0,4}", txt):
             art["par"].append(txt)
 
+    capllet = ""
+    blocs_plans = []
     for np_, blocs in pagines:
         for linies in blocs:
+            # parteix el bloc on hi ha la marca de final (quadradet tipogràfic)
+            tros = []
+            for l in linies:
+                if re.search(r"Dingbat", l["f"]) and len(l["t"].strip()) <= 2:
+                    if tros:
+                        blocs_plans.append((np_, tros))
+                    blocs_plans.append((np_, [l]))
+                    tros = []
+                else:
+                    tros.append(l)
+            if tros:
+                blocs_plans.append((np_, tros))
+
+    for np_, linies in blocs_plans:
+        if True:
             text_bloc = neteja(" ".join(l["t"] for l in linies))
             if not text_bloc:
                 continue
             fonts = {l["f"] for l in linies}
             if all("Revue" in f for f in fonts):  # números de pàgina
+                continue
+            if re.fullmatch(r"[A-ZÀ-ÚÑÇ]", text_bloc) and max(l["m"] for l in linies) >= cos * 1.8:
+                capllet = text_bloc  # caplletra
                 continue
             if any(re.search(r"Dingbat", f) for f in fonts) and len(text_bloc) <= 2:
                 if act:
@@ -333,9 +410,18 @@ def articles_pdf(cami):
                     if resta:
                         afegeix(act, uneix_linies([l["t"] for l in linies]).replace(m.group(0), "").strip())
                 continue
+            txt = uneix_linies([l["t"] for l in linies])
+            if capllet:
+                if re.match(r"[a-zà-ÿ]", txt):
+                    txt = capllet + txt
+                capllet = ""
+            if mode_font and (act is None or estat == "tancat") and re.match(r"[A-ZÀ-ÚÑÇ¿¡«“\"]", txt) and len(txt.split()) >= 25:
+                # article amb el títol en imatge: el títol serà l'inici del text
+                nou("", np_)
+                act["sense_titol"] = True
             if act is None or estat == "tancat":
                 continue
-            afegeix(act, uneix_linies([l["t"] for l in linies]))
+            afegeix(act, txt)
             estat = "cos"
     # uneix paràgrafs partits pel salt de pàgina o de columna (acaben sense punt i el següent comença en minúscula)
     for a in arts:
@@ -346,6 +432,12 @@ def articles_pdf(cami):
             else:
                 net.append(ptxt)
         a["par"] = net
+        while a["par"] and re.match(r"(\(?\s*)?(texto|text|vea|vegeu|véase|ver|més|más|original|versión|versió)\b.{0,160}(https?://|latinoamericana\.org|\.org|\.com)", a["par"][-1], re.I):
+            a["par"].pop()  # notes finals amb enllaços
+        if a.get("sense_titol") and a["par"]:
+            frase = re.split(r"(?<=[.!?…])\s", a["par"][0])[0]
+            w = frase.split()
+            a["t"] = frase.rstrip(".") if len(w) <= 12 else " ".join(w[:9]) + "…"
     return [a for a in arts if a["par"]]
 
 
@@ -392,7 +484,8 @@ def main():
             id_ = f"{any_}-{ll}-{hashlib.md5((url + a['t']).encode()).hexdigest()[:6]}"
             index.append({
                 "id": id_, "a": any_, "l": ll, "t": a["t"], "au": a["au"],
-                "tg": temes(text), "p": par, "n": nivell(par, text),
+                "tg": temes(text), "p": par, "n": "", "ti": tipus(a["t"], a["par"], text, ll),
+                "_d": dificultat(par, text),
                 "pg": a["pg"], "f": url, "r": text[:240],
             })
             textos[f"{any_}-{ll}"][id_] = a["par"]
@@ -416,6 +509,7 @@ def main():
         fora.update(x["id"] for x in g[1:])
     index = [x for x in index if x["id"] not in fora]
     textos = {k: {i: v for i, v in d.items() if i not in fora} for k, d in textos.items()}
+    assigna_cursos(index)
     index.sort(key=lambda x: (x["a"] == 0, -x["a"], x["l"], x["f"], x["pg"]))
     for f in os.listdir(f"{SORTIDA}/textos"):
         os.remove(f"{SORTIDA}/textos/{f}")
