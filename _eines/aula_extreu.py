@@ -551,6 +551,42 @@ def article_arxiu(pre, codi):
     return {"codi": codi, "t": titol, "au": autor, "a": int(an.group(1)) if an else 0, "par": par, "url": url}
 
 
+def titol_net(t, text):
+    """Títols en majúscules → majúscula inicial, i els noms propis com surten al text."""
+    lletres = [c for c in t if c.isalpha()]
+    if not lletres or sum(c.isupper() for c in lletres) / len(lletres) < 0.7:
+        return t
+    propis = collections.Counter()
+    for m in re.finditer(r"(?<![.!?¿¡«\"“]\s)(?<!^)\b([A-ZÀ-ÚÑÇ][a-zà-ÿ·’'-]+)", text):
+        propis[m.group(1).lower()] += 1
+    minus = collections.Counter(w.lower() for w in re.findall(r"\b[a-zà-ÿ·’'-]+\b", text))
+    def paraula(w, primera):
+        base = w.lower()
+        nucli = re.sub(r"^(l’|l'|d’|d'|s’|s')", "", base)
+        pref = base[:len(base) - len(nucli)]
+        if propis[nucli] >= 2 and propis[nucli] > minus[nucli]:
+            return pref + nucli[:1].upper() + nucli[1:]
+        if primera:
+            return base[:1].upper() + base[1:]
+        return base
+    parts = re.split(r"(\s+|—)", t.strip())
+    out, primera = [], True
+    for w in parts:
+        if not w.strip() or w == "—":
+            out.append(w); primera = primera or w == "—"; continue
+        out.append(paraula(w, primera)); primera = bool(re.search(r"[.:?!]$", w))
+    return "".join(out)
+
+
+def autor_net(au):
+    """«Vigil, José María» → «José María Vigil» (també amb diversos autors separats per «;» o « y »)."""
+    def un(x):
+        x = x.strip()
+        m = re.fullmatch(r"([^,]+),\s*([^,]+)", x)
+        return f"{m.group(2).strip()} {m.group(1).strip()}" if m and len(x.split()) <= 6 else x
+    return "; ".join(un(x) for x in re.split(r";", au) if x.strip())
+
+
 def recull_arxiu(anteriors):
     """Articles de l'arxiu; els que ja teníem de l'any passat no es tornen a baixar."""
     res = []
@@ -623,7 +659,7 @@ def main():
         vistos.add((any_, ll, re.sub(r"\W+", "", art["t"].lower())[:60]))
         id_ = f"{any_}-{ll}-k{art['codi']}"
         index.append({
-            "id": id_, "a": any_, "l": ll, "t": art["t"], "au": art["au"],
+            "id": id_, "a": any_, "l": ll, "t": titol_net(art["t"], text), "au": autor_net(art["au"]),
             "tg": temes(text), "to": art.get("to", []), "p": par, "n": "", "ti": tipus(art["t"], art["par"], text, ll),
             "_d": dificultat(par, text), "ok": 1, "pg": 0, "f": art["url"], "r": text[:240],
         })
