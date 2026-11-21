@@ -2004,7 +2004,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       const ao = (llista, v) => llista.map(o => "<option" + (o === v ? " selected" : "") + ">" + o + "</option>").join("");
       h = '<p class="font">Genera una activitat en tres nivells (bàsic, mitjà i avançat) amb solucionari.</p>' +
         '<div class="fila-as"><label>Curs<select id="asCurs">' + ao(["1r d'ESO", "2n d'ESO", "3r d'ESO", "4t d'ESO", "1r de batxillerat", "2n de batxillerat"], asAct.curs) + '</select></label><label>Llengua<select id="asLleng"><option value="català"' + (asAct.lleng === "català" ? " selected" : "") + '>Català</option><option value="castellà"' + (asAct.lleng === "castellà" ? " selected" : "") + '>Castellà</option></select></label>' +
-        '<label>Tipus<select id="asTipus">' + ao(["Comprensió lectora", "Propietats textuals (adequació, coherència, cohesió i correcció)", "Comentari de text (model de selectivitat)", "Ortografia", "Gramàtica", "Vocabulari", "Expressió escrita (consignes)", "Qüestionari tipus test", "Literatura"], asAct.tipus) + '</select></label><label>Preguntes<input type="text" id="asN" value="' + esc(asAct.n) + '" inputmode="numeric" style="width:4em"></label></div>' +
+        '<label>Tipus<select id="asTipus">' + ao(["Comprensió lectora", "Model d'examen (complet, amb puntuació)", "Propietats textuals (adequació, coherència, cohesió i correcció)", "Comentari de text (model de selectivitat)", "Ortografia", "Gramàtica", "Vocabulari", "Expressió escrita (consignes)", "Qüestionari tipus test", "Literatura"], asAct.tipus) + '</select></label><label>Preguntes<input type="text" id="asN" value="' + esc(asAct.n) + '" inputmode="numeric" style="width:4em"></label></div>' +
         '<textarea id="asText" placeholder="Tema, objectius o text de partida (pots enganxar-hi un text)…" rows="6"></textarea>' +
         '<label class="font"><input type="checkbox" id="asDisAct"' + (asAct.dis ? " checked" : "") + '> Afegeix també una versió adaptada DIS/PSI</label>' +
         '<div class="alum-eines"><button type="button" class="boto" data-asb="activitat">📚 Genera l\'activitat</button></div>';
@@ -2145,12 +2145,26 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
         // Si no hi ha text de partida (camp buit o només un tema), s'agafa un text del corpus de l'aula
         let txtA = txt, fontA = null;
         if (txt.split(/\s+/).filter(Boolean).length < 40 && window.CorpusAula) {
+          const LLARG = { "1r d'ESO": 300, "2n d'ESO": 350, "3r d'ESO": 400, "4t d'ESO": 450, "1r de batxillerat": 550, "2n de batxillerat": 650 };
           fontA = await window.CorpusAula.tria({ lleng: F.lleng, curs: F.curs, q: txt, min: 250 });
-          if (fontA) txtA = (txt ? "Tema demanat: " + txt + "\n\n" : "") + "Text de partida (article de l'Agenda Llatinoamericana; fes-lo servir com a text de lectura, sencer o en un fragment coherent, i posa al final del text la font: " + fontA.cita + "):\n\n" + fontA.x.t + "\n\n" + fontA.par.join("\n\n");
+          if (fontA) txtA = (txt ? "Tema demanat: " + txt + "\n\n" : "") + "Text de partida (fragment d'un article de l'Agenda Llatinoamericana; fes-lo servir com a text de lectura tal com és, sense reescriure'l, i posa al final del text la font: " + fontA.cita + "):\n\n" + fontA.x.t + "\n\n" + window.CorpusAula.fragment(fontA.par, LLARG[F.curs] || 400);
         }
         if (!txtA) return fet('<p class="avis">Escriu el tema o enganxa el text de partida.</p>');
         const dis = F.dis;
-        const sistema = "Ets un professor de llengua de secundària a Catalunya. Prepara una activitat de tipus «" + F.tipus + "» per a " + F.curs + ", redactada en " + F.lleng + ", amb " + (F.n || 6) + " preguntes o exercicis per nivell. " +
+        const NIVELL_EXAM = {
+          "1r d'ESO": "comprensió literal i inferencial; categories gramaticals, concordança, accentuació i ortografia bàsica; lèxic (sinònims, antònims, famílies); producció d'un text narratiu o descriptiu de 100-150 paraules",
+          "2n d'ESO": "comprensió i idea principal; sintagmes, temps verbals, connectors; ortografia i puntuació; lèxic en context; producció d'un text expositiu o narratiu de 150 paraules",
+          "3r d'ESO": "comprensió, tema i estructura; oració simple (subjecte, predicat i complements); tipologies textuals; ortografia; producció d'un text argumentatiu breu de 150-200 paraules",
+          "4t d'ESO": "comprensió (com a les proves de competències bàsiques), tema, idea principal i intenció; propietats textuals (adequació, coherència, cohesió i correcció); oració composta (coordinades i subordinades bàsiques); producció d'un text argumentatiu de 200-250 paraules",
+          "1r de batxillerat": "comentari de text (tema, tesi, estructura, tipologia, recursos lingüístics); sintaxi de l'oració composta; lèxic i semàntica; producció argumentativa de 250-300 paraules",
+          "2n de batxillerat": "model de la prova de selectivitat (PAU) de Catalunya: comprensió, resum, tema i tesi, estructura, recursos, vocabulari en context, sintaxi i producció argumentativa de 300-400 paraules, amb la puntuació oficial"
+        };
+        const sistemaExam = "Ets un professor de llengua de secundària a Catalunya. Prepara un MODEL D'EXAMEN complet per a " + F.curs + ", redactat en " + F.lleng + ", a partir del text que t'envien. Continguts propis del curs: " + (NIVELL_EXAM[F.curs] || NIVELL_EXAM["4t d'ESO"]) + ". " +
+          "Estructura: «## Text» (el text de partida tal com és, amb la font al final), «## Comprensió», «## Coneixement de la llengua», «## Expressió escrita», amb les preguntes numerades i la puntuació de cada pregunta entre parèntesis; el total ha de fer 10 punts. " +
+          "Les preguntes s'han de basar en el text i ser adequades al curs. Al final, «## Solucionari i criteris de correcció» amb les respostes i com puntuar cada pregunta (també la producció escrita: adequació, coherència, cohesió i correcció)." +
+          (dis ? " Després, «## Versió adaptada (DIS/PSI)»: el mateix examen amb frases curtes, una instrucció per frase, vocabulari senzill, preguntes més guiades i un petit glossari." : "") +
+          " Usa format Markdown senzill (##, llistes numerades, **negreta**). No posis cap introducció ni comentari fora de l'examen.";
+        const sistema = /model d'examen/i.test(F.tipus) ? sistemaExam : "Ets un professor de llengua de secundària a Catalunya. Prepara una activitat de tipus «" + F.tipus + "» per a " + F.curs + ", redactada en " + F.lleng + ", amb " + (F.n || 6) + " preguntes o exercicis per nivell. " +
           "Fes TRES NIVELLS: «## Nivell bàsic», «## Nivell mitjà», «## Nivell avançat», cadascun amb les seves instruccions i preguntes numerades. Si cal un text de lectura, posa'l al principi amb «## Text». Al final, «## Solucionari» amb les respostes de cada nivell." +
           (dis ? " Després, «## Versió adaptada (DIS/PSI)»: frases curtes, una instrucció per frase, vocabulari senzill, preguntes més guiades i un petit glossari." : "") +
           (/propietats textuals/i.test(F.tipus) ? " Treballa les quatre propietats textuals a partir del text: adequació (registre, finalitat, destinatari), coherència (tema, idees, estructura), cohesió (connectors, referents, puntuació) i correcció (ortografia, morfologia, sintaxi, lèxic). Inclou exercicis de detectar i esmenar errors, ordenar fragments, triar connectors i reescriure." : "") +
