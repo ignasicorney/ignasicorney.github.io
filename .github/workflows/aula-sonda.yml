@@ -1,0 +1,21 @@
+name: Aula sonda (temporal)
+on:
+  push:
+    paths: ['.github/workflows/aula-sonda.yml']
+permissions:
+  contents: write
+jobs:
+  s:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          mkdir -p sonda; B=https://servicioskoinonia.org/agenda/archivo
+          curl -sL -m 30 "$B/catalan/manyos.php" -o sonda/cat_anys.html
+          curl -sL -m 30 "$B/manyos.php" -o sonda/es_anys.html
+          a=$(grep -oiE 'href="[^"]+"' sonda/cat_anys.html | sed 's/href="//I;s/"$//' | grep -iv 'css\|index\|^/\|http' | sed -n '8p')
+          echo "any: $a"; curl -sL -m 30 "$B/catalan/$a" -o sonda/cat_any.html
+          t=$(grep -oiE 'href="[^"]+"' sonda/cat_any.html | sed 's/href="//I;s/"$//' | grep -i 'obra\|texto\|text\|\.php?' | sed -n '3p')
+          echo "text: $t"; curl -sL -m 30 "$(python3 -c "import sys,urllib.parse as u;print(u.urljoin('$B/catalan/$a','$t'))")" -o sonda/cat_text.html
+          ls -la sonda
+          git config user.name bot; git config user.email bot@x; git checkout -b sonda; git add -f sonda; git commit -qm s; git push -f origin sonda
