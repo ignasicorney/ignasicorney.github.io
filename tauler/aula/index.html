@@ -71,6 +71,7 @@ label.chk{display:flex;align-items:center;gap:6px;font-size:.9rem;color:var(--su
   const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
   const norm = s => String(s || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
   const NOM_LL = { ca: "Català", es: "Castellà" };
+  const nomAny = a => a ? String(a) : "Reculls i materials";
   let INDEX = [], filtrats = [], mostra = 60, sel = null;
   const cauText = {};
   let desats = new Set();
@@ -112,7 +113,7 @@ label.chk{display:flex;align-items:center;gap:6px;font-size:.9rem;color:var(--su
     $("llista").innerHTML = filtrats.slice(0, mostra).map(x => `
       <button type="button" class="fitxa${sel === x.id ? " sel" : ""}" data-id="${x.id}">
         <h3>${desats.has(x.id) ? "★ " : ""}${esc(x.t)}</h3>
-        <div class="meta"><span class="ll ${x.l}">${x.l.toUpperCase()}</span><span>${x.a}</span>${x.au ? `<span>· ${esc(x.au)}</span>` : ""}<span>· ${x.p.toLocaleString("ca")} paraules · ${x.n}</span></div>
+        <div class="meta"><span class="ll ${x.l}">${x.l.toUpperCase()}</span><span>${nomAny(x.a)}</span>${x.au ? `<span>· ${esc(x.au)}</span>` : ""}<span>· ${x.p.toLocaleString("ca")} paraules · ${x.n}</span></div>
         <div class="meta" style="margin-top:3px">${x.tg.map(g => `<span class="tg">${esc(g)}</span>`).join("")}</div>
         <p class="res">${esc(x.r.slice(0, 170))}…</p>
       </button>`).join("") || `<p class="buit">Cap text no coincideix amb els filtres.</p>`;
@@ -126,10 +127,12 @@ label.chk{display:flex;align-items:center;gap:6px;font-size:.9rem;color:var(--su
     L.innerHTML = `<p class="buit">Carregant el text…</p>`;
     const par = (await textosDe(`${x.a}-${x.l}`))[id] || [];
     const nomEd = x.l === "ca" ? "Agenda Llatinoamericana Mundial" : "Agenda Latinoamericana Mundial";
-    const cita = `${x.au ? x.au + ": " : ""}«${x.t}». ${nomEd} ${x.a}, p. ${x.pg}.`;
+    const cita = x.a
+      ? `${x.au ? x.au + ": " : ""}«${x.t}». ${nomEd} ${x.a}, p. ${x.pg}.`
+      : `${x.au ? x.au + ": " : ""}«${x.t}». ${nomEd}, recull o material (${decodeURIComponent(x.f.split("/").pop())}), p. ${x.pg}.`;
     L.innerHTML = `
       <h2>${esc(x.t)}</h2>
-      <div class="meta"><span class="ll ${x.l}">${NOM_LL[x.l]}</span><span>${x.a}</span>${x.au ? `<span>· ${esc(x.au)}</span>` : ""}<span>· ${x.p.toLocaleString("ca")} paraules · nivell ${x.n.toLowerCase()}</span></div>
+      <div class="meta"><span class="ll ${x.l}">${NOM_LL[x.l]}</span><span>${nomAny(x.a)}</span>${x.au ? `<span>· ${esc(x.au)}</span>` : ""}<span>· ${x.p.toLocaleString("ca")} paraules · nivell ${x.n.toLowerCase()}</span></div>
       <div class="accions">
         <button type="button" class="prim" data-acc="copia">📋 Copia el text</button>
         <button type="button" data-acc="desa">${desats.has(id) ? "★ Desat" : "☆ Desa"}</button>
@@ -165,8 +168,8 @@ label.chk{display:flex;align-items:center;gap:6px;font-size:.9rem;color:var(--su
   ]).then(([idx, estat]) => {
     INDEX = idx;
     if (estat && estat.actualitzat) $("actualitzat").textContent = `Actualitzat ${/^(01|11)\./.test(estat.actualitzat) ? "l'" : "el "}${estat.actualitzat}`;
-    const anys = [...new Set(idx.map(x => x.a))].sort((a, b) => b - a);
-    $("fa").insertAdjacentHTML("beforeend", anys.map(a => `<option>${a}</option>`).join(""));
+    const anys = [...new Set(idx.map(x => x.a))].sort((a, b) => (a === 0) - (b === 0) || b - a);
+    $("fa").insertAdjacentHTML("beforeend", anys.map(a => `<option value="${a}">${nomAny(a)}</option>`).join(""));
     const temes = [...new Set(idx.flatMap(x => x.tg))].sort((a, b) => a.localeCompare(b, "ca"));
     $("ft").insertAdjacentHTML("beforeend", temes.map(t => `<option>${esc(t)}</option>`).join(""));
     if (!idx.length) { $("info").textContent = "La base de dades s'està generant. Torna-hi d'aquí a una estona."; return; }

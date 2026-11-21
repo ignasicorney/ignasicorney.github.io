@@ -24,7 +24,7 @@ LLAVORS = [
     "https://llatinoamericana.org/",
 ]
 SEGUIR = {"agendalatinoamericana.red", "llatinoamericana.org", "www.llatinoamericana.org"}
-EXCLOU_URL = re.compile(r"/(English|Italia|EnFrancais)/|italia|brasil|english|francais|mondiale|latino-americana|portugu", re.I)
+EXCLOU_URL = re.compile(r"/(English|Italia|EnFrancais)/|/ITA\d|italia|brasil|english|francais|mondiale|latino-americana|portugu|socis|premi_|cartel|mapa_peters_pintar", re.I)
 UA = {"User-Agent": "Mozilla/5.0 (Bitacola aula; us educatiu no comercial)"}
 
 ses = requests.Session()
@@ -67,11 +67,15 @@ def cerca_pdfs():
 
 
 def any_de(url, etiqueta):
-    for t in (urlparse(url).path, etiqueta):
+    """Any de l'edició; 0 = reculls, antologies i materials sense any."""
+    nom = requests.utils.unquote(urlparse(url).path.rsplit("/", 1)[-1]).lower()
+    if re.search(r"antolog|recull", nom):
+        return 0
+    for t in (nom, etiqueta):
         m = re.search(r"(?<!\d)(199[2-9]|20[0-3]\d)(?!\d)", requests.utils.unquote(t))
         if m:
             return int(m.group(1))
-    return None
+    return 0
 
 
 # ---------- llengua ----------
@@ -79,6 +83,8 @@ CA = set("els les amb per però més també això aquest aquesta són això seva
 ES = set("los las con por pero más también esto este esta son su sus porque una nuestra nuestro hasta muy hay todas todos del".split())
 PT = set("não uma são também nós você muito pelo pela isso esta essa como mais".split())
 EN = set("the and of to is that with for are this from".split())
+IT = set("della delle degli che sono gli nel nella alla anche questo questa perché non è più loro".split())
+FR = set("les des est une dans pour qui sont nous avec cette leur aux".split())
 
 
 def llengua(text):
@@ -86,10 +92,10 @@ def llengua(text):
     if len(p) < 40:
         return None
     c = collections.Counter(p)
-    ca, es, pt, en = (sum(c[w] for w in s) for s in (CA, ES, PT, EN))
+    ca, es, pt, en, it, fr = (sum(c[w] for w in s) for s in (CA, ES, PT, EN, IT, FR))
     ca += 3 * text.count("l·l") + c["i"] * 0.5
     es += c["y"] * 0.5
-    millor = max((ca, "ca"), (es, "es"), (pt, "pt"), (en, "en"))
+    millor = max((ca, "ca"), (es, "es"), (pt, "pt"), (en, "en"), (it, "it"), (fr, "fr"))
     return millor[1] if millor[0] > 0 else None
 
 
@@ -129,7 +135,23 @@ def nivell(paraules, text):
 
 
 # ---------- extracció ----------
-DIES = re.compile(r"\b(lunes|martes|miércoles|jueves|viernes|sábado|domingo|dilluns|dimarts|dimecres|dijous|divendres|dissabte|diumenge)\b", re.I)
+DIES = re.compile(r"\b(lunes|martes|miércoles|jueves|viernes|sábado|domingo|dilluns|dimarts|dimecres|dijous|divendres|dissabte|diumenge|lunedì|martedì|mercoledì|giovedì|venerdì|sabato|domenica|segunda-feira|terça-feira|sexta-feira|lundi|mardi|mercredi|jeudi|vendredi|samedi|dimanche)\b", re.I)
+SUBTITOL = re.compile(r"^([IVX]+|\d+)[.)]\s|^(ver|juzgar|actuar|veure|jutjar|actuar)\b", re.I)
+
+
+def bon_titol(t):
+    w = t.split()
+    for k in range(len(w) // 2 + 1, 1, -1):  # títol repetit per l'ombra, sencer o tallat
+        pri, res = " ".join(w[:k]), " ".join(w[k:])
+        if len(res.split()) >= 2 and (pri.lower().startswith(res.lower()) or res.lower().startswith(pri.lower())):
+            t = pri if len(pri) >= len(res) else res
+            break
+    lletres = [c for c in t if c.isalpha()]
+    raros = re.search(r"[a-zà-ÿ][A-ZÀ-Þ]", t)
+    if lletres and (sum(c.isupper() for c in lletres) / len(lletres) > 0.6 or raros):
+        t = t.lower()
+        t = t[0].upper() + t[1:]
+    return t.strip(" .·-")
 TITOLS_FORA = re.compile(r"^(índice|índex|indice|sumario|sumari|calendari|calendario|agenda|enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre|gener|febrer|març|maig|juny|juliol|setembre|novembre|desembre)\b", re.I)
 
 
@@ -144,7 +166,7 @@ def articles_pdf(cami):
     for np_, pag in enumerate(doc):
         d = pag.get_text("dict")
         text_pag = pag.get_text()
-        if len(DIES.findall(text_pag)) >= 5:  # pàgina de calendari
+        if len(DIES.findall(text_pag)) >= 3:  # pàgina de calendari
             pagines.append((np_, []))
             continue
         blocs = []
@@ -179,6 +201,9 @@ def articles_pdf(cami):
         for linies in blocs:
             gran = [t for t, m in linies if m >= cos * 1.35]
             text_bloc = neteja(" ".join(t for t, _ in linies))
+            if gran and len(gran) == len(linies) and act and act["par"] and SUBTITOL.match(text_bloc):
+                act["par"].append(text_bloc)  # subapartat (I. Veure, 2. …) dins del mateix article
+                continue
             if gran and len(gran) == len(linies) and 4 <= len(text_bloc) <= 160 and not re.fullmatch(r"[\d\W]+", text_bloc):
                 if act and not act["par"]:
                     act["t"] = neteja(act["t"] + " " + text_bloc)  # títol en diverses línies
@@ -201,7 +226,7 @@ def articles_pdf(cami):
             txt = neteja(txt)
             if not txt or re.fullmatch(r"\d{1,3}", txt):
                 continue
-            if not act["par"] and not act["au"] and len(txt.split()) <= 12 and not txt.endswith((".", ":", ";")):
+            if not act["par"] and not act["au"] and len(txt.split()) <= 12 and not txt.endswith((".", ":", ";")) and not re.match(r"(tabla|índice|índex|nombre|nom):?", txt, re.I):
                 act["au"] = txt
                 continue
             act["par"].append(txt)
@@ -220,9 +245,6 @@ def main():
     ordre = sorted(pdfs.items(), key=lambda kv: ("solotext" in kv[0].lower(), kv[0]))
     for url, etiqueta in ordre:
         any_ = any_de(url, etiqueta)
-        if not any_:
-            print(f"  sense any, s'omet: {url}")
-            continue
         nom = hashlib.md5(url.encode()).hexdigest() + ".pdf"
         cami = f"{CAU}/{nom}"
         if not os.path.exists(cami):
@@ -240,7 +262,8 @@ def main():
         for a in arts:
             text = " ".join(a["par"])
             par = len(text.split())
-            if par < 200 or par > 7000 or TITOLS_FORA.match(a["t"]):
+            a["t"] = bon_titol(a["t"])
+            if par < 200 or par > 7000 or TITOLS_FORA.match(a["t"]) or DIES.search(a["t"]) or a["t"].count(":") >= 3:
                 continue
             ll = llengua(text)
             if ll not in ("ca", "es"):
@@ -260,7 +283,7 @@ def main():
         fonts.append({"url": url, "any": any_, "estat": "ok", "textos": n})
         print(f"  {any_} {url.rsplit('/', 1)[-1]}: {n} textos")
 
-    index.sort(key=lambda x: (-x["a"], x["l"], x["pg"]))
+    index.sort(key=lambda x: (x["a"] == 0, -x["a"], x["l"], x["f"], x["pg"]))
     for k, v in textos.items():
         with open(f"{SORTIDA}/textos/{k}.json", "w", encoding="utf-8") as fh:
             json.dump(v, fh, ensure_ascii=False, separators=(",", ":"))
