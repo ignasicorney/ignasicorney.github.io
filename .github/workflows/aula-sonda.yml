@@ -32,11 +32,11 @@ jobs:
               links = [(a.get_text(" ", strip=True)[:60], urljoin(B + pag, a["href"])) for a in sp.find_all("a", href=True)]
               out.write(f"### {pag} ({len(h)} bytes, {len(links)} enllaços)\n" + "\n".join(f"  {t} -> {u}" for t, u in links[:60]) + "\n")
           for ll in ("catalan/", ""):
-              u = B + ll + "listanyos.php?select=1"; h2 = get(u); open("sonda/" + ll.strip("/") + "llista.html", "w").write(h2)
+              u = B + ll + "listanyos.php?select=1&opcion=s&Submit=Consultar"; h2 = get(u); open("sonda/" + ll.strip("/") + "llista.html", "w").write(h2)
               sp2 = BeautifulSoup(h2, "html.parser")
               ll2 = [(a.get_text(" ", strip=True)[:70], urljoin(u, a["href"])) for a in sp2.find_all("a", href=True)]
-              out.write(f"\n### LLISTA {u} ({len(h2)} bytes, {len(ll2)} enllaços)\n" + "\n".join(f"  {t} -> {x}" for t, x in ll2[20:45]) + "\n")
-              cand = [x for t, x in ll2 if "servicioskoinonia.org/agenda" in x and "list" not in x and "index" not in x and not x.endswith(".php")]
+              out.write(f"\n### LLISTA {u} ({len(h2)} bytes, {len(ll2)} enllaços)\n" + "\n".join(f"  {t} -> {x}" for t, x in ll2[19:50]) + "\n")
+              cand = [x for t, x in ll2 if "servicioskoinonia.org" in x and not re.search(r"servicioskoinonia.org/?(\w+/?)?$", x) and "list" not in x]
               out.write(f"candidats {len(cand)}\n")
               if cand:
                   h3 = get(cand[5]); open("sonda/" + ll.strip("/") + "text.html", "w").write(h3)
