@@ -9,7 +9,23 @@
    "estat": "ok",
    "pdf": "1r-eso.pdf",
    "material": [],
-   "aval": null,
+   "aval": {
+    "pes": [
+     [
+      "Exàmens (continguts conceptuals i procedimentals)",
+      60
+     ],
+     [
+      "Activitats d'avaluació (exposicions, llibretes, redaccions, lectures, formularis…)",
+      20
+     ],
+     [
+      "Projecte (1 h setmanal)",
+      20
+     ]
+    ],
+    "final": "Mitjana de les tres avaluacions; avaluació contínua i examen final de tot el curs (suficiència o per pujar nota)."
+   },
    "unitats": [
     {
      "t": "Os damos la bienvenida",
