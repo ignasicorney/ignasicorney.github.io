@@ -4612,8 +4612,10 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
         '<div class="prog-pdf" id="progPdf"><p class="font">Carregant el document…</p></div>';
       return h;
     }
+    if (vis) h += '<div class="prog-pdf" id="progPdf"><p class="font">Carregant el document…</p></div>';
     h += (c.avisos || []).map(a => '<div class="prog-avis">⚠️ ' + esc(a) + "</div>").join("");
-    h += '<div class="alum-eines"><button type="button" class="boto" data-asb="ei-prv" data-v="doc">👁️ Visualitza el PDF</button>' + '<a class="boto clar" style="text-decoration:none" href="programacions/' + c.pdf + '" download="Programacio_castella_' + c.id + '_2026-2027.pdf">⬇️ Baixa el PDF</a>' + "</div>";
+    const vis = fv("vis", false);
+    h += '<div class="alum-eines"><button type="button" class="boto" data-asb="ei-prvis">' + (vis ? "🙈 Amaga el PDF" : "👁️ Visualitza el PDF") + "</button>" + '<a class="boto clar" style="text-decoration:none" href="programacions/' + c.pdf + '" download="Programacio_castella_' + c.id + '_2026-2027.pdf">⬇️ Baixa el PDF</a>' + "</div>";
     if (c.material && c.material.length) h += "<h4>📚 Material i lectures</h4><ul>" + c.material.map(m => "<li>" + esc(m) + "</li>").join("") + "</ul>";
     if (c.unitats) {
       h += "<h4>🗓️ Situacions d'aprenentatge (" + c.unitats.length + ")</h4>";
@@ -4642,7 +4644,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     return h;
   }
   async function progDespres() {
-    if (fv("v", "res") !== "doc" || !progDades) return;
+    if ((fv("v", "res") !== "doc" && !fv("vis", false)) || !progDades) return;
     const el = $("progPdf"); if (!el) return;
     const c = progDades.cursos.find(x => x.id === fv("c", critDeGrup(triat().g))) || progDades.cursos[0];
     try {
@@ -4651,7 +4653,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
         lib.GlobalWorkerOptions.workerSrc = new URL("pdfjs/pdf.worker.min.mjs", location.href).href;
         progPdfLib = lib;
       }
-      const saSel = fv("sa", ""), fitx = saSel && (c.unitats || []).some(u => u.sa === saSel) ? saSel : c.pdf;
+      const saSel = fv("v", "res") === "doc" ? fv("sa", "") : "", fitx = saSel && (c.unitats || []).some(u => u.sa === saSel) ? saSel : c.pdf;
       const pdf = await progPdfLib.getDocument(new URL("programacions/" + fitx, location.href).href).promise;
       if (!document.body.contains(el)) return;
       el.innerHTML = '<p class="font" style="margin:0 0 6px">' + pdf.numPages + " pàgines</p>";
@@ -4671,7 +4673,8 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     } catch (e) { el.innerHTML = '<p class="avis">No s\'ha pogut mostrar el PDF aquí. Obre\'l amb el botó de dalt.</p>'; }
   }
   function progAccio(a, b) {
-    if (a === "prc") { fput("c", b.dataset.c); fput("sa", ""); return pintaAssistent(); }
+    if (a === "prc") { fput("c", b.dataset.c); fput("sa", ""); fput("vis", false); return pintaAssistent(); }
+    if (a === "prvis") { fput("vis", !fv("vis", false)); fput("sa", ""); return pintaAssistent(); }
     if (a === "prsa") { fput("sa", b.dataset.sa || ""); if (b.dataset.sa) fput("v", "doc"); pintaAssistent(); const el = $("asCos"); if (el && b.dataset.sa) el.scrollIntoView({ behavior: "smooth", block: "start" }); return; }
     if (a === "prv") { fput("v", b.dataset.v); if (b.dataset.v === "doc") fput("sa", ""); return pintaAssistent(); }
     if (a === "prretry") { progErr = false; return pintaAssistent(); }
