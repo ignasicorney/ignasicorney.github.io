@@ -4607,13 +4607,13 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     if (vista === "doc") {
       const saSel = fv("sa", ""), uSel = saSel && (c.unitats || []).find(u => u.sa === saSel);
       if (uSel) return h + '<div class="prog-avis" style="border-left-color:var(--accent);background:transparent">Situació d\'aprenentatge <b>' + uSel.n + ". " + esc(uSel.t) + "</b> · pàg. " + uSel.pag[0] + "–" + uSel.pag[1] + '</div><div class="alum-eines"><button type="button" class="boto clar" data-asb="ei-prsa" data-sa="">↩️ Document sencer</button><a class="boto" style="text-decoration:none" href="programacions/' + esc(uSel.sa) + '" download="Programacio_castella_' + c.id + '_SA' + uSel.n + '.pdf">⬇️ Baixa-la en PDF</a></div><div class="prog-pdf" id="progPdf"><p class="font">Carregant…</p></div>';
-      h += '<div class="alum-eines">' + (c.docx ? '<a class="boto" style="text-decoration:none" href="programacions/' + c.docx + '" download="Programacio_castella_' + c.id + '_2026-2027.docx">⬇️ Baixa el Word</a>' : "") +
+      h += '<div class="alum-eines">' +
         '<a class="boto clar" style="text-decoration:none" href="programacions/' + c.pdf + '" target="_blank" rel="noopener">↗️ Obre el PDF</a>' + '<a class="boto clar" style="text-decoration:none" href="programacions/' + c.pdf + '" download="Programacio_castella_' + c.id + '_2026-2027.pdf">⬇️ Baixa el PDF</a>' + "</div>" +
         '<div class="prog-pdf" id="progPdf"><p class="font">Carregant el document…</p></div>';
       return h;
     }
     h += (c.avisos || []).map(a => '<div class="prog-avis">⚠️ ' + esc(a) + "</div>").join("");
-    h += '<div class="alum-eines">' + (c.docx ? '<a class="boto" style="text-decoration:none" href="programacions/' + c.docx + '" download="Programacio_castella_' + c.id + '_2026-2027.docx">⬇️ Baixa el Word</a>' : "") + '<a class="boto clar" style="text-decoration:none" href="programacions/' + c.pdf + '" download="Programacio_castella_' + c.id + '_2026-2027.pdf">⬇️ Baixa el PDF</a>' + "</div>";
+    h += '<div class="alum-eines"><button type="button" class="boto" data-asb="ei-prv" data-v="doc">👁️ Visualitza el PDF</button>' + '<a class="boto clar" style="text-decoration:none" href="programacions/' + c.pdf + '" download="Programacio_castella_' + c.id + '_2026-2027.pdf">⬇️ Baixa el PDF</a>' + "</div>";
     if (c.material && c.material.length) h += "<h4>📚 Material i lectures</h4><ul>" + c.material.map(m => "<li>" + esc(m) + "</li>").join("") + "</ul>";
     if (c.unitats) {
       h += "<h4>🗓️ Situacions d'aprenentatge (" + c.unitats.length + ")</h4>";
