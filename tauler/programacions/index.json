@@ -1,0 +1,846 @@
+{
+ "cursos": [
+  {
+   "id": "1r-eso",
+   "nom": "1r d'ESO",
+   "materia": "Llengua castellana i literatura",
+   "prof": "Mireia Calm, Aleix Crosa i Jordi Imaz",
+   "format": "nou",
+   "estat": "ok",
+   "pdf": "1r-eso.pdf",
+   "material": [],
+   "aval": null,
+   "unitats": [
+    {
+     "t": "Os damos la bienvenida",
+     "temp": "Dos últimas semanas de septiembre y primera de octubre",
+     "lit": "La literatura. Finalidad de la literatura; características de las obras literarias; literatura oral y literatura escrita; la literatura popular",
+     "com": "La comunicación. La comunicación y sus elementos; comunicación oral y escrita",
+     "lec": "Mi nick es Sam Pangea",
+     "exp": "Expresión oral. Presentarse",
+     "gra": "La estructura de las palabras. La palabra; los morfemas; derivación, composición y parasíntesis",
+     "ort": "Las mayúsculas",
+     "n": 1,
+     "tri": 1
+    },
+    {
+     "t": "En otras palabras",
+     "temp": "Tres últimas semanas de octubre",
+     "lit": "El lenguaje literario. Los recursos estilísticos; clases de recursos estilísticos: recursos fónicos, recursos gramaticales y recursos semánticos",
+     "com": "La lengua y sus hablantes. Lenguaje y lengua; las lenguas de España",
+     "lec": "¿Cómo se originaron las lenguas?",
+     "exp": "Expresión oral. Hablar sobre una persona",
+     "gra": "Las palabras y su significado. El significado de las palabras; sentido literal y sentido figurado; relaciones de significado; campo semántico y campo léxico",
+     "ort": "La letra b",
+     "n": 2,
+     "tri": 1
+    },
+    {
+     "t": "Profesiones sin género",
+     "temp": "Tres primeras semanas de noviembre",
+     "lit": "Grandes temas de la literatura. Los temas universales de la literatura; la tradición literaria; los tópicos literarios",
+     "com": "El texto como unidad de comunicación. El texto; propiedades de los textos; los conectores",
+     "lec": "Nellie Bly",
+     "exp": "Expresión escrita. Hacer un esquema",
+     "gra": "El sustantivo. Los sustantivos; el género; el número",
+     "ort": "La letra v",
+     "n": 3,
+     "tri": 1
+    },
+    {
+     "t": "Tecnología para todos",
+     "temp": "Última semana de noviembre y dos primeras semanas de diciembre",
+     "lit": "Los géneros literarios. El género narrativo; el género lírico; el género dramático o teatral",
+     "com": "Clases de textos. Tipos de textos según la forma del discurso; tipos de textos según la intención del emisor; tipos de textos según el ámbito de uso",
+     "lec": "Aislamiento digital: cómo la brecha digital afecta a las personas mayores en la sociedad actual",
+     "exp": "Expresión escrita. Escribir un correo electrónico",
+     "gra": "Los determinantes. Los demostrativos; los posesivos; los cuantificadores; interrogativos, exclamativos y relativos",
+     "ort": "La letra j",
+     "n": 4,
+     "tri": 1
+    },
+    {
+     "t": "Con poco texto",
+     "temp": "Tres semanas de enero",
+     "lit": "Los personajes literarios. Criterios de clasificación; grandes personajes de la literatura",
+     "lec": "Un rompecabezas",
+     "exp": "Expresión oral. Narrar una experiencia personal",
+     "gra": "Los pronombres. Los pronombres personales; otros pronombres",
+     "ort": "La letra g",
+     "n": 5,
+     "tri": 2
+    },
+    {
+     "t": "¿Es noticia?",
+     "temp": "Tres primeras semanas de febrero",
+     "lit": "La narrativa. La narración literaria; la voz del narrador; los personajes y su caracterización; el desarrollo de la acción",
+     "com": "La noticia. La narración periodística: la noticia; la estructura de la noticia; la elaboración de una noticia",
+     "lec": "Buscan al monstruo del lago Ness con submarinos, drones y más de cien voluntarios",
+     "exp": "Expresión escrita. Redactar una noticia",
+     "gra": "El adjetivo. Los adjetivos; usos de los adjetivos; los grados del adjetivo",
+     "ort": "La letra h",
+     "n": 6,
+     "tri": 2
+    },
+    {
+     "t": "Pintar con palabras",
+     "temp": "Cuarta semana de febrero y dos primeras semanas de marzo",
+     "lit": "El cuento. Clases de cuentos; el microrrelato",
+     "com": "La descripción. La descripción y sus clases; el orden en la descripción; el lenguaje en la descripción",
+     "lec": "El retrato de Dorian Gray",
+     "exp": "Expresión escrita. Describir un objeto",
+     "gra": "El verbo. Los verbos; las formas personales del verbo",
+     "ort": "Principios de acentuación; clases de palabras según su acento; normas de uso de la tilde",
+     "n": 7,
+     "tri": 2
+    },
+    {
+     "t": "¿Te apuntas al viaje?",
+     "temp": "Dos semanas de marzo y una de abril",
+     "lit": "El mito y la leyenda. El mito; la leyenda; clases de leyendas",
+     "com": "La descripción de personas y lugares. La descripción de personas; la descripción de lugares",
+     "lec": "La sociedad secreta",
+     "exp": "Expresión escrita. Describir un lugar",
+     "gra": "La conjugación verbal. La conjugación; verbos regulares e irregulares; verbos defectivos",
+     "ort": "Acentuación de diptongos y triptongos; diptongos y triptongos; acentuación de diptongos y triptongos",
+     "n": 8,
+     "tri": 2
+    },
+    {
+     "t": "Nuestra comunidad literaria",
+     "temp": "Tres últimas semanas de abril",
+     "lit": "La novela. El subgénero de la novela; características de la novela; clases de novela",
+     "com": "El diálogo. El diálogo y sus clases; características de los diálogos",
+     "lec": "El monstruo del sótano",
+     "exp": "Expresión oral. Participar en un coloquio",
+     "gra": "Otras clases de palabras. Los adverbios; las preposiciones; las conjunciones; las interjecciones",
+     "ort": "Acentuación de hiatos; hiatos, acentuación de hiatos",
+     "n": 9,
+     "tri": 3
+    },
+    {
+     "t": "Turno de preguntas",
+     "temp": "Dos semanas de mayo",
+     "lit": "La lírica. Las obras líricas y su clasificación; el verso y la rima; la medida de los versos",
+     "com": "La entrevista. El diálogo planificado: la entrevista; clases de entrevistas; la estructura de la entrevista",
+     "lec": "Sara García Alonso: «Se vuelve a notar un interés muy grande por el espacio»",
+     "exp": "Expresión escrita. Preparar una entrevista",
+     "gra": "Los sintagmas. Los grupos sintácticos o sintagmas; clases de sintagmas",
+     "ort": "La tilde diacrítica",
+     "n": 10,
+     "tri": 3
+    },
+    {
+     "t": "¿Cómo se hace?",
+     "temp": "Dos últimas semanas de mayo",
+     "lit": "Estrofas y poemas. Poemas y estrofas; principales estrofas",
+     "com": "Los textos prescriptivos: las instrucciones. Los textos prescriptivos; las instrucciones",
+     "lec": "Identidad digital. Constrúyela de forma responsable y mejorarás tu imagen digital",
+     "exp": "Expresión oral. Dar instrucciones",
+     "gra": "La oración. Sujeto y predicado. El enunciado; el sujeto; el predicado",
+     "ort": "La coma",
+     "n": 11,
+     "tri": 3
+    },
+    {
+     "t": "Alza la voz",
+     "temp": "Junio",
+     "lit": "El teatro. El teatro; el texto dramático; la representación; los subgéneros teatrales",
+     "com": "La exposición. La exposición y sus clases; la estructura de la exposición; características de la exposición",
+     "lec": "Muchoyó, el nuevo Pocoyó que lucha por los derechos de los niños",
+     "exp": "Expresión escrita. Escribir un texto expositivo",
+     "gra": "Clases de oraciones. Las oraciones según su modalidad; las oraciones y el número de verbos; las oraciones y la naturaleza del verbo; las oraciones y el tipo de sujeto",
+     "ort": "Los dos puntos",
+     "n": 12,
+     "tri": 3
+    }
+   ],
+   "avisos": [
+    "No hi ha l'apartat de criteris generals d'avaluació (percentatges, faltes, recuperació) que sí que tenen 2n, 3r i 4t.",
+    "No hi consten el llibre de text ni les lectures del curs."
+   ]
+  },
+  {
+   "id": "2n-eso",
+   "nom": "2n d'ESO",
+   "materia": "Llengua castellana i literatura",
+   "prof": "Raquel Guàrdia, Ignasi Corney i Jordi Imaz",
+   "format": "nou",
+   "estat": "ok",
+   "pdf": "2n-eso.pdf",
+   "material": [],
+   "aval": {
+    "pes": [
+     [
+      "Exàmens (continguts conceptuals i procedimentals)",
+      60
+     ],
+     [
+      "Activitats d'avaluació (exposicions, llibretes, redaccions, lectures, formularis…)",
+      20
+     ],
+     [
+      "Projecte (1 h setmanal)",
+      20
+     ]
+    ],
+    "final": "Mitjana de les tres avaluacions; avaluació contínua i examen final de tot el curs (suficiència o per pujar nota)."
+   },
+   "unitats": [
+    {
+     "t": "Las lenguas del mundo",
+     "temp": "Tres primeras semanas de septiembre",
+     "lit": "La comunicación literaria. El emisor y el receptor literarios; el mensaje literario",
+     "com": "La comunicación. La comunicación y sus elementos; el lenguaje verbal y las lenguas",
+     "lec": "Quipus, el código secreto de nudos de los incas",
+     "exp": "Expresión oral. Elaborar una encuesta",
+     "gra": "La palabra. Estructura y significado. La estructura de las palabras; el significado de las palabras; la creación de significados",
+     "ort": "Acentuación de diptongos, triptongos e hiatos. Acentuación de palabras con diptongo o triptongo; acentuación de palabras con hiato",
+     "n": 1,
+     "tri": 1
+    },
+    {
+     "t": "Mi biografía lingüística",
+     "temp": "Última semana de septiembre hasta la segunda semana de octubre",
+     "lit": "La narrativa. El narrador y los personajes. El género narrativo; el narrador; los personajes literarios",
+     "com": "Las lenguas de España. España, un país plurilingüe; orígenes de la diversidad lingüística; las variedades del castellano",
+     "lec": "Lecciones prácticas de español",
+     "exp": "Expresión oral. Expresar una opinión con asertividad",
+     "gra": "Clases de palabras (I). Palabras variables; palabras invariables",
+     "ort": "La tilde diacrítica en pares de palabras",
+     "n": 2,
+     "tri": 1
+    },
+    {
+     "t": "Hablando se entiende la gente",
+     "temp": "Desde la tercera semana de octubre hasta la primera de noviembre",
+     "lit": "La narrativa. El tiempo y el espacio. El tiempo en la narración; el espacio en la narración",
+     "com": "Las funciones del lenguaje. Funciones y elementos de la comunicación; funciones básicas",
+     "lec": "La prueba",
+     "exp": "Expresión escrita. Comunicar un aviso por escrito",
+     "gra": "Clases de palabras (II). Clases de palabras transversales",
+     "ort": "Acentuación de palabras compuestas",
+     "n": 3,
+     "tri": 1
+    },
+    {
+     "t": "En clave de humor",
+     "temp": "Desde la tercera semana de octubre hasta la primera de noviembre",
+     "lit": "Subgéneros narrativos en prosa. El cuento; la novela",
+     "com": "El texto y sus propiedades. El texto; las propiedades del texto",
+     "lec": "El cuarto del fantasma",
+     "exp": "Expresión escrita. Escribir un texto coherente y cohesionado",
+     "gra": "Los sintagmas (I). El sintagma; el sintagma nominal; el sintagma verbal",
+     "ort": "Homófonos con h o sin h. Palabras homófonas con h y sin h",
+     "n": 4,
+     "tri": 1
+    },
+    {
+     "t": "Imágenes que hablan",
+     "temp": "Tres semanas de diciembre hasta Navidad",
+     "lit": "Subgéneros narrativos en verso. Los subgéneros épicos; el romance; la fábula",
+     "com": "Los conectores textuales. Los conectores; Clases de conectores textuales",
+     "lec": "Skate: un deporte con espíritu urbano",
+     "gra": "Los sintagmas (II). El sintagma adjetival; el sintagma adverbial; el sintagma preposicional",
+     "ort": "Homófonos con b y con v",
+     "exp": "Expresión escrita. Elaborar un mapa mental",
+     "n": 5,
+     "tri": 1
+    },
+    {
+     "t": "Con toda la intención",
+     "temp": "El mes de enero",
+     "lit": "La lírica. El género lírico; la versificación; el verso libre",
+     "com": "Clases de textos según la intención del emisor. Los textos según la intención del emisor",
+     "exp": "Expresión oral. Convencer",
+     "gra": "Sujeto y predicado. Los constituyentes de la oración; el sujeto; el predicado",
+     "ort": "Palabras con x. Pronunciación de las palabras con x; la letra x",
+     "lec": "Las palabras terribles",
+     "n": 6,
+     "tri": 2
+    },
+    {
+     "t": "Próximo destino: los libros",
+     "temp": "Las tres primeras semanas de febrero",
+     "lit": "El verso y su medida. La rima. La medida de los versos; la rima; el análisis métrico",
+     "com": "Clases de textos según la forma del discurso. Los textos según la forma del discurso",
+     "lec": "Un libro sin fin",
+     "exp": "Expresión escrita. Escribir un cuento",
+     "ort": "Palabras con ll y con y. Pronunciación de ll y de y; el dígrafo ll; la letra y",
+     "gra": "Los complementos del verbo (I). El complemento directo; el complemento indirecto",
+     "n": 7,
+     "tri": 2
+    },
+    {
+     "t": "Sobre la mesa",
+     "temp": "La última semana de febrero y las dos primeras de marzo",
+     "lit": "Estrofas y poemas. La estrofa; el poema",
+     "com": "Clases de textos según el ámbito de uso. Los textos según el ámbito de uso",
+     "lec": "Encontrarte a ti misma",
+     "exp": "Expresión escrita. Escribir un diario",
+     "gra": "Los complementos del verbo (II). El complemento circunstancial; el complemento de régimen",
+     "ort": "Parónimos con ll y con y. La ll y la y en los parónimos",
+     "n": 8,
+     "tri": 2
+    },
+    {
+     "t": "Historias sin palabras",
+     "temp": "Desde la tercera semana de marzo hasta la segunda de abril",
+     "lit": "El teatro. Texto dramático y representación. El género dramático o teatral; el texto dramático; la representación teatral",
+     "com": "Los textos orales planificados y no planificados. Los textos orales; tipos de textos orales",
+     "lec": "Viaje a la Luna, la revolución del cine",
+     "exp": "Expresión escrita. Escribir la crítica de una película",
+     "gra": "Los complementos del verbo (III). El atributo; el complemento predicativo",
+     "ort": "El guion. Uso del guion para dividir palabras a final de línea",
+     "n": 9,
+     "tri": 2
+    },
+    {
+     "t": "Enviado especial",
+     "temp": "Desde la tercera semana de abril hasta la segunda de mayo",
+     "lit": "Los subgéneros teatrales. La tragedia; la comedia; la tragicomedia",
+     "lec": "El día que los marcianos cambiaron la historia de la radio",
+     "exp": "Expresión oral. Grabar una noticia radiofónica",
+     "gra": "Clases de oraciones (I). Las oraciones y sus clases; oraciones copulativas, transitivas e intransitivas",
+     "ort": "La raya. Uso de la raya",
+     "n": 10,
+     "tri": 3
+    },
+    {
+     "t": "Brigada antipiratería 2.0",
+     "temp": "Desde la tercera semana de mayo hasta la segunda de junio",
+     "lit": "La literatura actual. Novelas actuales y superventas; la literatura y las nuevas tecnologías; nuevas formas de literatura",
+     "com": "La información en internet. Internet y las nuevas tecnologías; el periódico digital; las redes sociales",
+     "lec": "Desafiando al algoritmo. Cómo utilizar las redes para tener una visión más diversa de la realidad",
+     "exp": "Expresión escrita. Escribir un artículo de opinión",
+     "gra": "Clases de oraciones (II). Oraciones impersonales; oraciones activas y pasivas; oraciones pasivas reflejas",
+     "ort": "Los dos puntos y las comillas. Los dos puntos; las comillas",
+     "n": 11,
+     "tri": 3
+    },
+    {
+     "t": "Anuncios con historias",
+     "temp": "Desde la segunda semana de junio hasta las vacaciones de verano",
+     "lit": "La literatura y otras artes. El arte y la literatura; literatura y cine",
+     "com": "La publicidad. Los textos publicitarios; el mensaje publicitario; el lenguaje de la publicidad",
+     "lec": "Cartel publicitario Moviendo tu mundo",
+     "exp": "Expresión escrita. Crear el story board de un anuncio",
+     "gra": "Análisis de la oración simple. Modelos. Oraciones con verbo copulativo; oraciones con verbo predicativo",
+     "ort": "Los paréntesis y los corchetes. Los paréntesis; los corchetes",
+     "n": 12,
+     "tri": 3
+    }
+   ],
+   "avisos": [
+    "Les unitats 3 i 4 tenen la mateixa temporització («de la 3a setmana d'octubre a la 1a de novembre»): sembla un error de còpia."
+   ]
+  },
+  {
+   "id": "3r-eso",
+   "nom": "3r d'ESO",
+   "materia": "Llengua castellana i literatura",
+   "prof": "Raquel Ibáñez, Raquel Guàrdia i Anna Lozano",
+   "format": "nou",
+   "estat": "ok",
+   "pdf": "3r-eso.pdf",
+   "material": [
+    "Llibre: Lo Esencial (Santillana)",
+    "Lectura: Mentira, de Care Santos",
+    "Lectura: Lazarillo de Tormes (Vicens Vives)"
+   ],
+   "aval": {
+    "pes": [
+     [
+      "Exàmens (continguts conceptuals i procedimentals)",
+      60
+     ],
+     [
+      "Activitats d'avaluació",
+      40
+     ]
+    ],
+    "final": "Mitjana de les tres avaluacions; avaluació contínua i examen final de tot el curs. Grups adaptats i de reforç: nota màxima AS."
+   },
+   "unitats": [
+    {
+     "t": "Te etiqueto (reto: «En la red»)",
+     "temp": "",
+     "com": "La comunicación. La comunicación y sus elementos; comunicación verbal y no verbal; la comunicación eficaz",
+     "lec": "Mis padres son sordos",
+     "ort": "Las mayúsculas",
+     "lit": "",
+     "gra": "",
+     "n": 1,
+     "tri": 1
+    },
+    {
+     "t": "Con voz propia",
+     "temp": "",
+     "com": "Las lenguas de España. España, un país plurilingüe; orígenes de la diversidad lingüística; las variedades del castellano",
+     "lec": "Nunca estuvo más cerca del paraíso",
+     "exp": "Expresión escrita. Elaborar un mapa conceptual",
+     "gra": "La estructura de las palabras. Los morfemas",
+     "ort": "Acentuación",
+     "lit": "La poesía medieval (I). Las jarchas; el mester de juglaría; el Poema de Mio Cid",
+     "n": 2,
+     "tri": 1
+    },
+    {
+     "t": "¿Cómo hablamos?",
+     "temp": "Tres primeras semanas de noviembre",
+     "lit": "La poesía medieval (II). El mester de clerecía; Gonzalo de Berceo; El Libro de buen amor; la lírica culta del siglo XV; Jorge Manrique",
+     "com": "Variedades de uso de la lengua. La lengua y sus variedades; las variedades sociales; las variedades estilísticas o registros",
+     "lec": "La academia de baile",
+     "exp": "Expresión oral. Definir palabras",
+     "gra": "El sintagma nominal. Los componentes del sintagma nominal; funciones del sintagma nominal",
+     "ort": "La tilde diacrítica (I). Acentuación diacrítica de monosílabos",
+     "n": 3,
+     "tri": 1
+    },
+    {
+     "t": "Hazte booktuber",
+     "temp": "",
+     "lit": "La prosa medieval. Las colecciones de cuentos medievales; el Conde Lucanor; la prosa del pensamiento; Alfonso X el Sabio y la reforma del castellano",
+     "com": "El texto. Las propiedades textuales. El texto; adecuación, coherencia y cohesión",
+     "lec": "Soy un incorpóreo",
+     "exp": "Expresión escrita. Corregir un texto",
+     "gra": "El sintagma verbal. Los componentes del sintagma verbal; las perífrasis verbales",
+     "ort": "La tilde diacrítica (II). Acentuación diacrítica en pares de palabras",
+     "n": 4,
+     "tri": 1
+    },
+    {
+     "t": "Episodio piloto",
+     "temp": "",
+     "lit": "El teatro medieval. El nacimiento del teatro medieval; la Celestina",
+     "com": "Narración, descripción y diálogo. La narración; la descripción; el diálogo",
+     "lec": "Tarde de agosto",
+     "exp": "Expresión oral. Narrar un suceso",
+     "gra": "Otros sintagmas. El sintagma adjetival; el sintagma adverbial; el sintagma preposicional",
+     "ort": "Los signos de final de enunciado",
+     "n": 5,
+     "tri": 2
+    },
+    {
+     "t": "En mi entorno",
+     "temp": "Tres primeras semanas de febrero",
+     "lit": "La poesía renacentista (I). La lírica renacentista española; Garcilaso de la Vega",
+     "com": "La exposición. Los textos expositivos; tipos de textos expositivos; el lenguaje de los textos expositivos",
+     "lec": "La línea de Nazca",
+     "exp": "Expresión oral. Preparar una exposición académica",
+     "gra": "La oración. Sujeto y predicado. La oración; el sujeto; el predicado; concordancia entre el sujeto y el predicado",
+     "ort": "La coma y el punto y coma. La coma; el punto y coma",
+     "n": 6,
+     "tri": 2
+    },
+    {
+     "t": "Cinefórum",
+     "temp": "Cuarta semana de febrero y dos primeras semanas de marzo",
+     "lit": "La poesía renacentista (II). La poesía religiosa; fray Luis de León; santa Teresa de Jesús; otras poetas místicas; san Juan de la Cruz",
+     "com": "Estructuras expositivas. La estructura de los textos expositivos; tipos de estructuras expositivas",
+     "lec": "La maldición de Tutankamón",
+     "exp": "Expresión escrita. Preparar un trabajo monográfico",
+     "gra": "Complementos del predicado (I). El complemento directo; el complemento indirecto; el complemento circunstancial",
+     "ort": "Los puntos suspensivos",
+     "n": 7,
+     "tri": 2
+    },
+    {
+     "t": "De aquí y de allá",
+     "temp": "Dos semanas de marzo y una de abril",
+     "lit": "La prosa renacentista. El Lazarillo. La prosa de pensamiento en el siglo XVI; la prosa renacentista de ficción; la novela picaresca; el Lazarillo de Tormes",
+     "com": "La argumentación. Los textos argumentativos; tipos de textos argumentativos; el lenguaje de los textos argumentativos",
+     "lec": "La buena vida",
+     "exp": "Expresión oral. Participar en un debate",
+     "gra": "Complementos del predicado (II). El complemento de régimen; el complemento predicativo; el atributo",
+     "ort": "Los dos puntos y las comillas. Los dos puntos; las comillas",
+     "n": 8,
+     "tri": 2
+    },
+    {
+     "t": "¡Así no!",
+     "temp": "Tres últimas semanas de abril",
+     "lit": "La poesía barroca. Características de la poesía barroca; Luis de Góngora; Francisco de Quevedo; Lope de Vega; sor Juana Inés de la Cruz",
+     "com": "Estructuras argumentativas. La estructura de los textos argumentativos; tipos de estructuras argumentativas; los argumentos",
+     "lec": "Consumo y consumismo",
+     "exp": "Expresión escrita. Escribir un texto argumentativo",
+     "gra": "Clases de oraciones simples (I). Clases de oraciones según la modalidad; oraciones copulativas, transitivas e intransitivas",
+     "ort": "La raya y los paréntesis. La raya; los paréntesis",
+     "n": 9,
+     "tri": 3
+    },
+    {
+     "t": "Desmontando bulos",
+     "temp": "Dos semanas de mayo",
+     "lit": "La prosa barroca. Prosa didáctica y de ficción; María de Zayas; Francisco de Quevedo; Baltasar Gracián",
+     "com": "Los textos de los medios de comunicación. Los medios de comunicación; los textos periodísticos",
+     "lec": "Atajos del cerebro y mentiras cochinas",
+     "exp": "Expresión escrita. Escribir una carta al director",
+     "gra": "Clases de oraciones (II). Oraciones activas y oraciones pasivas; oraciones impersonales",
+     "ort": "Homófonos con b y con v",
+     "n": 10,
+     "tri": 3
+    },
+    {
+     "t": "¿Qué pasa en el mundo?",
+     "temp": "Dos últimas semanas de mayo",
+     "lit": "Cervantes y el Quijote. Miguel de Cervantes; obra; el Quijote.",
+     "gra": "Análisis de la oración simple. El análisis sintáctico; dudas frecuentes; preguntas útiles",
+     "ort": "Homófonos con h y sin h",
+     "com": "Los géneros periodísticos. Información, opinión e interpretación en la prensa",
+     "lec": "Desde mi teclado",
+     "exp": "Expresión escrita. Escribir una crónica",
+     "n": 11,
+     "tri": 3
+    },
+    {
+     "t": "¡Cómpralo!",
+     "temp": "Junio",
+     "lit": "El teatro renacentista y barroco. El teatro renacentista; la revolución teatral barroca; Lope de Vega y la comedia nueva; Calderón de la Barca; Tirso de Molina",
+     "exp": "Expresión escrita. Publicar un anuncio por palabras",
+     "gra": "Oraciones simples",
+     "ort": "Parónimos con ll y con y",
+     "com": "La publicidad. Los textos publicitarios; el mensaje publicitario; procedimientos publicitarios; el lenguaje de la publicidad",
+     "lec": "Carteles publicitarios",
+     "n": 12,
+     "tri": 3
+    }
+   ],
+   "avisos": [
+    "Les unitats 1 i 2 no tenen la descripció de la situació d'aprenentatge ni temporització (només la taula).",
+    "Les unitats 4 i 5 no tenen temporització."
+   ]
+  },
+  {
+   "id": "4t-eso",
+   "nom": "4t d'ESO",
+   "materia": "Llengua castellana i literatura",
+   "prof": "Ignasi Corney i Òscar Canudas",
+   "format": "nou",
+   "estat": "proposta",
+   "pdf": "4t-eso-antiga.pdf",
+   "docx": "4t-eso.docx",
+   "material": [
+    "Classroom del curs i material fotocopiat del professorat",
+    "Lectura: El bosque de los corazones dormidos, de Esther Sanz (primer trimestre).",
+    "Lectura: Historia de una escalera, de Antonio Buero Vallejo (segundo trimestre).",
+    "Lectura: Tristes armas, de Marina Mayoral (tercer trimestre)."
+   ],
+   "aval": {
+    "pes": [
+     [
+      "Exàmens (continguts conceptuals i procedimentals)",
+      60
+     ],
+     [
+      "Activitats d'avaluació (exposicions, llibretes, redaccions, lectures, formularis…)",
+      40
+     ]
+    ],
+    "final": "Mitjana de les tres avaluacions; avaluació contínua i examen final de tot el curs. Grups adaptats i de reforç: nota màxima AS."
+   },
+   "unitats": [
+    {
+     "n": 1,
+     "tri": 1,
+     "t": "Palabras con historia (reto: «Nuestro diccionario de clase»)",
+     "temp": "Septiembre y primera quincena de octubre.",
+     "lengua": [
+      "Presentación del curso y del reto: Nuestro diccionario de clase.",
+      "Comunicación. El texto y sus propiedades: adecuación, coherencia y cohesión.",
+      "Expresión oral. Presentarse oralmente.",
+      "Léxico. Palabras de origen latino; la renovación del léxico.",
+      "Gramática. Clases de palabras y clases de sintagmas (repaso).",
+      "Ortografía. Las mayúsculas."
+     ],
+     "lit": "La Ilustración. El siglo XVIII: prosa ensayística, la fábula (Iriarte, Samaniego) y el teatro neoclásico (Moratín).; Escritura literaria. Componer una fábula en verso."
+    },
+    {
+     "n": 2,
+     "tri": 1,
+     "t": "Historias que se cuentan (reto: «Leyendas de nuestro pueblo»)",
+     "temp": "Segunda quincena de octubre y primera de noviembre.",
+     "lengua": [
+      "Reto: Leyendas de nuestro pueblo.",
+      "Comunicación. Los textos narrativos; el estilo directo y el estilo indirecto.",
+      "Expresión oral y escrita. Narrar una anécdota.",
+      "Léxico. La formación de palabras.",
+      "Gramática. Los complementos del verbo.",
+      "Ortografía. La acentuación."
+     ],
+     "lit": "El Romanticismo. Contexto; la poesía (Espronceda, Bécquer); la prosa (Larra, las Leyendas de Bécquer); el teatro (Zorrilla).; Escritura literaria. Redactar una leyenda de misterio.; Lectura del trimestre: El bosque de los corazones dormidos, de Esther Sanz."
+    },
+    {
+     "n": 3,
+     "tri": 1,
+     "t": "Retratos de una sociedad (reto: «Galería de retratos»)",
+     "temp": "Segunda quincena de noviembre y diciembre.",
+     "lengua": [
+      "Reto: Galería de retratos.",
+      "Comunicación. La descripción y el retrato.",
+      "Expresión escrita. Escribir un retrato.",
+      "Léxico. Polisemia y homonimia.",
+      "Gramática. Clases de oraciones simples (repaso).",
+      "Ortografía. Los signos de puntuación."
+     ],
+     "lit": "El Realismo y el Naturalismo. Contexto; la novela realista (Galdós, Clarín) y naturalista (Pardo Bazán).; Puesta en común de la lectura del trimestre."
+    },
+    {
+     "n": 4,
+     "tri": 2,
+     "t": "Paso a paso (reto: «Nuestro canal de tutoriales»)",
+     "temp": "Enero.",
+     "lengua": [
+      "Reto: Nuestro canal de tutoriales.",
+      "Comunicación. Los textos instructivos; los tutoriales.",
+      "Expresión oral. Explicar un proceso.",
+      "Léxico. Sinonimia y antonimia.",
+      "Gramática. La oración compuesta: oraciones yuxtapuestas y coordinadas.",
+      "Ortografía. La ortografía de las formas verbales."
+     ],
+     "lit": "El Modernismo (Rubén Darío) y la Generación del 98 (Unamuno, Machado, Baroja, Azorín, Valle-Inclán).; Lectura del trimestre: Historia de una escalera, de Antonio Buero Vallejo."
+    },
+    {
+     "n": 5,
+     "tri": 2,
+     "t": "Sueños y vanguardias (reto: «Exposición: el arte de romper»)",
+     "temp": "Febrero.",
+     "lengua": [
+      "Reto: Exposición «El arte de romper».",
+      "Comunicación. Los textos expositivos; las presentaciones digitales.",
+      "Expresión oral. Preparar una exposición oral.",
+      "Léxico. Hiperonimia e hiponimia.",
+      "Gramática. Las oraciones subordinadas sustantivas."
+     ],
+     "lit": "El Novecentismo y las vanguardias. La Generación del 27 (Lorca, Alberti, Cernuda, Salinas, Aleixandre…) y las poetas del 27.; Escritura literaria. Elaborar imágenes literarias surrealistas; componer un poema en verso libre."
+    },
+    {
+     "n": 6,
+     "tri": 2,
+     "t": "Vecinos de escalera (reto: «Teatro en el aula»)",
+     "temp": "Marzo.",
+     "lengua": [
+      "Reto: Teatro en el aula.",
+      "Comunicación. Los textos dialogados; rasgos paralingüísticos del diálogo.",
+      "Expresión escrita. Escribir una escena teatral.",
+      "Léxico. Significado denotativo y connotativo.",
+      "Gramática. Las oraciones subordinadas de relativo."
+     ],
+     "lit": "La literatura de posguerra: el teatro (Buero Vallejo, Alfonso Sastre, Miguel Mihura).; Lectura y análisis de Historia de una escalera, de Antonio Buero Vallejo."
+    },
+    {
+     "n": 7,
+     "tri": 3,
+     "t": "Con argumentos (reto: «Debate en el aula»)",
+     "temp": "Abril.",
+     "lengua": [
+      "Reto: Debate en el aula.",
+      "Comunicación. Los textos argumentativos; el ensayo.",
+      "Expresión escrita. Escribir un artículo de opinión.",
+      "Expresión oral. Participar en debates y coloquios.",
+      "Léxico. La creación de nuevos significados.",
+      "Gramática. Las oraciones subordinadas adverbiales."
+     ],
+     "lit": "La literatura de posguerra: la novela y la poesía.; Lectura del trimestre: Tristes armas, de Marina Mayoral."
+    },
+    {
+     "n": 8,
+     "tri": 3,
+     "t": "Mirada crítica (reto: «Nuestro periódico»)",
+     "temp": "Mayo.",
+     "lengua": [
+      "Reto: Nuestro periódico.",
+      "Comunicación. Los géneros periodísticos; la caricatura.",
+      "Comprensión. Informaciones de actualidad en los medios audiovisuales.",
+      "Léxico. La valoración de las palabras.",
+      "Gramática. Análisis de la oración compuesta (repaso).",
+      "Uso responsable de las redes: identidad digital propia y ajena."
+     ],
+     "lit": "La literatura actual: la novela, la poesía y el teatro desde 1975."
+    },
+    {
+     "n": 9,
+     "tri": 3,
+     "t": "Un idioma, muchas voces (reto: «Anuncios del mundo hispánico»)",
+     "temp": "Junio.",
+     "lengua": [
+      "Reto: Anuncios del mundo hispánico.",
+      "Comunicación. La publicidad; escribir el guion de un anuncio.",
+      "Las variedades de la lengua castellana en los distintos territorios donde se habla.",
+      "La diversidad de lenguas en España, Europa y el mundo; lenguas y estados; lenguas minoritarias.",
+      "Ortografía. Repaso general."
+     ],
+     "lit": "La literatura hispanoamericana del siglo XX (Borges, Cortázar, García Márquez, Rulfo, Neruda, Monterroso…).; Escritura literaria. Elaborar un microrrelato."
+    }
+   ],
+   "avisos": [
+    "La que va penjar el company és en el format antic (competències bàsiques per dimensions, anterior a la LOMLOE), fora de la carpeta de programacions acabades.",
+    "Aquí hi ha la versió nova en el format del departament: els mateixos continguts, lectures i criteris d'avaluació del company, repartits en 9 situacions d'aprenentatge amb competències específiques i criteris del cicle 3r-4t. El repartiment per unitats i el trimestre de cada lectura són proposta: revisa-ho amb l'Òscar abans de penjar-la."
+   ]
+  },
+  {
+   "id": "1r-batx",
+   "nom": "1r de batxillerat",
+   "materia": "Llengua castellana i literatura I",
+   "prof": "Anna Lozano",
+   "format": "antic",
+   "estat": "ok",
+   "pdf": "1r-batx.pdf",
+   "material": [
+    "Llibre: Lengua castellana 1-2 BA (Casals)",
+    "Lectura: La sombra del viento, de Carlos Ruiz Zafón",
+    "Lectura: Yerma, de Federico García Lorca"
+   ],
+   "aval": {
+    "pes": [
+     [
+      "Dos exàmens (teoria i expressió escrita, com a les PAU: la redacció val 2 dels 10 punts)",
+      80
+     ],
+     [
+      "Activitats d'avaluació",
+      20
+     ]
+    ],
+    "final": "Mitjana de les tres avaluacions. Amb un 20 % de faltes d'assistència no s'avalua i va a la recuperació de juny (15-18.06). Els decimals de la nota final, a criteri del professorat."
+   },
+   "blocs": [
+    "Bloc 1. Comunicació oral: escoltar i parlar (exposicions orals acadèmiques, textos dels mitjans)",
+    "Bloc 2. Comunicació escrita: llegir i escriure (textos expositius acadèmics, periodístics, publicitat, treballs de recerca)",
+    "Bloc 3. Coneixement de la llengua (categories gramaticals, perífrasis, oració simple i composta, propietats textuals, varietats, llengües d'Espanya)",
+    "Bloc 4. Educació literària (de l'edat mitjana al segle XIX)"
+   ],
+   "formularis": [
+    [
+     "1r trimestre",
+     [
+      "Clases de palabras I",
+      "Clases de palabras II",
+      "Figuras retóricas I",
+      "Figuras retóricas II",
+      "Semántica I",
+      "Funciones sintácticas I",
+      "Funciones sintácticas II",
+      "Métrica",
+      "Texto I",
+      "Texto II"
+     ]
+    ],
+    [
+     "2n trimestre",
+     [
+      "Clases de palabras III",
+      "Clases de palabras IV",
+      "Figuras retóricas III",
+      "Semántica II",
+      "Funciones sintácticas III",
+      "Funciones sintácticas IV",
+      "Clases de oraciones I",
+      "Texto III",
+      "Texto IV"
+     ]
+    ],
+    [
+     "3r trimestre",
+     [
+      "Clases de palabras V",
+      "Figuras retóricas IV",
+      "Semántica III",
+      "Funciones sintácticas V",
+      "Funciones sintácticas VI",
+      "Clases de oraciones II",
+      "Clases de oraciones III",
+      "El texto y sus propiedades",
+      "Texto V",
+      "Texto VI"
+     ]
+    ]
+   ],
+   "avisos": [
+    "És en format antic (blocs i estàndards, anterior a la LOMLOE), com la de 4t: no té competències específiques ni situacions d'aprenentatge.",
+    "Hi diu «Curs 2025-2027»."
+   ]
+  },
+  {
+   "id": "2n-batx",
+   "nom": "2n de batxillerat",
+   "materia": "Literatura castellana (modalitat)",
+   "prof": "Òscar Canudas",
+   "format": "nou",
+   "estat": "ok",
+   "pdf": "2n-batx.pdf",
+   "material": [
+    "Classroom de la matèria",
+    "Antología poética del Siglo de Oro (15 poemas)",
+    "El Quijote, de Cervantes (capítols seleccionats)",
+    "Fuenteovejuna, de Lope de Vega",
+    "Los pazos de Ulloa, d'Emilia Pardo Bazán",
+    "Romancero gitano, de Federico García Lorca",
+    "Luciérnagas, d'Ana María Matute",
+    "Punts bàsics i terminologia de la coordinació PAU"
+   ],
+   "aval": {
+    "pes": [
+     [
+      "Dos exàmens per trimestre",
+      80
+     ],
+     [
+      "Activitats d'avaluació",
+      20
+     ]
+    ],
+    "final": "Mitjana de les tres avaluacions. Recuperació a la convocatòria de juliol (calendari PAU)."
+   },
+   "examens": [
+    [
+     "1r trimestre",
+     "19.10.2026–23.10.2026",
+     "16.11.2026–20.11.2026"
+    ],
+    [
+     "2n trimestre",
+     "18.01.2027–22.01.2027",
+     "15.02.2027–19.02.2027"
+    ],
+    [
+     "3r trimestre",
+     "15.03.2027–19.03.2027",
+     "26.04.2027–29.04.2027"
+    ]
+   ],
+   "temari": [
+    [
+     "1r trimestre",
+     [
+      "Lírica del Siglo de Oro (antologia del departament: Garcilaso, fray Luis, san Juan, Lope, Góngora, Quevedo)",
+      "Novel·la del Siglo de Oro: el Quijote (capítols de selectivitat)",
+      "Teatre del Barroc: Lope de Vega, Fuenteovejuna"
+     ]
+    ],
+    [
+     "2n trimestre",
+     [
+      "Novel·la realista i naturalista: Los pazos de Ulloa",
+      "Romancero gitano i la generació del 27"
+     ]
+    ],
+    [
+     "3r trimestre",
+     [
+      "Novel·la de postguerra: Luciérnagas, d'Ana María Matute"
+     ]
+    ]
+   ],
+   "avisos": [
+    "És la de Literatura castellana de modalitat. La de Llengua castellana i literatura II de 2n de batxillerat no és entre els documents."
+   ]
+  }
+ ],
+ "comu": {
+  "orto": "−0,10 per falta fins a −2 punts; «Las imperdonables», −0,20. Amb PI metodològic: −0,10 cada tres faltes (sense imperdonables; les gramaticals no s'adapten).",
+  "pi": "Alumnat amb PI metodològic: 15 minuts més a les proves.",
+  "ia": "Ús d'IA o mitjans no autoritzats (o indicis raonables): 0 a la prova i pèrdua del dret a fer-la o recuperar-la en condicions ordinàries.",
+  "rec": "Matèria suspesa al juny: es recupera aprovant el 1r trimestre del curs següent; si no, convocatòria de febrer amb exercicis de recuperació i dossier fet a mà."
+ }
+}

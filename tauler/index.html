@@ -446,6 +446,29 @@ a.cons-b{text-decoration:none;color:inherit;font-size:.86rem;line-height:1.3}
 .eines{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
 .eines .titol{font-weight:700;font-size:1.05rem;margin:0 6px;min-width:9em}
 .eines .esq{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap}
+.as-grups{display:flex;flex-direction:column;gap:0;margin-bottom:10px;border:1px solid var(--linia);border-radius:10px;overflow:hidden}
+.as-grup{display:flex;align-items:center;gap:10px;padding:6px 8px;flex-wrap:wrap}
+.as-grup+.as-grup{border-top:1px solid var(--linia)}
+.as-grup-t{flex:0 0 11.5em;font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.03em;color:var(--suau,#777)}
+.as-grup .vistes{flex-wrap:wrap;border:0;border-radius:0;gap:2px}
+.as-grup .vistes button{border-radius:6px}
+@media (max-width:640px){.as-grup-t{flex-basis:100%}}
+.prog-cap{display:flex;flex-wrap:wrap;gap:6px 18px;margin:6px 0 10px;font-size:.9rem}
+.prog-etq{display:inline-block;padding:1px 8px;border-radius:10px;font-size:.75rem;font-weight:700;color:#fff}
+.prog-avis{border-left:4px solid #d08a1e;background:rgba(208,138,30,.09);padding:6px 10px;margin:6px 0;border-radius:4px;font-size:.9rem}
+.prog-tri{margin:12px 0 4px;font-size:.95rem;border-bottom:2px solid var(--accent);padding-bottom:2px}
+.prog-u{border:1px solid var(--linia);border-radius:8px;margin:6px 0;background:var(--targeta)}
+.prog-u>summary{cursor:pointer;padding:6px 10px;display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+.prog-u>summary b{min-width:2.2em}
+.prog-u .temp{margin-left:auto;font-size:.8rem;color:var(--suau,#777)}
+.prog-u dl{display:grid;grid-template-columns:8.5em 1fr;gap:3px 10px;margin:0;padding:4px 12px 10px;font-size:.88rem}
+.prog-u dt{font-weight:700;color:var(--suau,#777)}
+.prog-u dd{margin:0}
+.prog-pes{width:100%;border-collapse:collapse;font-size:.9rem;margin:4px 0}
+.prog-pes td{border-bottom:1px solid var(--linia);padding:3px 6px}
+.prog-pes td:last-child{text-align:right;font-weight:700;width:4em}
+.prog-pdf{max-height:75vh;overflow:auto;border:1px solid var(--linia);border-radius:8px;background:#f3f1ec;margin-top:6px;padding:8px;text-align:center}
+.prog-pdf canvas{max-width:100%;height:auto;margin:0 auto 8px;display:block;box-shadow:0 1px 3px rgba(0,0,0,.2);background:#fff}
 .vistes{display:inline-flex;border:1px solid var(--linia);border-radius:8px;overflow:hidden}
 .vistes button{background:var(--targeta);border:0;padding:5px 12px;color:var(--text)}
 .vistes button[aria-pressed=true]{background:var(--accent);color:#fff}
@@ -694,27 +717,11 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     </div>
   <div class="bloc" id="assistent">
     <h3 class="bt">🤖 Assistent</h3>
-    <div class="vistes" role="group" aria-label="Eina" id="asEines" style="flex-wrap:wrap;margin-bottom:10px">
-      <button type="button" data-as="corregir">✍️ Corregir</button>
-      <button type="button" data-as="cb">🧪 Competències bàsiques</button>
-      <button type="button" data-as="activitats">📚 Activitats</button>
-      <button type="button" data-as="aula">📰 Textos per a l'aula</button>
-      <button type="button" data-as="video">🎬 Vídeo</button>
-      <button type="button" data-as="adaptar">🧩 Adaptar</button>
-      <button type="button" data-as="rubrica">📋 Rúbrica</button>
-      <button type="button" data-as="butlleti">💬 Butlletí</button>
-      <button type="button" data-as="flu">📖 Fluïdesa lectora</button>
-      <button type="button" data-as="dic">✏️ Dictats</button>
-      <button type="button" data-as="fal">🔤 Faltes d'ortografia</button>
-      <button type="button" data-as="ctl">📗 Controls de lectura</button>
-      <button type="button" data-as="var">🔀 Variants d'examen</button>
-      <button type="button" data-as="ref">🩹 Reforç</button>
-      <button type="button" data-as="seg">📈 Seguiment</button>
-      <button type="button" data-as="exp">🎤 Exposicions</button>
-      <button type="button" data-as="pau">🧩 Sintaxi i selectivitat</button>
-      <button type="button" data-as="cur">📘 Currículum</button>
-      <button type="button" data-as="crit">📋 Criteris del departament</button>
-      <button type="button" data-as="mat">🗂️ Material 4t ESO</button>
+    <div id="asEines" class="as-grups">
+      <div class="as-grup"><span class="as-grup-t">✍️ Corregir i avaluar</span><div class="vistes" role="group" aria-label="Corregir i avaluar"><button type="button" data-as="corregir">✍️ Corregir</button><button type="button" data-as="cb">🧪 Competències bàsiques</button><button type="button" data-as="fal">🔤 Faltes d'ortografia</button><button type="button" data-as="rubrica">📋 Rúbrica</button></div></div>
+      <div class="as-grup"><span class="as-grup-t">📚 Preparar material</span><div class="vistes" role="group" aria-label="Preparar material"><button type="button" data-as="activitats">📚 Activitats</button><button type="button" data-as="aula">📰 Textos per a l'aula</button><button type="button" data-as="video">🎬 Vídeo</button><button type="button" data-as="dic">✏️ Dictats</button><button type="button" data-as="ctl">📗 Controls de lectura</button><button type="button" data-as="var">🔀 Variants d'examen</button><button type="button" data-as="ref">🩹 Reforç</button><button type="button" data-as="adaptar">🧩 Adaptar</button></div></div>
+      <div class="as-grup"><span class="as-grup-t">🧑‍🏫 A classe i seguiment</span><div class="vistes" role="group" aria-label="🏫 A classe i seguiment"><button type="button" data-as="flu">📖 Fluïdesa lectora</button><button type="button" data-as="exp">🎤 Exposicions</button><button type="button" data-as="seg">📈 Seguiment</button><button type="button" data-as="butlleti">💬 Butlletí</button></div></div>
+      <div class="as-grup"><span class="as-grup-t">🗂️ Documents del curs</span><div class="vistes" role="group" aria-label="Documents del curs"><button type="button" data-as="prog">🗓️ Programacions</button><button type="button" data-as="crit">📋 Criteris del departament</button><button type="button" data-as="cur">📘 Currículum</button><button type="button" data-as="mat">🗂️ Material 4t ESO</button><button type="button" data-as="pau">🧩 Sintaxi i selectivitat</button></div></div>
     </div>
     <div id="asCos"></div>
   </div>
@@ -4577,6 +4584,96 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
   EINES_DESPRES.crit = critDespres;
   ACCIONS_EI.cr = critAccio;
   ACCIONS_EI.pa = pauAccio;
+  // ---------- 🗓️ Programacions del departament (curs 2026-2027): resum llegible + document original ----------
+  let progDades = null, progErr = false, progPdfLib = null;
+  const progCarrega = () => {
+    if (progDades || progErr === "carregant") return;
+    progErr = "carregant";
+    fetch("programacions/index.json", { cache: "no-cache" }).then(r => { if (!r.ok) throw 0; return r.json(); })
+      .then(d => { progDades = d; progErr = false; }).catch(() => { progErr = true; })
+      .then(() => { if (asEina === "prog") pintaAssistent(); });
+  };
+  const TRI_NOM = { 1: "1r trimestre", 2: "2n trimestre", 3: "3r trimestre" };
+  function pintaProg() {
+    let h = '<p class="font">Programacions de Llengua castellana i literatura del departament, curs 2026-2027. A <b>Resum</b> hi ha el que cal saber de cada curs (unitats per trimestres, lectures, avaluació i el que hi falta); a <b>Document</b>, l\'original.</p>';
+    progCarrega();
+    if (progErr === true) return h + '<p class="avis">No s\'han pogut carregar les programacions.</p><div class="alum-eines">' + eBoto("prretry", "Torna-ho a provar", true) + "</div>";
+    if (!progDades) return h + '<p class="font">Carregant…</p>';
+    const C = progDades.cursos, id = fv("c", critDeGrup(triat().g)), c = C.find(x => x.id === id) || C[0], vista = fv("v", "res");
+    h += '<div class="vistes" role="group" aria-label="Curs" style="margin-bottom:8px;flex-wrap:wrap">' + C.map(x => '<button type="button" data-asb="ei-prc" data-c="' + x.id + '" aria-pressed="' + (x === c) + '">' + esc(x.nom) + (x.estat === "proposta" ? " ✳️" : "") + "</button>").join("") + "</div> " +
+      '<div class="vistes" role="group" aria-label="Vista" style="margin-bottom:8px"><button type="button" data-asb="ei-prv" data-v="res" aria-pressed="' + (vista === "res") + '">📌 Resum</button><button type="button" data-asb="ei-prv" data-v="doc" aria-pressed="' + (vista === "doc") + '">📄 Document</button></div>';
+    const etq = c.estat === "proposta" ? '<span class="prog-etq" style="background:#d08a1e">Proposta nova · per revisar</span>' : c.format === "antic" ? '<span class="prog-etq" style="background:#8a8a85">Format antic</span>' : '<span class="prog-etq" style="background:#3c7d4f">Format nou (LOMLOE)</span>';
+    h += '<div class="prog-cap"><span><b>' + esc(c.materia) + "</b> · " + esc(c.nom) + "</span><span>👥 " + esc(c.prof) + "</span>" + etq + "</div>";
+    if (vista === "doc") {
+      h += '<div class="alum-eines">' + (c.docx ? '<a class="boto" style="text-decoration:none" href="programacions/' + c.docx + '" download="Programacio_castella_' + c.id + '_2026-2027.docx">⬇️ Baixa la programació nova (Word)</a>' : "") +
+        '<a class="boto clar" style="text-decoration:none" href="programacions/' + c.pdf + '" target="_blank" rel="noopener">↗️ Obre el PDF' + (c.docx ? " del company (format antic)" : "") + "</a></div>" +
+        '<div class="prog-pdf" id="progPdf"><p class="font">Carregant el document…</p></div>';
+      return h;
+    }
+    h += (c.avisos || []).map(a => '<div class="prog-avis">⚠️ ' + esc(a) + "</div>").join("");
+    if (c.docx) h += '<div class="alum-eines"><a class="boto" style="text-decoration:none" href="programacions/' + c.docx + '" download="Programacio_castella_' + c.id + '_2026-2027.docx">⬇️ Programació nova de 4t (Word)</a></div>';
+    if (c.material && c.material.length) h += "<h4>📚 Material i lectures</h4><ul>" + c.material.map(m => "<li>" + esc(m) + "</li>").join("") + "</ul>";
+    if (c.unitats) {
+      h += "<h4>🗓️ Situacions d'aprenentatge (" + c.unitats.length + ")</h4>";
+      [1, 2, 3].forEach(t => {
+        const us = c.unitats.filter(u => u.tri === t); if (!us.length) return;
+        h += '<div class="prog-tri">' + TRI_NOM[t] + "</div>";
+        h += us.map(u => {
+          const f = [];
+          if (u.lengua) f.push(["Llengua", u.lengua.join(" · ")]);
+          [["com", "Comunicació"], ["lec", "Lectura"], ["exp", "Expressió"], ["gra", "Gramàtica"], ["ort", "Ortografia"]].forEach(x => { if (u[x[0]]) f.push([x[1], u[x[0]]]); });
+          if (u.lit) f.push(["Literatura", u.lit]);
+          return '<details class="prog-u"><summary><b>' + u.n + ".</b><span>" + esc(u.t) + '</span><span class="temp">' + esc(u.temp || "sense temporització") + "</span></summary><dl>" + f.map(x => "<dt>" + x[0] + "</dt><dd>" + esc(x[1]) + "</dd>").join("") + "</dl></details>";
+        }).join("");
+      });
+      h += '<p class="font">Trimestre segons la temporització que dona cada programació.</p>';
+    }
+    if (c.blocs) h += "<h4>🧱 Blocs de continguts</h4><ul>" + c.blocs.map(m => "<li>" + esc(m) + "</li>").join("") + "</ul>";
+    if (c.temari) h += "<h4>🗓️ Temari per trimestres</h4>" + c.temari.map(t => '<div class="prog-tri">' + esc(t[0]) + "</div><ul>" + t[1].map(m => "<li>" + esc(m) + "</li>").join("") + "</ul>").join("");
+    if (c.formularis) h += "<h4>📝 Formularis per trimestre</h4>" + c.formularis.map(t => '<div class="prog-tri">' + esc(t[0]) + '</div><p style="font-size:.88rem;margin:4px 0">' + t[1].map(esc).join(" · ") + "</p>").join("");
+    if (c.examens) h += "<h4>📅 Setmanes d'examen</h4><table class=\"prog-pes\">" + c.examens.map(e => "<tr><td>" + esc(e[0]) + "</td><td style=\"text-align:left;font-weight:400;width:auto\">" + esc(e[1]) + " · " + esc(e[2]) + "</td></tr>").join("") + "</table>";
+    h += "<h4>⚖️ Avaluació</h4>";
+    if (c.aval) h += '<table class="prog-pes">' + c.aval.pes.map(p => "<tr><td>" + esc(p[0]) + "</td><td>" + p[1] + " %</td></tr>").join("") + '</table><p style="font-size:.9rem;margin:4px 0">' + esc(c.aval.final) + "</p>";
+    else h += '<p class="font" style="margin-top:0">Aquesta programació no en diu res.</p>';
+    if (c.id !== "2n-batx") { const k = progDades.comu; h += '<ul style="font-size:.88rem">' + [k.orto, k.pi, k.ia].concat(/batx/.test(c.id) ? [] : [k.rec]).map(x => "<li>" + esc(x) + "</li>").join("") + "</ul>" + (c.aval ? "" : '<p class="font">Són els criteris comuns que repeteixen les altres programacions d\'ESO.</p>'); }
+    return h;
+  }
+  async function progDespres() {
+    if (fv("v", "res") !== "doc" || !progDades) return;
+    const el = $("progPdf"); if (!el) return;
+    const c = progDades.cursos.find(x => x.id === fv("c", critDeGrup(triat().g))) || progDades.cursos[0];
+    try {
+      if (!progPdfLib) {
+        const lib = await import(new URL("pdfjs/pdf.min.mjs", location.href).href);
+        lib.GlobalWorkerOptions.workerSrc = new URL("pdfjs/pdf.worker.min.mjs", location.href).href;
+        progPdfLib = lib;
+      }
+      const pdf = await progPdfLib.getDocument(new URL("programacions/" + c.pdf, location.href).href).promise;
+      if (!document.body.contains(el)) return;
+      el.innerHTML = '<p class="font" style="margin:0 0 6px">' + pdf.numPages + " pàgines</p>";
+      let seg = 1;
+      const pinta = async n => {
+        const pg = await pdf.getPage(n), vp = pg.getViewport({ scale: 1.4 }), cv = document.createElement("canvas");
+        cv.width = vp.width; cv.height = vp.height; el.appendChild(cv);
+        await pg.render({ canvasContext: cv.getContext("2d"), viewport: vp }).promise;
+      };
+      const lot = async () => {
+        const b = el.querySelector(".prog-mes"); if (b) b.remove();
+        const fi = Math.min(pdf.numPages, seg + 9);
+        for (; seg <= fi; seg++) { if (!document.body.contains(el)) return; await pinta(seg); }
+        if (seg <= pdf.numPages) { const m = document.createElement("button"); m.type = "button"; m.className = "boto clar prog-mes"; m.textContent = "Mostra'n més (" + (seg - 1) + " de " + pdf.numPages + ")"; m.onclick = lot; el.appendChild(m); }
+      };
+      await lot();
+    } catch (e) { el.innerHTML = '<p class="avis">No s\'ha pogut mostrar el PDF aquí. Obre\'l amb el botó de dalt.</p>'; }
+  }
+  function progAccio(a, b) {
+    if (a === "prc") { fput("c", b.dataset.c); return pintaAssistent(); }
+    if (a === "prv") { fput("v", b.dataset.v); return pintaAssistent(); }
+    if (a === "prretry") { progErr = false; return pintaAssistent(); }
+  }
+  EINES.prog = pintaProg;
+  EINES_DESPRES.prog = progDespres;
+  ACCIONS_EI.pr = progAccio;
 
   // ================= Qualificacions =================
   // Fórmules: {Columna} = mateixa fila; {Full|Columna} = el mateix alumne en un altre full.
