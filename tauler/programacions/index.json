@@ -517,8 +517,8 @@
    "materia": "Llengua castellana i literatura",
    "prof": "Ignasi Corney i Òscar Canudas",
    "format": "nou",
-   "estat": "proposta",
-   "pdf": "4t-eso-antiga.pdf",
+   "estat": "ok",
+   "pdf": "4t-eso.pdf",
    "docx": "4t-eso.docx",
    "material": [
     "Classroom del curs i material fotocopiat del professorat",
@@ -692,10 +692,7 @@
      "lit": "Repaso de la literatura del curso: Ilustración y Neoclasicismo, Romanticismo, Realismo, Naturalismo y Modernismo.; Escritura literaria. Elaborar un microrrelato a partir de las lecturas del curso."
     }
    ],
-   "avisos": [
-    "La que va penjar el company és en el format antic (competències bàsiques per dimensions, anterior a la LOMLOE), fora de la carpeta de programacions acabades.",
-    "Aquí hi ha la versió nova en el format del departament (LOMLOE): els continguts, les lectures i l'avaluació del company i dels criteris de 4t, repartits en 9 situacions d'aprenentatge amb competències específiques i criteris del cicle 3r-4t. La literatura s'ajusta als criteris de 4t. El repartiment dels continguts per unitats és proposta: revisa-ho amb l'Òscar abans de penjar-la."
-   ]
+   "avisos": []
   },
   {
    "id": "1r-batx",
