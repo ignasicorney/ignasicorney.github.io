@@ -4606,12 +4606,12 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     h += '<div class="prog-cap"><span><b>' + esc(c.materia) + "</b> · " + esc(c.nom) + "</span><span>👥 " + esc(c.prof) + "</span>" + etq + "</div>";
     if (vista === "doc") {
       h += '<div class="alum-eines">' + (c.docx ? '<a class="boto" style="text-decoration:none" href="programacions/' + c.docx + '" download="Programacio_castella_' + c.id + '_2026-2027.docx">⬇️ Baixa el Word</a>' : "") +
-        '<a class="boto clar" style="text-decoration:none" href="programacions/' + c.pdf + '" target="_blank" rel="noopener">↗️ Obre el PDF</a></div>' +
+        '<a class="boto clar" style="text-decoration:none" href="programacions/' + c.pdf + '" target="_blank" rel="noopener">↗️ Obre el PDF</a>' + '<a class="boto clar" style="text-decoration:none" href="programacions/' + c.pdf + '" download="Programacio_castella_' + c.id + '_2026-2027.pdf">⬇️ Baixa el PDF</a>' + "</div>" +
         '<div class="prog-pdf" id="progPdf"><p class="font">Carregant el document…</p></div>';
       return h;
     }
     h += (c.avisos || []).map(a => '<div class="prog-avis">⚠️ ' + esc(a) + "</div>").join("");
-    if (c.docx) h += '<div class="alum-eines"><a class="boto" style="text-decoration:none" href="programacions/' + c.docx + '" download="Programacio_castella_' + c.id + '_2026-2027.docx">⬇️ Baixa el Word</a></div>';
+    h += '<div class="alum-eines">' + (c.docx ? '<a class="boto" style="text-decoration:none" href="programacions/' + c.docx + '" download="Programacio_castella_' + c.id + '_2026-2027.docx">⬇️ Baixa el Word</a>' : "") + '<a class="boto clar" style="text-decoration:none" href="programacions/' + c.pdf + '" download="Programacio_castella_' + c.id + '_2026-2027.pdf">⬇️ Baixa el PDF</a>' + "</div>";
     if (c.material && c.material.length) h += "<h4>📚 Material i lectures</h4><ul>" + c.material.map(m => "<li>" + esc(m) + "</li>").join("") + "</ul>";
     if (c.unitats) {
       h += "<h4>🗓️ Situacions d'aprenentatge (" + c.unitats.length + ")</h4>";
