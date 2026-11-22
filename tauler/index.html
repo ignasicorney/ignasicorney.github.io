@@ -4605,6 +4605,8 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     const etq = c.estat === "proposta" ? '<span class="prog-etq" style="background:#d08a1e">Proposta nova · per revisar</span>' : c.format === "antic" ? '<span class="prog-etq" style="background:#8a8a85">Format antic</span>' : '<span class="prog-etq" style="background:#3c7d4f">Format nou (LOMLOE)</span>';
     h += '<div class="prog-cap"><span><b>' + esc(c.materia) + "</b> · " + esc(c.nom) + "</span><span>👥 " + esc(c.prof) + "</span>" + etq + "</div>";
     if (vista === "doc") {
+      const saSel = fv("sa", ""), uSel = saSel && (c.unitats || []).find(u => u.sa === saSel);
+      if (uSel) return h + '<div class="prog-avis" style="border-left-color:var(--accent);background:transparent">Situació d\'aprenentatge <b>' + uSel.n + ". " + esc(uSel.t) + "</b> · pàg. " + uSel.pag[0] + "–" + uSel.pag[1] + '</div><div class="alum-eines"><button type="button" class="boto clar" data-asb="ei-prsa" data-sa="">↩️ Document sencer</button><a class="boto" style="text-decoration:none" href="programacions/' + esc(uSel.sa) + '" download="Programacio_castella_' + c.id + '_SA' + uSel.n + '.pdf">⬇️ Baixa-la en PDF</a></div><div class="prog-pdf" id="progPdf"><p class="font">Carregant…</p></div>';
       h += '<div class="alum-eines">' + (c.docx ? '<a class="boto" style="text-decoration:none" href="programacions/' + c.docx + '" download="Programacio_castella_' + c.id + '_2026-2027.docx">⬇️ Baixa el Word</a>' : "") +
         '<a class="boto clar" style="text-decoration:none" href="programacions/' + c.pdf + '" target="_blank" rel="noopener">↗️ Obre el PDF</a>' + '<a class="boto clar" style="text-decoration:none" href="programacions/' + c.pdf + '" download="Programacio_castella_' + c.id + '_2026-2027.pdf">⬇️ Baixa el PDF</a>' + "</div>" +
         '<div class="prog-pdf" id="progPdf"><p class="font">Carregant el document…</p></div>';
@@ -4623,7 +4625,8 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
           if (u.lengua) f.push(["Llengua", u.lengua.join(" · ")]);
           [["com", "Comunicació"], ["lec", "Lectura"], ["exp", "Expressió"], ["gra", "Gramàtica"], ["ort", "Ortografia"]].forEach(x => { if (u[x[0]]) f.push([x[1], u[x[0]]]); });
           if (u.lit) f.push(["Literatura", u.lit]);
-          return '<details class="prog-u"><summary><b>' + u.n + ".</b><span>" + esc(u.t) + '</span><span class="temp">' + esc(u.temp || "sense temporització") + "</span></summary><dl>" + f.map(x => "<dt>" + x[0] + "</dt><dd>" + esc(x[1]) + "</dd>").join("") + "</dl></details>";
+          return '<details class="prog-u"><summary><b>' + u.n + ".</b><span>" + esc(u.t) + '</span><span class="temp">' + esc(u.temp || "sense temporització") + "</span></summary><dl>" + f.map(x => "<dt>" + x[0] + "</dt><dd>" + esc(x[1]) + "</dd>").join("") + "</dl>" +
+            (u.sa ? '<div class="alum-eines" style="padding:0 12px 10px;margin-top:0"><button type="button" class="boto clar" data-asb="ei-prsa" data-sa="' + esc(u.sa) + '" data-n="' + u.n + '">👁️ Mostra-la</button><a class="boto clar" style="text-decoration:none" href="programacions/' + esc(u.sa) + '" download="Programacio_castella_' + c.id + '_SA' + u.n + '.pdf">⬇️ Baixa-la en PDF</a><span class="font" style="margin:0">pàg. ' + u.pag[0] + "–" + u.pag[1] + " del document</span></div>" : "") + "</details>";
         }).join("");
       });
       h += '<p class="font">Trimestre segons la temporització que dona cada programació.</p>';
@@ -4648,7 +4651,8 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
         lib.GlobalWorkerOptions.workerSrc = new URL("pdfjs/pdf.worker.min.mjs", location.href).href;
         progPdfLib = lib;
       }
-      const pdf = await progPdfLib.getDocument(new URL("programacions/" + c.pdf, location.href).href).promise;
+      const saSel = fv("sa", ""), fitx = saSel && (c.unitats || []).some(u => u.sa === saSel) ? saSel : c.pdf;
+      const pdf = await progPdfLib.getDocument(new URL("programacions/" + fitx, location.href).href).promise;
       if (!document.body.contains(el)) return;
       el.innerHTML = '<p class="font" style="margin:0 0 6px">' + pdf.numPages + " pàgines</p>";
       let seg = 1;
@@ -4667,8 +4671,9 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     } catch (e) { el.innerHTML = '<p class="avis">No s\'ha pogut mostrar el PDF aquí. Obre\'l amb el botó de dalt.</p>'; }
   }
   function progAccio(a, b) {
-    if (a === "prc") { fput("c", b.dataset.c); return pintaAssistent(); }
-    if (a === "prv") { fput("v", b.dataset.v); return pintaAssistent(); }
+    if (a === "prc") { fput("c", b.dataset.c); fput("sa", ""); return pintaAssistent(); }
+    if (a === "prsa") { fput("sa", b.dataset.sa || ""); if (b.dataset.sa) fput("v", "doc"); pintaAssistent(); const el = $("asCos"); if (el && b.dataset.sa) el.scrollIntoView({ behavior: "smooth", block: "start" }); return; }
+    if (a === "prv") { fput("v", b.dataset.v); if (b.dataset.v === "doc") fput("sa", ""); return pintaAssistent(); }
     if (a === "prretry") { progErr = false; return pintaAssistent(); }
   }
   EINES.prog = pintaProg;

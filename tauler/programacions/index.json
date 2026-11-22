@@ -37,7 +37,12 @@
      "gra": "La estructura de las palabras. La palabra; los morfemas; derivación, composición y parasíntesis",
      "ort": "Las mayúsculas",
      "n": 1,
-     "tri": 1
+     "tri": 1,
+     "pag": [
+      1,
+      9
+     ],
+     "sa": "sa/1r-eso-01.pdf"
     },
     {
      "t": "En otras palabras",
@@ -49,7 +54,12 @@
      "gra": "Las palabras y su significado. El significado de las palabras; sentido literal y sentido figurado; relaciones de significado; campo semántico y campo léxico",
      "ort": "La letra b",
      "n": 2,
-     "tri": 1
+     "tri": 1,
+     "pag": [
+      10,
+      19
+     ],
+     "sa": "sa/1r-eso-02.pdf"
     },
     {
      "t": "Profesiones sin género",
@@ -61,7 +71,12 @@
      "gra": "El sustantivo. Los sustantivos; el género; el número",
      "ort": "La letra v",
      "n": 3,
-     "tri": 1
+     "tri": 1,
+     "pag": [
+      20,
+      28
+     ],
+     "sa": "sa/1r-eso-03.pdf"
     },
     {
      "t": "Tecnología para todos",
@@ -73,7 +88,12 @@
      "gra": "Los determinantes. Los demostrativos; los posesivos; los cuantificadores; interrogativos, exclamativos y relativos",
      "ort": "La letra j",
      "n": 4,
-     "tri": 1
+     "tri": 1,
+     "pag": [
+      29,
+      38
+     ],
+     "sa": "sa/1r-eso-04.pdf"
     },
     {
      "t": "Con poco texto",
@@ -84,7 +104,12 @@
      "gra": "Los pronombres. Los pronombres personales; otros pronombres",
      "ort": "La letra g",
      "n": 5,
-     "tri": 2
+     "tri": 2,
+     "pag": [
+      39,
+      47
+     ],
+     "sa": "sa/1r-eso-05.pdf"
     },
     {
      "t": "¿Es noticia?",
@@ -96,7 +121,12 @@
      "gra": "El adjetivo. Los adjetivos; usos de los adjetivos; los grados del adjetivo",
      "ort": "La letra h",
      "n": 6,
-     "tri": 2
+     "tri": 2,
+     "pag": [
+      48,
+      56
+     ],
+     "sa": "sa/1r-eso-06.pdf"
     },
     {
      "t": "Pintar con palabras",
@@ -108,7 +138,12 @@
      "gra": "El verbo. Los verbos; las formas personales del verbo",
      "ort": "Principios de acentuación; clases de palabras según su acento; normas de uso de la tilde",
      "n": 7,
-     "tri": 2
+     "tri": 2,
+     "pag": [
+      57,
+      64
+     ],
+     "sa": "sa/1r-eso-07.pdf"
     },
     {
      "t": "¿Te apuntas al viaje?",
@@ -120,7 +155,12 @@
      "gra": "La conjugación verbal. La conjugación; verbos regulares e irregulares; verbos defectivos",
      "ort": "Acentuación de diptongos y triptongos; diptongos y triptongos; acentuación de diptongos y triptongos",
      "n": 8,
-     "tri": 2
+     "tri": 2,
+     "pag": [
+      65,
+      74
+     ],
+     "sa": "sa/1r-eso-08.pdf"
     },
     {
      "t": "Nuestra comunidad literaria",
@@ -132,7 +172,12 @@
      "gra": "Otras clases de palabras. Los adverbios; las preposiciones; las conjunciones; las interjecciones",
      "ort": "Acentuación de hiatos; hiatos, acentuación de hiatos",
      "n": 9,
-     "tri": 3
+     "tri": 3,
+     "pag": [
+      75,
+      84
+     ],
+     "sa": "sa/1r-eso-09.pdf"
     },
     {
      "t": "Turno de preguntas",
@@ -144,7 +189,12 @@
      "gra": "Los sintagmas. Los grupos sintácticos o sintagmas; clases de sintagmas",
      "ort": "La tilde diacrítica",
      "n": 10,
-     "tri": 3
+     "tri": 3,
+     "pag": [
+      85,
+      95
+     ],
+     "sa": "sa/1r-eso-10.pdf"
     },
     {
      "t": "¿Cómo se hace?",
@@ -156,7 +206,12 @@
      "gra": "La oración. Sujeto y predicado. El enunciado; el sujeto; el predicado",
      "ort": "La coma",
      "n": 11,
-     "tri": 3
+     "tri": 3,
+     "pag": [
+      96,
+      104
+     ],
+     "sa": "sa/1r-eso-11.pdf"
     },
     {
      "t": "Alza la voz",
@@ -168,7 +223,12 @@
      "gra": "Clases de oraciones. Las oraciones según su modalidad; las oraciones y el número de verbos; las oraciones y la naturaleza del verbo; las oraciones y el tipo de sujeto",
      "ort": "Los dos puntos",
      "n": 12,
-     "tri": 3
+     "tri": 3,
+     "pag": [
+      105,
+      115
+     ],
+     "sa": "sa/1r-eso-12.pdf"
     }
    ],
    "avisos": [
@@ -213,7 +273,12 @@
      "gra": "La palabra. Estructura y significado. La estructura de las palabras; el significado de las palabras; la creación de significados",
      "ort": "Acentuación de diptongos, triptongos e hiatos. Acentuación de palabras con diptongo o triptongo; acentuación de palabras con hiato",
      "n": 1,
-     "tri": 1
+     "tri": 1,
+     "pag": [
+      14,
+      28
+     ],
+     "sa": "sa/2n-eso-01.pdf"
     },
     {
      "t": "Mi biografía lingüística",
@@ -225,7 +290,12 @@
      "gra": "Clases de palabras (I). Palabras variables; palabras invariables",
      "ort": "La tilde diacrítica en pares de palabras",
      "n": 2,
-     "tri": 1
+     "tri": 1,
+     "pag": [
+      29,
+      38
+     ],
+     "sa": "sa/2n-eso-02.pdf"
     },
     {
      "t": "Hablando se entiende la gente",
@@ -237,7 +307,12 @@
      "gra": "Clases de palabras (II). Clases de palabras transversales",
      "ort": "Acentuación de palabras compuestas",
      "n": 3,
-     "tri": 1
+     "tri": 1,
+     "pag": [
+      39,
+      49
+     ],
+     "sa": "sa/2n-eso-03.pdf"
     },
     {
      "t": "En clave de humor",
@@ -249,7 +324,12 @@
      "gra": "Los sintagmas (I). El sintagma; el sintagma nominal; el sintagma verbal",
      "ort": "Homófonos con h o sin h. Palabras homófonas con h y sin h",
      "n": 4,
-     "tri": 1
+     "tri": 1,
+     "pag": [
+      50,
+      60
+     ],
+     "sa": "sa/2n-eso-04.pdf"
     },
     {
      "t": "Imágenes que hablan",
@@ -261,7 +341,12 @@
      "ort": "Homófonos con b y con v",
      "exp": "Expresión escrita. Elaborar un mapa mental",
      "n": 5,
-     "tri": 1
+     "tri": 1,
+     "pag": [
+      61,
+      72
+     ],
+     "sa": "sa/2n-eso-05.pdf"
     },
     {
      "t": "Con toda la intención",
@@ -273,7 +358,12 @@
      "ort": "Palabras con x. Pronunciación de las palabras con x; la letra x",
      "lec": "Las palabras terribles",
      "n": 6,
-     "tri": 2
+     "tri": 2,
+     "pag": [
+      73,
+      83
+     ],
+     "sa": "sa/2n-eso-06.pdf"
     },
     {
      "t": "Próximo destino: los libros",
@@ -285,7 +375,12 @@
      "ort": "Palabras con ll y con y. Pronunciación de ll y de y; el dígrafo ll; la letra y",
      "gra": "Los complementos del verbo (I). El complemento directo; el complemento indirecto",
      "n": 7,
-     "tri": 2
+     "tri": 2,
+     "pag": [
+      84,
+      94
+     ],
+     "sa": "sa/2n-eso-07.pdf"
     },
     {
      "t": "Sobre la mesa",
@@ -297,7 +392,12 @@
      "gra": "Los complementos del verbo (II). El complemento circunstancial; el complemento de régimen",
      "ort": "Parónimos con ll y con y. La ll y la y en los parónimos",
      "n": 8,
-     "tri": 2
+     "tri": 2,
+     "pag": [
+      95,
+      105
+     ],
+     "sa": "sa/2n-eso-08.pdf"
     },
     {
      "t": "Historias sin palabras",
@@ -309,7 +409,12 @@
      "gra": "Los complementos del verbo (III). El atributo; el complemento predicativo",
      "ort": "El guion. Uso del guion para dividir palabras a final de línea",
      "n": 9,
-     "tri": 2
+     "tri": 2,
+     "pag": [
+      106,
+      116
+     ],
+     "sa": "sa/2n-eso-09.pdf"
     },
     {
      "t": "Enviado especial",
@@ -320,7 +425,12 @@
      "gra": "Clases de oraciones (I). Las oraciones y sus clases; oraciones copulativas, transitivas e intransitivas",
      "ort": "La raya. Uso de la raya",
      "n": 10,
-     "tri": 3
+     "tri": 3,
+     "pag": [
+      117,
+      127
+     ],
+     "sa": "sa/2n-eso-10.pdf"
     },
     {
      "t": "Brigada antipiratería 2.0",
@@ -332,7 +442,12 @@
      "gra": "Clases de oraciones (II). Oraciones impersonales; oraciones activas y pasivas; oraciones pasivas reflejas",
      "ort": "Los dos puntos y las comillas. Los dos puntos; las comillas",
      "n": 11,
-     "tri": 3
+     "tri": 3,
+     "pag": [
+      128,
+      137
+     ],
+     "sa": "sa/2n-eso-11.pdf"
     },
     {
      "t": "Anuncios con historias",
@@ -344,7 +459,12 @@
      "gra": "Análisis de la oración simple. Modelos. Oraciones con verbo copulativo; oraciones con verbo predicativo",
      "ort": "Los paréntesis y los corchetes. Los paréntesis; los corchetes",
      "n": 12,
-     "tri": 3
+     "tri": 3,
+     "pag": [
+      138,
+      150
+     ],
+     "sa": "sa/2n-eso-12.pdf"
     }
    ],
    "avisos": [
@@ -387,7 +507,12 @@
      "lit": "",
      "gra": "",
      "n": 1,
-     "tri": 1
+     "tri": 1,
+     "pag": [
+      1,
+      8
+     ],
+     "sa": "sa/3r-eso-01.pdf"
     },
     {
      "t": "Con voz propia",
@@ -399,7 +524,12 @@
      "ort": "Acentuación",
      "lit": "La poesía medieval (I). Las jarchas; el mester de juglaría; el Poema de Mio Cid",
      "n": 2,
-     "tri": 1
+     "tri": 1,
+     "pag": [
+      9,
+      17
+     ],
+     "sa": "sa/3r-eso-02.pdf"
     },
     {
      "t": "¿Cómo hablamos?",
@@ -411,7 +541,12 @@
      "gra": "El sintagma nominal. Los componentes del sintagma nominal; funciones del sintagma nominal",
      "ort": "La tilde diacrítica (I). Acentuación diacrítica de monosílabos",
      "n": 3,
-     "tri": 1
+     "tri": 1,
+     "pag": [
+      18,
+      27
+     ],
+     "sa": "sa/3r-eso-03.pdf"
     },
     {
      "t": "Hazte booktuber",
@@ -423,7 +558,12 @@
      "gra": "El sintagma verbal. Los componentes del sintagma verbal; las perífrasis verbales",
      "ort": "La tilde diacrítica (II). Acentuación diacrítica en pares de palabras",
      "n": 4,
-     "tri": 1
+     "tri": 1,
+     "pag": [
+      28,
+      38
+     ],
+     "sa": "sa/3r-eso-04.pdf"
     },
     {
      "t": "Episodio piloto",
@@ -435,7 +575,12 @@
      "gra": "Otros sintagmas. El sintagma adjetival; el sintagma adverbial; el sintagma preposicional",
      "ort": "Los signos de final de enunciado",
      "n": 5,
-     "tri": 2
+     "tri": 2,
+     "pag": [
+      39,
+      48
+     ],
+     "sa": "sa/3r-eso-05.pdf"
     },
     {
      "t": "En mi entorno",
@@ -447,7 +592,12 @@
      "gra": "La oración. Sujeto y predicado. La oración; el sujeto; el predicado; concordancia entre el sujeto y el predicado",
      "ort": "La coma y el punto y coma. La coma; el punto y coma",
      "n": 6,
-     "tri": 2
+     "tri": 2,
+     "pag": [
+      49,
+      58
+     ],
+     "sa": "sa/3r-eso-06.pdf"
     },
     {
      "t": "Cinefórum",
@@ -459,7 +609,12 @@
      "gra": "Complementos del predicado (I). El complemento directo; el complemento indirecto; el complemento circunstancial",
      "ort": "Los puntos suspensivos",
      "n": 7,
-     "tri": 2
+     "tri": 2,
+     "pag": [
+      59,
+      68
+     ],
+     "sa": "sa/3r-eso-07.pdf"
     },
     {
      "t": "De aquí y de allá",
@@ -471,7 +626,12 @@
      "gra": "Complementos del predicado (II). El complemento de régimen; el complemento predicativo; el atributo",
      "ort": "Los dos puntos y las comillas. Los dos puntos; las comillas",
      "n": 8,
-     "tri": 2
+     "tri": 2,
+     "pag": [
+      69,
+      79
+     ],
+     "sa": "sa/3r-eso-08.pdf"
     },
     {
      "t": "¡Así no!",
@@ -483,7 +643,12 @@
      "gra": "Clases de oraciones simples (I). Clases de oraciones según la modalidad; oraciones copulativas, transitivas e intransitivas",
      "ort": "La raya y los paréntesis. La raya; los paréntesis",
      "n": 9,
-     "tri": 3
+     "tri": 3,
+     "pag": [
+      80,
+      89
+     ],
+     "sa": "sa/3r-eso-09.pdf"
     },
     {
      "t": "Desmontando bulos",
@@ -495,7 +660,12 @@
      "gra": "Clases de oraciones (II). Oraciones activas y oraciones pasivas; oraciones impersonales",
      "ort": "Homófonos con b y con v",
      "n": 10,
-     "tri": 3
+     "tri": 3,
+     "pag": [
+      90,
+      99
+     ],
+     "sa": "sa/3r-eso-10.pdf"
     },
     {
      "t": "¿Qué pasa en el mundo?",
@@ -507,7 +677,12 @@
      "lec": "Desde mi teclado",
      "exp": "Expresión escrita. Escribir una crónica",
      "n": 11,
-     "tri": 3
+     "tri": 3,
+     "pag": [
+      100,
+      110
+     ],
+     "sa": "sa/3r-eso-11.pdf"
     },
     {
      "t": "¡Cómpralo!",
@@ -519,7 +694,12 @@
      "com": "La publicidad. Los textos publicitarios; el mensaje publicitario; procedimientos publicitarios; el lenguaje de la publicidad",
      "lec": "Carteles publicitarios",
      "n": 12,
-     "tri": 3
+     "tri": 3,
+     "pag": [
+      111,
+      121
+     ],
+     "sa": "sa/3r-eso-12.pdf"
     }
    ],
    "avisos": [
@@ -588,7 +768,12 @@
       "Gramática. Clases de palabras y clases de sintagmas (repaso).",
       "Ortografía. Las mayúsculas."
      ],
-     "lit": "La Ilustración y el Neoclasicismo. El siglo XVIII: prosa ensayística, la fábula (Iriarte, Samaniego) y el teatro neoclásico (Moratín).; Escritura literaria. Componer una fábula en verso."
+     "lit": "La Ilustración y el Neoclasicismo. El siglo XVIII: prosa ensayística, la fábula (Iriarte, Samaniego) y el teatro neoclásico (Moratín).; Escritura literaria. Componer una fábula en verso.",
+     "pag": [
+      6,
+      9
+     ],
+     "sa": "sa/4t-eso-01.pdf"
     },
     {
      "n": 2,
@@ -603,7 +788,12 @@
       "Gramática. Los complementos del verbo.",
       "Ortografía. La acentuación."
      ],
-     "lit": "El Romanticismo. Contexto; la poesía (Espronceda, Bécquer); la prosa (Larra, las Leyendas de Bécquer); el teatro (Zorrilla).; Escritura literaria. Redactar una leyenda de misterio.; Lectura del trimestre: Tristes armas, de Marina Mayoral."
+     "lit": "El Romanticismo. Contexto; la poesía (Espronceda, Bécquer); la prosa (Larra, las Leyendas de Bécquer); el teatro (Zorrilla).; Escritura literaria. Redactar una leyenda de misterio.; Lectura del trimestre: Tristes armas, de Marina Mayoral.",
+     "pag": [
+      10,
+      13
+     ],
+     "sa": "sa/4t-eso-02.pdf"
     },
     {
      "n": 3,
@@ -618,7 +808,12 @@
       "Gramática. Clases de oraciones simples (repaso).",
       "Ortografía. Los signos de puntuación."
      ],
-     "lit": "El Realismo y el Naturalismo. Contexto; la novela realista (Galdós, Clarín) y naturalista (Pardo Bazán).; La Guerra Civil y las guerras mundiales: contexto de Tristes armas.; Puesta en común de la lectura del trimestre: Tristes armas (lectura y comprensión)."
+     "lit": "El Realismo y el Naturalismo. Contexto; la novela realista (Galdós, Clarín) y naturalista (Pardo Bazán).; La Guerra Civil y las guerras mundiales: contexto de Tristes armas.; Puesta en común de la lectura del trimestre: Tristes armas (lectura y comprensión).",
+     "pag": [
+      14,
+      17
+     ],
+     "sa": "sa/4t-eso-03.pdf"
     },
     {
      "n": 4,
@@ -633,7 +828,12 @@
       "Gramática. La oración compuesta: oraciones yuxtapuestas y coordinadas.",
       "Ortografía. La ortografía de las formas verbales."
      ],
-     "lit": "El género dramático: texto y representación.; Lectura y comprensión: Historia de una escalera, de Antonio Buero Vallejo (inicio de la lectura del trimestre)."
+     "lit": "El género dramático: texto y representación.; Lectura y comprensión: Historia de una escalera, de Antonio Buero Vallejo (inicio de la lectura del trimestre).",
+     "pag": [
+      18,
+      20
+     ],
+     "sa": "sa/4t-eso-04.pdf"
     },
     {
      "n": 5,
@@ -647,7 +847,12 @@
       "Léxico. Hiperonimia e hiponimia.",
       "Gramática. Las oraciones subordinadas sustantivas."
      ],
-     "lit": "El Modernismo. Contexto; Rubén Darío y la renovación del lenguaje poético; temas y recursos de la poesía modernista."
+     "lit": "El Modernismo. Contexto; Rubén Darío y la renovación del lenguaje poético; temas y recursos de la poesía modernista.",
+     "pag": [
+      21,
+      23
+     ],
+     "sa": "sa/4t-eso-05.pdf"
     },
     {
      "n": 6,
@@ -661,7 +866,12 @@
       "Léxico. Significado denotativo y connotativo.",
       "Gramática. Las oraciones subordinadas de relativo."
      ],
-     "lit": "La Guerra Civil y las guerras mundiales: contexto de Historia de una escalera.; Lectura y comprensión de Historia de una escalera, de Antonio Buero Vallejo."
+     "lit": "La Guerra Civil y las guerras mundiales: contexto de Historia de una escalera.; Lectura y comprensión de Historia de una escalera, de Antonio Buero Vallejo.",
+     "pag": [
+      24,
+      26
+     ],
+     "sa": "sa/4t-eso-06.pdf"
     },
     {
      "n": 7,
@@ -676,7 +886,12 @@
       "Léxico. La creación de nuevos significados.",
       "Gramática. Las oraciones subordinadas adverbiales."
      ],
-     "lit": "Lectura y comprensión: El bosque de los corazones dormidos, de Esther Sanz (lectura del trimestre)."
+     "lit": "Lectura y comprensión: El bosque de los corazones dormidos, de Esther Sanz (lectura del trimestre).",
+     "pag": [
+      27,
+      29
+     ],
+     "sa": "sa/4t-eso-07.pdf"
     },
     {
      "n": 8,
@@ -691,7 +906,12 @@
       "Gramática. Análisis de la oración compuesta (repaso).",
       "Uso responsable de las redes: identidad digital propia y ajena."
      ],
-     "lit": "Lectura y comprensión: El bosque de los corazones dormidos (narrador, personajes, espacios y temas); puesta en común."
+     "lit": "Lectura y comprensión: El bosque de los corazones dormidos (narrador, personajes, espacios y temas); puesta en común.",
+     "pag": [
+      30,
+      33
+     ],
+     "sa": "sa/4t-eso-08.pdf"
     },
     {
      "n": 9,
@@ -705,7 +925,12 @@
       "La diversidad de lenguas en España, Europa y el mundo; lenguas y estados; lenguas minoritarias.",
       "Ortografía. Repaso general."
      ],
-     "lit": "Repaso de la literatura del curso: Ilustración y Neoclasicismo, Romanticismo, Realismo, Naturalismo y Modernismo.; Escritura literaria. Elaborar un microrrelato a partir de las lecturas del curso."
+     "lit": "Repaso de la literatura del curso: Ilustración y Neoclasicismo, Romanticismo, Realismo, Naturalismo y Modernismo.; Escritura literaria. Elaborar un microrrelato a partir de las lecturas del curso.",
+     "pag": [
+      34,
+      36
+     ],
+     "sa": "sa/4t-eso-09.pdf"
     }
    ],
    "avisos": []
