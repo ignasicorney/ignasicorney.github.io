@@ -13,7 +13,15 @@
   const MAX = 300;
   const esc = t => String(t ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const norm = t => String(t ?? "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[’`]/g, "'");
-  const data = v => { const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(v || "")); return m ? (m[1] === "0000" ? "" : (m[3] === "00" ? (m[2] === "00" ? m[1] : m[2] + "." + m[1]) : m[3] + "." + m[2] + "." + m[1])) : String(v ?? ""); };
+  // Les dates «AAAA-01-01» de boig per la sardana volen dir «només l'any»
+  const data = v => {
+    const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(v || ""));
+    if (!m) return String(v ?? "");
+    if (m[1] === "0000") return "";
+    if (m[2] === "00" || (m[2] === "01" && m[3] === "01")) return m[1];
+    if (m[3] === "00") return m[2] + "." + m[1];
+    return m[3] + "." + m[2] + "." + m[1];
+  };
   const any = v => { const m = /^(\d{4})/.exec(String(v || "")); return m && m[1] !== "0000" ? m[1] : ""; };
   const cert = v => !(v == null || v === "" || v === 0 || v === "0" || v === false || /^no$/i.test(String(v)));
   const num = v => { const n = Number(v); return isFinite(n) ? n : 0; };
@@ -263,6 +271,8 @@
   }
 
   // Aplecs de la Bisbal (SomArxiu)
+  // Línies del programa com «- Tarda» o «- Lluïment», que no són sardanes
+  const separador = i => /^\s*-/.test(nomDe(i.sardana)) || ["", ".", "?"].includes(nomDe(i.autorSardana).trim());
   function pintaAplecs() {
     const ap = D.aplecs;
     if (!ap.length) { cos().innerHTML = '<p class="buit">Encara no hi ha l\'històric dels aplecs (es genera amb l\'actualització setmanal).</p>'; return; }
@@ -270,13 +280,13 @@
     const suma = (m, k) => { if (k) m.set(k, (m.get(k) || 0) + 1); };
     ap.forEach(a => {
       (a.cobles || []).forEach(c => suma(cob, nomDe(c)));
-      (a.interpretacions || []).forEach(i => { suma(sard, nomDe(i.sardana) + " — " + nomDe(i.autorSardana)); suma(aut, nomDe(i.autorSardana)); });
+      (a.interpretacions || []).forEach(i => { if (separador(i)) return; suma(sard, nomDe(i.sardana) + " — " + nomDe(i.autorSardana)); suma(aut, nomDe(i.autorSardana)); });
     });
     const top = (m, n) => [...m.entries()].sort((a, b) => b[1] - a[1]).slice(0, n);
     const llista = (t, m, n) => '<div><h4>' + t + '</h4><table class="sa-taula"><tbody>' + top(m, n).map(([k, v]) => '<tr><td>' + esc(k) + '</td><td class="n">' + v + '</td></tr>').join("") + '</tbody></table></div>';
     const ambProg = ap.filter(a => (a.interpretacions || []).length).length;
     cos().innerHTML =
-      '<p class="sa-compte">' + ap.length + (ap.length === 1 ? ' aplec' : ' aplecs') + ' a la Bisbal d\'Empordà registrats a SomArxiu, ' + ambProg + ' amb el programa.</p>' +
+      '<p class="sa-compte">' + ap.length + (ap.length === 1 ? ' aplec' : ' aplecs') + (ap.length === 1 ? ' a la Bisbal d\'Empordà registrat a SomArxiu, ' : ' a la Bisbal d\'Empordà registrats a SomArxiu, ') + ambProg + ' amb el programa.</p>' +
       (sard.size || cob.size ? '<div class="sa-graella">' + (sard.size ? llista("Sardanes més tocades", sard, 20) + llista("Autors més tocats", aut, 15) : "") + (cob.size ? llista("Cobles que hi han tocat més", cob, 15) : "") + '</div>' : '') +
       '<h4 style="margin:14px 0 4px">Aplec per aplec</h4>' +
       ap.map(a => {
@@ -284,7 +294,7 @@
         return '<details class="sa-aplec"><summary><b>' + esc(data(a.dia)) + '</b> · ' + esc(a.titol) + (a.anulada ? ' · <i>anul·lat</i>' : '') + (ints.length ? ' · ' + ints.length + ' sardanes' : '') + '</summary><div>' +
           dl([["Lloc", esc(a.lloc)], ["Cobles", esc(nomDe(a.cobles))], ["Descripció", esc(a.descripcio)]]) +
           (ints.length ? '<div class="sa-desp" style="margin-top:6px"><table class="sa-taula"><thead><tr><th>Sardana</th><th>Autor</th><th>Cobla</th><th>Notes</th></tr></thead><tbody>' +
-            ints.map(i => '<tr><td>' + esc(nomDe(i.sardana)) + '</td><td>' + esc(nomDe(i.autorSardana)) + '</td><td>' + esc(nomDe(i.cobla)) + '</td><td>' + esc([i.estrenaSardana, i.altres].filter(Boolean).join(" ")) + '</td></tr>').join("") +
+            ints.map(i => separador(i) ? '<tr><td colspan="4"><b>' + esc(nomDe(i.sardana).replace(/^[-\s]+/, "")) + '</b></td></tr>' : '<tr><td>' + esc(nomDe(i.sardana)) + '</td><td>' + esc(nomDe(i.autorSardana)) + '</td><td>' + esc(nomDe(i.cobla)) + '</td><td>' + esc([i.estrenaSardana, i.altres].filter(Boolean).join(" ")) + '</td></tr>').join("") +
             '</tbody></table></div>' : '<p class="buit">Programa no disponible a SomArxiu.</p>') +
           '<p><a href="https://somarxiu.cat/dades/activitats/' + encodeURIComponent(a.id) + '" target="_blank" rel="noopener">Fitxa a SomArxiu</a></p></div></details>';
       }).join("");
