@@ -472,8 +472,26 @@
           (ints.length ? '<div class="sa-desp" style="margin-top:6px"><table class="sa-taula"><thead><tr><th>Sardana</th><th>Autor</th><th>Cobla</th><th>Notes</th></tr></thead><tbody>' +
             ints.map(i => tipusLinia(i) === "apartat" ? '<tr><td colspan="4"><b>' + esc(nomDe(i.sardana).replace(/^[-\s]+/, "")) + '</b></td></tr>' : tipusLinia(i) === "sense" ? '<tr><td colspan="2"><i>' + esc(nomLinia(i)) + '</i></td><td>' + esc(nomDe(i.cobla)) + '</td><td></td></tr>' : '<tr><td>' + esc(nomDe(i.sardana)) + '</td><td>' + esc(nomDe(i.autorSardana)) + '</td><td>' + esc(nomDe(i.cobla)) + '</td><td>' + esc([i.estrenaSardana ? "Estrenada: " + data(i.estrenaSardana) : "", i.altres].filter(x => x && String(x).trim()).join(" · ")) + '</td></tr>').join("") +
             '</tbody></table></div>' : '<p class="buit">Programa no disponible a SomArxiu.</p>') +
-          '<p><a href="https://somarxiu.cat/dades/activitats/' + encodeURIComponent(a.id) + '" target="_blank" rel="noopener">Fitxa a SomArxiu</a></p></div></details>';
+          '<p class="sa-accions">' + (a.programaArxiu ? '<button type="button" class="boto" data-programa="' + esc(a.programaArxiu) + '">📄 Programa oficial (PDF)</button>' : '') +
+          '<a class="boto clar" href="https://somarxiu.cat/dades/activitats/' + encodeURIComponent(a.id) + '" target="_blank" rel="noopener">Fitxa a SomArxiu</a></p></div></details>';
       }).join("");
+  }
+
+  // Programa oficial d'un aplec: còpia pròpia del PDF al repo privat (no depèn de SomArxiu)
+  async function obrePrograma(boto) {
+    const w = window.open("", "_blank");
+    const text = boto.textContent;
+    boto.disabled = true; boto.textContent = "Obrint…";
+    try {
+      const r = await fetch("https://api.github.com/repos/" + REPO + "/contents/" + boto.dataset.programa.split("/").map(encodeURIComponent).join("/") + "?ref=main",
+        { headers: { Authorization: "Bearer " + D.token, Accept: "application/vnd.github.raw+json" } });
+      if (!r.ok) throw new Error("GitHub " + r.status);
+      const url = URL.createObjectURL(new Blob([await r.arrayBuffer()], { type: "application/pdf" }));
+      if (w) w.location.href = url; else location.href = url;
+    } catch (e) {
+      if (w) w.close();
+      alert("No s'ha pogut obrir el programa (" + e.message + ").");
+    } finally { boto.disabled = false; boto.textContent = text; }
   }
 
   // ---------------- Utilitats i esdeveniments ----------------
@@ -487,6 +505,8 @@
   $("sardanes").addEventListener("click", e => {
     if (!D) return;
     if (e.target.closest("[data-tanca]")) { fitxa = null; $("saFitxa").innerHTML = ""; return; }
+    const pr = e.target.closest("[data-programa]");
+    if (pr) { obrePrograma(pr); return; }
     const co = e.target.closest("[data-corregeix]");
     if (co) { formCorr(co.dataset.corregeix, +co.dataset.i); return; }
     const ra = e.target.closest("tr[data-a]");
