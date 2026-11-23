@@ -447,12 +447,11 @@ a.cons-b{text-decoration:none;color:inherit;font-size:.86rem;line-height:1.3}
 .eines .titol{font-weight:700;font-size:1.05rem;margin:0 6px;min-width:9em}
 .eines .esq{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap}
 .as-grups{display:flex;flex-direction:column;gap:0;margin-bottom:10px;border:1px solid var(--linia);border-radius:10px;overflow:hidden}
-.as-grup{display:flex;align-items:center;gap:10px;padding:6px 8px;flex-wrap:wrap}
+.as-grup{display:flex;flex-direction:column;align-items:flex-start;gap:6px;padding:8px 8px}
 .as-grup+.as-grup{border-top:1px solid var(--linia)}
-.as-grup-t{flex:0 0 11.5em;font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.03em;color:var(--suau,#777)}
+.as-grup-t{white-space:nowrap;font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.03em;color:var(--suau,#777)}
 .as-grup .vistes{flex-wrap:wrap;border:0;border-radius:0;gap:2px}
 .as-grup .vistes button{border-radius:6px}
-@media (max-width:640px){.as-grup-t{flex-basis:100%}}
 .prog-cap{display:flex;flex-wrap:wrap;gap:6px 18px;margin:6px 0 10px;font-size:.9rem}
 .prog-etq{display:inline-block;padding:1px 8px;border-radius:10px;font-size:.75rem;font-weight:700;color:#fff}
 .prog-avis{border-left:4px solid #d08a1e;background:rgba(208,138,30,.09);padding:6px 10px;margin:6px 0;border-radius:4px;font-size:.9rem}
@@ -720,7 +719,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     <div id="asEines" class="as-grups">
       <div class="as-grup"><span class="as-grup-t">✍️ Corregir i avaluar</span><div class="vistes" role="group" aria-label="Corregir i avaluar"><button type="button" data-as="corregir">✍️ Corregir</button><button type="button" data-as="cb">🧪 Competències bàsiques</button><button type="button" data-as="fal">🔤 Faltes d'ortografia</button><button type="button" data-as="rubrica">📋 Rúbrica</button></div></div>
       <div class="as-grup"><span class="as-grup-t">📚 Preparar material</span><div class="vistes" role="group" aria-label="Preparar material"><button type="button" data-as="activitats">📚 Activitats</button><button type="button" data-as="aula">📰 Textos per a l'aula</button><button type="button" data-as="video">🎬 Vídeo</button><button type="button" data-as="dic">✏️ Dictats</button><button type="button" data-as="ctl">📗 Controls de lectura</button><button type="button" data-as="var">🔀 Variants d'examen</button><button type="button" data-as="ref">🩹 Reforç</button><button type="button" data-as="adaptar">🧩 Adaptar</button></div></div>
-      <div class="as-grup"><span class="as-grup-t">🧑‍🏫 A classe i seguiment</span><div class="vistes" role="group" aria-label="🏫 A classe i seguiment"><button type="button" data-as="flu">📖 Fluïdesa lectora</button><button type="button" data-as="exp">🎤 Exposicions</button><button type="button" data-as="seg">📈 Seguiment</button><button type="button" data-as="butlleti">💬 Butlletí</button></div></div>
+      <div class="as-grup"><span class="as-grup-t">🧑‍🏫 Classes i seguiment</span><div class="vistes" role="group" aria-label="Classes i seguiment"><button type="button" data-as="flu">📖 Fluïdesa lectora</button><button type="button" data-as="exp">🎤 Exposicions</button><button type="button" data-as="seg">📈 Seguiment</button><button type="button" data-as="butlleti">💬 Butlletí</button></div></div>
       <div class="as-grup"><span class="as-grup-t">🗂️ Documents del curs</span><div class="vistes" role="group" aria-label="Documents del curs"><button type="button" data-as="prog">🗓️ Programacions</button><button type="button" data-as="crit">📋 Criteris del departament</button><button type="button" data-as="cur">📘 Currículum</button><button type="button" data-as="mat">🗂️ Material 4t ESO</button><button type="button" data-as="pau">🧩 Sintaxi i selectivitat</button></div></div>
     </div>
     <div id="asCos"></div>
