@@ -68,6 +68,8 @@
 .sa-form label{display:grid;gap:3px;font-size:.88rem;color:var(--suau)}
 .sa-form label:has(textarea),.sa-form label.ample,.sa-form .sa-accions,.sa-form .sa-estat{grid-column:1/-1}
 .sa-form input,.sa-form textarea{font:inherit;color:var(--text);padding:6px 8px;border:1px solid var(--linia);border-radius:8px;background:var(--targeta)}
+.sa-llibre{max-height:70vh;overflow:auto}
+.sa-text mark,.sa-taula mark{background:#ffe08a}
 .sa-text{white-space:pre-wrap;font-size:.85rem;background:var(--targeta);border:1px solid var(--linia);border-radius:8px;padding:10px;margin-top:10px}
 .sa-enllac{background:none;border:0;padding:0;font:inherit;color:var(--accent);cursor:pointer;text-decoration:underline;text-align:left}
 .sa-aplec{border:1px solid var(--linia);border-radius:10px;margin:6px 0;background:var(--targeta)}
@@ -268,6 +270,105 @@
     });
   }
 
+  // ---------------- Llibres de l'Aplec 1964-2015 (XAC Premsa) ----------------
+  // Text OCR desat a latdg/sardana/dades/xac/text/<any>.txt. La cerca no té en
+  // compte espais, accents ni signes, perquè l'OCR sovint espaia les lletres
+  // («B i s b a l e n c a») i així també es troba.
+  const LLIBRES = {};          // any -> text
+  let exemplars = null;        // any -> id del portal
+  let llibreAny = "1964";
+  const ANYS_LLIBRES = Array.from({ length: 52 }, (_, i) => String(1964 + i));
+
+  async function textRepo(cami) {
+    const r = await fetch("https://api.github.com/repos/" + REPO + "/contents/" + cami + "?ref=main",
+      { headers: { Authorization: "Bearer " + D.token, Accept: "application/vnd.github.raw+json" } });
+    if (!r.ok) throw new Error("GitHub " + r.status);
+    return r.text();
+  }
+  async function llibre(any_) {
+    if (!(any_ in LLIBRES)) LLIBRES[any_] = await textRepo("dades/xac/text/" + any_ + ".txt");
+    return LLIBRES[any_];
+  }
+  async function idsExemplars() {
+    if (exemplars) return exemplars;
+    exemplars = {};
+    try { (await textRepo("dades/xac/exemplars.tsv")).split("\n").forEach(l => { const [a, i] = l.split("\t"); if (a && i) exemplars[a.trim()] = i.trim(); }); } catch (e) {}
+    return exemplars;
+  }
+  // Text esclafat (només lletres i xifres, sense accents) amb la posició original de cada caràcter
+  function esclafa(text) {
+    let s = "", mapa = [];
+    for (let i = 0; i < text.length; i++) {
+      const c = text[i].normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+      if (/^[a-z0-9]$/.test(c)) { s += c; mapa.push(i); }
+    }
+    return { s, mapa };
+  }
+  function troba(text, q) {
+    const k = esclafa(q).s; if (k.length < 3) return [];
+    const e = esclafa(text), r = [];
+    let p = e.s.indexOf(k);
+    while (p >= 0 && r.length < 500) { r.push([e.mapa[p], e.mapa[p + k.length - 1] + 1]); p = e.s.indexOf(k, p + k.length); }
+    return r;
+  }
+  const net = t => t.replace(/[ \t]+/g, " ").replace(/\n\s*\n+/g, "\n");
+
+  function pintaLlibres() {
+    cos().innerHTML =
+      '<p class="sa-compte">Llibres de l\'Aplec de la Sardana de la Bisbal del 1964 al 2015, a XAC Premsa (Arxiu Comarcal del Baix Empordà). Text llegit per OCR: pot tenir errors; per a la imatge original, obre el llibre a XAC Premsa. Del 2012 al 2015 no hi ha text, i el del 2011 és parcial.</p>' +
+      '<div class="sa-filtres"><input type="search" id="llQ" placeholder="Cerca a tots els llibres: sardana, autor, cobla, persona…" autocomplete="off"><button type="button" class="boto" id="llCerca">Cerca</button></div>' +
+      '<div id="llRes"></div>' +
+      '<div class="sa-filtres"><label>Llibre de l\'any <select id="llAny">' + ANYS_LLIBRES.map(a => '<option' + (a === llibreAny ? " selected" : "") + '>' + a + '</option>').join("") + '</select></label>' +
+      '<input type="search" id="llDins" class="curt" placeholder="Cerca dins d\'aquest llibre" autocomplete="off"><span class="sa-compte" id="llCompte"></span><a class="boto clar" id="llXac" target="_blank" rel="noopener">Obre\'l a XAC Premsa</a></div>' +
+      '<pre class="sa-text sa-llibre" id="llText">Carregant…</pre>';
+    $("llAny").addEventListener("change", () => { llibreAny = $("llAny").value; mostraLlibre(); });
+    $("llDins").addEventListener("input", retarda(() => mostraLlibre(true)));
+    $("llCerca").addEventListener("click", cercaLlibres);
+    $("llQ").addEventListener("keydown", e => { if (e.key === "Enter") cercaLlibres(); });
+    $("llRes").addEventListener("click", e => {
+      const b = e.target.closest("[data-any]"); if (!b) return;
+      llibreAny = b.dataset.any; $("llAny").value = llibreAny; $("llDins").value = $("llQ").value; mostraLlibre(true);
+    });
+    mostraLlibre();
+  }
+
+  async function mostraLlibre(desplaca) {
+    const any_ = llibreAny, pre = $("llText");
+    const ids = await idsExemplars();
+    $("llXac").href = "https://xacpremsa.cultura.gencat.cat/pandora/viewer.vm?id=" + encodeURIComponent(ids[any_] || "") + "&lang=ca&view=premsa_baix_emporda";
+    $("llXac").hidden = !ids[any_];
+    let text;
+    try { text = net(await llibre(any_)); } catch (e) { pre.textContent = "No s'ha pogut llegir el llibre (" + e.message + ")."; return; }
+    if (any_ !== llibreAny) return;
+    const q = $("llDins").value.trim(), m = q ? troba(text, q) : [];
+    $("llCompte").textContent = q ? (m.length + (m.length === 1 ? " coincidència" : " coincidències")) : "";
+    if (!m.length) { pre.textContent = text.replace(/^\s+|\s+$/g, "") || "Aquest llibre no té text."; return; }
+    let h = "", p = 0;
+    m.forEach(([a, b]) => { h += esc(text.slice(p, a)) + "<mark>" + esc(text.slice(a, b)) + "</mark>"; p = b; });
+    pre.innerHTML = h + esc(text.slice(p));
+    if (desplaca) { const mk = pre.querySelector("mark"); if (mk) mk.scrollIntoView({ behavior: "smooth", block: "center" }); }
+  }
+
+  async function cercaLlibres() {
+    const q = $("llQ").value.trim(), res = $("llRes");
+    if (esclafa(q).s.length < 3) { res.innerHTML = '<p class="buit">Escriu almenys tres lletres.</p>'; return; }
+    res.innerHTML = '<p class="sa-compte">Cercant…</p>';
+    const files = [];
+    for (let i = 0; i < ANYS_LLIBRES.length; i += 8) {
+      const lot = ANYS_LLIBRES.slice(i, i + 8);
+      const textos = await Promise.all(lot.map(a => llibre(a).then(t => net(t)).catch(() => "")));
+      lot.forEach((a, k) => {
+        const m = troba(textos[k], q);
+        m.slice(0, 6).forEach(([x, y]) => files.push({ a, abans: textos[k].slice(Math.max(0, x - 90), x), mot: textos[k].slice(x, y), despres: textos[k].slice(y, y + 90), n: m.length }));
+      });
+      res.innerHTML = '<p class="sa-compte">Cercant… ' + Math.min(i + 8, ANYS_LLIBRES.length) + ' de ' + ANYS_LLIBRES.length + ' llibres</p>';
+    }
+    const anys = [...new Set(files.map(f => f.a))];
+    res.innerHTML = !files.length ? '<p class="buit">No surt a cap llibre.</p>' :
+      '<p class="sa-compte">Surt en ' + anys.length + (anys.length === 1 ? ' llibre' : ' llibres') + ': ' + anys.join(", ") + '. Toca una línia per obrir el llibre.</p>' +
+      '<div class="sa-desp"><table class="sa-taula"><tbody>' + files.map(f => '<tr data-any="' + f.a + '" style="cursor:pointer"><td><b>' + f.a + '</b></td><td>…' + esc(f.abans.replace(/\s+/g, " ")) + '<mark>' + esc(f.mot) + '</mark>' + esc(f.despres.replace(/\s+/g, " ")) + '…</td></tr>').join("") + '</tbody></table></div>';
+  }
+
   // ---------------- Pintat ----------------
   const cos = () => $("saCos");
   function estat(text, err) { const e = $("saEstat"); e.textContent = text; e.className = "sa-estat" + (err ? " err" : ""); }
@@ -277,6 +378,7 @@
     if (pest === "sardanes") pintaSardanes();
     else if (pest === "autors") pintaAutors();
     else if (pest === "correccions") pintaCorreccions();
+    else if (pest === "llibres") pintaLlibres();
     else pintaAplecs();
   }
 
