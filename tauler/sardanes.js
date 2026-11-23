@@ -62,6 +62,13 @@
 .sa-fitxa .tanca{float:right}
 .sa-accions{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 0}
 .sa-accions a{text-decoration:none}
+.sa-corr{margin:0 0 8px;padding:6px 10px;border-left:3px solid var(--accent);background:var(--targeta);font-size:.88rem}
+.sa-corr span{color:var(--suau)}
+.sa-form{display:grid;gap:8px 14px;grid-template-columns:repeat(auto-fill,minmax(230px,1fr))}
+.sa-form label{display:grid;gap:3px;font-size:.88rem;color:var(--suau)}
+.sa-form label:has(textarea),.sa-form label.ample,.sa-form .sa-accions,.sa-form .sa-estat{grid-column:1/-1}
+.sa-form input,.sa-form textarea{font:inherit;color:var(--text);padding:6px 8px;border:1px solid var(--linia);border-radius:8px;background:var(--targeta)}
+.sa-text{white-space:pre-wrap;font-size:.85rem;background:var(--targeta);border:1px solid var(--linia);border-radius:8px;padding:10px;margin-top:10px}
 .sa-enllac{background:none;border:0;padding:0;font:inherit;color:var(--accent);cursor:pointer;text-decoration:underline;text-align:left}
 .sa-aplec{border:1px solid var(--linia);border-radius:10px;margin:6px 0;background:var(--targeta)}
 .sa-aplec>summary{cursor:pointer;padding:8px 12px}
@@ -108,17 +115,157 @@
         baixa("autors.json", t.token),
         meta.taules && meta.taules.aplecs ? baixa("aplecs.json", t.token) : Promise.resolve([])
       ]);
-      const sardanes = files(s), autors = files(a);
-      sardanes.forEach(x => { x._t = norm(x.titol); x._a = norm(x.autor); x._q = norm([x.titol, x.autor, x.poblacioEstrena, x.llocEstrena, x.poblacioRef, x.altres, x.autorLletra, x.premis, x.obligada].join(" ")); });
-      autors.forEach(x => { x._n = norm(x.nom); x._q = norm([x.nom, x.poblacio, x.descripcio, x.cobla, x.comarca].join(" ")); });
-      const perAutor = new Map();
-      sardanes.forEach((x, i) => { if (!x._a) return; if (!perAutor.has(x._a)) perAutor.set(x._a, []); perAutor.get(x._a).push(i); });
-      const autorPerNom = new Map();
-      autors.forEach((x, i) => { if (x._n && !autorPerNom.has(x._n)) autorPerNom.set(x._n, i); });
-      D = { meta, sardanes, autors, aplecs: Array.isArray(ap) ? ap : [], perAutor, autorPerNom };
+      const corr = await llegeixCorr(t.token);
+      D = { meta, sardanes: files(s), autors: files(a), aplecs: Array.isArray(ap) ? ap : [], token: t.token, corr: corr.dades, corrSha: corr.sha };
+      aplicaCorr();
       return D;
     })();
     try { return await carregant; } finally { carregant = null; }
+  }
+
+  // ---------------- Correccions pròpies (23.11.2026) ----------------
+  // Es desen a latdg/sardana/correccions.json i es posen per sobre de les dades
+  // de les webs; l'actualització setmanal no les toca.
+  const CAMPS = {
+    sardanes: [["titol", "Títol"], ["autor", "Autor"], ["tipus", "Tipus"], ["dataEstrena", "Data d'estrena", "data"], ["poblacioEstrena", "Població d'estrena"], ["llocEstrena", "Lloc d'estrena"], ["curts", "Curts", "num"], ["llargs", "Llargs", "num"], ["salts", "Salts", "num"], ["obligada", "Obligada"], ["poblacioRef", "Població referenciada"], ["altres", "Dedicatòria i notes", "llarg"], ["premis", "Premis"], ["autorLletra", "Autor de la lletra"]],
+    autors: [["nom", "Nom"], ["naixement", "Naixement", "data"], ["poblacio", "Població de naixement"], ["defuncio", "Defunció", "data"], ["comarca", "Comarca"], ["cobla", "Cobla"], ["rol", "Instrument o paper a la cobla"], ["descripcio", "Descripció", "llarg"]]
+  };
+  const etiqueta = (col, c) => (CAMPS[col].find(x => x[0] === c) || [c, c])[1];
+  const avui = () => new Date().toISOString().slice(0, 10);
+  const b64 = t => { const b = new TextEncoder().encode(t); let s = ""; for (let i = 0; i < b.length; i += 0x8000) s += String.fromCharCode.apply(null, b.subarray(i, i + 0x8000)); return btoa(s); };
+  const deB64 = t => new TextDecoder().decode(Uint8Array.from(atob(String(t || "").replace(/\s/g, "")), c => c.charCodeAt(0)));
+  const URL_CORR = "https://api.github.com/repos/" + REPO + "/contents/correccions.json";
+
+  async function llegeixCorr(token) {
+    const r = await fetch(URL_CORR + "?ref=main", { headers: { Authorization: "Bearer " + token, Accept: "application/vnd.github+json" }, cache: "no-cache" });
+    if (r.status === 404) return { dades: { sardanes: {}, autors: {} }, sha: null };
+    if (!r.ok) throw new Error("No s'han pogut llegir les correccions (GitHub " + r.status + ").");
+    const j = await r.json();
+    let d = {};
+    try { d = JSON.parse(deB64(j.content)); } catch (e) { d = {}; }
+    return { dades: { sardanes: d.sardanes || {}, autors: d.autors || {} }, sha: j.sha };
+  }
+
+  async function desaCorr(missatge, canvi) {
+    // canvi(dades) aplica la modificació; si algú ha desat abans (sha antic), es torna a llegir i a aplicar
+    for (let intent = 0; intent < 2; intent++) {
+      canvi(D.corr);
+      const r = await fetch(URL_CORR, { method: "PUT", headers: { Authorization: "Bearer " + D.token, Accept: "application/vnd.github+json", "Content-Type": "application/json" },
+        body: JSON.stringify(Object.assign({ message: missatge, content: b64(JSON.stringify(D.corr, null, 1) + "\n"), branch: "main" }, D.corrSha ? { sha: D.corrSha } : {})) });
+      if (r.ok) { D.corrSha = (await r.json()).content.sha; return; }
+      if ((r.status === 409 || r.status === 422) && intent === 0) { const c = await llegeixCorr(D.token); D.corr = c.dades; D.corrSha = c.sha; continue; }
+      if (r.status === 403 || r.status === 404) throw new Error("El token no té permís per escriure a latdg/sardana (cal «Contents: Read and write»).");
+      throw new Error("No s'ha pogut desar la correcció (GitHub " + r.status + ").");
+    }
+  }
+
+  function aplicaCorr() {
+    ["sardanes", "autors"].forEach(col => {
+      const perId = new Map(D[col].map((x, i) => [String(x.id), i]));
+      D[col].forEach(x => { if (x._orig) { Object.assign(x, x._orig); delete x._orig; } });
+      Object.entries(D.corr[col] || {}).forEach(([id, c]) => {
+        const i = perId.get(String(id)); if (i == null || !c || !c.camps) return;
+        const x = D[col][i]; x._orig = {};
+        Object.entries(c.camps).forEach(([k, v]) => { x._orig[k] = x[k]; x[k] = v; });
+      });
+    });
+    indexa();
+  }
+
+  function indexa() {
+    D.sardanes.forEach(x => { x._t = norm(x.titol); x._a = norm(x.autor); x._q = norm([x.titol, x.autor, x.poblacioEstrena, x.llocEstrena, x.poblacioRef, x.altres, x.autorLletra, x.premis, x.obligada].join(" ")); });
+    D.autors.forEach(x => { x._n = norm(x.nom); x._q = norm([x.nom, x.poblacio, x.descripcio, x.cobla, x.comarca].join(" ")); });
+    D.perAutor = new Map();
+    D.sardanes.forEach((x, i) => { if (!x._a) return; if (!D.perAutor.has(x._a)) D.perAutor.set(x._a, []); D.perAutor.get(x._a).push(i); });
+    D.autorPerNom = new Map();
+    D.autors.forEach((x, i) => { if (x._n && !D.autorPerNom.has(x._n)) D.autorPerNom.set(x._n, i); });
+  }
+
+  // «14.06.1965» -> «1965-06-14»; «06.1965» -> «1965-06-00»; «1965» -> «1965-01-01» (es mostra només l'any)
+  function dataIso(t) {
+    t = String(t || "").trim();
+    let m;
+    if ((m = /^(\d{1,2})[./-](\d{1,2})[./-](\d{4})$/.exec(t))) return m[3] + "-" + m[2].padStart(2, "0") + "-" + m[1].padStart(2, "0");
+    if ((m = /^(\d{1,2})[./-](\d{4})$/.exec(t))) return m[2] + "-" + m[1].padStart(2, "0") + "-00";
+    if (/^\d{4}$/.test(t)) return t + "-01-01";
+    return t;
+  }
+  const valorForm = (v, tipus) => tipus === "data" ? data(v) : String(v ?? "");
+  const valorDesa = (v, tipus) => { v = String(v ?? "").trim(); if (tipus === "data") return v ? dataIso(v) : null; if (tipus === "num") return v === "" ? null : (isFinite(Number(v)) ? Number(v) : v); return v || null; };
+  const iguals = (a, b) => String(a ?? "") === String(b ?? "");
+
+  function marcaCorr(col, x) {
+    if (!x._orig) return "";
+    const c = (D.corr[col] || {})[String(x.id)] || {};
+    const det = Object.keys(x._orig).map(k => etiqueta(col, k) + " (abans: " + (valorForm(x._orig[k], (CAMPS[col].find(f => f[0] === k) || [])[2]) || "buit") + ")").join(" · ");
+    return '<p class="sa-corr">✎ Corregit per tu' + (c.data ? " el " + esc(data(c.data)) : "") + ": " + esc(det) + (c.nota ? '<br><span>Font: ' + esc(c.nota) + '</span>' : "") + '</p>';
+  }
+
+  function formCorr(col, i) {
+    const x = D[col][i];
+    const c = (D.corr[col] || {})[String(x.id)] || {};
+    $("saFitxa").innerHTML = '<div class="sa-fitxa"><h3>✏️ Corregeix: ' + esc(col === "sardanes" ? x.titol : x.nom) + '</h3>' +
+      '<p class="sub">Canvia només el que sàpigues que és diferent. Les dates, en format dd.mm.aaaa (o només l\'any).</p>' +
+      '<form class="sa-form" id="saForm">' +
+      CAMPS[col].map(([k, et, tipus]) => {
+        const orig = x._orig && k in x._orig ? x._orig[k] : x[k];
+        const v = valorForm(x[k], tipus);
+        const ajuda = x._orig && k in x._orig ? ' title="Original: ' + esc(valorForm(orig, tipus) || "buit") + '"' : "";
+        return '<label' + ajuda + '><span>' + esc(et) + (x._orig && k in x._orig ? " ✎" : "") + '</span>' +
+          (tipus === "llarg" ? '<textarea name="' + k + '" rows="3">' + esc(v) + '</textarea>' : '<input name="' + k + '" value="' + esc(v) + '"' + (tipus === "num" ? ' inputmode="numeric"' : "") + '>') + '</label>';
+      }).join("") +
+      '<label class="ample"><span>D\'on surt la correcció</span><input name="_nota" value="' + esc(c.nota || "") + '" placeholder="P. ex.: guió de l\'aplec del 2019, partitura, conversa amb l\'autor…"></label>' +
+      '<p class="sa-accions"><button type="submit" class="boto">Desa</button><button type="button" class="boto clar" data-cancela>Cancel·la</button>' +
+      (x._orig ? '<button type="button" class="boto perill" data-desfes>Torna a les dades originals</button>' : '') + '</p>' +
+      '<p class="sa-estat" id="saFormEstat"></p></form></div>';
+    const f = $("saForm");
+    const torna = () => (col === "sardanes" ? obreSardana(i, true) : obreAutor(i, true));
+    f.querySelector("[data-cancela]").addEventListener("click", torna);
+    const des = async (missatge, canvi) => {
+      f.querySelectorAll("button").forEach(b => { b.disabled = true; });
+      $("saFormEstat").textContent = "Desant…";
+      try { await desaCorr(missatge, canvi); aplicaCorr(); fitxa = { tipus: col === "sardanes" ? "sardana" : "autor", i }; pinta(); }
+      catch (e) { $("saFormEstat").textContent = e.message; $("saFormEstat").className = "sa-estat err"; f.querySelectorAll("button").forEach(b => { b.disabled = false; }); }
+    };
+    if (x._orig) f.querySelector("[data-desfes]").addEventListener("click", () => des("Desfà la correcció de " + (x.titol || x.nom), d => { delete d[col][String(x.id)]; }));
+    f.addEventListener("submit", e => {
+      e.preventDefault();
+      const camps = {};
+      CAMPS[col].forEach(([k, , tipus]) => {
+        const orig = x._orig && k in x._orig ? x._orig[k] : x[k];
+        const v = valorDesa(f.elements[k].value, tipus);
+        if (!iguals(v, orig) && !(tipus === "data" && iguals(data(v), data(orig)))) camps[k] = v;
+      });
+      const nota = f.elements._nota.value.trim();
+      const nom = x.titol || x.nom;
+      if (!Object.keys(camps).length) des("Desfà la correcció de " + nom, d => { delete d[col][String(x.id)]; });
+      else des("Correcció: " + nom, d => { d[col] = d[col] || {}; d[col][String(x.id)] = { camps, nota, data: avui() }; });
+    });
+  }
+
+  function pintaCorreccions() {
+    const files = [];
+    ["sardanes", "autors"].forEach(col => {
+      const perId = new Map(D[col].map((x, i) => [String(x.id), i]));
+      Object.entries(D.corr[col] || {}).forEach(([id, c]) => { const i = perId.get(id); if (i != null) files.push({ col, i, c, x: D[col][i] }); });
+    });
+    files.sort((a, b) => String(b.c.data || "").localeCompare(String(a.c.data || "")));
+    if (!files.length) { cos().innerHTML = '<p class="buit">Encara no hi has fet cap correcció. A la fitxa de qualsevol sardana o autor hi ha el botó «✏️ Corregeix».</p>'; return; }
+    const text = files.map(({ col, c, x }) => {
+      const qui = col === "sardanes" ? "Sardana «" + (x._orig && x._orig.titol || x.titol) + "» (" + (x._orig && x._orig.autor || x.autor || "") + "), id " + x.id : "Persona «" + (x._orig && x._orig.nom || x.nom) + "», id " + x.id;
+      return qui + ":\n" + Object.entries(c.camps).map(([k, v]) => { const t = (CAMPS[col].find(f => f[0] === k) || [])[2]; return "  - " + etiqueta(col, k) + ": diu «" + (valorForm(x._orig[k], t) || "buit") + "» i hauria de dir «" + (valorForm(v, t) || "buit") + "»"; }).join("\n") + (c.nota ? "\n  Font: " + c.nota : "");
+    }).join("\n\n");
+    cos().innerHTML = '<p class="sa-compte">' + files.length + (files.length === 1 ? " fitxa corregida" : " fitxes corregides") + '. Les correccions es mantenen encara que les webs actualitzin les dades.</p>' +
+      '<p class="sa-accions"><button type="button" class="boto" id="saCopia">📋 Copia-les per enviar-les a les webs</button>' +
+      '<a class="boto clar" href="https://boigperlasardana.cat/#coneix-nos/formulari-de-contacte" target="_blank" rel="noopener">Formulari de boig per la sardana</a>' +
+      '<a class="boto clar" href="https://somsardana.cat/somsardana/contacte" target="_blank" rel="noopener">Contacte de SomArxiu</a></p>' +
+      '<div class="sa-desp"><table class="sa-taula"><thead><tr><th>Fitxa</th><th>Camp</th><th>Abans</th><th>Ara</th><th>Font</th><th>Data</th></tr></thead><tbody>' +
+      files.map(({ col, i, c, x }) => Object.entries(c.camps).map(([k, v], n) => { const t = (CAMPS[col].find(f => f[0] === k) || [])[2]; return '<tr' + (n ? '' : ' data-' + (col === "sardanes" ? "s" : "a") + '="' + i + '"') + '><td>' + (n ? '' : esc((col === "sardanes" ? "🎶 " + x.titol : "👤 " + x.nom))) + '</td><td>' + esc(etiqueta(col, k)) + '</td><td>' + esc(valorForm(x._orig[k], t)) + '</td><td>' + esc(valorForm(v, t)) + '</td><td>' + (n ? '' : esc(c.nota || "")) + '</td><td>' + (n ? '' : esc(data(c.data))) + '</td></tr>'; }).join("")).join("") +
+      '</tbody></table></div><pre class="sa-text" id="saText">' + esc(text) + '</pre>';
+    $("saCopia").addEventListener("click", async () => {
+      try { await navigator.clipboard.writeText(text); $("saCopia").textContent = "✅ Copiades"; }
+      catch (e) { const r = document.createRange(); r.selectNodeContents($("saText")); const s = getSelection(); s.removeAllRanges(); s.addRange(r); $("saCopia").textContent = "Text seleccionat: Ctrl+C"; }
+    });
   }
 
   // ---------------- Pintat ----------------
@@ -129,6 +276,7 @@
     document.querySelectorAll("#saPest button").forEach(b => b.classList.toggle("actiu", b.dataset.t === pest));
     if (pest === "sardanes") pintaSardanes();
     else if (pest === "autors") pintaAutors();
+    else if (pest === "correccions") pintaCorreccions();
     else pintaAplecs();
   }
 
@@ -200,7 +348,7 @@
     const autor = ai != null ? '<button type="button" class="sa-enllac" data-autor="' + ai + '">' + esc(x.autor) + '</button>' : esc(x.autor);
     const mateixAutor = (D.perAutor.get(x._a) || []).length;
     $("saFitxa").innerHTML = '<div class="sa-fitxa"><button type="button" class="boto clar tanca" data-tanca>✕</button>' +
-      '<h3>' + esc(x.titol) + '</h3><p class="sub">' + autor + (mateixAutor > 1 ? ' · ' + mateixAutor + ' obres seves a la base de dades' : '') + '</p>' +
+      '<h3>' + esc(x.titol) + '</h3><p class="sub">' + autor + (mateixAutor > 1 ? ' · ' + mateixAutor + ' obres seves a la base de dades' : '') + '</p>' + marcaCorr("sardanes", x) +
       dl([
         ["Tipus", esc(x.tipus)],
         ["Estrena", esc([data(x.dataEstrena), x.poblacioEstrena, x.llocEstrena].filter(Boolean).join(" · "))],
@@ -216,6 +364,7 @@
       ]) +
       '<p class="sa-accions">' +
       (cert(x.pdf) ? '<a class="boto" href="https://cdn.sardamania.cat/particeles/' + encodeURIComponent(x.id) + '.zip" target="_blank" rel="noopener">📄 Descarrega les particel·les (PDF en .zip)</a>' : '') +
+      '<button type="button" class="boto clar" data-corregeix="sardanes" data-i="' + i + '">✏️ Corregeix</button>' +
       '<a class="boto clar" href="https://boigperlasardana.cat/sardanes?Titol=' + encodeURIComponent(x.titol || "") + '" target="_blank" rel="noopener" title="Hi ha els arxius que tenen les particel·les (amb el contacte per demanar-les), la lletra i l\'àudio">Obre-la a boig per la sardana</a>' +
       '</p>' +
       (num(x.particeles) && !cert(x.pdf) ? '<p class="sub" style="margin:6px 0 0">Les particel·les no són en PDF: a boig per la sardana, «Veure arxius de particel·les» diu quins arxius i cobles les tenen i com demanar-les.</p>' : '') +
@@ -269,7 +418,7 @@
     const rols = [cert(x.compositor) && "compositor", cert(x.lletrista) && "lletrista", cert(x.llibres) && "autor de llibres", cert(x.instrumentista) && "instrumentista"].filter(Boolean).join(", ");
     const interp = obres.reduce((s, i) => s + num(D.sardanes[i].interpretacions), 0);
     $("saFitxa").innerHTML = '<div class="sa-fitxa"><button type="button" class="boto clar tanca" data-tanca>✕</button>' +
-      '<h3>' + esc(x.nom) + '</h3><p class="sub">' + esc([rols, x.comarca].filter(Boolean).join(" · ")) + '</p>' +
+      '<h3>' + esc(x.nom) + '</h3><p class="sub">' + esc([rols, x.comarca].filter(Boolean).join(" · ")) + '</p>' + marcaCorr("autors", x) +
       dl([
         ["Naixement", esc([data(x.naixement), x.poblacio].filter(Boolean).join(" · "))],
         ["Defunció", esc(data(x.defuncio))],
@@ -277,6 +426,7 @@
         ["Descripció", esc(x.descripcio)],
         ["Obres", esc(obres.length ? obres.length + (interp ? " · " + interp.toLocaleString("ca") + " interpretacions en total" : "") : "")]
       ]) +
+      '<p class="sa-accions"><button type="button" class="boto clar" data-corregeix="autors" data-i="' + ai + '">✏️ Corregeix</button></p>' +
       (obres.length ? '<div class="sa-desp" style="margin-top:8px">' + taulaSardanes(obres).replace(/<tr data-i="/g, '<tr data-s="') + '</div>' : '') +
       '</div>';
     if (!sensScroll) $("saFitxa").scrollIntoView({ behavior: "smooth", block: "nearest" });
@@ -337,6 +487,10 @@
   $("sardanes").addEventListener("click", e => {
     if (!D) return;
     if (e.target.closest("[data-tanca]")) { fitxa = null; $("saFitxa").innerHTML = ""; return; }
+    const co = e.target.closest("[data-corregeix]");
+    if (co) { formCorr(co.dataset.corregeix, +co.dataset.i); return; }
+    const ra = e.target.closest("tr[data-a]");
+    if (ra) { pest = "autors"; fitxa = { tipus: "autor", i: +ra.dataset.a }; pinta(); $("saFitxa").scrollIntoView({ behavior: "smooth", block: "nearest" }); return; }
     const au = e.target.closest("[data-autor]");
     if (au) { pest = "autors"; fitxa = { tipus: "autor", i: +au.dataset.autor }; pinta(); $("saFitxa").scrollIntoView({ behavior: "smooth", block: "nearest" }); return; }
     const s = e.target.closest("tr[data-s]");
