@@ -569,7 +569,8 @@
     return t + " (títol no registrat)";
   };
   function pintaAplecs() {
-    const ap = D.aplecs;
+    // Només l'Aplec de la Sardana i la seva vigília: els aplecs del Remei, de Santa Llúcia… són una altra cosa
+    const ap = D.aplecs.filter(a => !/remei|ll[uú]cia|cristina|pasqua/i.test(a.titol || ""));
     if (!ap.length) { cos().innerHTML = '<p class="buit">Encara no hi ha l\'històric dels aplecs (es genera amb l\'actualització setmanal).</p>'; return; }
     // Rànquing de l'Aplec de la Sardana (l'aplec gran de cada any): SomArxiu i, a sobre, els teus guions
     const principals = {};
@@ -600,7 +601,7 @@
       '<span class="sa-compte">' + anysR.filter(y => y >= desR && y <= finsR).length + ' aplecs amb programa · fonts: SomArxiu i els teus guions</span></div>' : '';
     const ambProg = ap.filter(a => (a.interpretacions || []).length).length;
     cos().innerHTML =
-      '<p class="sa-compte">' + ap.length + (ap.length === 1 ? ' aplec' : ' aplecs') + (ap.length === 1 ? ' a la Bisbal d\'Empordà registrat a SomArxiu, ' : ' a la Bisbal d\'Empordà registrats a SomArxiu, ') + ambProg + ' amb el programa.</p>' +
+      '<p class="sa-compte">' + ap.length + (ap.length === 1 ? ' jornada de l\'Aplec de la Sardana registrada' : ' jornades de l\'Aplec de la Sardana (i les vigílies) registrades') + ' a SomArxiu, ' + ambProg + ' amb el programa.</p>' +
       ranquing + (sard.size || cob.size ? '<div class="sa-graella">' + (sard.size ? llista("Sardanes més tocades", sard, 25) + llista("Autors més tocats", aut, 15) : "") + (cob.size ? llista("Cobles que hi han tocat més", cob, 15) : "") + '</div>' : '') +
       '<h4 style="margin:14px 0 4px">Aplec per aplec</h4>' +
       ap.map(a => {
