@@ -69,6 +69,9 @@
 .sa-form label:has(textarea),.sa-form label.ample,.sa-form .sa-accions,.sa-form .sa-estat{grid-column:1/-1}
 .sa-form input,.sa-form textarea{font:inherit;color:var(--text);padding:6px 8px;border:1px solid var(--linia);border-radius:8px;background:var(--targeta)}
 .sa-llibre{max-height:70vh;overflow:auto}
+.sa-guio{margin:10px 0 0;font-size:.92rem}
+.sa-guio>summary{cursor:pointer;color:var(--accent)}
+.sa-guio p{margin:6px 0}
 .sa-text mark,.sa-taula mark{background:#ffe08a}
 .sa-text{white-space:pre-wrap;font-size:.85rem;background:var(--targeta);border:1px solid var(--linia);border-radius:8px;padding:10px;margin-top:10px}
 .sa-enllac{background:none;border:0;padding:0;font:inherit;color:var(--accent);cursor:pointer;text-decoration:underline;text-align:left}
@@ -86,6 +89,7 @@
   let carregant = null;
   let pest = "sardanes";
   let fitxa = null;       // {tipus, i}
+  let rangR = {};         // anys del rànquing de l'Aplec
 
   function files(t) {
     if (!t || !Array.isArray(t.camps) || !Array.isArray(t.files)) return [];
@@ -118,7 +122,13 @@
         meta.taules && meta.taules.aplecs ? baixa("aplecs.json", t.token) : Promise.resolve([])
       ]);
       const corr = await llegeixCorr(t.token);
-      D = { meta, sardanes: files(s), autors: files(a), aplecs: Array.isArray(ap) ? ap : [], token: t.token, corr: corr.dades, corrSha: corr.sha };
+      let guions = {};
+      try {
+        const r = await fetch("https://api.github.com/repos/" + REPO + "/contents/dades/guions/programes.json?ref=main",
+          { headers: { Authorization: "Bearer " + t.token, Accept: "application/vnd.github.raw+json" }, cache: "no-cache" });
+        if (r.ok) guions = await r.json();
+      } catch (e) {}
+      D = { meta, sardanes: files(s), autors: files(a), aplecs: Array.isArray(ap) ? ap : [], guions, token: t.token, corr: corr.dades, corrSha: corr.sha };
       aplicaCorr();
       return D;
     })();
@@ -179,6 +189,12 @@
     D.autors.forEach(x => { x._n = norm(x.nom); x._q = norm([x.nom, x.poblacio, x.descripcio, x.cobla, x.comarca].join(" ")); });
     D.perAutor = new Map();
     D.sardanes.forEach((x, i) => { if (!x._a) return; if (!D.perAutor.has(x._a)) D.perAutor.set(x._a, []); D.perAutor.get(x._a).push(i); });
+    D.guioPerSardana = new Map();
+    Object.entries(D.guions || {}).forEach(([any_, g]) => (g.programa || []).forEach(p => {
+      if (p.id == null) return;
+      if (!D.guioPerSardana.has(p.id)) D.guioPerSardana.set(p.id, []);
+      D.guioPerSardana.get(p.id).push({ any: any_, edicio: g.edicio, num: p.num, text: p.text });
+    }));
     D.autorPerNom = new Map();
     D.autors.forEach((x, i) => { if (x._n && !D.autorPerNom.has(x._n)) D.autorPerNom.set(x._n, i); });
   }
@@ -469,6 +485,8 @@
       '<button type="button" class="boto clar" data-corregeix="sardanes" data-i="' + i + '">✏️ Corregeix</button>' +
       '<a class="boto clar" href="https://boigperlasardana.cat/sardanes?Titol=' + encodeURIComponent(x.titol || "") + '" target="_blank" rel="noopener" title="Hi ha els arxius que tenen les particel·les (amb el contacte per demanar-les), la lletra i l\'àudio">Obre-la a boig per la sardana</a>' +
       '</p>' +
+      ((D.guioPerSardana.get(x.id) || []).length ? '<details class="sa-guio" open><summary>📜 Als teus guions de l\'Aplec (' + D.guioPerSardana.get(x.id).length + ')</summary>' +
+        D.guioPerSardana.get(x.id).slice().sort((a, b) => b.any.localeCompare(a.any)).map(g => '<p><b>' + esc(g.edicio) + 'è Aplec (' + esc(g.any) + '), sardana ' + esc(g.num) + ':</b> ' + esc(g.text) + '</p>').join("") + '</details>' : '') +
       (num(x.particeles) && !cert(x.pdf) ? '<p class="sub" style="margin:6px 0 0">Les particel·les no són en PDF: a boig per la sardana, «Veure arxius de particel·les» diu quins arxius i cobles les tenen i com demanar-les.</p>' : '') +
       '</div>';
     if (!sensScroll) $("saFitxa").scrollIntoView({ behavior: "smooth", block: "nearest" });
@@ -553,18 +571,37 @@
   function pintaAplecs() {
     const ap = D.aplecs;
     if (!ap.length) { cos().innerHTML = '<p class="buit">Encara no hi ha l\'històric dels aplecs (es genera amb l\'actualització setmanal).</p>'; return; }
+    // Rànquing de l'Aplec de la Sardana (l'aplec gran de cada any): SomArxiu i, a sobre, els teus guions
+    const principals = {};
+    ap.forEach(a => {
+      if (!/aplec/i.test(a.titol || "") || /remei|ll[uú]cia|cristina|vig[ií]lia/i.test(a.titol || "")) return;
+      const y = String(a.dia || "").slice(0, 4), n = (a.interpretacions || []).length;
+      if (!principals[y] || n > principals[y].n) principals[y] = { a, n };
+    });
+    const perAny = {};
+    Object.entries(principals).forEach(([y, { a }]) => {
+      const ll = (a.interpretacions || []).filter(i => !tipusLinia(i)).map(i => ({ id: (i.sardana || {}).id, t: nomDe(i.sardana), au: nomDe(i.autorSardana) }));
+      if (ll.length) perAny[y] = ll;
+    });
+    Object.entries(D.guions || {}).forEach(([y, g]) => {
+      const ja = new Set((perAny[y] || []).map(x => x.id));
+      (g.programa || []).filter(p => p.id != null && !ja.has(p.id)).forEach(p => { (perAny[y] = perAny[y] || []).push({ id: p.id, t: p.sardana, au: p.autor }); ja.add(p.id); });
+    });
+    const anysR = Object.keys(perAny).sort();
+    const desR = rangR.des || anysR[0], finsR = rangR.fins || anysR[anysR.length - 1];
     const sard = new Map(), aut = new Map(), cob = new Map();
     const suma = (m, k) => { if (k) m.set(k, (m.get(k) || 0) + 1); };
-    ap.forEach(a => {
-      (a.cobles || []).forEach(c => suma(cob, nomDe(c)));
-      (a.interpretacions || []).forEach(i => { if (tipusLinia(i)) return; suma(sard, nomDe(i.sardana) + " — " + nomDe(i.autorSardana)); suma(aut, nomDe(i.autorSardana)); });
-    });
+    anysR.filter(y => y >= desR && y <= finsR).forEach(y => perAny[y].forEach(x => { suma(sard, x.t + " — " + x.au); suma(aut, x.au); }));
+    Object.entries(principals).forEach(([y, { a }]) => { if (y >= desR && y <= finsR) (a.cobles || []).forEach(c => suma(cob, nomDe(c))); });
     const top = (m, n) => [...m.entries()].sort((a, b) => b[1] - a[1]).slice(0, n);
     const llista = (t, m, n) => '<div><h4>' + t + '</h4><table class="sa-taula"><tbody>' + top(m, n).map(([k, v]) => '<tr><td>' + esc(k) + '</td><td class="n">' + v + '</td></tr>').join("") + '</tbody></table></div>';
+    const selAny = (id, v) => '<select id="' + id + '">' + anysR.map(y => '<option' + (y === v ? " selected" : "") + '>' + y + '</option>').join("") + '</select>';
+    const ranquing = anysR.length ? '<div class="sa-filtres"><b>Rànquing de l\'Aplec</b><label>des del ' + selAny("rDes", desR) + '</label><label>fins al ' + selAny("rFins", finsR) + '</label>' +
+      '<span class="sa-compte">' + anysR.filter(y => y >= desR && y <= finsR).length + ' aplecs amb programa · fonts: SomArxiu i els teus guions</span></div>' : '';
     const ambProg = ap.filter(a => (a.interpretacions || []).length).length;
     cos().innerHTML =
       '<p class="sa-compte">' + ap.length + (ap.length === 1 ? ' aplec' : ' aplecs') + (ap.length === 1 ? ' a la Bisbal d\'Empordà registrat a SomArxiu, ' : ' a la Bisbal d\'Empordà registrats a SomArxiu, ') + ambProg + ' amb el programa.</p>' +
-      (sard.size || cob.size ? '<div class="sa-graella">' + (sard.size ? llista("Sardanes més tocades", sard, 20) + llista("Autors més tocats", aut, 15) : "") + (cob.size ? llista("Cobles que hi han tocat més", cob, 15) : "") + '</div>' : '') +
+      ranquing + (sard.size || cob.size ? '<div class="sa-graella">' + (sard.size ? llista("Sardanes més tocades", sard, 25) + llista("Autors més tocats", aut, 15) : "") + (cob.size ? llista("Cobles que hi han tocat més", cob, 15) : "") + '</div>' : '') +
       '<h4 style="margin:14px 0 4px">Aplec per aplec</h4>' +
       ap.map(a => {
         const ints = a.interpretacions || [];
@@ -574,9 +611,13 @@
           (ints.length ? '<div class="sa-desp" style="margin-top:6px"><table class="sa-taula"><thead><tr><th>Sardana</th><th>Autor</th><th>Cobla</th><th>Notes</th></tr></thead><tbody>' +
             ints.map(i => tipusLinia(i) === "apartat" ? '<tr><td colspan="4"><b>' + esc(nomDe(i.sardana).replace(/^[-\s]+/, "")) + '</b></td></tr>' : tipusLinia(i) === "sense" ? '<tr><td colspan="2"><i>' + esc(nomLinia(i)) + '</i></td><td>' + esc(nomDe(i.cobla)) + '</td><td></td></tr>' : '<tr><td>' + esc(nomDe(i.sardana)) + '</td><td>' + esc(nomDe(i.autorSardana)) + '</td><td>' + esc(nomDe(i.cobla)) + '</td><td>' + esc([i.estrenaSardana ? "Estrenada: " + data(i.estrenaSardana) : "", i.altres].filter(x => x && String(x).trim()).join(" · ")) + '</td></tr>').join("") +
             '</tbody></table></div>' : '<p class="buit">Programa no disponible a SomArxiu.</p>') +
+          (() => { const y = String(a.dia || "").slice(0, 4), g = (D.guions || {})[y];
+            if (!g || !principals[y] || principals[y].a !== a) return "";
+            return '<details class="sa-guio"><summary>📜 El teu guió (' + esc(g.edicio) + 'è Aplec)</summary>' + (g.programa || []).map(p => '<p><b>' + esc(p.num) + '.' + (p.sardana ? ' ' + esc(p.sardana) : '') + '</b> ' + esc(p.text) + '</p>').join("") + '</details>'; })() +
           '<p class="sa-accions">' + (a.programaArxiu ? '<button type="button" class="boto" data-programa="' + esc(a.programaArxiu) + '">📄 Programa oficial (PDF)</button>' : '') +
           '<a class="boto clar" href="https://somarxiu.cat/dades/activitats/' + encodeURIComponent(a.id) + '" target="_blank" rel="noopener">Fitxa a SomArxiu</a></p></div></details>';
       }).join("");
+    ["rDes", "rFins"].forEach(id => $(id) && $(id).addEventListener("change", () => { rangR = { des: $("rDes").value, fins: $("rFins").value }; if (rangR.des > rangR.fins) rangR = { des: rangR.fins, fins: rangR.des }; pintaAplecs(); }));
   }
 
   // Programa oficial d'un aplec: còpia pròpia del PDF al repo privat (no depèn de SomArxiu)
