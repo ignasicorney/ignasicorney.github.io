@@ -627,6 +627,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       <a class="tdg-acces" target="_blank" rel="noopener" href="/"><span class="tdg-ico">🌐</span><span>Pàgina web</span></a>
       <a class="tdg-acces" target="_blank" rel="noopener" href="/editor/" title="Edita les seccions, el blog i les imatges del web"><span class="tdg-ico">✏️</span><span>Gestió de la web</span></a>
       <button type="button" class="tdg-acces feina-obre" id="genBoto" aria-expanded="false" aria-controls="genealogia" title="Obre la genealogia"><span class="tdg-ico">🌳</span><span>Genealogia</span></button>
+      <button type="button" class="tdg-acces feina-obre" id="saBoto" aria-expanded="false" aria-controls="sardanes" title="Obre les sardanes"><span class="tdg-ico">🎶</span><span>Sardanes</span></button>
       <button type="button" class="tdg-acces feina-obre" id="f1Boto" aria-expanded="false" aria-controls="f1" title="Obre la Fórmula 1"><span class="tdg-ico">🏎️</span><span>Fórmula 1</span></button>
       <button type="button" class="tdg-acces feina-obre" id="instBoto" aria-expanded="false" aria-controls="institut" title="Obre l'Institut"><img src="logo-ins.png" alt="" class="feina-logo"><span>Institut</span></button>
     </div>
@@ -795,6 +796,18 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
       </div>
     </div>
     <p class="font">Dades: Jolpica (API d'Ergast) · temps al circuit: Open-Meteo · hores en hora local.</p>
+  </section>
+  <section id="sardanes" class="ample" hidden>
+    <div class="sa-cap">
+      <h2 style="text-transform:none">🎶 Sardanes i autors</h2>
+      <div class="sa-enll">
+        <a href="https://boigperlasardana.cat" target="_blank" rel="noopener">boig per la sardana</a>
+        <a href="https://somarxiu.cat" target="_blank" rel="noopener">SomArxiu</a>
+      </div>
+    </div>
+    <p class="sa-estat" id="saEstat"></p>
+    <div class="sa-pest" id="saPest"><button type="button" data-t="sardanes" class="actiu">Sardanes</button><button type="button" data-t="autors">Autors</button><button type="button" data-t="aplecs">Aplecs de la Bisbal</button></div>
+    <div id="saCos"></div>
   </section>
 
 
@@ -1376,6 +1389,17 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
     desaGenealogia(g) {
       if (!llegit) return false;          // mai no desa sense haver llegit abans les dades de debò
       dades.genealogia = g; desa(); return true;
+    },
+    // 23.11.2026: el token de GitHub dels fitxers adjunts, per llegir el repo privat latdg/sardana
+    async tokenGitHub() {
+      if (!clau) return { estat: "clau" };
+      let d;
+      try { d = await crida({ accio: "noticies-llegeix", dia: Fitxers.CONFIG_DIA }); }
+      catch (e) { return { estat: e.estat === 401 || e.estat === 403 ? "clau" : "xarxa" }; }
+      const e = (d.noticies || []).find(n => n.id === "fitxers");
+      const s = e && e.text;
+      if (!s || s.indexOf("v1:") !== 0) return { estat: "sense" };
+      try { return { estat: "ok", token: atob(s.slice(3)).split("").reverse().join("") }; } catch (x) { return { estat: "sense" }; }
     }
   };
   function mostraInstitut(si) {
@@ -7853,6 +7877,7 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
 })();
 </script>
 <script src="f1.js?v=3" defer></script>
+<script src="sardanes.js?v=1" defer></script>
 <script src="dates-ca.js?v=4"></script>
 <script>
 // =============================================================================
