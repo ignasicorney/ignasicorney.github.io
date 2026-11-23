@@ -60,6 +60,8 @@
 .sa-fitxa dt{color:var(--suau)}
 .sa-fitxa dd{margin:0}
 .sa-fitxa .tanca{float:right}
+.sa-accions{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 0}
+.sa-accions a{text-decoration:none}
 .sa-enllac{background:none;border:0;padding:0;font:inherit;color:var(--accent);cursor:pointer;text-decoration:underline;text-align:left}
 .sa-aplec{border:1px solid var(--linia);border-radius:10px;margin:6px 0;background:var(--targeta)}
 .sa-aplec>summary{cursor:pointer;padding:8px 12px}
@@ -137,10 +139,12 @@
       '<input type="search" id="saQ" placeholder="Títol, autor, lloc d\'estrena… (paraules en qualsevol ordre)" autocomplete="off">' +
       '<input type="search" id="saPob" class="curt" placeholder="Població d\'estrena" autocomplete="off">' +
       '<input type="search" id="saAny" class="curt" placeholder="Anys (p. ex. 1950-1960)" autocomplete="off">' +
+      '<label title="Sardanes amb les particel·les en PDF per descarregar"><input type="checkbox" id="saPdf"> Amb particel·les en PDF</label>' +
       '<select id="saOrd"><option value="titol">Per títol</option><option value="data">Més recents</option><option value="antigues">Més antigues</option><option value="interp">Més interpretades</option><option value="grav">Més enregistrades</option></select>' +
       '</div><div id="saFitxa"></div><p class="sa-compte" id="saCompte"></p><div class="sa-desp" id="saRes"></div>';
     ["saQ", "saPob", "saAny"].forEach(id => $(id).addEventListener("input", retarda(llistaSardanes)));
     $("saOrd").addEventListener("change", llistaSardanes);
+    $("saPdf").addEventListener("change", llistaSardanes);
     $("saRes").addEventListener("click", e => { const tr = e.target.closest("tr[data-i]"); if (tr) obreSardana(+tr.dataset.i); });
     llistaSardanes();
     if (fitxa && fitxa.tipus === "sardana") obreSardana(fitxa.i, true);
@@ -157,9 +161,11 @@
     const pob = norm($("saPob").value.trim());
     const anys = rangAnys($("saAny").value);
     const ord = $("saOrd").value;
+    const nomesPdf = $("saPdf").checked;
     let r = [];
     D.sardanes.forEach((x, i) => {
       if (q.length && !q.every(p => x._q.includes(p))) return;
+      if (nomesPdf && !cert(x.pdf)) return;
       if (pob && !norm(x.poblacioEstrena).includes(pob)) return;
       if (anys) { const a = any(x.dataEstrena); if (!a || a < anys[0] || a > anys[1]) return; }
       r.push(i);
@@ -178,7 +184,7 @@
   function taulaSardanes(idx) {
     if (!idx.length) return '<p class="buit">Cap sardana.</p>';
     return '<table class="sa-taula"><thead><tr><th>Títol</th><th>Autor</th><th>Estrena</th><th>Població</th><th title="Interpretacions">Interp.</th><th title="Enregistraments">Enreg.</th></tr></thead><tbody>' +
-      idx.map(i => { const x = D.sardanes[i]; return '<tr data-i="' + i + '"><td>' + esc(x.titol) + '</td><td>' + esc(x.autor) + '</td><td>' + esc(data(x.dataEstrena)) + '</td><td>' + esc(x.poblacioEstrena) + '</td><td class="n">' + esc(num(x.interpretacions) || "") + '</td><td class="n">' + esc(num(x.gravacions) || "") + '</td></tr>'; }).join("") +
+      idx.map(i => { const x = D.sardanes[i]; return '<tr data-i="' + i + '"><td>' + esc(x.titol) + (cert(x.pdf) ? ' <span title="Particel·les en PDF">📄</span>' : '') + '</td><td>' + esc(x.autor) + '</td><td>' + esc(data(x.dataEstrena)) + '</td><td>' + esc(x.poblacioEstrena) + '</td><td class="n">' + esc(num(x.interpretacions) || "") + '</td><td class="n">' + esc(num(x.gravacions) || "") + '</td></tr>'; }).join("") +
       '</tbody></table>';
   }
 
@@ -206,8 +212,14 @@
         ["Lletra", cert(x.lletra) ? esc("Sí" + (x.autorLletra ? " · " + x.autorLletra : "")) : esc(x.autorLletra)],
         ["Interpretacions", esc(num(x.interpretacions) || "")],
         ["Enregistraments", esc(num(x.gravacions) || "")],
-        ["Particel·les", esc(num(x.particeles) || "")]
-      ]) + '</div>';
+        ["Particel·les", esc(num(x.particeles) ? "En paper a " + num(x.particeles) + (num(x.particeles) === 1 ? " arxiu" : " arxius") : "")]
+      ]) +
+      '<p class="sa-accions">' +
+      (cert(x.pdf) ? '<a class="boto" href="https://cdn.sardamania.cat/particeles/' + encodeURIComponent(x.id) + '.zip" target="_blank" rel="noopener">📄 Descarrega les particel·les (PDF en .zip)</a>' : '') +
+      '<a class="boto clar" href="https://boigperlasardana.cat/sardanes?Titol=' + encodeURIComponent(x.titol || "") + '" target="_blank" rel="noopener" title="Hi ha els arxius que tenen les particel·les (amb el contacte per demanar-les), la lletra i l\'àudio">Obre-la a boig per la sardana</a>' +
+      '</p>' +
+      (num(x.particeles) && !cert(x.pdf) ? '<p class="sub" style="margin:6px 0 0">Les particel·les no són en PDF: a boig per la sardana, «Veure arxius de particel·les» diu quins arxius i cobles les tenen i com demanar-les.</p>' : '') +
+      '</div>';
     if (!sensScroll) $("saFitxa").scrollIntoView({ behavior: "smooth", block: "nearest" });
   }
 
