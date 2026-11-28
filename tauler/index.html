@@ -5042,7 +5042,10 @@ body.gen-imprimeix .gen-ped{overflow:visible}body.gen-imprimeix .gen-ped-g{min-w
         }).join("") + "</tr>"; }).join("") || '<tr><td colspan="' + (f.columnes.length + 2) + '" class="buit">Cap alumne no coincideix.</td></tr>') +
         "</tbody></table></div><p class=\"font\">" + files.length + " alumnes · toca una nota per canviar-la (com a l\'Excel: les fletxes, Retorn i Tab es mouen per la graella, també pel nom, els deures, els comentaris i les columnes calculades; escriu per posar la nota, Supr per esborrar-la); toca el nom per canviar-lo o esborrar l'alumne; toca «📕 Deures» per apuntar faltes de deures" + (qDeures ? " (mode ràpid: cada toc posa o treu la falta d'avui)" : "") + ".</p>";
     }
+    // 28.11.2026: en redibuixar la graella (fotos carregades, compte detectat, nota desada…) es manté on era el desplaçament
+    const vell = cos.querySelector(".taula"), sx = vell ? vell.scrollLeft : 0, sy = vell ? vell.scrollTop : 0;
     cos.innerHTML = h;
+    { const nou = cos.querySelector(".taula"); if (nou && (sx || sy)) { nou.scrollLeft = sx; nou.scrollTop = sy; } }
     marcaSel();
     if (typeof pintaAssistent === "function" && $("asCos") && !$("asCos").contains(document.activeElement) && !asOcupat && !asResultat) pintaAssistent();
   }
